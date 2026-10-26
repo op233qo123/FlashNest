@@ -35,3 +35,24 @@ with zipfile.ZipFile(ROOT/'fixtures'/'multi-swf.zip','w',zipfile.ZIP_DEFLATED) a
             info.compress_type=zipfile.ZIP_DEFLATED; info.external_attr=0o100644 << 16
             z.writestr(info,p.read_bytes())
 print('Generated original multi-SWF fixture and import ZIP')
+
+# Original AVM1 SharedObject regression fixture. The root localPath deliberately
+# exercises keys without a package-path prefix; native per-package WK stores
+# must provide isolation. This is real SWF bytecode, not a JavaScript write.
+def integer(n): return action(0x96,b'\x07'+struct.pack('<i',n))
+def variable(name): return push(name)+action(0x1c)
+def member(obj,name): return obj+push(name)+action(0x4e)
+def call_method(obj,name,args=()):
+    return b''.join(reversed(args))+integer(len(args))+obj+push(name)+action(0x52)
+get_save=call_method(variable('SharedObject'),'getLocal',(push('FlashNestFixture'),push('/')))
+set_save=push('save')+get_save+action(0x1d)
+data=member(variable('save'),'data')
+read=push('FLASHNEST_SAVE_BEFORE:')+member(data,'progress')+action(0x47)+action(0x26)
+write=data+push('progress')+integer(42)+action(0x4f)
+flush=push('FLASHNEST_SAVE_FLUSH:')+call_method(variable('save'),'flush')+action(0x47)+action(0x26)
+saves=ROOT/'fixtures'/'shared-object'; saves.mkdir(exist_ok=True)
+(saves/'explicit-flush.swf').write_bytes(movie(set_save+read+write+flush+trace('FLASHNEST_SAVE_READY')+action(0x07),(54,70,120)))
+(saves/'close-flush.swf').write_bytes(movie(set_save+read+write+trace('FLASHNEST_SAVE_READY')+action(0x07),(54,70,120)))
+(saves/'read-only.swf').write_bytes(movie(set_save+read+trace('FLASHNEST_SAVE_READY')+action(0x07),(54,70,120)))
+(saves/'README.txt').write_text('Original AVM1 SharedObject fixture: getLocal("FlashNestFixture", "/"). Trace FLASHNEST_SAVE_BEFORE:<progress>. explicit-flush sets progress=42 and calls flush(); close-flush sets42 without flush; read-only reads only. FLASHNEST_SAVE_READY ends actions. Native tests must use actual bundled Ruffle, await close/destroy before snapshot, restart same package profile, and verify another profile has undefined progress. This is game save data, not a savestate.\n')
+print('Generated original SharedObject fixtures')

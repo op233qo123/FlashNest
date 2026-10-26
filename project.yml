@@ -27,10 +27,16 @@ targets:
       - path: App/Resources/Web
         type: folder
         buildPhase: resources
+      - path: App/Resources/Assets.xcassets
+        buildPhase: resources
+      - path: App/Resources/Localization
+        buildPhase: resources
     info:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: FlashNest
+        CFBundleShortVersionString: '1.1'
+        CFBundleVersion: '2'
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -52,8 +58,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.flashnest.app
-        MARKETING_VERSION: '0.1.0'
-        CURRENT_PROJECT_VERSION: '1'
+        MARKETING_VERSION: '1.1'
+        CURRENT_PROJECT_VERSION: '2'
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
     dependencies:
       - package: ZIPFoundation

@@ -46,6 +46,39 @@ class StaticTests(unittest.TestCase):
   with zipfile.ZipFile(ROOT/'fixtures/multi-swf.zip') as z:
    self.assertIn('sub/child.swf',z.namelist())
    self.assertEqual(z.read('main.swf'),main)
+ def test_shared_object_fixtures(self):
+  root=ROOT/'fixtures/shared-object'
+  explicit=(root/'explicit-flush.swf').read_bytes()
+  close=(root/'close-flush.swf').read_bytes()
+  readonly=(root/'read-only.swf').read_bytes()
+  for data in (explicit,close,readonly):
+   self.assertEqual(data[:3],b'FWS')
+   self.assertEqual(struct.unpack('<I',data[4:8])[0],len(data))
+   for marker in (b'SharedObject',b'getLocal',b'FlashNestFixture',b'FLASHNEST_SAVE_BEFORE:',b'FLASHNEST_SAVE_READY'):
+    self.assertIn(marker,data)
+  self.assertIn(b'flush',explicit)
+  self.assertNotIn(b'flush',close)
+  self.assertNotIn(b'flush',readonly)
+  def opcodes(swf):
+   offset=8+(5+4*(swf[8]>>3)+7)//8+4
+   while offset<len(swf):
+    header=struct.unpack_from('<H',swf,offset)[0]; offset+=2
+    size=header&63
+    if size==63: size=struct.unpack_from('<I',swf,offset)[0]; offset+=4
+    body=swf[offset:offset+size]; offset+=size
+    if header>>6==12:
+     codes=[]; i=0
+     while i<len(body):
+      code=body[i]; codes.append(code); i+=1
+      if code>=128:
+       size=struct.unpack_from('<H',body,i)[0]; i+=2+size
+     self.assertEqual(i,len(body))
+     return codes
+   self.fail('Missing DoAction tag')
+  self.assertIn(0x4f,opcodes(close))  # ActionSetMember progress=42.
+  self.assertNotIn(0x4f,opcodes(readonly))
+  self.assertEqual(opcodes(explicit).count(0x52),2)  # getLocal + flush.
+  self.assertEqual(opcodes(close).count(0x52),1)
  def test_manifest(self):
   manifest=json.loads((ROOT/'runtime.files.json').read_text())
   for name,digest in manifest.items(): self.assertEqual(hashlib.sha256((WEB/'runtime'/name).read_bytes()).hexdigest(),digest,name)

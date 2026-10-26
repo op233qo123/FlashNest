@@ -49,7 +49,7 @@ import WebKit
         var started = false
         while Date() < deadline {
             if let failure = session.failure { XCTFail(failure); return }
-            if !started && session.status == "Playing" {
+            if !started && session.isLoaded {
                 // Observe a real Ruffle asset request without substituting data.
                 _ = try await view.evaluateJavaScript("""
                 window.__fixtureText = null;

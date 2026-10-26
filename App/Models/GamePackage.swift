@@ -12,11 +12,11 @@ enum PackageError: LocalizedError {
     case invalidPath(String), unsupported(String), limit(String), noMovies, corrupt(String)
     var errorDescription: String? {
         switch self {
-        case .invalidPath(let value): return "Unsafe or conflicting path: \(value)"
-        case .unsupported(let value): return "Unsupported file: \(value)"
-        case .limit(let value): return "Import limit exceeded: \(value)"
-        case .noMovies: return "No SWF movies were found in this package."
-        case .corrupt(let value): return "Package could not be read: \(value)"
+        case .invalidPath(let value): return L10n.format("Unsafe or conflicting path: %@", value)
+        case .unsupported(let value): return L10n.format("Unsupported file: %@", L10n.detail(value))
+        case .limit(let value): return L10n.format("Import limit exceeded: %@", L10n.detail(value))
+        case .noMovies: return L10n.text("No SWF movies were found in this package.")
+        case .corrupt(let value): return L10n.format("Package could not be read: %@", L10n.detail(value))
         }
     }
 }

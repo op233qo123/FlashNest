@@ -5,6 +5,11 @@ import SwiftUI
     @Published var packages: [GamePackage] = []
     @Published var busy = false
     @Published var error: String?
+    @Published var importProgress = ImportProgress()
+    @Published var importMessage: String?
+    @Published var cancelling = false
+    private var importControl: ImportControl?
+    private var importOperation = UUID()
     let root: URL
 
     init(root: URL? = nil) {
@@ -27,21 +32,42 @@ import SwiftUI
                 } catch { unreadable += 1 }
             }
             packages = readable.sorted { $0.importedAt > $1.importedAt }
-            if unreadable > 0 { error = "\(unreadable) package manifest(s) could not be read. Their files have been preserved." }
-        } catch { self.error = error.localizedDescription }
+            if unreadable > 0 { error = L10n.format("%d package manifest(s) could not be read. Their files have been preserved.", unreadable) }
+        } catch { self.error = L10n.error(error) }
     }
 
-    func importURLs(_ urls: [URL]) async {
-        guard !busy else { return }
+    @discardableResult func importURLs(_ urls: [URL]) async -> GamePackage? {
+        guard !busy, !urls.isEmpty else { return nil }
         busy = true
-        defer { busy = false }
-        let importer = PackageImporter(root: root)
+        cancelling = false; error = nil; importMessage = nil
+        importProgress = ImportProgress()
+        let operation = UUID(); importOperation = operation
+        let control = ImportControl { [weak self] progress in
+            Task { @MainActor in
+                guard let self, self.busy, self.importOperation == operation else { return }
+                self.importProgress = progress
+            }
+        }
+        importControl = control
+        defer { busy = false; cancelling = false; importControl = nil }
+        let importer = PackageImporter(root: root, control: control)
         do {
+            var last: GamePackage?
             for url in urls {
-                _ = try await Task.detached(priority: .userInitiated) { try importer.importPackage(from: url) }.value
+                last = try await Task.detached(priority: .userInitiated) { try importer.importPackage(from: url) }.value
             }
             reload()
-        } catch { reload(); self.error = error.localizedDescription }
+            importMessage = L10n.text("Import complete.")
+            return last
+        } catch is CancellationError {
+            reload(); importMessage = L10n.text("Import cancelled."); return nil
+        } catch { reload(); self.error = L10n.error(error); return nil }
+    }
+
+    func cancelImport() {
+        guard busy else { return }
+        cancelling = true
+        importControl?.cancel()
     }
 
     func choose(_ movie: String, for package: GamePackage) throws -> GamePackage {

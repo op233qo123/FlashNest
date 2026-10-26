@@ -13,12 +13,12 @@ struct PlayerView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Button { session.stop(); dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Close game")
+                Button { session.stop(); dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel(L10n.text("Close game"))
                 Text(package.title).font(.headline).lineLimit(1)
                 Spacer()
-                Button { session.setPaused(!session.paused) } label: { Image(systemName: session.paused ? "play.fill" : "pause.fill") }.accessibilityLabel(session.paused ? "Resume" : "Pause")
-                Button { showControls.toggle() } label: { Image(systemName: "gamecontroller") }.accessibilityLabel("Toggle touch controls")
-                Button { showDiagnostics = true } label: { Image(systemName: "info.circle") }.accessibilityLabel("Diagnostics")
+                Button { session.setPaused(!session.paused) } label: { Image(systemName: session.paused ? "play.fill" : "pause.fill") }.accessibilityLabel(L10n.text(session.paused ? "Resume" : "Pause"))
+                Button { showControls.toggle() } label: { Image(systemName: "gamecontroller") }.accessibilityLabel(L10n.text("Toggle touch controls"))
+                Button { showDiagnostics = true } label: { Image(systemName: "info.circle") }.accessibilityLabel(L10n.text("Diagnostics"))
             }.padding().background(.ultraThinMaterial)
             ZStack {
                 Color.black
@@ -27,9 +27,9 @@ struct PlayerView: View {
                 if let failure = session.failure {
                     VStack(spacing: 12) {
                         Image(systemName: "exclamationmark.triangle").font(.largeTitle)
-                        Text("Unable to play").font(.headline)
+                        Text(L10n.text("Unable to play")).font(.headline)
                         Text(failure).font(.callout).textSelection(.enabled)
-                        Button("Close game") { session.stop(); dismiss() }
+                        Button(L10n.text("Close game")) { session.stop(); dismiss() }
                     }.padding(24).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16)).padding()
                 }
             }
@@ -39,8 +39,8 @@ struct PlayerView: View {
                     VStack { HoldKey(label: "↑", code: "ArrowUp", session: session); HoldKey(label: "↓", code: "ArrowDown", session: session) }
                     HoldKey(label: "→", code: "ArrowRight", session: session)
                     Spacer()
-                    HoldKey(label: "Space", code: "Space", session: session)
-                    HoldKey(label: "Enter", code: "Enter", session: session)
+                    HoldKey(label: L10n.text("Space"), code: "Space", session: session)
+                    HoldKey(label: L10n.text("Enter"), code: "Enter", session: session)
                 }.padding(10).background(.ultraThinMaterial)
             }
         }
@@ -50,12 +50,12 @@ struct PlayerView: View {
         .sheet(isPresented: $showDiagnostics) {
             NavigationStack {
                 List {
-                    Section("Status") { Text(session.failure ?? session.status); Text(package.selectedMovie).font(.caption) }
-                    Section("Recent diagnostics") {
+                    Section(L10n.text("Status")) { Text(session.failure ?? session.status); Text(package.selectedMovie).font(.caption) }
+                    Section(L10n.text("Recent diagnostics")) {
                         ForEach(Array(session.diagnostics.enumerated()), id: \.offset) { _, value in Text(value).font(.caption).textSelection(.enabled) }
                     }
-                    Section { Text("No external network access. If a movie expects a remote API, an absolute website URL, or missing files, it may not work offline. Touch controls send keyboard events; game support varies.").font(.footnote) }
-                }.navigationTitle("Diagnostics").toolbar { Button("Done") { showDiagnostics = false } }
+                    Section { Text(L10n.text("No external network access. If a movie expects a remote API, an absolute website URL, or missing files, it may not work offline. Touch controls send keyboard events; game support varies.")).font(.footnote) }
+                }.navigationTitle(L10n.text("Diagnostics")).toolbar { Button(L10n.text("Done")) { showDiagnostics = false } }
             }
         }
     }

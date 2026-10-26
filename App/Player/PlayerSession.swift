@@ -3,7 +3,8 @@ import WebKit
 import SwiftUI
 
 @MainActor final class PlayerSession: NSObject, ObservableObject, WKNavigationDelegate, WKScriptMessageHandler {
-    @Published var status = "Starting local player…"
+    @Published var status = L10n.text("Starting local player…")
+    @Published private(set) var isLoaded = false
     @Published var failure: String?
     @Published var diagnostics: [String] = []
     @Published var paused = false
@@ -16,7 +17,7 @@ import SwiftUI
         guard server == nil else { return }
         let attempt = UUID()
         generation = attempt
-        ready = false; paused = false; failure = nil; status = "Starting local player…"
+        ready = false; isLoaded = false; paused = false; failure = nil; status = L10n.text("Starting local player…")
         do {
             guard let webRoot = Bundle.main.url(forResource: "Web", withExtension: nil),
                   FileManager.default.fileExists(atPath: webRoot.appendingPathComponent("runtime/ruffle.js").path) else {
@@ -69,18 +70,20 @@ import SwiftUI
             view.scrollView.isScrollEnabled = false
             webView = view
             var components = URLComponents(url: local.shellURL, resolvingAgainstBaseURL: false)!
-            components.queryItems = [URLQueryItem(name: "entry", value: package.selectedMovie), URLQueryItem(name: "package", value: package.id.uuidString)]
+            components.queryItems = [URLQueryItem(name: "entry", value: package.selectedMovie), URLQueryItem(name: "package", value: package.id.uuidString), URLQueryItem(name: "language", value: L10n.languageCode)]
             guard let url = components.url else { throw PackageError.invalidPath(package.selectedMovie) }
             view.load(URLRequest(url: url))
         } catch {
             guard generation == attempt else { return }
-            failure = error.localizedDescription
+            record(error.localizedDescription)
+            failure = L10n.error(error)
             server?.stop(); server = nil
         }
     }
 
     func stop() {
         generation = UUID()
+        isLoaded = false
         webView?.evaluateJavaScript("window.FlashNest?.pause()")
         webView?.stopLoading()
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "flashnest")
@@ -101,7 +104,7 @@ import SwiftUI
     }
 
     private func record(_ message: String) {
-        diagnostics.append(String(message.prefix(500)))
+        diagnostics.append(String(L10n.detail(message).prefix(500)))
         if diagnostics.count > 60 { diagnostics.removeFirst(diagnostics.count - 60) }
     }
 
@@ -113,8 +116,8 @@ import SwiftUI
               let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
         let text = String((body["message"] as? String ?? "").prefix(500))
         switch type {
-        case "ready": status = "Runtime ready"; ready = true; if paused { setPaused(true) }
-        case "loaded": status = "Playing"; ready = true
+        case "ready": status = L10n.text("Runtime ready"); ready = true; if paused { setPaused(true) }
+        case "loaded": status = L10n.text("Playing"); ready = true; isLoaded = true
         case "error": failure = text
         case "diagnostic": record(text)
         default: break
@@ -126,12 +129,12 @@ import SwiftUI
         guard let url = navigationAction.request.url, let shell = server?.shellURL,
               url.scheme == shell.scheme, url.host == shell.host, url.port == shell.port,
               url.path == shell.path, navigationAction.targetFrame?.isMainFrame == true else {
-            record("Blocked navigation outside the bundled player")
+            record(L10n.text("Blocked navigation outside the bundled player"))
             decisionHandler(.cancel); return
         }
         decisionHandler(.allow)
     }
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { failure = error.localizedDescription }
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { failure = error.localizedDescription }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { failure = "The web player stopped, possibly because this game exceeded memory limits. Close and reopen it." }
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { record(error.localizedDescription); failure = L10n.error(error) }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { record(error.localizedDescription); failure = L10n.error(error) }
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { failure = L10n.text("The web player stopped, possibly because this game exceeded memory limits. Close and reopen it.") }
 }

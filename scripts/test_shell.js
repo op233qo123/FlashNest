@@ -6,9 +6,12 @@ const api={load:async c=>{config=c},suspend:()=>suspended++,resume:()=>resumed++
 const player={ruffle:()=>api, focus(){},dispatchEvent(){}};
 for(const id of ['status','pause','start','stage']) elements[id]={textContent:'',append:p=>appended=p};
 const context={URL,URLSearchParams,Object,Set,Error,String,KeyboardEvent:class{},location:{href:'http://127.0.0.1:8766/cap/web/index.html?package=11111111-1111-4111-8111-111111111111&entry=folder%2Fspace%20%23.swf'}};
+const language=process.argv[2] || 'en';
+context.location.href+='&language='+encodeURIComponent(language);
 context.location.search=new URL(context.location.href).search;
-context.document={getElementById:id=>elements[id],querySelectorAll:()=>controls,addEventListener(){},createElement:()=>({}),head:{append:s=>{context.window.RufflePlayer.newest=()=>({createPlayer:()=>player});s.onload()}}};
-context.window={fetch:async()=>({ok:true}),addEventListener(){}};
+context.document={documentElement:{},getElementById:id=>elements[id],querySelectorAll:()=>controls,addEventListener(){},createElement:()=>({}),head:{append:s=>{context.window.RufflePlayer.newest=()=>({createPlayer:()=>player});s.onload()}}};
+const messages=[];
+context.window={webkit:{messageHandlers:{flashnest:{postMessage:m=>messages.push(m)}}},fetch:async()=>({ok:true}),addEventListener(){}};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../App/Resources/Web/shell.js'),'utf8'),context);
 setImmediate(()=>{
  assert.equal(config.url,'http://127.0.0.1:8766/cap/games/11111111-1111-4111-8111-111111111111/folder/space%20%23.swf');
@@ -20,5 +23,9 @@ setImmediate(()=>{
  context.window.FlashNest.pause(); assert.equal(suspended,1);
  context.window.FlashNest.resume(); assert.equal(resumed,2);
  assert.equal(typeof api.traceObserver,'function');
- console.log('PASS shell URL encoding, base, offline config, lifecycle contract (mock unit test only)');
+ assert.equal(context.document.documentElement.lang,language);
+ assert.equal(elements.start.textContent,language==='zh-Hans'?'播放 / 开启声音':'Play / enable audio');
+ assert(messages.some(m=>m.type==='ready')); assert(messages.some(m=>m.type==='loaded'));
+ assert.equal(elements.status.textContent,language==='zh-Hans'?'文件已加载。点击“播放”开启声音。':'Movie loaded. Tap Play to start audio.');
+ console.log(language+': PASS shell URL encoding, base, offline config, lifecycle contract (mock unit test only)');
 });

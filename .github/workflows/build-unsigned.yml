@@ -20,8 +20,10 @@ jobs:
         run: |
           python3 scripts/test_static.py
           python3 scripts/test_licenses.py
+          python3 scripts/test_localization.py
           node --check App/Resources/Web/shell.js
           node scripts/test_shell.js
+          node scripts/test_shell.js zh-Hans
       - name: Download pinned XcodeGen without installing globally
         run: |
           curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip

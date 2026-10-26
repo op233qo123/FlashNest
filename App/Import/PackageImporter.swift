@@ -4,22 +4,28 @@ import ZIPFoundation
 struct PackageImporter: Sendable {
     let root: URL
     var limits = ImportLimits()
+    var control: ImportControl? = nil
 
     func importPackage(from source: URL) throws -> GamePackage {
+        try control?.checkpoint(phase: "import.waiting", file: source.lastPathComponent)
         let scoped = source.startAccessingSecurityScopedResource()
         defer { if scoped { source.stopAccessingSecurityScopedResource() } }
         var coordinationError: NSError?
         var result: Result<GamePackage, Error>?
-        NSFileCoordinator().coordinate(readingItemAt: source, options: [], error: &coordinationError) { readable in
+        let coordinator = NSFileCoordinator()
+        control?.coordinate(with: coordinator)
+        defer { control?.coordinate(with: nil) }
+        coordinator.coordinate(readingItemAt: source, options: [], error: &coordinationError) { readable in
             result = Result { try stageAndCommit(readable) }
         }
-        if let coordinationError { throw coordinationError }
-        guard let result else { throw PackageError.corrupt("File provider returned no data") }
+        if let coordinationError { try control?.checkpoint(); throw coordinationError }
+        guard let result else { try control?.checkpoint(); throw PackageError.corrupt("File provider returned no data") }
         return try result.get()
     }
 
     // Internal entry point also exercises rollback without a Files provider in tests.
     func stageAndCommit(_ source: URL) throws -> GamePackage {
+        try control?.checkpoint(phase: "import.checking", file: source.lastPathComponent)
         let fm = FileManager.default
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         let id = UUID()
@@ -36,11 +42,13 @@ struct PackageImporter: Sendable {
         } else if source.pathExtension.lowercased() == "swf", values.isRegularFile == true {
             try copyFolderFile(source, to: content.appendingPathComponent(source.lastPathComponent))
         } else { throw PackageError.unsupported(source.lastPathComponent) }
+        try control?.checkpoint(phase: "import.validating")
         let movies = try discoverMovies(content)
         guard let first = movies.first else { throw PackageError.noMovies }
         let package = GamePackage(id: id, title: source.deletingPathExtension().lastPathComponent,
                                   importedAt: Date(), movies: movies, selectedMovie: first)
         try JSONEncoder().encode(package).write(to: stage.appendingPathComponent("manifest.json"), options: .atomic)
+        try control?.checkpoint(phase: "import.finishing")
         try fm.moveItem(at: stage, to: root.appendingPathComponent(id.uuidString, isDirectory: true))
         return package
     }
@@ -56,6 +64,7 @@ struct PackageImporter: Sendable {
         var count = 0
         var total: UInt64 = 0
         for case let file as URL in enumerator {
+            try control?.checkpoint()
             count += 1
             guard count <= limits.files else { throw PackageError.limit("file count") }
             let prefix = source.standardizedFileURL.path + "/"
@@ -78,6 +87,7 @@ struct PackageImporter: Sendable {
     }
 
     @discardableResult private func copyFolderFile(_ source: URL, to target: URL, budget: UInt64? = nil) throws -> UInt64 {
+        try control?.checkpoint(phase: "import.copying", file: source.lastPathComponent)
         try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
         guard FileManager.default.createFile(atPath: target.path, contents: nil) else { throw PackageError.corrupt(target.path) }
         let input = try FileHandle(forReadingFrom: source)
@@ -85,6 +95,7 @@ struct PackageImporter: Sendable {
         defer { try? input.close(); try? output.close() }
         var size: UInt64 = 0
         while let data = try input.read(upToCount: 65536), !data.isEmpty {
+            try control?.checkpoint(addingBytes: UInt64(data.count))
             size += UInt64(data.count)
             guard size <= limits.fileBytes, size <= (budget ?? limits.totalBytes) else { throw PackageError.limit(source.lastPathComponent) }
             try output.write(contentsOf: data)
@@ -99,6 +110,7 @@ struct PackageImporter: Sendable {
         var total: UInt64 = 0
         var count = 0
         for entry in archive {
+            try control?.checkpoint(phase: "import.extracting", file: entry.path)
             count += 1
             guard count <= limits.files else { throw PackageError.limit("file count") }
             let path = try registry.register(entry.path, limits: limits)
@@ -119,6 +131,7 @@ struct PackageImporter: Sendable {
             defer { try? output.close() }
             var written: UInt64 = 0
             let checksum = try archive.extract(entry, bufferSize: 65536) { data in
+                try control?.checkpoint(addingBytes: UInt64(data.count))
                 let bytes = UInt64(data.count)
                 guard bytes <= limits.fileBytes - written, bytes <= limits.totalBytes - total else { throw PackageError.limit(path) }
                 written += bytes; total += bytes
@@ -136,6 +149,7 @@ struct PackageImporter: Sendable {
         var movies: [String] = []
         let prefix = content.path + "/"
         for case let file as URL in enumerator where file.pathExtension.lowercased() == "swf" {
+            try control?.checkpoint()
             guard try file.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true else { continue }
             let handle = try FileHandle(forReadingFrom: file)
             defer { try? handle.close() }
