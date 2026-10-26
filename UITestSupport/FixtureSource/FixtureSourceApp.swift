@@ -1,0 +1,50 @@
+import SwiftUI
+import Foundation
+
+/// Installed only by the diagnostic UI workflow. Its separate app sandbox is
+/// the source of Files selections; it never calls FlashNest or its importer.
+@main struct FixtureSourceApp: App {
+    @State private var state = "Preparing cross-app fixture…"
+    @State private var ready = false
+
+    var body: some Scene {
+        WindowGroup {
+            VStack(spacing: 20) {
+                Text("FlashNest Source").font(.title)
+                Text(state).accessibilityIdentifier(ready ? "source-ready" : "source-status")
+                Text("Documents / FlashNest Cross-App Fixture")
+            }
+            .padding()
+            .task {
+                guard !ready else { return }
+                do {
+                    try await Task.detached(priority: .userInitiated) { try CrossAppFixtureSeed.prepare() }.value
+                    state = "Cross-app fixture ready"
+                    ready = true
+                } catch {
+                    state = "Fixture creation failed: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+}
+
+private enum CrossAppFixtureSeed {
+    static func prepare() throws {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let root = documents.appendingPathComponent("FlashNest Cross-App Fixture", isDirectory: true)
+        let child = root.appendingPathComponent("sub/level2/level3/child.swf")
+        try FileManager.default.createDirectory(at: child.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("FWSfixture-child".utf8).write(to: child)
+        try Data("<fixture>external app nested asset</fixture>".utf8)
+            .write(to: child.deletingLastPathComponent().appendingPathComponent("config.xml"))
+        try Data("Created only by com.flashnest.fixture-source, not FlashNest.\n".utf8)
+            .write(to: root.appendingPathComponent("origin.txt"))
+        let main = root.appendingPathComponent("main.swf")
+        try Data("FWSfixture-main".utf8).write(to: main)
+        let handle = try FileHandle(forWritingTo: main)
+        defer { try? handle.close() }
+        try handle.truncate(atOffset: 44 * 1_048_576)
+        print("FLASHNEST_CROSS_APP_SOURCE ready: 44 MiB + three-level nested child")
+    }
+}

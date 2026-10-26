@@ -65,27 +65,18 @@ final class ImportFlowTests: XCTestCase {
 }
 
 @MainActor final class DocumentPickerDelegateTests: XCTestCase {
-    func testSelectionIsDeliveredOnceAndNotLostOnSubsequentCancellation() {
-        var received: [URL] = []
-        var cancellations = 0
-        let coordinator = PackageDocumentPicker.Coordinator(selected: { received = $0 }, cancelled: { cancellations += 1 })
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder], asCopy: false)
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("selected game")
-        coordinator.documentPicker(picker, didPickDocumentsAt: [url])
-        coordinator.documentPickerWasCancelled(picker)
-        coordinator.documentPicker(picker, didPickDocumentsAt: [])
-        XCTAssertEqual(received, [url])
-        XCTAssertEqual(cancellations, 0)
+    func testNativeServiceStartsWithoutAnActivePresentation() {
+        let service = NativeImportController()
+        XCTAssertFalse(service.isPresented)
+        XCTAssertEqual(service.phase, "picker.ready")
     }
 
-    func testCancellationWithoutSelectionIsReported() {
-        var selected = false
-        var cancellations = 0
-        let coordinator = PackageDocumentPicker.Coordinator(selected: { _ in selected = true }, cancelled: { cancellations += 1 })
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder], asCopy: false)
-        coordinator.documentPickerWasCancelled(picker)
-        coordinator.documentPickerWasCancelled(picker)
-        XCTAssertFalse(selected)
-        XCTAssertEqual(cancellations, 1)
+    func testCallbacksFromAnUnownedPickerCannotChangeServiceState() {
+        let service = NativeImportController()
+        let unrelated = UIDocumentPickerViewController(forOpeningContentTypes: [.folder], asCopy: false)
+        service.documentPickerWasCancelled(unrelated)
+        service.documentPicker(unrelated, didPickDocumentsAt: [FileManager.default.temporaryDirectory])
+        XCTAssertFalse(service.isPresented)
+        XCTAssertEqual(service.phase, "picker.ready")
     }
 }

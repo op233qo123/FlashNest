@@ -37,6 +37,13 @@ jobs:
           device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.2)
           echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
           echo "Selected existing iOS 18.2 device $device_id"
+      - name: Install separate source application for cross-container selection
+        run: |
+          set -euo pipefail
+          device_id='${{ steps.simulator.outputs.device_id }}'
+          xcrun simctl bootstatus "$device_id" -b
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNestFixtureSource -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,id=$device_id" -derivedDataPath build-source -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+          xcrun simctl install "$device_id" build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app
       - name: Tap the real Files Open and Cancel controls
         timeout-minutes: 20
         run: |

@@ -36,8 +36,8 @@ targets:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: FlashNest
-        CFBundleShortVersionString: '1.2'
-        CFBundleVersion: '3'
+        CFBundleShortVersionString: '1.3'
+        CFBundleVersion: '4'
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -54,13 +54,13 @@ targets:
             127.0.0.1:
               NSExceptionAllowsInsecureHTTPLoads: true
         UIApplicationSupportsIndirectInputEvents: true
-        UIFileSharingEnabled: false
+        UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.flashnest.app
-        MARKETING_VERSION: '1.2'
-        CURRENT_PROJECT_VERSION: '3'
+        MARKETING_VERSION: '1.3'
+        CURRENT_PROJECT_VERSION: '4'
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
       configs:
@@ -95,6 +95,26 @@ targets:
         TEST_TARGET_NAME: FlashNest
     dependencies:
       - target: FlashNest
+  FlashNestFixtureSource:
+    type: application
+    platform: iOS
+    sources:
+      - path: UITestSupport/FixtureSource
+        excludes:
+          - Info.plist
+    info:
+      path: UITestSupport/FixtureSource/Info.plist
+      properties:
+        CFBundleDisplayName: FlashNest Source
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flashnest.fixture-source
+        GENERATE_INFOPLIST_FILE: NO
 schemes:
   FlashNest:
     build:
@@ -115,3 +135,7 @@ schemes:
     test:
       targets:
         - FlashNestUITests
+  FlashNestFixtureSource:
+    build:
+      targets:
+        FlashNestFixtureSource: all

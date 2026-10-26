@@ -70,6 +70,5 @@ jobs:
           path: |
             build.log
             test.log
-            TestResults.xcresult
           if-no-files-found: ignore
           retention-days: 7

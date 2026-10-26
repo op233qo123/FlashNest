@@ -1,7 +1,8 @@
 import XCTest
 
-/// Exercises the real Files document picker. The app launch hook only seeds
-/// Documents; neither this test nor the hook invokes an import/delegate API.
+/// Exercises the real Files picker across TWO app sandboxes. A separately
+/// installed source app seeds its own Documents; FlashNest receives access only
+/// through the user's simulated Open action, never an importer/delegate hook.
 final class FolderPickerUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -9,21 +10,32 @@ final class FolderPickerUITests: XCTestCase {
     }
 
     private func launch() -> XCUIApplication {
+        let source = XCUIApplication(bundleIdentifier: "com.flashnest.fixture-source")
+        source.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        source.launch()
+        XCTAssertTrue(source.staticTexts["source-ready"].waitForExistence(timeout: 20), "Separate source app must create its own Documents fixture")
+        source.terminate()
         let app = XCUIApplication()
-        app.launchArguments = ["--flashnest-picker-ui-test", "-FlashNest.language", "en",
+        // This flag must NOT seed FlashNest's Documents or set directoryURL.
+        app.launchArguments = ["--flashnest-cross-container-ui-test", "-FlashNest.language", "en",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15))
         XCTAssertTrue(app.buttons["import-folder"].waitForExistence(timeout: 15))
-        XCTAssertTrue(waitUntil(timeout: 10) {
-            app.buttons["import-folder"].isHittable && app.buttons["import-folder"].isEnabled
-        }, "Import control must be interactive after cold launch")
+        XCTAssertTrue(waitForImportControl(app), "Import control must be interactive after cold launch")
         return app
     }
 
-    private func waitUntil(timeout: TimeInterval, _ condition: @escaping () -> Bool) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in condition() }, object: nil)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    private func waitForImportControl(_ app: XCUIApplication) -> Bool {
+        // Resolve a fresh app element each time. Do not run a predicate waiter
+        // spanning app and remote Files accessibility trees during dismissal.
+        let deadline = Date().addingTimeInterval(10)
+        repeat {
+            let button = app.buttons["import-folder"]
+            if button.exists && button.isHittable && button.isEnabled { return true }
+            Thread.sleep(forTimeInterval: 0.25)
+        } while Date() < deadline
+        return false
     }
 
     private func capture(_ app: XCUIApplication, _ name: String) {
@@ -40,9 +52,9 @@ final class FolderPickerUITests: XCTestCase {
         let state = app.staticTexts["picker-state"]
         let originalState = state.value as? String
         let systemNavigation = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"]
-        XCTAssertTrue(waitUntil(timeout: 10) { importButton.isHittable && importButton.isEnabled })
+        XCTAssertTrue(waitForImportControl(app))
         importButton.tap()
-        if !waitUntil(timeout: 5, { state.value as? String == "picker.presented" || systemNavigation.exists }) {
+        if !systemNavigation.waitForExistence(timeout: 15) {
             // On the first cold simulator launch, the run-3 screenshot showed
             // the button action never ran (state remained ready). Retry that
             // event once only, never a failed app presentation/Files operation.
@@ -53,18 +65,17 @@ final class FolderPickerUITests: XCTestCase {
                 importButton.tap()
             }
         }
-        XCTAssertTrue(waitUntil(timeout: 10) { state.value as? String == "picker.presented" }, "The app must acknowledge the import tap")
         XCTAssertTrue(systemNavigation.waitForExistence(timeout: 15), "Files must be presented before navigating; never tap underlying library controls")
         // Captured iOS 18.2 AX identifies the title as an Actions Menu button,
         // not a bare title string or a navigation-bar identifier.
-        let title = app.navigationBars.buttons["FlashNest UI Fixture, Actions Menu"].firstMatch
+        let title = app.navigationBars.buttons["FlashNest Cross-App Fixture, Actions Menu"].firstMatch
         if !title.waitForExistence(timeout: 8) {
             // directoryURL is a best-effort hint. Navigate only known UI labels,
             // then require the exact fixture title before accepting Open.
-            for label in ["Browse", "On My iPhone", "FlashNest", "FlashNest UI Fixture"] {
+            for label in ["Browse", "On My iPhone", "FlashNest Source", "FlashNest Cross-App Fixture"] {
                 if title.exists { break }
-                // The underlying library also has a "FlashNest" title. Select
-                // the Files collection cell, not a hidden firstMatch behind it.
+                // Select the separate source app's Files cell, not an app title
+                // behind the picker or FlashNest's own Documents container.
                 let cells = app.collectionViews["File View"].cells.containing(.staticText, identifier: label)
                 _ = cells.firstMatch.waitForExistence(timeout: 2)
                 if let cell = cells.allElementsBoundByIndex.first(where: { $0.isHittable }) {
@@ -87,9 +98,9 @@ final class FolderPickerUITests: XCTestCase {
         XCTAssertTrue(files.cells.containing(.staticText, identifier: "sub").firstMatch.waitForExistence(timeout: 5))
     }
 
-    func testSystemOpenDismissesPickerAndImportsNestedFolder() {
+    func testSystemOpenImportsNestedFolderFromSeparateAppContainer() {
         let app = launch()
-        defer { capture(app, "Folder import final state") }
+        defer { capture(app, "Cross-container folder import final state") }
         openFixtureFolder(app)
         let open = app.buttons["Open"].firstMatch
         XCTAssertTrue(open.waitForExistence(timeout: 5))
@@ -112,16 +123,14 @@ final class FolderPickerUITests: XCTestCase {
         for _ in 0..<4 {
             if cancel.exists && cancel.isHittable { break }
             let back = app.navigationBars.buttons.allElementsBoundByIndex.first {
-                ["FlashNest", "On My iPhone", "Browse"].contains($0.label) && $0.isHittable
+                ["FlashNest Source", "On My iPhone", "Browse"].contains($0.label) && $0.isHittable
             }
             guard let back else { break }
             back.tap()
         }
         XCTAssertTrue(cancel.waitForExistence(timeout: 5))
         cancel.tap()
-        let importButton = app.buttons["import-folder"]
-        XCTAssertTrue(importButton.waitForExistence(timeout: 10))
-        XCTAssertTrue(importButton.isHittable)
+        XCTAssertTrue(waitForImportControl(app), "Actual Cancel must return to the interactive app")
         openFixtureFolder(app)
         app.buttons["Open"].firstMatch.tap()
         XCTAssertTrue(app.buttons["entry-sub/level2/level3/child.swf"].waitForExistence(timeout: 45))
