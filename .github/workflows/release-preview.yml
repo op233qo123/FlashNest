@@ -5,7 +5,7 @@ permissions:
   actions: read
   contents: write
 concurrency:
-  group: flashnest-ios-preview-20261026
+  group: flashnest-ios-v1.1-preview
   cancel-in-progress: false
 jobs:
   publish:
@@ -14,10 +14,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      VERIFIED_RUN: '40293637468'
-      VERIFIED_COMMIT: d345a497d56807a886483ea87f87d938719b57b8
-      VERIFIED_SHA256: 724059fdede6969e398538fcef6b1dd4e1f3bc716e010f37fdd08a4d41d9fc89
-      RELEASE_TAG: ios-preview-20261026
+      VERIFIED_RUN: '40298962271'
+      VERIFIED_COMMIT: 239354df932f165dd3b10136be84f0e9b8cebe34
+      VERIFIED_SHA256: f5d87edb1fa585ffc4c1e0eadea3e977dcf6e967a2c83277037864e553f6dc20
+      RELEASE_TAG: ios-v1.1-preview
     steps:
       - name: Verify allowlisted successful build and download its artifact
         shell: bash
@@ -47,7 +47,7 @@ jobs:
           fields = lines[0].split(maxsplit=1) if len(lines) == 1 else []
           if len(fields) != 2 or fields[0] != expected or pathlib.PurePosixPath(fields[1].lstrip('*')).name != ipa.name:
               raise SystemExit('Supplied artifact checksum does not match allowlisted IPA')
-          if ipa.stat().st_size != 11006783 or hashlib.file_digest(ipa.open('rb'), 'sha256').hexdigest() != expected:
+          if ipa.stat().st_size != 14904812 or hashlib.file_digest(ipa.open('rb'), 'sha256').hexdigest() != expected:
               raise SystemExit('IPA size or digest does not match verified successful build')
           shutil.copyfile(ipa, pathlib.Path('release') / ipa.name)
           # Normalize the runner-specific original path into a portable checksum.
@@ -69,8 +69,8 @@ jobs:
           cat > notes.md <<'NOTES'
           iOS 17+ / iPhone、iPad。未签名 IPA，需自行签名后安装。
 
-          已完成 iPhoneOS 构建及 17 项模拟器测试，包括文件夹/ZIP 导入、多 SWF、文本资源和离线拦截。尚未进行实体设备或真实游戏验证；兼容性取决于 Ruffle。
+          新增应用图标、中英文界面、递归文件夹选择与导入进度。已完成 iPhoneOS 构建及 24 项模拟器测试，覆盖导入、多 SWF、文本资源与离线拦截。实体设备上的文件夹导入问题仍待用户复测；尚未验证真实游戏。兼容性取决于 Ruffle。
 
-          构建提交：`d345a497d56807a886483ea87f87d938719b57b8`
+          构建提交：`239354df932f165dd3b10136be84f0e9b8cebe34`
           NOTES
-          gh release create "$RELEASE_TAG" --verify-tag --target "$VERIFIED_COMMIT" --title 'FlashNest iOS Preview' --notes-file notes.md --prerelease release/FlashNest-unsigned.ipa release/FlashNest-unsigned.ipa.sha256
+          gh release create "$RELEASE_TAG" --verify-tag --target "$VERIFIED_COMMIT" --title 'FlashNest iOS 1.1 Preview' --notes-file notes.md --prerelease release/FlashNest-unsigned.ipa release/FlashNest-unsigned.ipa.sha256
