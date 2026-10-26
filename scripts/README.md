@@ -1,58 +1,31 @@
 # Build and verification
 
-The `.github/workflows/build-unsigned.yml` workflow is manual-only. Review GitHub account runner-minute costs before running; macOS builds can
-consume billed minutes. No signing keys are needed.
-The repository root for this workflow must be this `FlashNest` directory.
+## Verified artifact
 
-On a Mac with Xcode and XcodeGen 2.42.0:
+- **1.5 / build 6:** [unsigned IPA](https://github.com/op233qo123/FlashNest/actions/runs/40346370319/artifacts/12663010141), [successful build and 89 tests](https://github.com/op233qo123/FlashNest/actions/runs/40346370319), [source `432a139`](https://github.com/op233qo123/FlashNest/commit/432a139610dcf462b1ea34133369f8abb704fa60).
+- IPA: **15,345,590 bytes**. SHA-256: `4745322f9758225e5f1944b923746895ac7d64005cf9761d9043d91f3bfd4987`.
+- XCTest covers real bundled Ruffle in WKWebView, multi-SWF assets, offline denial, 44 MiB Unicode-path transport, SharedObject save/restore, selected-game import, isolation, deletion safeguards and input models.
+- Three iOS 18.2 UI tests passed on the earlier `0d3c` revision, including cross-app folder import and full-screen controls. UI code was unchanged afterward, but storage lifecycle code changed; those results are not a fresh UI run of `432a139`.
+- Actual-device game playback was confirmed before this update. Version 1.5 save/control behavior on the user's device still requires confirmation. Tests do not promise compatibility with every Flash game or preservation of unsaved progress after force termination.
+
+## Build
+
+Use macOS, Xcode 16.4 and XcodeGen 2.42.0 from this repository root:
 
 ```sh
 python3 scripts/fetch_runtime.py
 python3 scripts/test_static.py
+python3 scripts/test_localization.py
 python3 scripts/test_licenses.py
 node scripts/test_shell.js
+node scripts/test_shell.js zh-Hans
 xcodegen generate
 xcodebuild -project FlashNest.xcodeproj -scheme FlashNest -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
 bash scripts/package_unsigned.sh build/Build/Products/Release-iphoneos/FlashNest.app artifacts/FlashNest-unsigned.ipa
 ```
 
-The IPA contains a real device Mach-O executable, not source renamed as an IPA.
-Unsigned artifacts require an appropriate external signing/install workflow;
-they cannot be installed directly. Packaging rejects simulator builds, missing
-executables, missing runtime, or unexpectedly signed apps.
+The manual `build-unsigned.yml` workflow runs the full simulator XCTest scheme before building the device IPA. Failed tests block packaging; it does not substitute a different simulator when the matching installed runtime is absent. Review runner usage before dispatching. No signing credentials are needed; the resulting IPA requires external signing before installation.
 
-`fetch_runtime.py` re-fetches the official pinned Ruffle archive, checks the
-SHA256 before extracting, rejects unsafe archive entries, and includes upstream
-licenses. No package manager or third-party install script is executed.
+Runtime JS/WASM/source maps are restored from the official SHA-256-pinned Ruffle archive, not committed to Git. Complete license files remain tracked. Packaging rejects simulator executables, missing runtime and unexpectedly signed applications.
 
-## Tests and exact limits
-
-* `test_static.py`: bundled file hashes, WASM signatures, safety configuration,
-  fixture SWF header lengths, and ZIP membership. Passed in Linux.
-* `test_shell.js`: **mock** unit test for shell URL encoding, relative base,
-  config and pause/resume method calls. Not Ruffle compatibility evidence.
-* `make_fixtures.py`: reproducibly generates original AVM1 main + child SWFs and
-  sibling text. Import `fixtures/multi-swf.zip` or its extracted directory.
-* `serve_fixture.py`: loopback-only local fixture server on port 8766.
-* `test_runtime_browser.py`: **actual Ruffle**, checks real bundled WASM request,
-  child SWF trace, sibling text request, and pause/resume. Uses preinstalled
-  Python Playwright and Chromium. Run the server first, then this script. This
-  test requires a working local browser. Actual iOS playback remains unverified.
-
-No successful Xcode build or iOS device test is currently recorded.
-Touch-key delivery, WebKit audio gestures, SharedObject persistence, import flow,
-and WKWebView WASM behavior require actual simulator/device acceptance tests.
-The script keeps runtime integration testing distinct from mock/static tests.
-
-## Manual workflow simulator gate
-
-Before the device build, CI selects Xcode 16.4 explicitly, discovers an available
-iPhone by UDID whose installed runtime matches its iOS Simulator SDK, and runs
-the complete FlashNest XCTest scheme. It fails closed if that compatible runtime
-is absent. The test step is limited to 15 minutes (overall job: 30 minutes);
-individual tests have 60-second default / 120-second maximum allowances. Failed
-tests block IPA packaging. Failure artifacts include test logs and xcresult.
-The checkout and upload-artifact actions are pinned to commits verified against
-their official v4 refs on 2026-10-26. This workflow has not been run here.
-
-Runtime JavaScript, WebAssembly and source maps are intentionally excluded from Git. The manual workflow restores the exact SHA-256-pinned official archive before validation and bundles it into the iOS app. License/notice files remain tracked and are checked before build.
+Static checks and `test_shell.js` are not iOS runtime tests. `fixtures/` contains original synthetic SWFs for reproducible testing, not user games. The separate `diagnose-picker-ios18.yml` workflow runs the real Files picker and full-screen UI on an installed iOS 18.2 simulator.
