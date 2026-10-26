@@ -28,10 +28,9 @@ final class FolderPickerUITests: XCTestCase {
 
     private func openFixtureFolder(_ app: XCUIApplication) {
         app.buttons["import-folder"].tap()
-        // iOS 18.2 uses a constant navigation-bar identifier rather than its
-        // displayed title. Require the exact title *inside* that bar instead.
-        let title = app.navigationBars.descendants(matching: .any)
-            .matching(NSPredicate(format: "label == %@", "FlashNest UI Fixture")).firstMatch
+        // Captured iOS 18.2 AX identifies the title as an Actions Menu button,
+        // not a bare title string or a navigation-bar identifier.
+        let title = app.navigationBars.buttons["FlashNest UI Fixture, Actions Menu"].firstMatch
         if !title.waitForExistence(timeout: 8) {
             // directoryURL is a best-effort hint. Navigate only known UI labels,
             // then require the exact fixture title before accepting Open.
@@ -52,6 +51,11 @@ final class FolderPickerUITests: XCTestCase {
         }
         capture(app, "Files picker before Open")
         XCTAssertTrue(title.waitForExistence(timeout: 10), "Must select the seeded folder, never an arbitrary Files location")
+        XCTAssertTrue(title.isHittable, "The fixture folder must be the visible location")
+        XCTAssertTrue(app.otherElements["DOC.browsingRoot Source: com.apple.FileProvider.LocalStorage, Title: FlashNest UI Fixture"].exists)
+        let files = app.collectionViews["File View"]
+        XCTAssertTrue(files.cells.containing(.staticText, identifier: "main.swf").firstMatch.exists)
+        XCTAssertTrue(files.cells.containing(.staticText, identifier: "sub").firstMatch.exists)
     }
 
     func testSystemOpenDismissesPickerAndImportsNestedFolder() {
