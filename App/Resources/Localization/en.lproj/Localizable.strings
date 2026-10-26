@@ -215,3 +215,7 @@
 "This game's files were removed. Its saves are retained for export. Import a compatible game separately before restoring a save." = "This game's files were removed. Its saves are retained for export. Import a compatible game separately before restoring a save.";
 
 "Saving did not finish safely. Close and reopen FlashNest before opening this game again." = "Saving did not finish safely. Close and reopen FlashNest before opening this game again.";
+
+"The web player stopped unexpectedly. The cause is unknown. Close this game and reopen it." = "The web player stopped unexpectedly. The cause is unknown. Close this game and reopen it.";
+
+"The web player stopped. Previous saves were kept, but unsaved progress may be lost." = "The web player stopped. Previous saves were kept, but unsaved progress may be lost.";

@@ -8,14 +8,23 @@ const settle = () => new Promise(resolve => setImmediate(resolve));
 
 async function exercise(timing) {
   const controls = [], elements = {}, messages = [], keyEvents = [], listeners = new Map(), windowListeners = new Map(), documentListeners = new Map(), stored = new Map();
-  let finishLoad, config, suspended = 0, resumed = 0, removed = 0, appended, fetchResponse = {ok:true}, fetchError;
+  let finishLoad, config, suspended = 0, resumed = 0, removed = 0, appended, fetchResponse = {ok:true}, fetchError, fetchCalls = 0, canvasFocusCalls = 0;
+  const canvasListeners = new Map();
+  const canvas = {
+    clientWidth:390, clientHeight:844, width:1170, height:2532,
+    focus() { canvasFocusCalls++; }, // Deliberately unfocusable, like pinned Ruffle's canvas.
+    dispatchEvent:event => player.dispatchEvent(event),
+    addEventListener:(name, callback) => canvasListeners.set(name, callback)
+  };
   const player = {
-    ruffle: () => api, focus() {}, remove() { removed++; },
+    ruffle: () => api, focus() { context.document.activeElement = player; }, remove() { removed++; },
+    shadowRoot:{querySelector:selector => selector === 'canvas' ? canvas : null},
     addEventListener(type, callback, options) {
       const entries = listeners.get(type) || [];
       entries.push({callback, once:options?.once}); listeners.set(type, entries);
     },
     dispatchEvent(event) {
+      if (event.type === 'keydown') assert.equal(context.document.activeElement, player, 'Focus must be restored before dispatch');
       if (event.type.startsWith('key')) keyEvents.push(event);
       for (const listener of [...(listeners.get(event.type) || [])]) {
         if (listener.once) listeners.set(event.type, listeners.get(event.type).filter(x => x !== listener));
@@ -50,7 +59,8 @@ async function exercise(timing) {
   context.window = {
     webkit:{messageHandlers:{flashnest:{postMessage:message => messages.push(message)}}},
     localStorage:{get length() { return stored.size; }, key:index => [...stored.keys()][index], getItem:key => stored.get(key) ?? null, setItem:(key,value) => stored.set(key,value), removeItem:key => stored.delete(key)},
-    fetch:async () => { if (fetchError) throw fetchError; return fetchResponse; },
+    fetch:async () => { fetchCalls++; if (fetchError) throw fetchError; return fetchResponse; },
+    devicePixelRatio:3,
     addEventListener:(type, callback) => windowListeners.set(type, callback),
     setTimeout:() => 1, clearTimeout() {}
   };
@@ -123,7 +133,7 @@ async function exercise(timing) {
     assert.equal(elements.status.textContent, language === 'zh-Hans' ? 'WASM 和渲染器已初始化，正在加载主 SWF。' : 'Bundled WASM and renderer initialized; main SWF request started.');
     player.dispatchEvent({type:'loadeddata'});
   }
-  assert.equal(messages.at(-1).type, 'loaded', 'Initialization must not overwrite early SWF completion');
+  assert.equal(messages.filter(m => m.type !== 'diagnostic').at(-1).type, 'loaded', 'Initialization must not overwrite early SWF completion');
   player.dispatchEvent({type:'loadeddata'});
   assert.equal(messages.filter(m => m.type === 'loaded').length, 1, 'Completion is reported once');
   assert.equal(elements.status.textContent, language === 'zh-Hans' ? '文件已加载。点击“播放”开启声音。' : 'Movie loaded. Tap Play to start audio.');
@@ -134,6 +144,10 @@ async function exercise(timing) {
   context.window.FlashNest.resume(); assert.equal(resumed, 3);
 
   const input = context.window.FlashNest;
+  context.document.activeElement = {outside:true};
+  input.key('KeyA', true);
+  assert.equal(context.document.activeElement, player, 'Virtual keydown must restore Ruffle host focus');
+  assert.equal(canvasFocusCalls, 0, "Do not try to focus Ruffle's unfocusable canvas");
   input.key('KeyA', true); input.key('KeyA', true);
   assert.equal(keyEvents.length, 1); assert.equal(keyEvents[0].key, 'a'); assert.equal(keyEvents[0].keyCode, 65);
   input.key('KeyA', false); input.key('ShiftLeft', true); input.key('KeyZ', true);
@@ -150,7 +164,10 @@ async function exercise(timing) {
 
   if (timing === 'delayed') {
     const sanitizedURL = config.url.replace('/cap/', '/');
-    fetchResponse = {ok:false, status:404, url:config.url};
+    fetchResponse = {ok:false, status:404, url:config.url, headers:{get:() => '44'},
+      clone() { throw new Error('Must not clone a game response'); },
+      arrayBuffer() { throw new Error('Must not buffer a game response'); },
+      get body() { throw new Error('Must not consume the response stream'); }};
     assert.equal(await context.window.fetch(config.url), fetchResponse, 'Diagnostic redaction must not alter the response');
     assert(messages.at(-1).message.includes('404'));
     assert(messages.at(-1).message.includes(sanitizedURL), 'Keep the resource path in diagnostics');
@@ -167,6 +184,21 @@ async function exercise(timing) {
     const remoteURL = config.url.replace('http://127.0.0.1:8766', 'https://example.com');
     windowListeners.get('error')({message:'Remote: ' + remoteURL});
     assert(messages.at(-1).message.includes(remoteURL), 'Do not rewrite unrelated remote URLs');
+
+    fetchError = undefined;
+    const callsBefore = fetchCalls;
+    const reportsBefore = messages.length;
+    for (let i = 0; i < 100; i++) await context.window.fetch(config.url + '?privateSave=do-not-log');
+    assert.equal(fetchCalls - callsBefore, 100, 'Diagnostics must forward each fetch exactly once');
+    assert(messages.length - reportsBefore <= 61, 'SWF request diagnostics must have a finite budget');
+    assert(messages.every(m => !m.message.includes('privateSave') && !m.message.includes('do-not-log')));
+    assert(messages.some(m => m.message.includes('status=404') || m.message.includes('状态=404')));
+    assert(messages.some(m => m.message.includes('bytes=44') || m.message.includes('字节数=44')));
+    for (let i = 0; i < 12; i++) canvasListeners.get('webglcontextlost')({preventDefault() { throw new Error('Do not change renderer behavior'); }});
+    assert.equal(messages.filter(m => m.message.includes('webglcontextlost')).length, 4, 'Context-loss diagnostics are bounded');
+    for (let i = 0; i < 40; i++) { input.pause(); input.resume(); }
+    assert(messages.filter(m => m.message.startsWith('Player state') || m.message.startsWith('播放器状态')).length <= 24);
+    assert(messages.some(m => m.message.includes('1170x2532') && m.message.includes('DPR=3')));
   }
   input.key('Enter', true);
   const firstClose = input.shutdownAndCapture();
@@ -179,7 +211,7 @@ async function exercise(timing) {
 
 (async () => {
   for (const timing of ['delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake']) await exercise(timing);
-  console.log(language + ': PASS shell URL/base, offline config, key lifecycle, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
+  console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, bounded scene diagnostics, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
 require("./test_save_bridge.js");

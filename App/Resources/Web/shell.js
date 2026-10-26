@@ -7,11 +7,11 @@
   const strings = {
     en: {
       title:'FlashNest Player', preparing:'Preparing offline runtime…', play:'Play / enable audio', pause:'Pause', resume:'Resume', action:'Action', enter:'Enter', stage:'Flash player', controls:'Game controls',
-      offline:'Offline policy blocked {0}. Remote servers are unavailable; include local assets in the package.', jsError:'JavaScript/resource error: {0}', unknown:'unknown', runtimeError:'Runtime error: {0}', wasmStart:'Runtime WASM fetch started: {0}', wasmResponse:'Runtime WASM response: {0}; bytes={1}', assetFailed:'Asset request failed ({0}): {1}', assetBlocked:'Asset request blocked or unavailable: {0}', invalid:'Invalid package or entry SWF.', unsafe:'Unsafe entry path.', missing:'Bundled runtime missing or blocked.', ready:'Offline runtime ready.', initializing:'Initializing bundled WASM and renderer…', pending:'Runtime initialization still pending after 20 seconds; download progress={0}; visible={1}', unavailable:'unavailable', initialized:'Bundled WASM and renderer initialized; main SWF request started.', loaded:'Movie loaded. Tap Play to start audio.', saveReady:'Local save storage ready.', saveTimeout:'Native save preparation timed out.', loadError:'Unable to load movie: {0}'
+      offline:'Offline policy blocked {0}. Remote servers are unavailable; include local assets in the package.', jsError:'JavaScript/resource error: {0}', unknown:'unknown', runtimeError:'Runtime error: {0}', wasmStart:'Runtime WASM fetch started: {0}', wasmResponse:'Runtime WASM response: {0}; bytes={1}', assetFailed:'Asset request failed ({0}): {1}', assetBlocked:'Asset request blocked or unavailable: {0}', invalid:'Invalid package or entry SWF.', unsafe:'Unsafe entry path.', missing:'Bundled runtime missing or blocked.', ready:'Offline runtime ready.', initializing:'Initializing bundled WASM and renderer…', pending:'Runtime initialization still pending after 20 seconds; download progress={0}; visible={1}', unavailable:'unavailable', initialized:'Bundled WASM and renderer initialized; main SWF request started.', loaded:'Movie loaded. Tap Play to start audio.', saveReady:'Local save storage ready.', saveTimeout:'Native save preparation timed out.', swfRequest:'SWF request #{0}: {1}', swfResponse:'SWF response headers #{0}: status={1}; bytes={2}; {3}', swfFailure:'SWF fetch failed #{0}: {1}', swfLimit:'Further SWF request diagnostics omitted (limit reached).', graphicsEvent:'Renderer event: {0}', playerState:'Player state ({0}): started={1}; paused={2}; hidden={3}; focused={4}; canvasCSS={5}; canvasPixels={6}; DPR={7}', loadError:'Unable to load movie: {0}'
     },
     'zh-Hans': {
       title:'FlashNest 播放器', preparing:'正在准备离线运行环境…', play:'播放 / 开启声音', pause:'暂停', resume:'继续', action:'动作', enter:'确认', stage:'Flash 播放区域', controls:'游戏按键',
-      offline:'离线策略已拦截 {0}。无法连接远程服务器，请将资源一并导入。', jsError:'脚本或资源错误：{0}', unknown:'未知', runtimeError:'运行错误：{0}', wasmStart:'正在加载 WASM：{0}', wasmResponse:'WASM 响应：{0}；字节数={1}', assetFailed:'资源请求失败（{0}）：{1}', assetBlocked:'资源被拦截或不可用：{0}', invalid:'游戏包或入口 SWF 无效。', unsafe:'入口路径不安全。', missing:'内置运行环境缺失或被拦截。', ready:'离线运行环境已就绪。', initializing:'正在初始化 WASM 和渲染器…', pending:'初始化已超过 20 秒；下载进度={0}；页面可见={1}', unavailable:'不可用', initialized:'WASM 和渲染器已初始化，正在加载主 SWF。', loaded:'文件已加载。点击“播放”开启声音。', saveReady:'本地存档已准备就绪。', saveTimeout:'原生存档准备超时。', loadError:'无法加载文件：{0}'
+      offline:'离线策略已拦截 {0}。无法连接远程服务器，请将资源一并导入。', jsError:'脚本或资源错误：{0}', unknown:'未知', runtimeError:'运行错误：{0}', wasmStart:'正在加载 WASM：{0}', wasmResponse:'WASM 响应：{0}；字节数={1}', assetFailed:'资源请求失败（{0}）：{1}', assetBlocked:'资源被拦截或不可用：{0}', invalid:'游戏包或入口 SWF 无效。', unsafe:'入口路径不安全。', missing:'内置运行环境缺失或被拦截。', ready:'离线运行环境已就绪。', initializing:'正在初始化 WASM 和渲染器…', pending:'初始化已超过 20 秒；下载进度={0}；页面可见={1}', unavailable:'不可用', initialized:'WASM 和渲染器已初始化，正在加载主 SWF。', loaded:'文件已加载。点击“播放”开启声音。', saveReady:'本地存档已准备就绪。', saveTimeout:'原生存档准备超时。', swfRequest:'SWF 请求 #{0}：{1}', swfResponse:'SWF 响应头 #{0}：状态={1}；字节数={2}；{3}', swfFailure:'SWF 请求失败 #{0}：{1}', swfLimit:'后续 SWF 请求诊断已省略（达到数量上限）。', graphicsEvent:'渲染器事件：{0}', playerState:'播放器状态（{0}）：已开始={1}；暂停={2}；隐藏={3}；焦点={4}；画布CSS={5}；画布像素={6}；DPR={7}', loadError:'无法加载文件：{0}'
     }
   };
   const t = (key, ...values) => strings[language][key].replace(/\{(\d+)\}/g, (_, i) => String(values[Number(i)] ?? ''));
@@ -30,19 +30,50 @@
   Object.freeze(keys);
   const diagnosticRoot = new URL('../', location.href);
   const privateURLPrefix = diagnosticRoot.origin + diagnosticRoot.pathname;
-  function report(type, message) {
+  function report(type, message, updateStatus = true) {
     // Remove only this app's exact capability-bearing URL prefix, before
     // truncation. Keep resource paths/status and unrelated remote URLs intact.
     const text = String(message).split(privateURLPrefix).join(diagnosticRoot.origin + '/').slice(0, 1024);
-    status.textContent = text;
+    if (updateStatus) status.textContent = text;
     window.webkit?.messageHandlers?.flashnest?.postMessage({type, message:text});
+  }
+  let swfRequestID = 0, swfReports = 0, stateReports = 0, graphicsReports = 0;
+  function reportSWF(message) {
+    if (swfReports < 60) report('diagnostic', message, false);
+    else if (swfReports === 60) report('diagnostic', t('swfLimit'), false);
+    swfReports = Math.min(swfReports + 1, 61);
+  }
+  function reportState(reason) {
+    if (!player || stateReports >= 24) return;
+    stateReports++;
+    const canvas = player.shadowRoot?.querySelector('canvas');
+    report('diagnostic', t('playerState', reason, started, paused, !!document.hidden,
+      document.activeElement === player, canvas ? `${canvas.clientWidth}x${canvas.clientHeight}` : t('unavailable'),
+      canvas ? `${canvas.width}x${canvas.height}` : t('unavailable'), window.devicePixelRatio || 1), false);
+  }
+  function watchRenderer() {
+    const canvas = player?.shadowRoot?.querySelector('canvas');
+    if (!canvas) return;
+    for (const name of ['webglcontextlost', 'webglcontextrestored']) {
+      // Observe only: do not preventDefault, replace the renderer, or reload.
+      canvas.addEventListener(name, () => {
+        if (graphicsReports++ < 4) report('diagnostic', t('graphicsEvent', name), false);
+      });
+    }
+    reportState('renderer-ready');
   }
   function key(code, down) {
     if (!Object.hasOwn(keys, code) || !player || closing || typeof down !== 'boolean') return;
     if (down === held.has(code)) return;
     if (down) held.add(code); else held.delete(code);
     const target = player.shadowRoot?.querySelector('canvas') || player;
-    if (down) target.focus();
+    // Ruffle tracks focus on its shadow host; its canvas has no tabindex.
+    // Focusing the canvas can leave virtual keys ignored after focus is lost.
+    if (down) {
+      const hadFocus = document.activeElement === player;
+      player.focus({preventScroll:true});
+      if (!hadFocus) reportState('virtual-key-focus');
+    }
     target.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', {
       key:code === 'Space' ? ' ' : code.startsWith('Key') ? (held.has('ShiftLeft') || held.has('ShiftRight') ? code.slice(3) : code.slice(3).toLowerCase()) : code.startsWith('Digit') ? code.slice(5) : code.startsWith('Shift') ? 'Shift' : code,
       code, keyCode:keys[code], which:keys[code], shiftKey:held.has('ShiftLeft') || held.has('ShiftRight'),
@@ -51,11 +82,13 @@
   }
   function releaseKeys() { for (const code of [...held]) key(code, false); }
   function reconcile() { if (!player || !started || closing) return; if (paused || backgrounded) player.ruffle().suspend(); else player.ruffle().resume(); }
-  function pause() { releaseKeys(); paused = true; reconcile(); }
-  function resume() { paused = false; reconcile(); }
+  function pause() { const changed = !paused; releaseKeys(); paused = true; reconcile(); if (changed) reportState('pause'); }
+  function resume() { const changed = paused; paused = false; reconcile(); if (changed) reportState('resume'); }
   function start(fromGesture = false) {
     if (closing) return;
+    const changed = !started || paused;
     started = true; paused = false; reconcile(); player?.focus();
+    if (changed) reportState('start');
     // A native evaluateJavaScript call is not a trusted audio gesture. Keep the
     // one small web affordance until the user actually taps the web content.
     if (fromGesture) document.getElementById('start').hidden = true;
@@ -82,7 +115,7 @@
   window.FlashNest = Object.freeze({start:() => start(false), pause, resume, key, releaseKeys, shutdownAndCapture, confirmSaveReady});
   document.getElementById('start').onclick = () => start(true);
   window.addEventListener('blur', releaseKeys);
-  document.addEventListener('visibilitychange', () => { backgrounded = document.hidden; releaseKeys(); reconcile(); });
+  document.addEventListener('visibilitychange', () => { backgrounded = document.hidden; releaseKeys(); reconcile(); reportState('visibility'); });
   document.addEventListener('pointercancel', releaseKeys);
   document.addEventListener('lostpointercapture', releaseKeys, true);
   document.addEventListener('securitypolicyviolation', e => report('diagnostic', t('offline', e.blockedURI || e.violatedDirective)));
@@ -93,11 +126,25 @@
   window.fetch = async (...args) => {
     const resource = String(args[0]?.url || args[0]);
     const runtimeAsset = /\.wasm(?:[?#]|$)/.test(resource);
+    let parsed;
+    try { parsed = new URL(resource, location.href); } catch (_) { /* Keep fetch's own error behavior. */ }
+    const isSWF = parsed && /\.swf$/i.test(parsed.pathname);
+    const requestID = isSWF ? ++swfRequestID : 0;
+    // Do not log query values, credentials, response bodies, or duplicate data.
+    const assetPath = isSWF ? parsed.origin + parsed.pathname : '';
+    if (isSWF) reportSWF(t('swfRequest', requestID, assetPath));
     if (runtimeAsset) report('diagnostic', t('wasmStart', resource.split('/').pop()));
     try { const response = await originalFetch(...args);
       if (runtimeAsset) report('diagnostic', t('wasmResponse', response.status, response.headers.get('content-length') || t('unknown')));
-      if (!response.ok) report('diagnostic', t('assetFailed', response.status, response.url)); return response; }
-    catch (error) { report('diagnostic', t('assetBlocked', String(args[0]?.url || args[0]).slice(0,300))); throw error; }
+      // fetch resolves at response headers, NOT at completed SWF decoding.
+      if (isSWF) reportSWF(t('swfResponse', requestID, response.status, response.headers?.get('content-length') || t('unknown'), assetPath));
+      else if (!response.ok) report('diagnostic', t('assetFailed', response.status, response.url));
+      return response; }
+    catch (error) {
+      if (isSWF) reportSWF(t('swfFailure', requestID, assetPath));
+      else report('diagnostic', t('assetBlocked', String(args[0]?.url || args[0]).slice(0,300)));
+      throw error;
+    }
   };
   async function boot() {
     const query = new URLSearchParams(location.search);
@@ -159,6 +206,7 @@
       autoplay:'off', unmuteOverlay:'visible', backgroundExecutionMode:'none', upgradeToHttps:false,
       showSwfDownload:false, contextMenu:'off', logLevel:'warn'});
     } finally { window.clearTimeout?.(loadWatchdog); }
+    watchRenderer();
     // A small movie can dispatch loadeddata before load() resolves; do not
     // overwrite the completed state with an earlier initialization milestone.
     if (!movieLoaded) report('diagnostic', t('initialized'));

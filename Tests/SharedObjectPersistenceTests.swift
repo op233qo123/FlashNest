@@ -135,6 +135,50 @@ import CryptoKit
         XCTAssertNotNil(reopened.failure)
     }
 
+    /// Inject the public delegate signal; this is not an OOM reproduction.
+    func testProcessTerminationKeepsNativeArchiveAndAllowsCleanReopen() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = SaveStore(root: root.appendingPathComponent("save"))
+        let packages = root.appendingPathComponent("packages")
+        let package = try fixturePackage(in: packages)
+        let content = packages.appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        _ = try store.persistLatest(SaveCapture(version: 1, entries: []), package: package)
+        let current = store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")
+        let original = try Data(contentsOf: current)
+        let session = PlayerSession(saveStore: store)
+        defer { session.stop() }
+        await session.start(package: package, contentRoot: content, storageOnly: true)
+        let deadline = Date().addingTimeInterval(15)
+        while !session.saveReady, session.failure == nil, Date() < deadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertTrue(session.saveReady)
+        let view = try XCTUnwrap(session.webView)
+        // A stale callback from some other page must not affect this session.
+        session.webViewWebContentProcessDidTerminate(WKWebView())
+        XCTAssertNil(session.failure)
+        session.webViewWebContentProcessDidTerminate(view)
+        XCTAssertFalse(session.saveReady)
+        XCTAssertNotNil(session.saveFailure)
+        XCTAssertTrue(session.diagnostics.contains { $0.contains("cause=unknown") })
+        let saved = await session.closeAndSave()
+        XCTAssertFalse(saved)
+        XCTAssertFalse(session.restartRequired, "Confirmed process death is not an uncertain flush timeout")
+        XCTAssertEqual(try Data(contentsOf: current), original)
+        let reopened = PlayerSession(saveStore: store)
+        defer { reopened.stop() }
+        await reopened.start(package: package, contentRoot: content, storageOnly: true)
+        let reopenedDeadline = Date().addingTimeInterval(15)
+        while !reopened.saveReady, reopened.failure == nil, Date() < reopenedDeadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertTrue(reopened.saveReady)
+        XCTAssertNil(reopened.failure)
+        XCTAssertEqual(try Data(contentsOf: current), original)
+        try await reopened.closeWithoutSaving()
+    }
+
     private func fixturePackage(in root: URL) throws -> GamePackage {
         let fixtureRoot = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "fixtures", withExtension: nil))
         return try PackageImporter(root: root).stageAndCommit(fixtureRoot.appendingPathComponent("shared-object"))

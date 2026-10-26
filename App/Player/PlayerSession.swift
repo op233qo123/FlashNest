@@ -12,6 +12,7 @@ import SwiftUI
     private var server: LoopbackServer?
     private var generation = UUID()
     private var ready = false
+    private var processTerminated = false
     @Published private(set) var saveFailure: String?
     @Published private(set) var saveReady = false
     @Published private(set) var restartRequired = false
@@ -49,7 +50,7 @@ import SwiftUI
         ownsPackageLease = true
         currentPackage = package; currentContentRoot = contentRoot
         pendingRestoreID = nil
-        saveReady = false; saveFailure = nil
+        saveReady = false; saveFailure = nil; processTerminated = false
         let attempt = UUID()
         generation = attempt
         ready = false; isLoaded = false; paused = false; failure = nil; status = L10n.text("Starting local player…")
@@ -182,6 +183,9 @@ import SwiftUI
     }
 
     private func captureAndPersistIfReady() async -> Bool {
+        // A terminated page cannot provide a trustworthy final capture. Never
+        // turn process loss into an empty replacement of an existing archive.
+        guard !processTerminated else { return false }
         guard let view = webView, let package = currentPackage else { return saveFailure == nil }
         guard saveReady else {
             // No game starts before saveReady. Closing during bootstrap must
@@ -192,6 +196,7 @@ import SwiftUI
         var shutdownConfirmed = false
         do {
             let object = try await captureObject(from: view)
+            guard !processTerminated else { return false }
             shutdownConfirmed = true
             let data = try JSONSerialization.data(withJSONObject: object)
             guard data.count <= SaveStore.maximumArchiveBytes else { throw SaveStoreError.limit("archive size") }
@@ -210,7 +215,11 @@ import SwiftUI
         } catch {
             // WebKit errors may contain capability URLs; display only a
             // stable local message and retain all previous native snapshots.
-            if !shutdownConfirmed {
+            if processTerminated {
+                // WebKit confirmed the old process is gone: unlike an unknown
+                // flush timeout, there is no old page to quarantine across retry.
+                saveFailure = L10n.text("The web player stopped. Previous saves were kept, but unsaved progress may be lost.")
+            } else if !shutdownConfirmed {
                 Self.blockedPackageIDs.insert(package.id)
                 restartRequired = true
                 saveFailure = L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again.")
@@ -308,7 +317,7 @@ import SwiftUI
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard message.frameInfo.isMainFrame,
+        guard !processTerminated, message.frameInfo.isMainFrame,
               let current = message.frameInfo.request.url, let shell = server?.shellURL,
               current.scheme == shell.scheme, current.host == shell.host, current.port == shell.port,
               current.path == shell.path,
@@ -332,6 +341,7 @@ import SwiftUI
                     guard self.generation == attempt else { return }
                     self.saveReady = true
                 } catch {
+                    guard self.generation == attempt else { return }
                     self.saveFailure = L10n.text("Save restoration could not be confirmed. The game was not started.")
                     self.failure = self.saveFailure
                     self.stop()
@@ -357,7 +367,17 @@ import SwiftUI
     }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { record(error.localizedDescription); failure = L10n.error(error) }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { record(error.localizedDescription); failure = L10n.error(error) }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { failure = L10n.text("The web player stopped, possibly because this game exceeded memory limits. Close and reopen it.") }
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        guard self.webView === webView, !processTerminated else { return }
+        // Public WebKit callback supplies no termination reason. Record only
+        // bounded state, never a URL, capability, save payload or game filename.
+        record("Web process terminated: cause=unknown, loaded=\(isLoaded), ready=\(ready), paused=\(paused), saveReady=\(saveReady), saving=\(saveTask != nil), profiles=\(PackageWebKitProfiles.shared.retainedCount)")
+        processTerminated = true
+        generation = UUID() // invalidate any pending bootstrap acknowledgement
+        ready = false; isLoaded = false; saveReady = false
+        failure = L10n.text("The web player stopped unexpectedly. The cause is unknown. Close this game and reopen it.")
+        saveFailure = L10n.text("The web player stopped. Previous saves were kept, but unsaved progress may be lost.")
+    }
 }
 
 

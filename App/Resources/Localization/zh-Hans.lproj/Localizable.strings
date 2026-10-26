@@ -215,3 +215,7 @@
 "This game's files were removed. Its saves are retained for export. Import a compatible game separately before restoring a save." = "此游戏的文件已删除，但存档已保留，可继续导出。恢复存档前，请先导入兼容的游戏。";
 
 "Saving did not finish safely. Close and reopen FlashNest before opening this game again." = "保存未能安全完成。请关闭并重新打开 FlashNest，再启动此游戏。";
+
+"The web player stopped unexpectedly. The cause is unknown. Close this game and reopen it." = "网页播放器意外停止，原因尚不明确。请关闭游戏后重新打开。";
+
+"The web player stopped. Previous saves were kept, but unsaved progress may be lost." = "网页播放器已停止。已有存档已保留，但尚未保存的进度可能丢失。";
