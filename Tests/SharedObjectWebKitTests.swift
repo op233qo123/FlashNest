@@ -232,11 +232,9 @@ import WebKit
     }
 
     func shutdownAndCapture() async throws -> SaveCapture {
-        let result = try await view.callAsyncJavaScript(
-            "return JSON.stringify(await window.FlashNest.shutdownAndCapture());",
-            arguments: [:], in: nil, contentWorld: .page)
-        let json = try XCTUnwrap(result as? String)
-        return try JSONDecoder().decode(SaveCapture.self, from: Data(json.utf8))
+        let result = try await SaveWebKitBridge.capture(from: view)
+        let bytes = try JSONSerialization.data(withJSONObject: result)
+        return try JSONDecoder().decode(SaveCapture.self, from: bytes)
     }
 
     func solValues() async throws -> [String] {

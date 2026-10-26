@@ -203,23 +203,7 @@ import SwiftUI
     }
 
     private func captureObject(from view: WKWebView) async throws -> Any {
-        try await withCheckedThrowingContinuation { continuation in
-            var completed = false
-            view.callAsyncJavaScript("return await window.FlashNest.shutdownAndCapture();",
-                                     arguments: [:], in: nil, in: .page) { result in
-                Task { @MainActor in
-                    guard !completed else { return }
-                    completed = true
-                    continuation.resume(with: result)
-                }
-            }
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 15_000_000_000)
-                guard !completed else { return }
-                completed = true
-                continuation.resume(throwing: SaveStoreError.invalid("save flush timed out"))
-            }
-        }
+        try await SaveWebKitBridge.capture(from: view)
     }
 
     func suspendAndSave() async {
@@ -339,4 +323,57 @@ import SwiftUI
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { record(error.localizedDescription); failure = L10n.error(error) }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { record(error.localizedDescription); failure = L10n.error(error) }
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { failure = L10n.text("The web player stopped, possibly because this game exceeded memory limits. Close and reopen it.") }
+}
+
+
+/// Avoids the refined callAsyncJavaScript Swift overlay, which is missing from
+/// affected iOS 18.5 simulator runtimes (WebKit bug 293831, target <= iOS 18.3).
+/// The longstanding plain evaluateJavaScript API starts the same Promise and
+/// polls its result; capture still resolves only after Ruffle destroy/flush.
+@MainActor enum SaveWebKitBridge {
+    static func capture(from view: WKWebView, timeout: TimeInterval = 15) async throws -> Any {
+        let key = "__FlashNestNativeCapture_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        defer { view.evaluateJavaScript("delete window.\(key); true") }
+        let deadline = Date().addingTimeInterval(timeout)
+        _ = try await evaluate("""
+        window.\(key) = {state:'pending'};
+        Promise.resolve().then(() => window.FlashNest.shutdownAndCapture()).then(value => {
+          if (window.\(key)) window.\(key) = {state:'complete', value};
+        }, () => {
+          if (window.\(key)) window.\(key) = {state:'error'};
+        }); true;
+        """, in: view, before: deadline)
+        while Date() < deadline {
+            try Task.checkCancellation()
+            if let result = try await evaluate("window.\(key)", in: view, before: deadline) as? [String: Any] {
+                if result["state"] as? String == "complete", let value = result["value"] { return value }
+                if result["state"] as? String == "error" { throw SaveStoreError.invalid("save flush failed") }
+            }
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        throw SaveStoreError.invalid("save flush timed out")
+    }
+
+    private static func evaluate(_ script: String, in view: WKWebView, before deadline: Date) async throws -> Any {
+        let remaining = deadline.timeIntervalSinceNow
+        guard remaining > 0 else { throw SaveStoreError.invalid("save flush timed out") }
+        return try await withCheckedThrowingContinuation { continuation in
+            var completed = false
+            view.evaluateJavaScript(script) { value, error in
+                Task { @MainActor in
+                    guard !completed else { return }
+                    completed = true
+                    if let error { continuation.resume(throwing: error) }
+                    else { continuation.resume(returning: value ?? NSNull()) }
+                }
+            }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+                guard !completed else { return }
+                completed = true
+                continuation.resume(throwing: SaveStoreError.invalid("save flush timed out"))
+            }
+        }
+    }
+
 }

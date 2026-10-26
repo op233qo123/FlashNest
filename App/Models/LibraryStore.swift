@@ -201,30 +201,56 @@ import SwiftUI
 private struct LibraryPackageFiles: Sendable {
     static let removalPrefix = ".removing-"
     let root: URL
-    private let canonicalRoot: URL
+    private let canonicalRootComponents: [String]?
     private let keys: Set<URLResourceKey> = [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey]
 
     init(root: URL) {
         self.root = root.standardizedFileURL
-        canonicalRoot = root.standardizedFileURL.resolvingSymlinksInPath()
+        // A nonexistent URL may not resolve ancestor aliases and may change its
+        // directory hint after creation. Pin real ancestor components instead
+        // of comparing URL identity before and after first launch.
+        canonicalRootComponents = try? Self.expectedRootComponents(self.root)
+    }
+
+    private static func expectedRootComponents(_ root: URL) throws -> [String] {
+        guard root.isFileURL, root.pathComponents.count > 1 else { throw LibraryRemovalError.unsafeBoundary }
+        var ancestor = root
+        var missing: [String] = []
+        while true {
+            do {
+                // attributesOfItem inspects the link itself, including dangling
+                // links; a missing Packages folder is not permission to follow one.
+                let attributes = try FileManager.default.attributesOfItem(atPath: ancestor.path)
+                guard attributes[.type] as? FileAttributeType == .typeDirectory else {
+                    throw LibraryRemovalError.unsafeBoundary
+                }
+                return ancestor.resolvingSymlinksInPath().pathComponents + Array(missing.reversed())
+            } catch let error as NSError where error.domain == NSCocoaErrorDomain &&
+                (error.code == NSFileReadNoSuchFileError || error.code == NSFileNoSuchFileError) {
+                let parent = ancestor.deletingLastPathComponent()
+                guard parent.pathComponents.count < ancestor.pathComponents.count else {
+                    throw LibraryRemovalError.unsafeBoundary
+                }
+                missing.append(ancestor.lastPathComponent)
+                ancestor = parent
+            }
+        }
     }
 
     func prepareRoot() throws {
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: root.path) {
-            // resourceValues also detects a dangling symlink, unlike fileExists.
-            if (try? root.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == true {
-                throw LibraryRemovalError.unsafeBoundary
-            }
-            try fm.createDirectory(at: root, withIntermediateDirectories: true)
-        }
+        // Recheck the pinned boundary before creating only the trusted app-owned
+        // root. This also rejects a root/nearest-parent link inserted since init.
+        guard let boundary = canonicalRootComponents,
+              try Self.expectedRootComponents(root) == boundary else { throw LibraryRemovalError.unsafeBoundary }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         try verifyRoot()
     }
 
     private func verifyRoot() throws {
-        let values = try root.resourceValues(forKeys: keys)
-        guard root.isFileURL, values.isDirectory == true, values.isSymbolicLink != true,
-              root.resolvingSymlinksInPath() == canonicalRoot else { throw LibraryRemovalError.unsafeBoundary }
+        let attributes = try FileManager.default.attributesOfItem(atPath: root.path)
+        guard let boundary = canonicalRootComponents, root.isFileURL,
+              attributes[.type] as? FileAttributeType == .typeDirectory,
+              root.resolvingSymlinksInPath().pathComponents == boundary else { throw LibraryRemovalError.unsafeBoundary }
     }
 
     private func folder(id: UUID, staged: Bool) -> URL {
@@ -235,8 +261,8 @@ private struct LibraryPackageFiles: Sendable {
         try verifyRoot()
         let values = try url.resourceValues(forKeys: keys)
         let components = url.standardizedFileURL.resolvingSymlinksInPath().pathComponents
-        let boundary = canonicalRoot.pathComponents
-        guard values.isSymbolicLink != true,
+        guard let boundary = canonicalRootComponents,
+              values.isSymbolicLink != true,
               directory ? values.isDirectory == true : values.isRegularFile == true,
               components.count > boundary.count,
               Array(components.prefix(boundary.count)) == boundary else { throw LibraryRemovalError.unsafeBoundary }

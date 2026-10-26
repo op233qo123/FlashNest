@@ -25,6 +25,47 @@ import XCTest
         return Fixture(directory: directory, root: root, source: source, package: package)
     }
 
+    func testFirstLaunchCreatesMissingRootAndIntermediateParentsWithoutAlert() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let root = directory.appendingPathComponent("Library/Application Support/Packages", isDirectory: true)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: root.path))
+        let library = LibraryStore(root: root, prepareRemoval: { _ in XCTFail("No removal expected") })
+        XCTAssertNil(library.error)
+        XCTAssertTrue(library.packages.isEmpty)
+        XCTAssertTrue(library.unfinishedRemovals.isEmpty)
+        XCTAssertEqual(try FileManager.default.attributesOfItem(atPath: root.path)[.type] as? FileAttributeType, .typeDirectory)
+        library.reload()
+        XCTAssertNil(library.error)
+        // Different URL directory hints name the same safe filesystem boundary.
+        let noDirectoryHint = URL(fileURLWithPath: root.path, isDirectory: false)
+        let reopened = LibraryStore(root: noDirectoryHint, prepareRemoval: { _ in XCTFail("No removal expected") })
+        XCTAssertNil(reopened.error)
+    }
+
+    func testFirstLaunchRejectsDanglingRootAndMissingChildOfLinkedParent() throws {
+        let fm = FileManager.default
+        let directory = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? fm.removeItem(at: directory) }
+        try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+        let dangling = directory.appendingPathComponent("Packages", isDirectory: true)
+        let missingTarget = directory.appendingPathComponent("must-not-be-created", isDirectory: true)
+        try fm.createSymbolicLink(at: dangling, withDestinationURL: missingTarget)
+        let linkedRoot = LibraryStore(root: dangling, prepareRemoval: { _ in XCTFail("No removal expected") })
+        XCTAssertNotNil(linkedRoot.error)
+        XCTAssertFalse(fm.fileExists(atPath: missingTarget.path))
+        XCTAssertEqual(try fm.attributesOfItem(atPath: dangling.path)[.type] as? FileAttributeType, .typeSymbolicLink)
+
+        let outside = directory.appendingPathComponent("outside", isDirectory: true)
+        try fm.createDirectory(at: outside, withIntermediateDirectories: true)
+        let linkedParent = directory.appendingPathComponent("linked-support", isDirectory: true)
+        try fm.createSymbolicLink(at: linkedParent, withDestinationURL: outside)
+        let child = linkedParent.appendingPathComponent("Packages", isDirectory: true)
+        let linkedAncestor = LibraryStore(root: child, prepareRemoval: { _ in XCTFail("No removal expected") })
+        XCTAssertNotNil(linkedAncestor.error)
+        XCTAssertFalse(fm.fileExists(atPath: outside.appendingPathComponent("Packages").path))
+    }
+
     func testRemovalDeletesEntireCopiedFolderButPreservesSourceSiblingAndSaves() async throws {
         let fixture = try fixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
