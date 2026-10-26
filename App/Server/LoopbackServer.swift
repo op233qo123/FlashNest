@@ -14,6 +14,10 @@ final class LoopbackServer {
     private var activePackage: (id: UUID, root: URL)?
     private var startup: CheckedContinuation<Void, Error>?
     private var ready = false
+    // Retain cancelled endpoints until Network.framework confirms teardown.
+    // A restart must not rebind the stable port while the old listener owns it.
+    private var stopping = false
+    private var restart: CheckedContinuation<Void, Error>?
 
     init(port: UInt16, capability: String, webRoot: URL) {
         precondition(port > 1024)
@@ -35,49 +39,59 @@ final class LoopbackServer {
 
     func start() async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            queue.async {
-                guard self.listener == nil else {
-                    if self.ready { continuation.resume() }
-                    else { continuation.resume(throwing: LocalHTTPError.alreadyStarted) }
-                    return
-                }
-                do {
-                    let parameters = NWParameters.tcp
-                    let endpointPort = NWEndpoint.Port(rawValue: self.port)!
-                    parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: endpointPort)
-                    parameters.requiredInterfaceType = .loopback
-                    parameters.allowLocalEndpointReuse = true
-                    // requiredLocalEndpoint already specifies both bind address
-                    // and stable port. Passing `on:` as well attempts a second
-                    // port override and Network.framework rejects it with EINVAL.
-                    let listener = try NWListener(using: parameters)
-                    self.listener = listener
-                    self.startup = continuation
-                    listener.stateUpdateHandler = { [weak self, weak listener] state in
-                        guard let self = self, self.listener === listener else { return }
-                        switch state {
-                        case .ready:
-                            self.ready = true
-                            self.startup?.resume()
-                            self.startup = nil
-                        case .failed(let error):
-                            self.failStart(error)
-                            self.shutdown()
-                        case .cancelled:
-                            self.failStart(LocalHTTPError.stopped)
-                        default: break
-                        }
-                    }
-                    listener.newConnectionHandler = { [weak self] connection in self?.accept(connection) }
-                    listener.start(queue: self.queue)
-                    self.queue.asyncAfter(deadline: .now() + 10) { [weak self, weak listener] in
-                        guard let self = self, self.listener === listener, !self.ready else { return }
-                        self.failStart(LocalHTTPError.stopped)
-                        self.shutdown()
-                    }
-                } catch { continuation.resume(throwing: error) }
-            }
+            queue.async { self.beginStart(continuation) }
         }
+    }
+
+    private func beginStart(_ continuation: CheckedContinuation<Void, Error>) {
+        if stopping {
+            guard restart == nil else { continuation.resume(throwing: LocalHTTPError.alreadyStarted); return }
+            restart = continuation
+            return
+        }
+        guard self.listener == nil else {
+            if self.ready { continuation.resume() }
+            else { continuation.resume(throwing: LocalHTTPError.alreadyStarted) }
+            return
+        }
+        do {
+            let parameters = NWParameters.tcp
+            let endpointPort = NWEndpoint.Port(rawValue: self.port)!
+            parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: endpointPort)
+            parameters.requiredInterfaceType = .loopback
+            parameters.allowLocalEndpointReuse = true
+            // requiredLocalEndpoint already specifies both bind address
+            // and stable port. Passing `on:` as well attempts a second
+            // port override and Network.framework rejects it with EINVAL.
+            let listener = try NWListener(using: parameters)
+            self.listener = listener
+            self.startup = continuation
+            listener.stateUpdateHandler = { [weak self, weak listener] state in
+                guard let self = self, self.listener === listener else { return }
+                switch state {
+                case .ready:
+                    guard !self.stopping else { return }
+                    self.ready = true
+                    self.startup?.resume()
+                    self.startup = nil
+                case .failed(let error):
+                    self.failStart(error)
+                    self.shutdown()
+                case .cancelled:
+                    self.failStart(LocalHTTPError.stopped)
+                    self.listener = nil
+                    self.finishStopIfDrained()
+                default: break
+                }
+            }
+            listener.newConnectionHandler = { [weak self] connection in self?.accept(connection) }
+            listener.start(queue: self.queue)
+            self.queue.asyncAfter(deadline: .now() + 10) { [weak self, weak listener] in
+                guard let self = self, self.listener === listener, !self.ready, !self.stopping else { return }
+                self.failStart(LocalHTTPError.stopped)
+                self.shutdown()
+            }
+        } catch { continuation.resume(throwing: error) }
     }
 
     func stop() { queue.async { self.shutdown() } }
@@ -87,21 +101,35 @@ final class LoopbackServer {
     }
     private func shutdown() {
         failStart(LocalHTTPError.stopped)
-        listener?.cancel()
-        listener = nil
+        restart?.resume(throwing: LocalHTTPError.stopped)
+        restart = nil
+        stopping = true
         ready = false
-        connections.values.forEach { $0.cancel() }
-        connections.removeAll()
         activePackage = nil
+        listener?.cancel()
+        connections.values.forEach { $0.cancel() }
+        finishStopIfDrained()
+    }
+
+    private func finishStopIfDrained() {
+        guard stopping, listener == nil, connections.isEmpty else { return }
+        stopping = false
+        if let pending = restart {
+            restart = nil
+            // Let the final cancellation callback unwind before rebinding.
+            queue.async { self.beginStart(pending) }
+        }
     }
 
     private func accept(_ connection: NWConnection) {
-        guard connections.count < 24 else { connection.cancel(); return }
+        guard !stopping, connections.count < 24 else { connection.cancel(); return }
         connections[ObjectIdentifier(connection)] = connection
         connection.stateUpdateHandler = { [weak self, weak connection] state in
             guard let self = self, let connection = connection else { return }
             switch state {
-            case .cancelled, .failed: self.connections.removeValue(forKey: ObjectIdentifier(connection))
+            case .cancelled, .failed:
+                self.connections.removeValue(forKey: ObjectIdentifier(connection))
+                self.finishStopIfDrained()
             default: break
             }
         }

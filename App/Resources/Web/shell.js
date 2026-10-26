@@ -34,11 +34,17 @@
     for (const name of ['pointerup','pointercancel','lostpointercapture']) button.addEventListener(name, () => { button.classList.remove('held'); key(button.dataset.key, false); });
   });
   document.addEventListener('securitypolicyviolation', e => report('diagnostic', `Offline policy blocked ${e.blockedURI || e.violatedDirective}. Remote servers are unavailable; include local assets in the package.`));
+  window.addEventListener('error', e => report('diagnostic', `JavaScript/resource error: ${e.message || e.target?.src || 'unknown resource'}`), true);
   window.addEventListener('unhandledrejection', e => report('error', `Runtime error: ${e.reason?.message || e.reason}`));
   // Report missing local subassets without converting remote URLs to local URLs.
   const originalFetch = window.fetch.bind(window);
   window.fetch = async (...args) => {
-    try { const response = await originalFetch(...args); if (!response.ok) report('diagnostic', `Asset request failed (${response.status}): ${response.url}`); return response; }
+    const resource = String(args[0]?.url || args[0]);
+    const runtimeAsset = /\.wasm(?:[?#]|$)/.test(resource);
+    if (runtimeAsset) report('diagnostic', `Runtime WASM fetch started: ${resource.split('/').pop()}`);
+    try { const response = await originalFetch(...args);
+      if (runtimeAsset) report('diagnostic', `Runtime WASM response: ${response.status}; bytes=${response.headers.get('content-length') || 'unknown'}`);
+      if (!response.ok) report('diagnostic', `Asset request failed (${response.status}): ${response.url}`); return response; }
     catch (error) { report('diagnostic', `Asset request blocked or unavailable: ${String(args[0]?.url || args[0]).slice(0,300)}`); throw error; }
   };
   async function boot() {
@@ -56,10 +62,18 @@
     player = ruffle.createPlayer();
     document.getElementById('stage').append(player);
     report('ready', 'Offline runtime ready.');
+    report('diagnostic', 'Initializing bundled WASM and renderer…');
+    const loadWatchdog = window.setTimeout?.(() => {
+      const progress = player.shadowRoot?.querySelector('.loadbar-inner')?.style.width || 'unavailable';
+      report('diagnostic', `Runtime initialization still pending after 20 seconds; download progress=${progress}; visible=${!document.hidden}`);
+    }, 20000);
+    try {
     await player.ruffle().load({url:url.href, base:new URL('./',url).href, publicPath:runtime.href,
       allowScriptAccess:false, allowNetworking:'internal', openUrlMode:'deny', socketProxy:[],
       autoplay:'off', unmuteOverlay:'visible', backgroundExecutionMode:'none', upgradeToHttps:false,
       showSwfDownload:false, contextMenu:'off', logLevel:'warn'});
+    } finally { window.clearTimeout?.(loadWatchdog); }
+    report('diagnostic', 'Bundled WASM and renderer initialized; main SWF request started.');
     player.ruffle().traceObserver = message => report('diagnostic', `SWF: ${message}`);
     reconcile(); report('loaded', 'Movie loaded. Tap Play to start audio.');
   }

@@ -57,6 +57,8 @@ final class HTTPServerTests: XCTestCase {
         try Data("<!doctype html><title>test</title>".utf8).write(to: web.appendingPathComponent("index.html"))
         try Data([70, 87, 83]).write(to: game.appendingPathComponent("entry.swf"))
         try Data("alert(1)".utf8).write(to: game.appendingPathComponent("bad.js"))
+        let streamedAsset = Data(repeating: 0xa5, count: 2_097_169)
+        try streamedAsset.write(to: game.appendingPathComponent("large.dat"))
         let id = UUID()
         let server = LoopbackServer(port: UInt16.random(in: 49152...62000), capability: UUID().uuidString.lowercased(), webRoot: web)
         defer { server.stop() }
@@ -79,6 +81,9 @@ final class HTTPServerTests: XCTestCase {
         let (partial, rangeResponse) = try await session.data(for: rangeRequest)
         XCTAssertEqual(partial, Data([87, 83]))
         XCTAssertEqual((rangeResponse as? HTTPURLResponse)?.statusCode, 206)
+        let (streamed, streamedResponse) = try await session.data(from: server.gameURL(packageID: id, relativePath: "large.dat"))
+        XCTAssertEqual((streamedResponse as? HTTPURLResponse)?.statusCode, 200)
+        XCTAssertEqual(streamed, streamedAsset, "Every streaming chunk and the final partial chunk must arrive intact")
         server.stop()
         server.activate(packageID: id, root: game)
         try await server.start()

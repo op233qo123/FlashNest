@@ -15,6 +15,7 @@ import WebKit
     }
 
     private func exerciseFixture(named name: String) async throws {
+        executionTimeAllowance = 120
         let fixtures = try XCTUnwrap(Bundle(for: RuffleRuntimeTests.self).url(forResource: "fixtures", withExtension: nil))
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -42,7 +43,9 @@ import WebKit
         view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         controller.view.addSubview(view)
 
-        let deadline = Date().addingTimeInterval(45)
+        // Cold simulator WASM compilation is substantially slower than a warm
+        // device. Keep this bounded below the per-test 120-second CI allowance.
+        let deadline = Date().addingTimeInterval(90)
         var started = false
         while Date() < deadline {
             if let failure = session.failure { XCTFail(failure); return }
@@ -79,6 +82,24 @@ import WebKit
             }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
-        XCTFail("Real WKWebView did not complete child SWF, sibling text, and offline-denial checks. Status: \(session.status); diagnostics: \(session.diagnostics.joined(separator: " | "))")
+        let pageState = try? await view.evaluateJavaScript("""
+        JSON.stringify({
+          status: document.getElementById('status')?.textContent,
+          hidden: document.hidden, readyState: document.readyState,
+          startDisabled: document.getElementById('start')?.disabled,
+          textObserved: window.__fixtureText,
+          remoteBlocked: window.__fixtureRemoteBlocked,
+          stage: document.getElementById('stage')?.innerHTML.slice(0, 1500),
+          playerShadow: document.querySelector('ruffle-player')?.shadowRoot?.textContent.slice(-2000),
+          resources: performance.getEntriesByType('resource').map(r => ({
+            file: r.name.split('/').pop(), duration: r.duration,
+            responseEnd: r.responseEnd, transferSize: r.transferSize,
+            encodedBodySize: r.encodedBodySize
+          }))
+        })
+        """)
+        let details = "Status: \(session.status); started: \(started); isLoading: \(view.isLoading); frame: \(view.frame); attached: \(view.window != nil); scene: \(scene.activationState.rawValue); page JSON: \(pageState as? String ?? "unavailable"); diagnostics: \(session.diagnostics.joined(separator: " | "))"
+        print("FLASHNEST_RUNTIME_FAILURE \(details)")
+        XCTFail("Real WKWebView did not complete child SWF, sibling text, and offline-denial checks. \(details)")
     }
 }
