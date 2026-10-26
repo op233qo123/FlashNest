@@ -79,10 +79,12 @@ final class FolderPickerUITests: XCTestCase {
         capture(app, "Files picker before Open")
         XCTAssertTrue(title.waitForExistence(timeout: 10), "Must select the seeded folder, never an arbitrary Files location")
         XCTAssertTrue(title.isHittable, "The fixture folder must be the visible location")
-        XCTAssertTrue(app.otherElements["DOC.browsingRoot Source: com.apple.FileProvider.LocalStorage, Title: FlashNest UI Fixture"].exists)
+        // Do not assert Files' private browsing-root identifier: the captured
+        // 18.2 screenshot showed the correct visible folder while that identifier
+        // still contained its parent title. Visible title + inventory is the gate.
         let files = app.collectionViews["File View"]
-        XCTAssertTrue(files.cells.containing(.staticText, identifier: "main.swf").firstMatch.exists)
-        XCTAssertTrue(files.cells.containing(.staticText, identifier: "sub").firstMatch.exists)
+        XCTAssertTrue(files.cells.containing(.staticText, identifier: "main.swf").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(files.cells.containing(.staticText, identifier: "sub").firstMatch.waitForExistence(timeout: 5))
     }
 
     func testSystemOpenDismissesPickerAndImportsNestedFolder() {
