@@ -8,7 +8,7 @@ const settle = () => new Promise(resolve => setImmediate(resolve));
 
 async function exercise(timing) {
   const controls = [], elements = {}, messages = [], keyEvents = [], listeners = new Map(), windowListeners = new Map(), documentListeners = new Map(), stored = new Map();
-  let finishLoad, config, suspended = 0, resumed = 0, removed = 0, appended, fetchResponse = {ok:true}, fetchError, fetchCalls = 0, canvasFocusCalls = 0;
+  let finishLoad, config, suspended = 0, resumed = 0, removed = 0, appended, fetchResponse = {ok:true}, fetchError, fetchCalls = 0, canvasFocusCalls = 0, clockTime = 0, traceCloseStart;
   const canvasListeners = new Map();
   const canvas = {
     clientWidth:390, clientHeight:844, width:1170, height:2532,
@@ -60,7 +60,7 @@ async function exercise(timing) {
     webkit:{messageHandlers:{flashnest:{postMessage:message => messages.push(message)}}},
     localStorage:{get length() { return stored.size; }, key:index => [...stored.keys()][index], getItem:key => stored.get(key) ?? null, setItem:(key,value) => stored.set(key,value), removeItem:key => stored.delete(key)},
     fetch:async () => { fetchCalls++; if (fetchError) throw fetchError; return fetchResponse; },
-    devicePixelRatio:3,
+    devicePixelRatio:3, performance:{now:() => clockTime},
     addEventListener:(type, callback) => windowListeners.set(type, callback),
     setTimeout:() => 1, clearTimeout() {}
   };
@@ -199,19 +199,46 @@ async function exercise(timing) {
     for (let i = 0; i < 40; i++) { input.pause(); input.resume(); }
     assert(messages.filter(m => m.message.startsWith('Player state') || m.message.startsWith('播放器状态')).length <= 24);
     assert(messages.some(m => m.message.includes('1170x2532') && m.message.includes('DPR=3')));
+
+    const traceStart = messages.length;
+    const isSuppression = m => m.message.startsWith('SWF trace limit:') || m.message.startsWith('SWF 跟踪限流：');
+    for (let i = 0; i < 20; i++) api.traceObserver('FLASHNEST_FIXTURE_' + i + ' ' + config.url);
+    assert.equal(messages.length - traceStart, 20, 'Ordinary fixture-rate traces remain available');
+    // A dropped trace must not even be formatted or retained by our observer.
+    const discarded = {toString() { throw new Error('Suppressed payload was inspected'); }};
+    api.traceObserver('suppressed-secret-save-payload ' + config.url);
+    for (let i = 0; i < 9999; i++) api.traceObserver(discarded);
+    assert.equal(messages.length - traceStart, 21, 'A 10,000-trace storm adds only one immediate count notice');
+    assert.equal(messages.slice(traceStart).filter(isSuppression).length, 1);
+    assert(messages.slice(traceStart).every(m => !m.message.includes('/cap/') && !m.message.includes('suppressed-secret-save-payload')), 'Accepted traces redact capabilities and dropped payloads never enter diagnostics');
+    clockTime = 999;
+    api.traceObserver(discarded);
+    assert.equal(messages.length - traceStart, 21, 'Budget must not reset before the interval expires');
+    clockTime = 1000;
+    api.traceObserver('FLASHNEST_AFTER_RATE_RESET');
+    assert.equal(messages.at(-1).message, 'SWF: FLASHNEST_AFTER_RATE_RESET');
+    assert(isSuppression(messages.at(-2)) && messages.at(-2).message.includes('10001'), 'Next interval reports the previous final suppression count');
+    for (let i = 0; i < 19; i++) api.traceObserver('ordinary');
+    for (let i = 0; i < 7; i++) api.traceObserver(discarded);
+    traceCloseStart = messages.length;
   }
   input.key('Enter', true);
   const firstClose = input.shutdownAndCapture();
   assert.equal(firstClose, input.shutdownAndCapture(), 'Close must be idempotent');
   const capture = await firstClose;
   assert.equal(capture.version, 1); assert.equal(capture.entries.length, 0); assert.equal(removed, 1);
+  if (timing === 'delayed') {
+    const finalCounts = messages.slice(traceCloseStart).filter(m => m.message.startsWith('SWF trace limit:') || m.message.startsWith('SWF 跟踪限流：'));
+    assert.equal(finalCounts.length, 1, 'Idempotent shutdown emits at most one final suppression count');
+    assert(finalCounts[0].message.includes('7'));
+  }
   assert.equal(keyEvents.at(-1).type, 'keyup', 'Close releases held native keys');
   const afterClose = keyEvents.length; input.key('KeyA', true); assert.equal(keyEvents.length, afterClose);
 }
 
 (async () => {
   for (const timing of ['delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake']) await exercise(timing);
-  console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, bounded scene diagnostics, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
+  console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, bounded scene/trace diagnostics, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
 require("./test_save_bridge.js");

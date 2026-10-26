@@ -7,11 +7,11 @@
   const strings = {
     en: {
       title:'FlashNest Player', preparing:'Preparing offline runtime…', play:'Play / enable audio', pause:'Pause', resume:'Resume', action:'Action', enter:'Enter', stage:'Flash player', controls:'Game controls',
-      offline:'Offline policy blocked {0}. Remote servers are unavailable; include local assets in the package.', jsError:'JavaScript/resource error: {0}', unknown:'unknown', runtimeError:'Runtime error: {0}', wasmStart:'Runtime WASM fetch started: {0}', wasmResponse:'Runtime WASM response: {0}; bytes={1}', assetFailed:'Asset request failed ({0}): {1}', assetBlocked:'Asset request blocked or unavailable: {0}', invalid:'Invalid package or entry SWF.', unsafe:'Unsafe entry path.', missing:'Bundled runtime missing or blocked.', ready:'Offline runtime ready.', initializing:'Initializing bundled WASM and renderer…', pending:'Runtime initialization still pending after 20 seconds; download progress={0}; visible={1}', unavailable:'unavailable', initialized:'Bundled WASM and renderer initialized; main SWF request started.', loaded:'Movie loaded. Tap Play to start audio.', saveReady:'Local save storage ready.', saveTimeout:'Native save preparation timed out.', swfRequest:'SWF request #{0}: {1}', swfResponse:'SWF response headers #{0}: status={1}; bytes={2}; {3}', swfFailure:'SWF fetch failed #{0}: {1}', swfLimit:'Further SWF request diagnostics omitted (limit reached).', graphicsEvent:'Renderer event: {0}', playerState:'Player state ({0}): started={1}; paused={2}; hidden={3}; focused={4}; canvasCSS={5}; canvasPixels={6}; DPR={7}', loadError:'Unable to load movie: {0}'
+      offline:'Offline policy blocked {0}. Remote servers are unavailable; include local assets in the package.', jsError:'JavaScript/resource error: {0}', unknown:'unknown', runtimeError:'Runtime error: {0}', wasmStart:'Runtime WASM fetch started: {0}', wasmResponse:'Runtime WASM response: {0}; bytes={1}', assetFailed:'Asset request failed ({0}): {1}', assetBlocked:'Asset request blocked or unavailable: {0}', invalid:'Invalid package or entry SWF.', unsafe:'Unsafe entry path.', missing:'Bundled runtime missing or blocked.', ready:'Offline runtime ready.', initializing:'Initializing bundled WASM and renderer…', pending:'Runtime initialization still pending after 20 seconds; download progress={0}; visible={1}', unavailable:'unavailable', initialized:'Bundled WASM and renderer initialized; main SWF request started.', loaded:'Movie loaded. Tap Play to start audio.', saveReady:'Local save storage ready.', saveTimeout:'Native save preparation timed out.', swfRequest:'SWF request #{0}: {1}', swfResponse:'SWF response headers #{0}: status={1}; bytes={2}; {3}', swfFailure:'SWF fetch failed #{0}: {1}', swfLimit:'Further SWF request diagnostics omitted (limit reached).', traceSuppressed:'SWF trace limit: {0} message(s) suppressed in this interval.', graphicsEvent:'Renderer event: {0}', playerState:'Player state ({0}): started={1}; paused={2}; hidden={3}; focused={4}; canvasCSS={5}; canvasPixels={6}; DPR={7}', loadError:'Unable to load movie: {0}'
     },
     'zh-Hans': {
       title:'FlashNest 播放器', preparing:'正在准备离线运行环境…', play:'播放 / 开启声音', pause:'暂停', resume:'继续', action:'动作', enter:'确认', stage:'Flash 播放区域', controls:'游戏按键',
-      offline:'离线策略已拦截 {0}。无法连接远程服务器，请将资源一并导入。', jsError:'脚本或资源错误：{0}', unknown:'未知', runtimeError:'运行错误：{0}', wasmStart:'正在加载 WASM：{0}', wasmResponse:'WASM 响应：{0}；字节数={1}', assetFailed:'资源请求失败（{0}）：{1}', assetBlocked:'资源被拦截或不可用：{0}', invalid:'游戏包或入口 SWF 无效。', unsafe:'入口路径不安全。', missing:'内置运行环境缺失或被拦截。', ready:'离线运行环境已就绪。', initializing:'正在初始化 WASM 和渲染器…', pending:'初始化已超过 20 秒；下载进度={0}；页面可见={1}', unavailable:'不可用', initialized:'WASM 和渲染器已初始化，正在加载主 SWF。', loaded:'文件已加载。点击“播放”开启声音。', saveReady:'本地存档已准备就绪。', saveTimeout:'原生存档准备超时。', swfRequest:'SWF 请求 #{0}：{1}', swfResponse:'SWF 响应头 #{0}：状态={1}；字节数={2}；{3}', swfFailure:'SWF 请求失败 #{0}：{1}', swfLimit:'后续 SWF 请求诊断已省略（达到数量上限）。', graphicsEvent:'渲染器事件：{0}', playerState:'播放器状态（{0}）：已开始={1}；暂停={2}；隐藏={3}；焦点={4}；画布CSS={5}；画布像素={6}；DPR={7}', loadError:'无法加载文件：{0}'
+      offline:'离线策略已拦截 {0}。无法连接远程服务器，请将资源一并导入。', jsError:'脚本或资源错误：{0}', unknown:'未知', runtimeError:'运行错误：{0}', wasmStart:'正在加载 WASM：{0}', wasmResponse:'WASM 响应：{0}；字节数={1}', assetFailed:'资源请求失败（{0}）：{1}', assetBlocked:'资源被拦截或不可用：{0}', invalid:'游戏包或入口 SWF 无效。', unsafe:'入口路径不安全。', missing:'内置运行环境缺失或被拦截。', ready:'离线运行环境已就绪。', initializing:'正在初始化 WASM 和渲染器…', pending:'初始化已超过 20 秒；下载进度={0}；页面可见={1}', unavailable:'不可用', initialized:'WASM 和渲染器已初始化，正在加载主 SWF。', loaded:'文件已加载。点击“播放”开启声音。', saveReady:'本地存档已准备就绪。', saveTimeout:'原生存档准备超时。', swfRequest:'SWF 请求 #{0}：{1}', swfResponse:'SWF 响应头 #{0}：状态={1}；字节数={2}；{3}', swfFailure:'SWF 请求失败 #{0}：{1}', swfLimit:'后续 SWF 请求诊断已省略（达到数量上限）。', traceSuppressed:'SWF 跟踪限流：本时段已省略 {0} 条消息。', graphicsEvent:'渲染器事件：{0}', playerState:'播放器状态（{0}）：已开始={1}；暂停={2}；隐藏={3}；焦点={4}；画布CSS={5}；画布像素={6}；DPR={7}', loadError:'无法加载文件：{0}'
     }
   };
   const t = (key, ...values) => strings[language][key].replace(/\{(\d+)\}/g, (_, i) => String(values[Number(i)] ?? ''));
@@ -42,6 +42,27 @@
     if (swfReports < 60) report('diagnostic', message, false);
     else if (swfReports === 60) report('diagnostic', t('swfLimit'), false);
     swfReports = Math.min(swfReports + 1, 61);
+  }
+  let traceWindowStart, traceCount = 0, suppressedTraces = 0, reportedSuppressedTraces = 0;
+  function reportTraceSuppression() {
+    if (suppressedTraces <= reportedSuppressedTraces) return;
+    reportedSuppressedTraces = suppressedTraces;
+    report('diagnostic', t('traceSuppressed', suppressedTraces), false);
+  }
+  function reportTrace(message) {
+    const now = window.performance?.now?.() ?? Date.now();
+    if (traceWindowStart === undefined || now - traceWindowStart >= 1000 || now < traceWindowStart) {
+      reportTraceSuppression();
+      traceWindowStart = now; traceCount = 0; suppressedTraces = 0; reportedSuppressedTraces = 0;
+    }
+    if (traceCount >= 20) {
+      // Keep a count only: no payload queue, periodic timer, or console hook.
+      suppressedTraces = Math.min(Number.MAX_SAFE_INTEGER, suppressedTraces + 1);
+      if (suppressedTraces === 1) reportTraceSuppression();
+      return;
+    }
+    traceCount++;
+    report('diagnostic', `SWF: ${message}`);
   }
   function reportState(reason) {
     if (!player || stateReports >= 24) return;
@@ -102,6 +123,7 @@
       // Pinned Ruffle's disconnectedCallback calls instance.destroy(); dropping
       // its Rust Player flushes SharedObjects. Suspend alone does NOT flush.
       if (player) { player.remove(); player = null; }
+      reportTraceSuppression();
       await Promise.resolve();
       return saveBridge.capture();
     })();
@@ -210,7 +232,7 @@
     // A small movie can dispatch loadeddata before load() resolves; do not
     // overwrite the completed state with an earlier initialization milestone.
     if (!movieLoaded) report('diagnostic', t('initialized'));
-    player.ruffle().traceObserver = message => report('diagnostic', `SWF: ${message}`);
+    player.ruffle().traceObserver = reportTrace;
     reconcile();
   }
   bootPromise = boot().catch(error => { report('error', t('loadError', error.message)); });
