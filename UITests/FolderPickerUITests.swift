@@ -13,8 +13,17 @@ final class FolderPickerUITests: XCTestCase {
         app.launchArguments = ["--flashnest-picker-ui-test", "-FlashNest.language", "en",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15))
         XCTAssertTrue(app.buttons["import-folder"].waitForExistence(timeout: 15))
+        XCTAssertTrue(waitUntil(timeout: 10) {
+            app.buttons["import-folder"].isHittable && app.buttons["import-folder"].isEnabled
+        }, "Import control must be interactive after cold launch")
         return app
+    }
+
+    private func waitUntil(timeout: TimeInterval, _ condition: @escaping () -> Bool) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in condition() }, object: nil)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
     private func capture(_ app: XCUIApplication, _ name: String) {
@@ -27,7 +36,25 @@ final class FolderPickerUITests: XCTestCase {
     }
 
     private func openFixtureFolder(_ app: XCUIApplication) {
-        app.buttons["import-folder"].tap()
+        let importButton = app.buttons["import-folder"]
+        let state = app.staticTexts["picker-state"]
+        let originalState = state.value as? String
+        let systemNavigation = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"]
+        XCTAssertTrue(waitUntil(timeout: 10) { importButton.isHittable && importButton.isEnabled })
+        importButton.tap()
+        if !waitUntil(timeout: 5, { state.value as? String == "picker.presented" || systemNavigation.exists }) {
+            // On the first cold simulator launch, the run-3 screenshot showed
+            // the button action never ran (state remained ready). Retry that
+            // event once only, never a failed app presentation/Files operation.
+            let untouched = originalState == "picker.ready" || originalState == "picker.cancelled"
+            if untouched && state.value as? String == originalState && !systemNavigation.exists && importButton.isHittable {
+                capture(app, "Cold launch tap not delivered — retry once")
+                print("FLASHNEST_UI_RETRY import tap; app state unchanged: \(originalState ?? "nil")")
+                importButton.tap()
+            }
+        }
+        XCTAssertTrue(waitUntil(timeout: 10) { state.value as? String == "picker.presented" }, "The app must acknowledge the import tap")
+        XCTAssertTrue(systemNavigation.waitForExistence(timeout: 15), "Files must be presented before navigating; never tap underlying library controls")
         // Captured iOS 18.2 AX identifies the title as an Actions Menu button,
         // not a bare title string or a navigation-bar identifier.
         let title = app.navigationBars.buttons["FlashNest UI Fixture, Actions Menu"].firstMatch
