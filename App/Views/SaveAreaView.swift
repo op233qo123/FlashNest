@@ -92,76 +92,121 @@ import UniformTypeIdentifiers
     @State private var noticeTitle = "Save area"
 
     var body: some View {
+        exportPresentation
+            .alert(L10n.text(noticeTitle), isPresented: noticePresented) {
+                Button(L10n.text("OK"), role: .cancel) { notice = nil }
+            } message: { Text(notice ?? "") }
+    }
+
+    private var saveList: some View {
         List {
-            Section(L10n.text("Current save")) {
-                if let current {
-                    statistics(current)
-                    Text(current.createdAt, format: .dateTime.year().month().day().hour().minute())
-                        .font(.caption).foregroundStyle(.secondary)
-                    if current.entries.isEmpty {
-                        Text(L10n.text("No saved objects in this capture."))
-                            .font(.footnote).foregroundStyle(.secondary)
-                    }
-                    Button(L10n.text("Export current save")) { Task { await export(current) } }
-                } else {
-                    Text(L10n.text("No native save captured yet. Existing game saves will be preserved before backup or import."))
-                        .font(.footnote).foregroundStyle(.secondary)
-                }
-                Button(L10n.text("Create named backup")) { backupName = ""; naming = true }
-                Button(L10n.text("Import save JSON")) { importing = true }
-                if busy { ProgressView(L10n.text("Working…")) }
-            }
-            Section(L10n.text("Backups")) {
-                if snapshots.isEmpty { Text(L10n.text("No named backups yet.")) .foregroundStyle(.secondary) }
-                ForEach(snapshots) { snapshot in
-                    VStack(alignment: .leading, spacing: 7) {
-                        Text(snapshot.name).font(.headline)
-                        Text(snapshot.createdAt, format: .dateTime.year().month().day().hour().minute())
-                            .font(.caption).foregroundStyle(.secondary)
-                        statistics(snapshot)
-                        Button(L10n.text("Export")) { Task { await export(snapshot) } }
-                    }.padding(.vertical, 4)
-                }
-            }
-            Section {
-                Text(L10n.text("Import replaces this game's current save after confirmation and keeps a pre-import backup. Compatibility depends on the game's version and save format."))
-                    .font(.footnote).foregroundStyle(.secondary)
-                Text(L10n.text("Only data written by the game is saved. Unsaved progress and emulator state are not included."))
-                    .font(.footnote).foregroundStyle(.secondary)
-            }
+            currentSaveSection
+            backupsSection
+            guidanceSection
         }
         .disabled(busy)
         .navigationTitle(package.title)
         .navigationBarBackButtonHidden(busy)
         .task { await refresh() }
-        .alert(L10n.text("Name backup"), isPresented: $naming) {
+    }
+
+    private var currentSaveSection: some View {
+        Section(L10n.text("Current save")) {
+            if let current {
+                statistics(current)
+                Text(current.createdAt, format: .dateTime.year().month().day().hour().minute())
+                    .font(.caption).foregroundStyle(.secondary)
+                if current.entries.isEmpty {
+                    Text(L10n.text("No saved objects in this capture."))
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                Button(L10n.text("Export current save")) { Task { await export(current) } }
+            } else {
+                Text(L10n.text("No native save captured yet. Existing game saves will be preserved before backup or import."))
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            Button(L10n.text("Create named backup")) { backupName = ""; naming = true }
+            Button(L10n.text("Import save JSON")) { importing = true }
+            if busy { ProgressView(L10n.text("Working…")) }
+        }
+    }
+
+    private var backupsSection: some View {
+        Section(L10n.text("Backups")) {
+            if snapshots.isEmpty { Text(L10n.text("No named backups yet.")).foregroundStyle(.secondary) }
+            ForEach(snapshots) { snapshot in backupRow(snapshot) }
+        }
+    }
+
+    private func backupRow(_ snapshot: SaveSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Text(snapshot.name).font(.headline)
+            Text(snapshot.createdAt, format: .dateTime.year().month().day().hour().minute())
+                .font(.caption).foregroundStyle(.secondary)
+            statistics(snapshot)
+            Button(L10n.text("Export")) { Task { await export(snapshot) } }
+        }.padding(.vertical, 4)
+    }
+
+    private var guidanceSection: some View {
+        Section {
+            Text(L10n.text("Import replaces this game's current save after confirmation and keeps a pre-import backup. Compatibility depends on the game's version and save format."))
+                .font(.footnote).foregroundStyle(.secondary)
+            Text(L10n.text("Only data written by the game is saved. Unsaved progress and emulator state are not included."))
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+
+    private var namingPresentation: some View {
+        saveList.alert(L10n.text("Name backup"), isPresented: $naming) {
             TextField(L10n.text("Backup name"), text: $backupName)
             Button(L10n.text("Create")) { Task { await createBackup() } }
             Button(L10n.text("Cancel"), role: .cancel) {}
         } message: { Text(L10n.text("Use up to 80 characters.")) }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.json], allowsMultipleSelection: false) { result in
-            switch result {
-            case .success(let urls): if let url = urls.first { Task { await readImport(url) } }
-            case .failure(let error): showError(error)
-            }
-        }
-        .confirmationDialog(L10n.text("Replace current save?"), isPresented: $confirmingImport, titleVisibility: .visible) {
+    }
+
+    private var importPickerPresentation: some View {
+        namingPresentation.fileImporter(isPresented: $importing, allowedContentTypes: [UTType.json],
+                                        allowsMultipleSelection: false, onCompletion: handleImportSelection)
+    }
+
+    private var importConfirmationPresentation: some View {
+        importPickerPresentation.confirmationDialog(L10n.text("Replace current save?"),
+                                                   isPresented: $confirmingImport, titleVisibility: .visible) {
             Button(L10n.text("Import and replace"), role: .destructive) {
                 if let snapshot = pendingImport { Task { await applyImport(snapshot) } }
             }
             Button(L10n.text("Cancel"), role: .cancel) { pendingImport = nil }
-        } message: {
-            Text(L10n.text("Target game") + ": " + package.title + "\n" +
-                 L10n.text("Backup") + ": " + (pendingImport?.name ?? "") + "\n" +
-                 L10n.text("Source game") + ": " + (pendingImport?.packageTitle ?? "") + "\n\n" +
-                 L10n.text("The current save will be backed up before replacement. The game must be closed."))
+        } message: { Text(importConfirmationMessage) }
+    }
+
+    private var exportPresentation: some View {
+        importConfirmationPresentation.fileExporter(isPresented: $exporting, document: exportDocument,
+                                                    contentType: UTType.json, defaultFilename: exportName,
+                                                    onCompletion: handleExportResult)
+    }
+
+    private var noticePresented: Binding<Bool> {
+        Binding<Bool>(get: { notice != nil }, set: { if !$0 { notice = nil } })
+    }
+
+    private var importConfirmationMessage: String {
+        let target = L10n.text("Target game") + ": " + package.title
+        let backup = L10n.text("Backup") + ": " + (pendingImport?.name ?? "")
+        let source = L10n.text("Source game") + ": " + (pendingImport?.packageTitle ?? "")
+        let warning = L10n.text("The current save will be backed up before replacement. The game must be closed.")
+        return [target, backup, source, "", warning].joined(separator: "\n")
+    }
+
+    private func handleImportSelection(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls): if let url = urls.first { Task { await readImport(url) } }
+        case .failure(let error): showError(error)
         }
-        .fileExporter(isPresented: $exporting, document: exportDocument, contentType: .json, defaultFilename: exportName) { result in
-            if case .failure(let error) = result { showError(error) }
-        }
-        .alert(L10n.text(noticeTitle), isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-            Button(L10n.text("OK"), role: .cancel) { notice = nil }
-        } message: { Text(notice ?? "") }
+    }
+
+    private func handleExportResult(_ result: Result<URL, Error>) {
+        if case .failure(let error) = result { showError(error) }
     }
 
     private func statistics(_ snapshot: SaveSnapshot) -> some View {
