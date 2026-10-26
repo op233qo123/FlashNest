@@ -70,9 +70,7 @@ struct PackageImporter: Sendable {
             try control?.checkpoint()
             count += 1
             guard count <= limits.files else { throw PackageError.limit("file count") }
-            let prefix = source.standardizedFileURL.path + "/"
-            guard file.standardizedFileURL.path.hasPrefix(prefix) else { throw PackageError.invalidPath(file.path) }
-            let relative = try registry.register(String(file.standardizedFileURL.path.dropFirst(prefix.count)), limits: limits)
+            let relative = try registry.register(Self.relativePath(of: file, under: source), limits: limits)
             let info = try file.resourceValues(forKeys: Set(keys))
             guard info.isSymbolicLink != true else { throw PackageError.unsupported("Symbolic link: \(relative)") }
             let target = destination.appendingPathComponent(relative)
@@ -147,21 +145,43 @@ struct PackageImporter: Sendable {
         }
     }
 
-    private func discoverMovies(_ content: URL) throws -> [String] {
-        guard let enumerator = FileManager.default.enumerator(at: content, includingPropertiesForKeys: [.isRegularFileKey]) else { return [] }
+    /// Root aliases (notably /var and /private/var on devices) must be resolved
+    /// symmetrically. Never derive a relative name by slicing an unchecked path.
+    static func relativePath(of file: URL, under root: URL) throws -> String {
+        let base = root.standardizedFileURL.resolvingSymlinksInPath().pathComponents
+        let path = file.standardizedFileURL.resolvingSymlinksInPath().pathComponents
+        guard path.count > base.count, Array(path.prefix(base.count)) == base else {
+            throw PackageError.invalidPath(file.lastPathComponent)
+        }
+        return path.dropFirst(base.count).joined(separator: "/")
+    }
+
+    func discoverMovies(_ content: URL) throws -> [String] {
+        let canonical = content.standardizedFileURL.resolvingSymlinksInPath()
+        let keys: [URLResourceKey] = [.isRegularFileKey, .isSymbolicLinkKey]
+        var enumerationError: Error?
+        guard let enumerator = FileManager.default.enumerator(at: canonical, includingPropertiesForKeys: keys,
+            errorHandler: { _, error in enumerationError = error; return false }) else {
+            throw PackageError.corrupt("Package content could not be enumerated")
+        }
         var movies: [String] = []
-        let prefix = content.path + "/"
-        for case let file as URL in enumerator where file.pathExtension.lowercased() == "swf" {
+        var count = 0
+        for case let file as URL in enumerator {
             try control?.checkpoint()
-            guard try file.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true else { continue }
+            count += 1
+            guard count <= limits.files else { throw PackageError.limit("file count") }
+            let values = try file.resourceValues(forKeys: Set(keys))
+            guard values.isSymbolicLink != true else { throw PackageError.unsupported("Symbolic link") }
+            guard file.pathExtension.lowercased() == "swf", values.isRegularFile == true else { continue }
             let handle = try FileHandle(forReadingFrom: file)
             defer { try? handle.close() }
             let signature = try handle.read(upToCount: 3) ?? Data()
             guard ["FWS", "CWS", "ZWS"].contains(String(data: signature, encoding: .ascii) ?? "") else {
                 throw PackageError.corrupt("Invalid SWF header: \(file.lastPathComponent)")
             }
-            movies.append(String(file.path.dropFirst(prefix.count)))
+            movies.append(try Self.relativePath(of: file, under: canonical))
         }
+        if let enumerationError { throw enumerationError }
         return movies.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
 }

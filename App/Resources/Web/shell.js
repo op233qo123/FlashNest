@@ -30,8 +30,12 @@
   let player, started = false, paused = false, backgrounded = false;
   const held = new Set();
   const keys = {ArrowLeft:37, ArrowUp:38, ArrowRight:39, ArrowDown:40, Space:32, Enter:13};
+  const diagnosticRoot = new URL('../', location.href);
+  const privateURLPrefix = diagnosticRoot.origin + diagnosticRoot.pathname;
   function report(type, message) {
-    const text = String(message).slice(0, 1024);
+    // Remove only this app's exact capability-bearing URL prefix, before
+    // truncation. Keep resource paths/status and unrelated remote URLs intact.
+    const text = String(message).split(privateURLPrefix).join(diagnosticRoot.origin + '/').slice(0, 1024);
     status.textContent = text;
     window.webkit?.messageHandlers?.flashnest?.postMessage({type, message:text});
   }

@@ -6,8 +6,8 @@ const language = process.argv[2] || 'en';
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
 async function exercise(timing) {
-  const controls = [], elements = {}, messages = [], listeners = new Map();
-  let config, suspended = 0, resumed = 0, appended;
+  const controls = [], elements = {}, messages = [], listeners = new Map(), windowListeners = new Map();
+  let config, suspended = 0, resumed = 0, appended, fetchResponse = {ok:true}, fetchError;
   const player = {
     ruffle: () => api, focus() {},
     addEventListener(type, callback, options) {
@@ -26,7 +26,7 @@ async function exercise(timing) {
       config = options;
       assert.equal(listeners.get('loadeddata')?.length, 1, 'Install the completion listener before load');
       if (timing === 'early') player.dispatchEvent({type:'loadeddata'});
-      if (timing === 'rejected') throw new Error('fixture load failed');
+      if (timing === 'rejected') throw new Error('fixture load failed: ' + options.url);
       // Like Ruffle 0.7.1, resolving this promise is not SWF completion.
     },
     suspend: () => suspended++, resume: () => resumed++
@@ -44,7 +44,8 @@ async function exercise(timing) {
   };
   context.window = {
     webkit:{messageHandlers:{flashnest:{postMessage:message => messages.push(message)}}},
-    fetch:async () => ({ok:true}), addEventListener() {}
+    fetch:async () => { if (fetchError) throw fetchError; return fetchResponse; },
+    addEventListener:(type, callback) => windowListeners.set(type, callback)
   };
   vm.runInNewContext(source, context);
   await settle();
@@ -61,7 +62,9 @@ async function exercise(timing) {
   if (timing === 'rejected') {
     assert.equal(messages.filter(m => m.type === 'loaded').length, 0, 'A failed load must not report completion');
     assert.equal(messages.at(-1).type, 'error');
-    assert.equal(elements.status.textContent, language === 'zh-Hans' ? '无法加载文件：fixture load failed' : 'Unable to load movie: fixture load failed');
+    const failurePrefix = language === 'zh-Hans' ? '无法加载文件：' : 'Unable to load movie: ';
+    assert.equal(elements.status.textContent, failurePrefix + 'fixture load failed: ' + config.url.replace('/cap/', '/'));
+    assert(messages.every(m => !m.message.includes('/cap/')), 'Boot errors must not expose the app capability');
     return;
   }
   assert.equal(typeof api.traceObserver, 'function');
@@ -77,9 +80,30 @@ async function exercise(timing) {
   elements.start.onclick(); assert.equal(resumed, 1);
   context.window.FlashNest.pause(); assert.equal(suspended, 1);
   context.window.FlashNest.resume(); assert.equal(resumed, 2);
+
+  if (timing === 'delayed') {
+    const sanitizedURL = config.url.replace('/cap/', '/');
+    fetchResponse = {ok:false, status:404, url:config.url};
+    assert.equal(await context.window.fetch(config.url), fetchResponse, 'Diagnostic redaction must not alter the response');
+    assert(messages.at(-1).message.includes('404'));
+    assert(messages.at(-1).message.includes(sanitizedURL), 'Keep the resource path in diagnostics');
+    fetchError = new Error('fixture transport failure');
+    await assert.rejects(context.window.fetch(config.url), error => error === fetchError);
+    assert(messages.at(-1).message.includes(sanitizedURL));
+    windowListeners.get('error')({message:'Resource error: ' + config.url});
+    windowListeners.get('unhandledrejection')({reason:new Error('Rejected: ' + config.url)});
+    assert(messages.at(-1).message.includes(sanitizedURL));
+    assert(!elements.status.textContent.includes('/cap/'));
+    assert(messages.every(m => !m.message.includes('/cap/')), 'Local capability must not appear in posted messages');
+
+    // Even the same path on a different origin is not the app's URL prefix.
+    const remoteURL = config.url.replace('http://127.0.0.1:8766', 'https://example.com');
+    windowListeners.get('error')({message:'Remote: ' + remoteURL});
+    assert(messages.at(-1).message.includes(remoteURL), 'Do not rewrite unrelated remote URLs');
+  }
 }
 
 (async () => {
   for (const timing of ['delayed','early','rejected']) await exercise(timing);
-  console.log(language + ': PASS shell URL/base, offline config, lifecycle, loadeddata timing and load failure (mock unit test only)');
+  console.log(language + ': PASS shell URL/base, offline config, lifecycle, loadeddata timing, load failure and exact-root diagnostic redaction (mock unit test only)');
 })().catch(error => { console.error(error); process.exitCode = 1; });
