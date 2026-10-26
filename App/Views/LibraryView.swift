@@ -114,6 +114,7 @@ private struct EntrySelectionView: View {
                     Button { play(movie) } label: {
                         HStack { Text(movie); Spacer(); if movie == package.selectedMovie { Image(systemName: "checkmark") } }
                     }
+                    .accessibilityIdentifier("entry-" + movie)
                 }
             }
             .navigationTitle(package.title)

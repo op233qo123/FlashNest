@@ -52,8 +52,8 @@ final class FolderPickerUITests: XCTestCase {
         open.tap()
         // These buttons exist only in the app-owned entry selector AFTER a
         // genuine picker callback, dismissal, background copy and discovery.
-        XCTAssertTrue(app.buttons["main.swf"].waitForExistence(timeout: 45), "Open must return to FlashNest and finish the import")
-        XCTAssertTrue(app.buttons["sub/level2/level3/child.swf"].exists, "Nested source directories must be discovered automatically")
+        XCTAssertTrue(app.buttons["entry-main.swf"].waitForExistence(timeout: 45), "Open must return to FlashNest and finish the import")
+        XCTAssertTrue(app.buttons["entry-sub/level2/level3/child.swf"].exists, "Nested source directories must be discovered automatically")
         XCTAssertFalse(open.exists, "System Files picker must be dismissed")
     }
 
@@ -69,6 +69,6 @@ final class FolderPickerUITests: XCTestCase {
         XCTAssertTrue(importButton.isHittable)
         openFixtureFolder(app)
         app.buttons["Open"].firstMatch.tap()
-        XCTAssertTrue(app.buttons["sub/level2/level3/child.swf"].waitForExistence(timeout: 45))
+        XCTAssertTrue(app.buttons["entry-sub/level2/level3/child.swf"].waitForExistence(timeout: 45))
     }
 }
