@@ -38,8 +38,14 @@ class StaticTests(unittest.TestCase):
   for p in (ROOT/'fixtures/multi-swf').rglob('*.swf'):
    b=p.read_bytes(); self.assertEqual(b[:3],b'FWS'); self.assertEqual(struct.unpack('<I',b[4:8])[0],len(b))
   self.assertIn(b'sub/child.swf',(ROOT/'fixtures/multi-swf/main.swf').read_bytes())
+  main=(ROOT/'fixtures/multi-swf/main.swf').read_bytes()
+  # ActionGetURL2 length=1, flags LoadVariables|LoadTarget for string _root.
+  self.assertIn(b'\x9a\x01\x00\xc0',main)
+  self.assertNotIn(b'\x9a\x01\x00\x80',main)
   self.assertIn(b'FLASHNEST_CHILD_OK',(ROOT/'fixtures/multi-swf/sub/child.swf').read_bytes())
-  with zipfile.ZipFile(ROOT/'fixtures/multi-swf.zip') as z: self.assertIn('sub/child.swf',z.namelist())
+  with zipfile.ZipFile(ROOT/'fixtures/multi-swf.zip') as z:
+   self.assertIn('sub/child.swf',z.namelist())
+   self.assertEqual(z.read('main.swf'),main)
  def test_manifest(self):
   manifest=json.loads((ROOT/'runtime.files.json').read_text())
   for name,digest in manifest.items(): self.assertEqual(hashlib.sha256((WEB/'runtime'/name).read_bytes()).hexdigest(),digest,name)

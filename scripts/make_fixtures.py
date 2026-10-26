@@ -19,11 +19,15 @@ def movie(actions,color):
     return b'FWS'+bytes([7])+struct.pack('<I',len(body)+8)+body
 base=ROOT/'fixtures'/'multi-swf'; (base/'sub').mkdir(parents=True,exist_ok=True)
 main=trace('FLASHNEST_MAIN_OK')+action(0x83,b'sub/child.swf\0_level1\0')
-main+=push('sibling.txt')+push('_root')+action(0x9a,b'\x80')+action(0x07)
+# A string MovieClip path needs BOTH flags: LoadVariables (0x80) and
+# LoadTarget (0x40). With only 0x80, '_root' is treated as browser navigation,
+# which the offline policy correctly blocks. Pinned Ruffle v0.7.1:
+# core/src/avm1/activation.rs::action_get_url_2, is_load_vars branch.
+main+=push('sibling.txt')+push('_root')+action(0x9a,b'\xc0')+action(0x07)
 (base/'main.swf').write_bytes(movie(main,(22,44,88)))
 (base/'sub'/'child.swf').write_bytes(movie(trace('FLASHNEST_CHILD_OK')+action(0x07),(24,130,96)))
 (base/'sibling.txt').write_text('fixture=FLASHNEST_TEXT_OK&answer=42\n')
-(base/'README.txt').write_text('Original FlashNest synthetic AVM1 test. main.swf loads sub/child.swf into _level1 and sibling.txt with LoadVariables. Child background green and trace FLASHNEST_CHILD_OK prove execution. No external assets.\n')
+(base/'README.txt').write_text('Original FlashNest synthetic AVM1 test. main.swf loads sub/child.swf into _level1 and sibling.txt with LoadVariables+LoadTarget (GetURL2 flags 0xC0) targeting _root. Child background green and trace FLASHNEST_CHILD_OK prove execution. No external assets.\n')
 with zipfile.ZipFile(ROOT/'fixtures'/'multi-swf.zip','w',zipfile.ZIP_DEFLATED) as z:
     for p in sorted(base.rglob('*')):
         if p.is_file():

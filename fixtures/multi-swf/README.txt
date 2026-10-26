@@ -1,1 +1,1 @@
-Original FlashNest synthetic AVM1 test. main.swf loads sub/child.swf into _level1 and sibling.txt with LoadVariables. Child background green and trace FLASHNEST_CHILD_OK prove execution. No external assets.
+Original FlashNest synthetic AVM1 test. main.swf loads sub/child.swf into _level1 and sibling.txt with LoadVariables+LoadTarget (GetURL2 flags 0xC0) targeting _root. Child background green and trace FLASHNEST_CHILD_OK prove execution. No external assets.
