@@ -219,3 +219,7 @@
 "The web player stopped unexpectedly. The cause is unknown. Close this game and reopen it." = "网页播放器意外停止，原因尚不明确。请关闭游戏后重新打开。";
 
 "The web player stopped. Previous saves were kept, but unsaved progress may be lost." = "网页播放器已停止。已有存档已保留，但尚未保存的进度可能丢失。";
+
+"Previous session diagnostics" = "上次会话诊断";
+
+"Clear previous diagnostics" = "清除上次诊断记录";

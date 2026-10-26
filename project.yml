@@ -37,7 +37,7 @@ targets:
       properties:
         CFBundleDisplayName: FlashNest
         CFBundleShortVersionString: '1.5.1'
-        CFBundleVersion: '7'
+        CFBundleVersion: '8'
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -60,7 +60,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.flashnest.app
         MARKETING_VERSION: '1.5.1'
-        CURRENT_PROJECT_VERSION: '7'
+        CURRENT_PROJECT_VERSION: '8'
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
       configs:

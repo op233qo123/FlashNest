@@ -219,3 +219,7 @@
 "The web player stopped unexpectedly. The cause is unknown. Close this game and reopen it." = "The web player stopped unexpectedly. The cause is unknown. Close this game and reopen it.";
 
 "The web player stopped. Previous saves were kept, but unsaved progress may be lost." = "The web player stopped. Previous saves were kept, but unsaved progress may be lost.";
+
+"Previous session diagnostics" = "Previous session diagnostics";
+
+"Clear previous diagnostics" = "Clear previous diagnostics";

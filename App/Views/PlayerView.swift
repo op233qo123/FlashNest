@@ -177,6 +177,18 @@ struct PlayerView: View {
         NavigationStack {
             List {
                 Section(L10n.text("Status")) { Text(session.failure ?? session.status); Text(package.selectedMovie).font(.caption) }
+                if let previous = session.previousSessionDiagnostic {
+                    Section(L10n.text("Previous session diagnostics")) {
+                        Text(previous)
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                            .accessibilityIdentifier("previous-session-diagnostic")
+                        Button(L10n.text("Clear previous diagnostics"), role: .destructive) {
+                            session.clearPreviousSessionDiagnostic()
+                        }
+                        .accessibilityIdentifier("clear-previous-session-diagnostic")
+                    }
+                }
                 Section(L10n.text("Recent diagnostics")) {
                     ForEach(Array(session.diagnostics.enumerated()), id: \.offset) { _, value in Text(value).font(.caption).textSelection(.enabled) }
                 }

@@ -44,6 +44,11 @@ jobs:
           xcrun simctl bootstatus "$device_id" -b
           xcodebuild -project FlashNest.xcodeproj -scheme FlashNestFixtureSource -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,id=$device_id" -derivedDataPath build-source -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
           xcrun simctl install "$device_id" build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app
+      - name: Verify input recovery and save safety on iOS 18.2
+        timeout-minutes: 10
+        run: |
+          set -o pipefail
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath SaveInputTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/InputFocusRuntimeTests -only-testing:FlashNestTests/SharedObjectPersistenceTests -only-testing:FlashNestTests/LastSessionDiagnosticsTests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee save-input-test.log
       - name: Tap the real Files Open and Cancel controls
         timeout-minutes: 20
         run: |
@@ -54,6 +59,9 @@ jobs:
         run: |
           mkdir -p picker-evidence
           xcrun xcresulttool help export attachments > picker-evidence/export-help.txt 2>&1 || true
+          if [ -d SaveInputTests.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path SaveInputTests.xcresult > picker-evidence/save-input-summary.json
+          fi
           if [ -d PickerTests.xcresult ]; then
             xcrun xcresulttool export attachments --path PickerTests.xcresult --output-path picker-evidence/attachments
             xcrun xcresulttool get test-results summary --path PickerTests.xcresult > picker-evidence/summary.json
@@ -64,6 +72,7 @@ jobs:
           name: FlashNest-iOS18.2-picker-evidence
           path: |
             picker-test.log
+            save-input-test.log
             picker-evidence
           if-no-files-found: warn
           retention-days: 7

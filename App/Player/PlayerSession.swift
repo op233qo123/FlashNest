@@ -7,6 +7,8 @@ import SwiftUI
     @Published private(set) var isLoaded = false
     @Published var failure: String?
     @Published var diagnostics: [String] = []
+    @Published private(set) var previousSessionDiagnostic: String?
+    private let incidentStore: LastSessionDiagnostics
     @Published var paused = false
     @Published var webView: WKWebView?
     private var server: LoopbackServer?
@@ -28,13 +30,16 @@ import SwiftUI
     private var pendingRestoreID: UUID?
     private var preserveNativeOnEmptyCapture = false
 
-    init(saveStore: SaveStore = SaveStore()) {
+    init(saveStore: SaveStore = SaveStore(), incidentStore: LastSessionDiagnostics? = nil) {
         self.saveStore = saveStore
+        self.incidentStore = incidentStore ?? LastSessionDiagnostics()
         super.init()
     }
 
     func start(package: GamePackage, contentRoot: URL, storageOnly: Bool = false) async {
         guard server == nil else { return }
+        currentPackage = package; currentContentRoot = contentRoot
+        previousSessionDiagnostic = incidentStore.latest(for: package.id)?.summary
         guard !Self.blockedPackageIDs.contains(package.id) else {
             restartRequired = true
             failure = L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again.")
@@ -220,10 +225,12 @@ import SwiftUI
                 // flush timeout, there is no old page to quarantine across retry.
                 saveFailure = L10n.text("The web player stopped. Previous saves were kept, but unsaved progress may be lost.")
             } else if !shutdownConfirmed {
+                persistIncident(.unconfirmedSaveFlush)
                 Self.blockedPackageIDs.insert(package.id)
                 restartRequired = true
                 saveFailure = L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again.")
             } else {
+                persistIncident(.nativeSaveWriteFailed)
                 saveFailure = L10n.text("Save could not be completed. Previous backups were kept.")
             }
             return false
@@ -311,6 +318,26 @@ import SwiftUI
         webView?.evaluateJavaScript("window.FlashNest?.key(\(literal), \(down ? "true" : "false"))")
     }
 
+    func clearPreviousSessionDiagnostic() {
+        guard let id = currentPackage?.id else { return }
+        do {
+            try incidentStore.clear(for: id)
+            previousSessionDiagnostic = nil
+        } catch {
+            record("Diagnostic metadata could not be cleared")
+        }
+    }
+
+    private func persistIncident(_ event: LastSessionDiagnostic.Event) {
+        guard let id = currentPackage?.id else { return }
+        let incident = LastSessionDiagnostic(event: event, date: Date(), loaded: isLoaded,
+            ready: ready, paused: paused, saveReady: saveReady, saving: saveTask != nil,
+            retainedProfiles: min(PackageWebKitProfiles.shared.retainedCount, 1024))
+        previousSessionDiagnostic = incident.summary
+        do { try incidentStore.record(incident, for: id) }
+        catch { record("Diagnostic metadata could not be retained") }
+    }
+
     private func record(_ message: String) {
         diagnostics.append(String(L10n.detail(message).prefix(500)))
         if diagnostics.count > 60 { diagnostics.removeFirst(diagnostics.count - 60) }
@@ -372,6 +399,7 @@ import SwiftUI
         // Public WebKit callback supplies no termination reason. Record only
         // bounded state, never a URL, capability, save payload or game filename.
         record("Web process terminated: cause=unknown, loaded=\(isLoaded), ready=\(ready), paused=\(paused), saveReady=\(saveReady), saving=\(saveTask != nil), profiles=\(PackageWebKitProfiles.shared.retainedCount)")
+        persistIncident(.webProcessTerminated)
         processTerminated = true
         generation = UUID() // invalidate any pending bootstrap acknowledgement
         ready = false; isLoaded = false; saveReady = false
