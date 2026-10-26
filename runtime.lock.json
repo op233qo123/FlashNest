@@ -1,0 +1,9 @@
+{
+  "name": "@ruffle-rs/ruffle",
+  "version": "0.7.1",
+  "release": "https://github.com/ruffle-rs/ruffle/releases/tag/v0.7.1",
+  "url": "https://github.com/ruffle-rs/ruffle/releases/download/v0.7.1/ruffle-0.7.1-web-selfhosted.zip",
+  "sha256": "ef12edbee135d581a9cd523837d746da30a07a64dbf1cf472d2e472c656f4b5e",
+  "checksumProvenance": "SHA256 computed from official GitHub HTTPS release asset downloaded 2026-10-26; not an independent publisher signature",
+  "license": "MIT OR Apache-2.0"
+}

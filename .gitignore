@@ -1,0 +1,25 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.build/
+build/
+DerivedData/
+artifacts/
+*.ipa
+*.xcarchive
+*.xcresult
+*.xcodeproj/
+*.xcworkspace/
+*.p12
+*.p8
+*.mobileprovision
+.env
+.env.*
+# Local implementation/review records; not part of the public project.
+NATIVE-IMPLEMENTATION.md
+review/
+
+# Exact official runtime fetched and verified at build time.
+App/Resources/Web/runtime/*.js
+App/Resources/Web/runtime/*.wasm
+App/Resources/Web/runtime/*.map

@@ -1,0 +1,73 @@
+name: Build unsigned iOS IPA (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-unsigned-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # verified official v4 ref
+      - name: Fetch checksum-pinned official runtime for bundling
+        run: python3 scripts/fetch_runtime.py
+      - name: Validate bundled runtime and shell
+        run: |
+          python3 scripts/test_static.py
+          python3 scripts/test_licenses.py
+          node --check App/Resources/Web/shell.js
+          node scripts/test_shell.js
+      - name: Download pinned XcodeGen without installing globally
+        run: |
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate
+      - name: Show toolchain and resolve exact Swift dependency
+        run: |
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild" || { echo "Pinned Xcode 16.4 is unavailable on this runner; no silent toolchain fallback" >&2; exit 1; }
+          xcodebuild -version
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Discover compatible available iPhone simulator
+        id: simulator
+        run: |
+          sdk_version=$(xcrun --sdk iphonesimulator --show-sdk-version)
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py "$sdk_version")
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+          echo "Selected iPhone $device_id for simulator SDK $sdk_version"
+      - name: Run native and actual WebKit runtime XCTest gate
+        timeout-minutes: 15
+        run: |
+          set -o pipefail
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 90 -derivedDataPath build-simulator -resultBundlePath TestResults.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 120 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee test.log
+      - name: Build unsigned iPhoneOS app
+        run: |
+          set -o pipefail
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNest -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee build.log
+      - name: Validate and package unsigned IPA
+        run: bash scripts/package_unsigned.sh build/Build/Products/Release-iphoneos/FlashNest.app artifacts/FlashNest-unsigned.ipa
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # verified official v4 ref
+        with:
+          name: FlashNest-unsigned-IPA
+          path: |
+            artifacts/FlashNest-unsigned.ipa
+            artifacts/FlashNest-unsigned.ipa.sha256
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # verified official v4 ref
+        if: failure()
+        with:
+          name: FlashNest-build-log
+          path: |
+            build.log
+            test.log
+            TestResults.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
