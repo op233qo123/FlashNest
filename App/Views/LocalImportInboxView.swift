@@ -77,7 +77,7 @@ struct LocalImportInboxView: View {
         defer { loading = false }
         let source = inbox
         do { entries = try await Task.detached(priority: .userInitiated) { try source.list() }.value }
-        catch { entries = []; error = L10n.error(error) }
+        catch { entries = []; self.error = L10n.error(error) }
     }
 
     @MainActor private func importEntry(_ entry: LocalImportInboxEntry) async {
