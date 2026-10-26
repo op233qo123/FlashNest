@@ -8,7 +8,9 @@ struct PackageImporter: Sendable {
 
     func importPackage(from source: URL) throws -> GamePackage {
         try control?.checkpoint(phase: "import.waiting", file: source.lastPathComponent)
+        print("FLASHNEST_PICKER worker starting security scope")
         let scoped = source.startAccessingSecurityScopedResource()
+        print("FLASHNEST_PICKER worker security scope returned=\(scoped)")
         defer { if scoped { source.stopAccessingSecurityScopedResource() } }
         var coordinationError: NSError?
         var result: Result<GamePackage, Error>?
@@ -16,6 +18,7 @@ struct PackageImporter: Sendable {
         control?.coordinate(with: coordinator)
         defer { control?.coordinate(with: nil) }
         coordinator.coordinate(readingItemAt: source, options: [], error: &coordinationError) { readable in
+            print("FLASHNEST_PICKER provider coordination accessor entered")
             result = Result { try stageAndCommit(readable) }
         }
         if let coordinationError { try control?.checkpoint(); throw coordinationError }

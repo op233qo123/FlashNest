@@ -68,7 +68,7 @@ final class ImportFlowTests: XCTestCase {
     func testSelectionIsDeliveredOnceAndNotLostOnSubsequentCancellation() {
         var received: [URL] = []
         var cancellations = 0
-        let coordinator = PackageDocumentPicker.Coordinator(selected: { received = $0.urls }, cancelled: { cancellations += 1 })
+        let coordinator = PackageDocumentPicker.Coordinator(selected: { received = $0 }, cancelled: { cancellations += 1 })
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder], asCopy: false)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("selected game")
         coordinator.documentPicker(picker, didPickDocumentsAt: [url])

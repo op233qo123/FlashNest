@@ -96,3 +96,11 @@
 "Incomplete or inconsistent ZIP directory" = "Incomplete or inconsistent ZIP directory";
 "%lld bytes copied" = "%lld bytes copied";
 "Missing local asset: %@" = "Missing local asset: %@";
+"picker.ready" = "Ready to import";
+"picker.presented" = "Files picker opened";
+"picker.callback" = "Files selection received";
+"picker.dismissed" = "Files picker closed";
+"picker.cancelled" = "File selection cancelled";
+"picker.importing" = "Importing selected files…";
+"picker.finished" = "Import finished — check the result above";
+"picker.imported" = "Folder imported successfully";

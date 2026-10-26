@@ -5,7 +5,7 @@ struct LibraryView: View {
     @ObservedObject var library: LibraryStore
     @AppStorage(L10n.preferenceKey) private var language = "system"
     @State private var importMode: PackagePickerMode?
-    @State private var pendingImport: ScopedImportSelection?
+    @State private var pickerEvent = "picker.ready"
     @State private var selected: GamePackage?
     @State private var playing: GamePackage?
     @State private var pendingPlay: GamePackage?
@@ -19,20 +19,25 @@ struct LibraryView: View {
                         .font(.largeTitle.bold()).padding(.vertical, 8)
                     Text(L10n.text("Import a complete game folder or ZIP. Keep every SWF and its assets together."))
                         .foregroundStyle(.secondary)
-                    Button { importMode = .folder } label: { Label(L10n.text("Import folder"), systemImage: "folder.badge.plus") }
+                    Button { pickerEvent = "picker.presented"; importMode = .folder } label: { Label(L10n.text("Import folder"), systemImage: "folder.badge.plus") }
                         .disabled(library.busy)
-                    Button { importMode = .files } label: { Label(L10n.text("Import ZIP or SWF"), systemImage: "doc.zipper") }
+                        .accessibilityIdentifier("import-folder")
+                    Button { pickerEvent = "picker.presented"; importMode = .files } label: { Label(L10n.text("Import ZIP or SWF"), systemImage: "doc.zipper") }
                         .disabled(library.busy)
                     Text(L10n.text("Open the game folder, then tap Open. Keep the main SWF and subfolders together."))
                         .font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.text(pickerEvent)).font(.caption).foregroundStyle(.secondary)
+                        .accessibilityIdentifier("picker-state").accessibilityValue(pickerEvent)
                     if library.busy {
                         ProgressView(L10n.text(library.cancelling ? "Cancelling…" : library.importProgress.phase))
+                            .accessibilityIdentifier("import-progress")
                         if !library.importProgress.file.isEmpty { Text(library.importProgress.file).font(.caption).lineLimit(2) }
                         Text(L10n.format("%lld bytes copied", Int64(library.importProgress.bytes)))
                             .font(.caption).monospacedDigit()
                         Button(L10n.text("Cancel import")) { library.cancelImport() }.disabled(library.cancelling)
                     } else if let message = library.importMessage {
                         Text(message).font(.caption).foregroundStyle(.secondary)
+                            .accessibilityIdentifier("import-result")
                     }
                 }
                 Section(L10n.text("Language")) {
@@ -61,11 +66,11 @@ struct LibraryView: View {
                 }
             }
             .navigationTitle(L10n.text("Library"))
-            .sheet(item: $importMode, onDismiss: beginPendingImport) { mode in
-                PackageDocumentPicker(mode: mode, selected: { selection in
-                    pendingImport = selection
+            .sheet(item: $importMode) { mode in
+                PackageDocumentPicker(mode: mode, selected: { urls in
                     importMode = nil
-                }, cancelled: { importMode = nil })
+                    beginImport(urls)
+                }, cancelled: { importMode = nil }, event: { pickerEvent = $0 })
             }
             .sheet(item: $selected, onDismiss: {
                 if let package = pendingPlay { pendingPlay = nil; playing = package }
@@ -81,18 +86,17 @@ struct LibraryView: View {
             .sheet(isPresented: $acknowledgments) { AcknowledgmentsView() }
             .alert("FlashNest", isPresented: Binding(get: { library.error != nil }, set: { if !$0 { library.error = nil } })) {
                 Button(L10n.text("OK")) { library.error = nil }
-            } message: { Text(library.error ?? "") }
+            } message: { Text(library.error ?? "").accessibilityIdentifier("import-error") }
         }
         .environment(\.locale, Locale(identifier: L10n.languageCode))
     }
 
-    private func beginPendingImport() {
-        guard let selection = pendingImport else { return }
-        pendingImport = nil
+    private func beginImport(_ urls: [URL]) {
         Task {
-            // Keep the provider's access grant alive for the full detached copy.
-            let imported = await library.importURLs(selection.urls)
-            withExtendedLifetime(selection) {}
+            pickerEvent = "picker.importing"
+            print("FLASHNEST_PICKER import task started")
+            let imported = await library.importURLs(urls)
+            pickerEvent = imported == nil ? "picker.finished" : "picker.imported"
             if let imported { selected = imported }
         }
     }

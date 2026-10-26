@@ -1,0 +1,53 @@
+name: Diagnose real folder picker on iOS 18.2 (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-picker-ios18
+  cancel-in-progress: false
+jobs:
+  picker:
+    runs-on: macos-14
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Prepare pinned resources and project
+        run: |
+          set -euo pipefail
+          python3 scripts/fetch_runtime.py
+          python3 scripts/test_static.py
+          python3 scripts/test_localization.py
+          python3 scripts/test_licenses.py
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -version
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNestUI -disableAutomaticPackageResolution
+      - name: Require installed iOS 18.2 simulator without downloading or substituting
+        id: simulator
+        run: |
+          set -euo pipefail
+          xcrun simctl list runtimes
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.2)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+          echo "Selected existing iOS 18.2 device $device_id"
+      - name: Tap the real Files Open and Cancel controls
+        timeout-minutes: 20
+        run: |
+          set -o pipefail
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath PickerTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 180 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee picker-test.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-iOS18.2-picker-evidence
+          path: |
+            picker-test.log
+            PickerTests.xcresult
+          if-no-files-found: warn
+          retention-days: 7

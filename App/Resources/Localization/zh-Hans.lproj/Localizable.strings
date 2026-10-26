@@ -96,3 +96,11 @@
 "Incomplete or inconsistent ZIP directory" = "ZIP 目录不完整或不一致";
 "%lld bytes copied" = "已复制 %lld 字节";
 "Missing local asset: %@" = "缺少本地资源：%@";
+"picker.ready" = "准备导入";
+"picker.presented" = "文件选择器已打开";
+"picker.callback" = "已收到所选文件";
+"picker.dismissed" = "文件选择器已关闭";
+"picker.cancelled" = "已取消选择文件";
+"picker.importing" = "正在导入所选文件…";
+"picker.finished" = "导入已结束，请查看上方结果";
+"picker.imported" = "文件夹导入成功";
