@@ -5,7 +5,7 @@ import XCTest
 final class FolderPickerUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
-        executionTimeAllowance = 120
+        executionTimeAllowance = 180
     }
 
     private func launch() -> XCUIApplication {
@@ -20,22 +20,34 @@ final class FolderPickerUITests: XCTestCase {
     private func capture(_ app: XCUIApplication, _ name: String) {
         let screenshot = XCTAttachment(screenshot: app.screenshot())
         screenshot.name = name; screenshot.lifetime = .keepAlways; add(screenshot)
-        let hierarchy = XCTAttachment(string: String(app.debugDescription.prefix(50_000)))
+        let description = String(app.debugDescription.prefix(50_000))
+        print("FLASHNEST_UI_AX \(name)\n\(description)")
+        let hierarchy = XCTAttachment(string: description)
         hierarchy.name = name + " accessibility"; hierarchy.lifetime = .keepAlways; add(hierarchy)
     }
 
     private func openFixtureFolder(_ app: XCUIApplication) {
         app.buttons["import-folder"].tap()
-        let title = app.navigationBars["FlashNest UI Fixture"].firstMatch
+        // iOS 18.2 uses a constant navigation-bar identifier rather than its
+        // displayed title. Require the exact title *inside* that bar instead.
+        let title = app.navigationBars.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "FlashNest UI Fixture")).firstMatch
         if !title.waitForExistence(timeout: 8) {
             // directoryURL is a best-effort hint. Navigate only known UI labels,
             // then require the exact fixture title before accepting Open.
             for label in ["Browse", "On My iPhone", "FlashNest", "FlashNest UI Fixture"] {
                 if title.exists { break }
-                let button = app.buttons[label].firstMatch
-                let text = app.staticTexts[label].firstMatch
-                if button.waitForExistence(timeout: 2), button.isHittable { button.tap() }
-                else if text.exists, text.isHittable { text.tap() }
+                // The underlying library also has a "FlashNest" title. Select
+                // the Files collection cell, not a hidden firstMatch behind it.
+                let cells = app.collectionViews["File View"].cells.containing(.staticText, identifier: label)
+                _ = cells.firstMatch.waitForExistence(timeout: 2)
+                if let cell = cells.allElementsBoundByIndex.first(where: { $0.isHittable }) {
+                    cell.tap()
+                } else if let button = app.buttons.matching(identifier: label).allElementsBoundByIndex.first(where: { $0.isHittable }) {
+                    button.tap()
+                } else if let text = app.staticTexts.matching(identifier: label).allElementsBoundByIndex.first(where: { $0.isHittable }) {
+                    text.tap()
+                }
             }
         }
         capture(app, "Files picker before Open")
@@ -62,6 +74,16 @@ final class FolderPickerUITests: XCTestCase {
         defer { capture(app, "Picker cancel and reopen final state") }
         openFixtureFolder(app)
         let cancel = app.buttons["Cancel"].firstMatch
+        // Files exposes its Cancel action at the Browse root; nested folders
+        // display a back breadcrumb instead, as seen in the real 18.2 capture.
+        for _ in 0..<4 {
+            if cancel.exists && cancel.isHittable { break }
+            let back = app.navigationBars.buttons.allElementsBoundByIndex.first {
+                ["FlashNest", "On My iPhone", "Browse"].contains($0.label) && $0.isHittable
+            }
+            guard let back else { break }
+            back.tap()
+        }
         XCTAssertTrue(cancel.waitForExistence(timeout: 5))
         cancel.tap()
         let importButton = app.buttons["import-folder"]
