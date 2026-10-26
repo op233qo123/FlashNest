@@ -93,7 +93,7 @@ import SwiftUI
             configuration.userContentController = controller
             // A URL path is not a storage boundary: Flash SharedObjects may use
             // localPath="/". Give each package an isolated, persistent profile.
-            configuration.websiteDataStore = WKWebsiteDataStore(forIdentifier: package.id)
+            configuration.websiteDataStore = PackageWebKitProfiles.shared.store(for: package.id, retaining: Self.activePackageIDs)
             configuration.allowsInlineMediaPlayback = true
             configuration.mediaTypesRequiringUserActionForPlayback = [.audio, .video]
             // Block remote subresources; permit same-origin blobs and inert data media alongside CSP.
@@ -264,7 +264,7 @@ import SwiftUI
 
     static func clearPackageCaches(packageID: UUID) async throws {
         guard !activePackageIDs.contains(packageID) else { throw SaveStoreError.invalid("game is still open") }
-        let profile = WKWebsiteDataStore(forIdentifier: packageID)
+        let profile = PackageWebKitProfiles.shared.store(for: packageID, retaining: activePackageIDs)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             var completed = false
             profile.removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache,

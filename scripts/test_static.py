@@ -19,8 +19,12 @@ class StaticTests(unittest.TestCase):
 
  def test_package_storage_isolation_contract(self):
   s=(ROOT/'App/Player/PlayerSession.swift').read_text()
-  self.assertIn('WKWebsiteDataStore(forIdentifier: package.id)',s)
+  registry=(ROOT/'App/Player/PackageWebKitProfiles.swift').read_text()
+  self.assertIn('PackageWebKitProfiles.shared.store(for: package.id',s)
+  self.assertIn('WKWebsiteDataStore(forIdentifier: id)',registry)
+  self.assertIn('profiles[id]',registry)
   self.assertNotIn('websiteDataStore = .default()',s)
+  self.assertNotIn('WKWebsiteDataStore.default()',registry)
  def test_actual_runtime(self):
   lock=json.loads((ROOT/'runtime.lock.json').read_text())
   self.assertEqual(json.loads((WEB/'runtime/package.json').read_text())['version'],lock['version'])
