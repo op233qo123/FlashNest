@@ -112,25 +112,52 @@ private struct EditableTouchButton: View {
     @State private var dragStart: CGPoint?
 
     var body: some View {
-        Text(TouchKeyLabel.title(button.key)).font(.system(size: 19, weight: .semibold)).minimumScaleFactor(0.65)
-            .foregroundStyle(.white).padding(5).frame(width: diameter, height: diameter)
-            .background(.black.opacity(0.35), in: Circle())
-            .overlay(Circle().stroke(.white.opacity(0.6), lineWidth: 1.5))
-            .opacity(opacity)
-            .overlay(Circle().stroke(selected ? Color.accentColor : .clear, lineWidth: 3))
-            .contentShape(Circle())
-            .gesture(DragGesture(minimumDistance: 1, coordinateSpace: .global).onChanged { value in
-                if dragStart == nil { dragStart = center; select() }
-                guard let start = dragStart else { return }
-                move(CGPoint(x: start.x + value.translation.width, y: start.y + value.translation.height))
-            }.onEnded { _ in dragStart = nil })
-            .onTapGesture(perform: select)
-            .accessibilityLabel(TouchKeyLabel.accessibility(button.key))
+        selectableFace
+            .gesture(moveGesture)
+            .onTapGesture { select() }
+            .accessibilityLabel(Text(TouchKeyLabel.accessibility(button.key)))
             .accessibilityAddTraits(.isButton)
-            .accessibilityAction(perform: select)
+            .accessibilityAction { select() }
             .accessibilityIdentifier("edit-touch-key-" + button.id)
             .position(center)
     }
+
+    private var keyFace: some View {
+        Text(TouchKeyLabel.title(button.key))
+            .font(Font.system(size: 19, weight: .semibold))
+            .minimumScaleFactor(0.65)
+            .foregroundStyle(Color.white)
+            .padding(5)
+            .frame(width: diameter, height: diameter)
+    }
+
+    private var translucentFace: some View {
+        keyFace
+            .background(Color.black.opacity(0.35), in: Circle())
+            .overlay(Circle().stroke(Color.white.opacity(0.6), lineWidth: 1.5))
+            .opacity(opacity)
+    }
+
+    private var selectableFace: some View {
+        let selectionColor: Color = selected ? Color.accentColor : Color.clear
+        return translucentFace
+            .overlay(Circle().stroke(selectionColor, lineWidth: 3))
+            .contentShape(Circle())
+    }
+
+    private var moveGesture: some Gesture {
+        DragGesture(minimumDistance: 1, coordinateSpace: .global)
+            .onChanged { value in updateDrag(value) }
+            .onEnded { _ in dragStart = nil }
+    }
+
+    private func updateDrag(_ value: DragGesture.Value) {
+        if dragStart == nil { dragStart = center; select() }
+        guard let start = dragStart else { return }
+        let destination = CGPoint(x: start.x + value.translation.width, y: start.y + value.translation.height)
+        move(destination)
+    }
+
 }
 
 struct TouchControlEditorBar: View {
@@ -141,42 +168,53 @@ struct TouchControlEditorBar: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                Image(systemName: "circle.lefthalf.filled").accessibilityHidden(true)
-                Slider(value: $settings.opacity, in: 0.1...1, step: 0.05)
-                    .frame(maxWidth: 180).accessibilityLabel(L10n.text("Control opacity"))
-                    .accessibilityIdentifier("control-opacity")
-                Text("\(Int((settings.opacity * 100).rounded()))%")
-                    .font(.caption.monospacedDigit()).frame(width: 36).accessibilityIdentifier("control-opacity-value")
-                Spacer(minLength: 0)
-                Button(L10n.text("Done"), action: done).buttonStyle(.borderedProminent)
-                    .accessibilityIdentifier("controls-editor-done")
-            }
-            HStack(spacing: 12) {
-                if let index = selectedIndex {
-                    Picker(L10n.text("Key"), selection: $settings.buttons[index].key) {
-                        ForEach(TouchControlSettings.supportedKeys, id: \.self) { code in
-                            Text(TouchKeyLabel.accessibility(code)).tag(code)
-                        }
-                    }.pickerStyle(.menu).accessibilityIdentifier("control-key-picker")
-                }
-                Button { selectedID = settings.addButton() } label: {
-                    Label(L10n.text("Add button"), systemImage: "plus.circle")
-                }.disabled(settings.buttons.count >= TouchControlSettings.maximumButtons)
-                    .accessibilityIdentifier("controls-add")
-                if let index = selectedIndex, settings.buttons[index].slot >= 6 {
-                    Button(role: .destructive) {
-                        settings.buttons.remove(at: index); selectedID = settings.buttons.first?.id
-                    } label: { Image(systemName: "trash") }
-                        .accessibilityLabel(L10n.text("Remove button"))
-                }
-                Spacer(minLength: 0)
-            }.font(.callout)
+            opacityRow
+            mappingRow
             Text(L10n.text("Drag buttons to move. Tap one to change its key."))
                 .font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
         }.padding(12).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             .frame(maxWidth: 540)
     }
+
+    private var opacityRow: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "circle.lefthalf.filled").accessibilityHidden(true)
+            Slider(value: $settings.opacity, in: 0.1...1, step: 0.05)
+                .frame(maxWidth: 180).accessibilityLabel(L10n.text("Control opacity"))
+                .accessibilityIdentifier("control-opacity")
+            Text("\(Int((settings.opacity * 100).rounded()))%")
+                .font(.caption.monospacedDigit()).frame(width: 36).accessibilityIdentifier("control-opacity-value")
+            Spacer(minLength: 0)
+            Button(L10n.text("Done"), action: done).buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("controls-editor-done")
+        }
+    }
+
+    private var mappingRow: some View {
+        HStack(spacing: 12) {
+            if let index = selectedIndex { keyPicker(at: index) }
+            Button { selectedID = settings.addButton() } label: {
+                Label(L10n.text("Add button"), systemImage: "plus.circle")
+            }.disabled(settings.buttons.count >= TouchControlSettings.maximumButtons)
+                .accessibilityIdentifier("controls-add")
+            if let index = selectedIndex, settings.buttons[index].slot >= 6 {
+                Button(role: .destructive) {
+                    settings.buttons.remove(at: index); selectedID = settings.buttons.first?.id
+                } label: { Image(systemName: "trash") }
+                    .accessibilityLabel(L10n.text("Remove button"))
+            }
+            Spacer(minLength: 0)
+        }.font(.callout)
+    }
+
+    private func keyPicker(at index: Int) -> some View {
+        Picker(L10n.text("Key"), selection: $settings.buttons[index].key) {
+            ForEach(TouchControlSettings.supportedKeys, id: \.self) { code in
+                Text(TouchKeyLabel.accessibility(code)).tag(code)
+            }
+        }.pickerStyle(.menu).accessibilityIdentifier("control-key-picker")
+    }
+
 }
 
 enum TouchKeyLabel {
