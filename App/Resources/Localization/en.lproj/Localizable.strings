@@ -213,3 +213,5 @@
 "Save restoration could not be confirmed. The game was not started." = "Save restoration could not be confirmed. The game was not started.";
 "This game is already open." = "This game is already open.";
 "This game's files were removed. Its saves are retained for export. Import a compatible game separately before restoring a save." = "This game's files were removed. Its saves are retained for export. Import a compatible game separately before restoring a save.";
+
+"Saving did not finish safely. Close and reopen FlashNest before opening this game again." = "Saving did not finish safely. Close and reopen FlashNest before opening this game again.";

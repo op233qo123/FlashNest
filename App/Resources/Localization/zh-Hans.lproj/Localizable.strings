@@ -213,3 +213,5 @@
 "Save restoration could not be confirmed. The game was not started." = "无法确认存档恢复结果，游戏未启动。";
 "This game is already open." = "此游戏已经打开。";
 "This game's files were removed. Its saves are retained for export. Import a compatible game separately before restoring a save." = "此游戏的文件已删除，但存档已保留，可继续导出。恢复存档前，请先导入兼容的游戏。";
+
+"Saving did not finish safely. Close and reopen FlashNest before opening this game again." = "保存未能安全完成。请关闭并重新打开 FlashNest，再启动此游戏。";

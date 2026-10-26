@@ -49,15 +49,14 @@ final class FullscreenPlayerUITests: XCTestCase {
 
         menu.tap()
         let visibility = app.switches["controls-visible"].firstMatch
-        reveal(visibility, in: app)
-        visibility.tap()
+        setControlVisibility(false, toggle: visibility, in: app)
         dismissMenu(app)
         XCTAssertTrue(wait { nativeKeys.count == 0 })
         XCTAssertTrue(menu.isHittable, "The floating menu must remain usable with all controls hidden")
         capture(app, "Landscape hidden controls recoverable menu")
 
         menu.tap()
-        reveal(visibility, in: app); visibility.tap()
+        setControlVisibility(true, toggle: visibility, in: app)
         let opacity = app.sliders["control-opacity"].firstMatch
         reveal(opacity, in: app); opacity.adjust(toNormalizedSliderPosition: 0)
         XCTAssertEqual(app.staticTexts["control-opacity-value"].firstMatch.label, "10%")
@@ -133,6 +132,22 @@ final class FullscreenPlayerUITests: XCTestCase {
         XCTAssertTrue(app.buttons["entry-sub/child.swf"].exists)
         entry.tap()
         return app
+    }
+
+    private func setControlVisibility(_ enabled: Bool, toggle: XCUIElement, in app: XCUIApplication) {
+        reveal(toggle, in: app)
+        let expectedBefore = enabled ? "0" : "1"
+        let expectedAfter = enabled ? "1" : "0"
+        XCTAssertEqual(toggle.value as? String, expectedBefore, "Visibility must start in the state this transition is testing")
+        // iOS18.2 exposes the entire Form row as a Switch. Its synthesized
+        // .tap() hit the empty row center (x426), while the actual UISwitch
+        // thumb was near x735; the recorded video stayed green. Target the
+        // trailing switch region of this identified element, not a screen-
+        // absolute coordinate, then prove the value changed before dismissal.
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        let changed = wait { (toggle.value as? String) == expectedAfter }
+        if !changed { capture(app, "Visibility switch did not change", includeHierarchy: true) }
+        XCTAssertTrue(changed, "The real visibility toggle must change before checking the game overlay")
     }
 
     private func reveal(_ element: XCUIElement, in app: XCUIApplication) {

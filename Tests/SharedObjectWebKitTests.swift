@@ -9,11 +9,11 @@ import WebKit
     func testDestroyFlushCaptureRestoreAndPackageStorageIsolation() async throws {
         executionTimeAllowance = 120
         let deadline = Date().addingTimeInterval(110)
-        let writer = try SaveFixturePage(movie: "close-flush.swf")
+        let writer = try SaveFixturePage(movie: "close-flush.swf", label: "writer", deadline: deadline)
         defer { writer.stop() }
         try await writer.load()
         try await writer.waitForFixture(before: "undefined", deadline: deadline)
-        _ = try await writer.view.evaluateJavaScript("window.FlashNest.pause(); true")
+        _ = try await writer.evaluate("window.FlashNest.pause(); true", phase: "pause")
         let pausedCount = try await writer.storedSOLCount()
         XCTAssertEqual(pausedCount, 0,
                        "Pausing alone must not masquerade as flushing the unflushed SharedObject")
@@ -51,7 +51,6 @@ import WebKit
                        "An ordinary open must not replace live saves with stale native backup data")
         let retainedUnrelated = try await writer.unrelatedValue()
         XCTAssertEqual(retainedUnrelated, "keep-me")
-        writer.stop()
 
         // A different per-package persistent profile, capability, package UUID,
         // and loopback origin must restore before Ruffle executes the movie.
@@ -62,7 +61,7 @@ import WebKit
             SaveEntry(scope: "ancestor", key: "games/FixtureGamesObject", value: object.value),
             SaveEntry(scope: "ancestor", key: "capability/FixtureCapabilityObject", value: object.value)
         ])
-        let reader = try SaveFixturePage(movie: "read-only.swf", restore: mappedCapture)
+        let reader = try SaveFixturePage(movie: "read-only.swf", restore: mappedCapture, label: "reader", deadline: deadline)
         defer { reader.stop() }
         XCTAssertNotEqual(reader.packageID, writer.packageID)
         XCTAssertNotEqual(reader.capability, writer.capability)
@@ -79,25 +78,28 @@ import WebKit
         let restoredJSON = String(decoding: try JSONEncoder().encode(restored), as: UTF8.self)
         XCTAssertFalse(restoredJSON.contains(reader.capability))
         XCTAssertFalse(restoredJSON.contains(reader.packageID.uuidString))
-        reader.stop()
 
         // Even root localPath saves must not bleed into another game's profile.
-        let isolated = try SaveFixturePage(movie: "read-only.swf")
+        let isolated = try SaveFixturePage(movie: "read-only.swf", label: "isolated", deadline: deadline)
         defer { isolated.stop() }
         try await isolated.load()
         try await isolated.waitForFixture(before: "undefined", deadline: deadline)
         _ = try await isolated.shutdownAndCapture()
-        await writer.clearTestStorage()
-        await reader.clearTestStorage()
-        await isolated.clearTestStorage()
+        // Keep the other profiles populated until isolation has been observed.
+        // Their destroyed players cannot keep writing, but their views remain
+        // attached so cleanup does not depend on waking a detached WebView.
+        try await writer.clearTestStorage()
+        try await reader.clearTestStorage()
+        try await isolated.clearTestStorage()
     }
 
     func testExplicitSharedObjectFlushIsCapturedWithoutChangingItsBytes() async throws {
         executionTimeAllowance = 120
-        let page = try SaveFixturePage(movie: "explicit-flush.swf")
+        let deadline = Date().addingTimeInterval(110)
+        let page = try SaveFixturePage(movie: "explicit-flush.swf", label: "explicit", deadline: deadline)
         defer { page.stop() }
         try await page.load()
-        try await page.waitForFixture(before: "undefined", deadline: Date().addingTimeInterval(90))
+        try await page.waitForFixture(before: "undefined", deadline: deadline)
         XCTAssertTrue(page.messages.traces.contains(where: { $0.hasPrefix("SWF: FLASHNEST_SAVE_FLUSH:") }))
         let explicitCount = try await page.storedSOLCount()
         XCTAssertEqual(explicitCount, 1)
@@ -108,7 +110,7 @@ import WebKit
                        "Export must preserve the actual Ruffle SOL bytes, not convert them to a savestate")
         let unrelated = try await page.unrelatedValue()
         XCTAssertEqual(unrelated, "keep-me")
-        await page.clearTestStorage()
+        try await page.clearTestStorage()
     }
 }
 
@@ -139,9 +141,13 @@ import WebKit
     private let window: UIWindow
     private weak var previousKeyWindow: UIWindow?
     private let movie: String
+    private let label: String
+    private let deadline: Date
+    private let beganAt = Date()
+    private var serverStarted = false
     private var stopped = false
 
-    init(movie: String, restore: SaveCapture? = nil) throws {
+    init(movie: String, restore: SaveCapture? = nil, label: String, deadline: Date) throws {
         let identifier = UUID()
         let token = UUID().uuidString.lowercased()
         let recorder = SaveFixtureMessages()
@@ -182,18 +188,31 @@ import WebKit
         window = fixtureWindow
         previousKeyWindow = previous
         self.movie = movie
+        self.label = label
+        self.deadline = deadline
     }
 
     func load(movie: String? = nil) async throws {
-        try await server.start()
+        guard !stopped else { throw fixtureError("Cannot load a stopped fixture") }
+        _ = try remainingTime(for: "load")
+        if !serverStarted {
+            phase("server-start.begin")
+            // LoopbackServer already bounds initial listener readiness to 10s.
+            try await server.start()
+            serverStarted = true
+            phase("server-start.complete")
+        }
+        phase("navigation.begin movie=" + (movie ?? self.movie))
         var components = URLComponents(url: server.shellURL, resolvingAgainstBaseURL: false)!
         components.queryItems = [URLQueryItem(name: "entry", value: movie ?? self.movie),
                                 URLQueryItem(name: "package", value: packageID.uuidString),
                                 URLQueryItem(name: "language", value: "en")]
         view.load(URLRequest(url: try XCTUnwrap(components.url)))
+        phase("navigation.issued")
     }
 
     func reload(movie: String, restore: SaveCapture, policy: String) async throws {
+        phase("reload.prepare policy=" + policy)
         let json = String(decoding: try JSONEncoder().encode(restore), as: UTF8.self)
         let policyJSON = String(decoding: try JSONEncoder().encode(policy), as: UTF8.self)
         let setup = "window.__FlashNestRestore = \(json); window.__FlashNestRestorePolicy = \(policyJSON);"
@@ -207,6 +226,7 @@ import WebKit
     }
 
     func waitForFixture(before: String, deadline: Date) async throws {
+        phase("movie.await expected=" + before)
         var started = false
         while Date() < deadline {
             if messages.failed { throw fixtureError("Shell reported an error before the SharedObject fixture completed") }
@@ -216,7 +236,7 @@ import WebKit
                     throw fixtureError("Save restoration must finish before the movie is reported loaded")
                 }
                 // Synthetic click checks the real DOM overlay path, not trusted audio.
-                _ = try await view.evaluateJavaScript("document.getElementById('start').click(); true")
+                _ = try await evaluate("document.getElementById('start').click(); true", phase: "movie.start")
                 started = true
             }
             if messages.traces.contains("SWF: FLASHNEST_SAVE_READY") {
@@ -224,6 +244,7 @@ import WebKit
                 XCTAssertTrue(messages.traces.contains("SWF: FLASHNEST_SAVE_BEFORE:\(before)"),
                               "Unexpected SharedObject value; observed only fixture traces: \(messages.traces)")
                 XCTAssertNotNil(view.window)
+                phase("movie.ready expected=" + before + " traces=" + messages.traces.joined(separator: " | "))
                 return
             }
             try await Task.sleep(nanoseconds: 100_000_000)
@@ -232,39 +253,97 @@ import WebKit
     }
 
     func shutdownAndCapture() async throws -> SaveCapture {
-        let result = try await SaveWebKitBridge.capture(from: view)
+        phase("capture.begin")
+        let result = try await SaveWebKitBridge.capture(from: view, timeout: min(15, try remainingTime(for: "capture")))
         let bytes = try JSONSerialization.data(withJSONObject: result)
-        return try JSONDecoder().decode(SaveCapture.self, from: bytes)
+        let capture = try JSONDecoder().decode(SaveCapture.self, from: bytes)
+        phase("capture.complete objects=\(capture.entries.count)")
+        return capture
     }
 
     func solValues() async throws -> [String] {
-        let result = try await view.evaluateJavaScript("""
+        let result = try await evaluate("""
         Object.keys(localStorage).map(key => localStorage.getItem(key)).filter(value => {
           try {
             const bytes = atob(value);
             return bytes.length >= 16 && bytes.charCodeAt(0) === 0 && bytes.charCodeAt(1) === 191 && bytes.slice(6, 10) === 'TCSO';
           } catch (_) { return false; }
         }).sort()
-        """)
+        """, phase: "storage.read-sol")
         return try XCTUnwrap(result as? [String])
     }
 
     func storedSOLCount() async throws -> Int { (try await solValues()).count }
 
     func unrelatedValue() async throws -> String? {
-        try await view.evaluateJavaScript("localStorage.getItem('FlashNestFixture.unrelated')") as? String
+        try await evaluate("localStorage.getItem('FlashNestFixture.unrelated')", phase: "storage.read-unrelated") as? String
     }
 
-    func clearTestStorage() async {
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+    func clearTestStorage() async throws {
+        // Match the already-passing explicit-flush path: finish data-store work
+        // while this fixture's view is attached, before detaching/suspending it.
+        guard view.window != nil, !stopped else { throw fixtureError("Cleanup requires an attached fixture") }
+        phase("storage-cleanup.begin")
+        let allowance = min(5, try remainingTime(for: "storage-cleanup"))
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            var completed = false
             dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast) {
-                continuation.resume()
+                Task { @MainActor in
+                    guard !completed else { return }
+                    completed = true
+                    continuation.resume()
+                }
+            }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(allowance * 1_000_000_000))
+                guard !completed else { return }
+                completed = true
+                continuation.resume(throwing: self.fixtureError("Timed out during storage-cleanup"))
             }
         }
+        phase("storage-cleanup.complete")
+    }
+
+    /// Test diagnostics use the longstanding callback API and a deadline, not
+    /// the affected refined callAsyncJavaScript overlay or an unbounded await.
+    func evaluate(_ script: String, phase name: String) async throws -> Any {
+        phase(name + ".begin")
+        let allowance = min(10, try remainingTime(for: name))
+        let result: Any = try await withCheckedThrowingContinuation { continuation in
+            var completed = false
+            view.evaluateJavaScript(script) { value, error in
+                Task { @MainActor in
+                    guard !completed else { return }
+                    completed = true
+                    if error != nil { continuation.resume(throwing: self.fixtureError("JavaScript failed during " + name)) }
+                    else { continuation.resume(returning: value ?? NSNull()) }
+                }
+            }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(allowance * 1_000_000_000))
+                guard !completed else { return }
+                completed = true
+                continuation.resume(throwing: self.fixtureError("Timed out during " + name))
+            }
+        }
+        phase(name + ".complete")
+        return result
+    }
+
+    private func remainingTime(for operation: String) throws -> TimeInterval {
+        let remaining = deadline.timeIntervalSinceNow
+        guard remaining > 0 else { throw fixtureError("Shared fixture deadline exceeded during " + operation) }
+        return remaining
+    }
+
+    private func phase(_ name: String) {
+        // Never log a capability URL, imported key, or save contents.
+        print("FLASHNEST_SAVE_TEST \(label) \(name) elapsed=\(String(format: "%.2f", Date().timeIntervalSince(beganAt))) attached=\(view.window != nil) types=\(messages.types.joined(separator: ","))")
     }
 
     func stop() {
         guard !stopped else { return }
+        phase("stop")
         stopped = true
         view.stopLoading()
         view.configuration.userContentController.removeScriptMessageHandler(forName: "flashnest")

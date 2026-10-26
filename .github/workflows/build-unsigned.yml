@@ -63,6 +63,14 @@ jobs:
             artifacts/FlashNest-unsigned.ipa.sha256
           if-no-files-found: error
           retention-days: 7
+      - name: Export compact XCTest failure evidence
+        if: failure()
+        run: |
+          mkdir -p test-evidence
+          if [ -d TestResults.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path TestResults.xcresult > test-evidence/summary.json || true
+            xcrun xcresulttool export attachments --path TestResults.xcresult --output-path test-evidence/attachments || true
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # verified official v4 ref
         if: failure()
         with:
@@ -70,5 +78,6 @@ jobs:
           path: |
             build.log
             test.log
+            test-evidence
           if-no-files-found: ignore
           retention-days: 7

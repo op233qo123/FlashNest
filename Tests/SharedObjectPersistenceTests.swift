@@ -68,7 +68,7 @@ import WebKit
         try await runMovie(package, content: content, store: store, before: "42", deadline: deadline)
     }
 
-    func testConfirmedImportAppliesOnceAndNewerLiveFlushSurvivesAbnormalStop() async throws {
+    func testConfirmedImportAppliesOnceAndNewerLiveFlushSurvivesMissedNativeCapture() async throws {
         executionTimeAllowance = 120
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -92,6 +92,42 @@ import WebKit
                       "Simulate interrupted native capture: disk is older than live WK SharedObject")
         package.selectedMovie = "read-only.swf"
         try await runMovie(package, content: content, store: store, before: "42", deadline: deadline)
+    }
+
+    func testUnconfirmedFlushBlocksSameProfileAcrossSessionsWithoutReplacingCurrent() async throws {
+        executionTimeAllowance = 60
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let packages = root.appendingPathComponent("packages")
+        let store = SaveStore(root: root.appendingPathComponent("save"))
+        let package = try fixturePackage(in: packages)
+        let content = packages.appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        _ = try store.persistLatest(SaveCapture(version: 1, entries: []), package: package)
+        let current = store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")
+        let original = try Data(contentsOf: current)
+        let session = PlayerSession(saveStore: store)
+        defer { session.stop() }
+        await session.start(package: package, contentRoot: content, storageOnly: true)
+        let deadline = Date().addingTimeInterval(15)
+        while !session.saveReady, session.failure == nil, Date() < deadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertTrue(session.saveReady)
+        let view = try XCTUnwrap(session.webView)
+        _ = try await view.evaluateJavaScript("""
+        window.FlashNest = {releaseKeys(){}, pause(){},
+          shutdownAndCapture: () => Promise.reject(new Error('intentional unconfirmed fixture flush'))}; true;
+        """)
+        let saved = await session.closeAndSave()
+        XCTAssertFalse(saved)
+        XCTAssertTrue(session.restartRequired)
+        XCTAssertEqual(try Data(contentsOf: current), original)
+        let reopened = PlayerSession(saveStore: store)
+        defer { reopened.stop() }
+        await reopened.start(package: package, contentRoot: content, storageOnly: true)
+        XCTAssertTrue(reopened.restartRequired)
+        XCTAssertNil(reopened.webView, "A new session must not bypass the process-wide unsafe-profile lease")
+        XCTAssertNotNil(reopened.failure)
     }
 
     private func fixturePackage(in root: URL) throws -> GamePackage {
@@ -121,13 +157,18 @@ import WebKit
                 started = true
             }
             if session.diagnostics.contains(where: { $0.contains("FLASHNEST_SAVE_READY") }) {
-                XCTAssertTrue(session.diagnostics.contains(where: { $0.contains("FLASHNEST_SAVE_BEFORE:" + before) }),
-                              "Actual SWF must observe expected isolated/restored progress")
+                let observed = session.diagnostics.filter { $0.contains("FLASHNEST_SAVE_BEFORE:") }
+                XCTAssertTrue(observed.contains(where: { $0.contains("FLASHNEST_SAVE_BEFORE:" + before) }),
+                              "Movie=\(package.selectedMovie), expected=\(before), observed=\(observed), nativeCapture=\(persist)")
                 XCTAssertTrue(session.saveReady)
                 if persist {
                     let saved = await session.closeAndSave()
                     XCTAssertTrue(saved, "Awaited destroy/capture/native persistence must succeed")
                 } else {
+                    // Model a missed native archive update, not an actual OS kill.
+                    // Await Ruffle destruction but deliberately discard its capture:
+                    // an old page must not flush later over the next page's writes.
+                    _ = try await SaveWebKitBridge.capture(from: view)
                     try await session.closeWithoutSaving()
                 }
                 return

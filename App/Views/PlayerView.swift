@@ -153,10 +153,14 @@ struct PlayerView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Label(L10n.text("Save could not be completed"), systemImage: "exclamationmark.triangle")
                     .font(.title2.bold())
-                if let message = session.saveFailure { Text(message) }
-                Text(L10n.text("The last saved copy is kept. Returning may discard unsaved progress."))
-                Button(L10n.text("Return to last saved game")) { acceptedSaveRecovery = true; sheet = nil }
-                    .buttonStyle(.borderedProminent)
+                if session.restartRequired {
+                    Text(L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again."))
+                } else {
+                    if let message = session.saveFailure { Text(message) }
+                    Text(L10n.text("The last saved copy is kept. Returning may discard unsaved progress."))
+                    Button(L10n.text("Return to last saved game")) { acceptedSaveRecovery = true; sheet = nil }
+                        .buttonStyle(.borderedProminent)
+                }
                 Button(L10n.text("Close without saving"), role: .destructive) {
                     Task {
                         closing = true; releaseKeys()

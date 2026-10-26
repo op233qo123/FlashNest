@@ -14,11 +14,15 @@ import SwiftUI
     private var ready = false
     @Published private(set) var saveFailure: String?
     @Published private(set) var saveReady = false
+    @Published private(set) var restartRequired = false
     private let saveStore: SaveStore
     private var currentPackage: GamePackage?
     private var currentContentRoot: URL?
     private var saveTask: Task<Bool, Never>?
     private static var activePackageIDs = Set<UUID>()
+    // An unconfirmed old page may still flush later. Keep the affected profile
+    // closed for this process; app restart terminates the uncertain old page.
+    private static var blockedPackageIDs = Set<UUID>()
     private var ownsPackageLease = false
     private var pendingRestoreID: UUID?
     private var preserveNativeOnEmptyCapture = false
@@ -30,6 +34,13 @@ import SwiftUI
 
     func start(package: GamePackage, contentRoot: URL, storageOnly: Bool = false) async {
         guard server == nil else { return }
+        guard !Self.blockedPackageIDs.contains(package.id) else {
+            restartRequired = true
+            failure = L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again.")
+            saveFailure = failure
+            return
+        }
+        restartRequired = false
         guard !Self.activePackageIDs.contains(package.id) else {
             failure = L10n.text("This game is already open.")
             return
@@ -178,8 +189,10 @@ import SwiftUI
             return true
         }
         releaseAllKeys()
+        var shutdownConfirmed = false
         do {
             let object = try await captureObject(from: view)
+            shutdownConfirmed = true
             let data = try JSONSerialization.data(withJSONObject: object)
             guard data.count <= SaveStore.maximumArchiveBytes else { throw SaveStoreError.limit("archive size") }
             let capture = try JSONDecoder().decode(SaveCapture.self, from: data)
@@ -197,7 +210,13 @@ import SwiftUI
         } catch {
             // WebKit errors may contain capability URLs; display only a
             // stable local message and retain all previous native snapshots.
-            saveFailure = L10n.text("Save could not be completed. Previous backups were kept.")
+            if !shutdownConfirmed {
+                Self.blockedPackageIDs.insert(package.id)
+                restartRequired = true
+                saveFailure = L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again.")
+            } else {
+                saveFailure = L10n.text("Save could not be completed. Previous backups were kept.")
+            }
             return false
         }
     }
@@ -222,6 +241,7 @@ import SwiftUI
     /// Captures a legacy persistent profile without starting the movie. Call
     /// before import if no current.json exists, so overwrite has a real backup.
     static func preserveLegacySave(package: GamePackage, store: SaveStore = SaveStore(), forceCaptureLive: Bool = false) async throws {
+        guard !blockedPackageIDs.contains(package.id) else { throw SaveStoreError.invalid("app restart required after unconfirmed save flush") }
         guard !activePackageIDs.contains(package.id) else { throw SaveStoreError.invalid("game is still open") }
         // A confirmed import not yet applied is authoritative; do not replace
         // it with the target profile's older live values during backup/export.
@@ -245,8 +265,23 @@ import SwiftUI
     static func clearPackageCaches(packageID: UUID) async throws {
         guard !activePackageIDs.contains(packageID) else { throw SaveStoreError.invalid("game is still open") }
         let profile = WKWebsiteDataStore(forIdentifier: packageID)
-        await profile.removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache,
-                                          WKWebsiteDataTypeOfflineWebApplicationCache], modifiedSince: .distantPast)
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            var completed = false
+            profile.removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache,
+                                         WKWebsiteDataTypeOfflineWebApplicationCache], modifiedSince: .distantPast) {
+                Task { @MainActor in
+                    guard !completed else { return }
+                    completed = true
+                    continuation.resume()
+                }
+            }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 15_000_000_000)
+                guard !completed else { return }
+                completed = true
+                continuation.resume(throwing: SaveStoreError.invalid("temporary cache cleanup timed out; game copy retained"))
+            }
+        }
     }
 
     static func preparePackageRemoval(package: GamePackage) async throws {
