@@ -18,6 +18,7 @@ final class LoopbackServer {
     // A restart must not rebind the stable port while the old listener owns it.
     private var stopping = false
     private var restart: CheckedContinuation<Void, Error>?
+    private var stopWaiters: [UUID: CheckedContinuation<Void, Error>] = [:]
 
     init(port: UInt16, capability: String, webRoot: URL) {
         precondition(port > 1024)
@@ -95,6 +96,18 @@ final class LoopbackServer {
     }
 
     func stop() { queue.async { self.shutdown() } }
+    func stopAndWait() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            queue.async {
+                let id = UUID()
+                self.stopWaiters[id] = continuation
+                self.shutdown()
+                self.queue.asyncAfter(deadline: .now() + 5) { [weak self] in
+                    self?.stopWaiters.removeValue(forKey: id)?.resume(throwing: LocalHTTPError.stopped)
+                }
+            }
+        }
+    }
     private func failStart(_ error: Error) {
         startup?.resume(throwing: error)
         startup = nil
@@ -114,6 +127,9 @@ final class LoopbackServer {
     private func finishStopIfDrained() {
         guard stopping, listener == nil, connections.isEmpty else { return }
         stopping = false
+        let completed = stopWaiters
+        stopWaiters.removeAll()
+        completed.values.forEach { $0.resume() }
         if let pending = restart {
             restart = nil
             // Let the final cancellation callback unwind before rebinding.

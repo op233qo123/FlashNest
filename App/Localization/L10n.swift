@@ -38,6 +38,12 @@ enum L10n {
     /// Detailed diagnostic information may be recorded separately by the caller.
     static func error(_ error: Error) -> String {
         if let packageError = error as? PackageError { return packageError.errorDescription ?? text("The operation could not be completed. Please try again.") }
+        if let saveError = error as? SaveStoreError {
+            switch saveError {
+            case .invalid: return text("The save could not be verified. Existing saves were kept.")
+            case .limit: return text("The save exceeds supported limits. Use a smaller backup or move older backups out of the save folder.")
+            }
+        }
         let nsError = error as NSError
         if nsError.domain == NSCocoaErrorDomain { return text("The file could not be accessed. Check its permissions and try importing it again.") }
         if nsError.domain == NSURLErrorDomain { return text("The local player could not connect. Close the game and try again.") }

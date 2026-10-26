@@ -12,9 +12,33 @@ import SwiftUI
     private var server: LoopbackServer?
     private var generation = UUID()
     private var ready = false
+    @Published private(set) var saveFailure: String?
+    @Published private(set) var saveReady = false
+    private let saveStore: SaveStore
+    private var currentPackage: GamePackage?
+    private var currentContentRoot: URL?
+    private var saveTask: Task<Bool, Never>?
+    private static var activePackageIDs = Set<UUID>()
+    private var ownsPackageLease = false
+    private var pendingRestoreID: UUID?
+    private var preserveNativeOnEmptyCapture = false
 
-    func start(package: GamePackage, contentRoot: URL) async {
+    init(saveStore: SaveStore = SaveStore()) {
+        self.saveStore = saveStore
+        super.init()
+    }
+
+    func start(package: GamePackage, contentRoot: URL, storageOnly: Bool = false) async {
         guard server == nil else { return }
+        guard !Self.activePackageIDs.contains(package.id) else {
+            failure = L10n.text("This game is already open.")
+            return
+        }
+        Self.activePackageIDs.insert(package.id)
+        ownsPackageLease = true
+        currentPackage = package; currentContentRoot = contentRoot
+        pendingRestoreID = nil
+        saveReady = false; saveFailure = nil
         let attempt = UUID()
         generation = attempt
         ready = false; isLoaded = false; paused = false; failure = nil; status = L10n.text("Starting local player…")
@@ -36,6 +60,23 @@ import SwiftUI
             try await local.start()
             guard generation == attempt else { local.stop(); return }
             let controller = WKUserContentController()
+            let store = saveStore
+            // Missing current.json is NOT an empty save: preserve legacy WK data.
+            if !storageOnly, let snapshot = try await Task.detached(priority: .userInitiated, operation: {
+                try store.currentSnapshot(packageID: package.id)
+            }).value {
+                guard generation == attempt else { local.stop(); return }
+                let capture = SaveCapture(version: 1, entries: snapshot.entries.map {
+                    SaveEntry(scope: $0.scope, key: $0.key, value: $0.value)
+                })
+                let encoded = try JSONEncoder().encode(capture)
+                let literal = String(decoding: encoded, as: UTF8.self)
+                let mode = snapshot.restoreRequired == true ? "replace" : "ifEmpty"
+                if snapshot.restoreRequired == true { pendingRestoreID = snapshot.id }
+                controller.addUserScript(WKUserScript(
+                    source: "window.__FlashNestRestore = " + literal + "; window.__FlashNestRestorePolicy = '" + mode + "';",
+                    injectionTime: .atDocumentStart, forMainFrameOnly: true))
+            }
             controller.add(self, name: "flashnest")
             let configuration = WKWebViewConfiguration()
             configuration.userContentController = controller
@@ -71,25 +112,164 @@ import SwiftUI
             webView = view
             var components = URLComponents(url: local.shellURL, resolvingAgainstBaseURL: false)!
             components.queryItems = [URLQueryItem(name: "entry", value: package.selectedMovie), URLQueryItem(name: "package", value: package.id.uuidString), URLQueryItem(name: "language", value: L10n.languageCode)]
+            components.queryItems?.append(URLQueryItem(name: "nativeSaveHandshake", value: "1"))
+            if storageOnly { components.queryItems?.append(URLQueryItem(name: "storageOnly", value: "1")) }
             guard let url = components.url else { throw PackageError.invalidPath(package.selectedMovie) }
             view.load(URLRequest(url: url))
         } catch {
             guard generation == attempt else { return }
             record(error.localizedDescription)
             failure = L10n.error(error)
-            server?.stop(); server = nil
+            stop()
         }
     }
 
     func stop() {
         generation = UUID()
-        isLoaded = false
-        webView?.evaluateJavaScript("window.FlashNest?.pause()")
+        isLoaded = false; saveReady = false
+        if ownsPackageLease, let id = currentPackage?.id { Self.activePackageIDs.remove(id) }
+        ownsPackageLease = false
+        webView?.evaluateJavaScript("window.FlashNest?.releaseKeys(); window.FlashNest?.pause(); true")
         webView?.stopLoading()
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "flashnest")
         webView?.navigationDelegate = nil
         webView = nil
         server?.stop(); server = nil
+    }
+
+    func releaseAllKeys() {
+        webView?.evaluateJavaScript("window.FlashNest?.releaseKeys(); true")
+    }
+
+    /// Explicit discard/emergency cleanup only; normal exits use closeAndSave.
+    func closeWithoutSaving() async throws {
+        if let task = saveTask { _ = await task.value }
+        let closingServer = server
+        stop()
+        try await closingServer?.stopAndWait()
+    }
+
+    /// Destroy Ruffle to flush SharedObjects, then atomically save a verified
+    /// capture. No timeout/error path writes an empty replacement.
+    func closeAndSave() async -> Bool {
+        if let task = saveTask { return await task.value }
+        let task = Task { @MainActor [self] in
+            let result = await captureAndPersistIfReady()
+            let closingServer = server
+            stop()
+            do { try await closingServer?.stopAndWait() }
+            catch {
+                saveFailure = L10n.text("The local player did not finish closing. Please reopen the app.")
+                return false
+            }
+            return result
+        }
+        saveTask = task
+        let result = await task.value
+        saveTask = nil
+        return result
+    }
+
+    private func captureAndPersistIfReady() async -> Bool {
+        guard let view = webView, let package = currentPackage else { return saveFailure == nil }
+        guard saveReady else {
+            // No game starts before saveReady. Closing during bootstrap must
+            // not clobber an existing native/legacy save with an empty value.
+            return true
+        }
+        releaseAllKeys()
+        do {
+            let object = try await captureObject(from: view)
+            let data = try JSONSerialization.data(withJSONObject: object)
+            guard data.count <= SaveStore.maximumArchiveBytes else { throw SaveStoreError.limit("archive size") }
+            let capture = try JSONDecoder().decode(SaveCapture.self, from: data)
+            if preserveNativeOnEmptyCapture, capture.entries.isEmpty {
+                // A storage-only browse must not mistake a missing/evicted WK
+                // profile for a game intentionally clearing its save.
+                return true
+            }
+            let store = saveStore
+            _ = try await Task.detached(priority: .userInitiated) {
+                try store.persistLatest(capture, package: package)
+            }.value
+            saveFailure = nil
+            return true
+        } catch {
+            // WebKit errors may contain capability URLs; display only a
+            // stable local message and retain all previous native snapshots.
+            saveFailure = L10n.text("Save could not be completed. Previous backups were kept.")
+            return false
+        }
+    }
+
+    private func captureObject(from view: WKWebView) async throws -> Any {
+        try await withCheckedThrowingContinuation { continuation in
+            var completed = false
+            view.callAsyncJavaScript("return await window.FlashNest.shutdownAndCapture();",
+                                     arguments: [:], in: nil, in: .page) { result in
+                Task { @MainActor in
+                    guard !completed else { return }
+                    completed = true
+                    continuation.resume(with: result)
+                }
+            }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 15_000_000_000)
+                guard !completed else { return }
+                completed = true
+                continuation.resume(throwing: SaveStoreError.invalid("save flush timed out"))
+            }
+        }
+    }
+
+    func suspendAndSave() async {
+        let background = UIApplication.shared.beginBackgroundTask(withName: "FlashNest save", expirationHandler: nil)
+        defer { if background != .invalid { UIApplication.shared.endBackgroundTask(background) } }
+        _ = await closeAndSave()
+    }
+
+    func resumeAfterSuspension(allowingSaveFailure: Bool = false) async {
+        if let task = saveTask { _ = await task.value }
+        guard allowingSaveFailure || saveFailure == nil else { return }
+        guard server == nil, let package = currentPackage, let root = currentContentRoot else { return }
+        await start(package: package, contentRoot: root)
+    }
+
+    /// Captures a legacy persistent profile without starting the movie. Call
+    /// before import if no current.json exists, so overwrite has a real backup.
+    static func preserveLegacySave(package: GamePackage, store: SaveStore = SaveStore(), forceCaptureLive: Bool = false) async throws {
+        guard !activePackageIDs.contains(package.id) else { throw SaveStoreError.invalid("game is still open") }
+        // A confirmed import not yet applied is authoritative; do not replace
+        // it with the target profile's older live values during backup/export.
+        if !forceCaptureLive, try store.currentSnapshot(packageID: package.id)?.restoreRequired == true { return }
+        let session = PlayerSession(saveStore: store)
+        let prior = try store.currentSnapshot(packageID: package.id)
+        session.preserveNativeOnEmptyCapture = !forceCaptureLive && prior?.entries.isEmpty == false
+        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Packages").appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        await session.start(package: package, contentRoot: root, storageOnly: true)
+        defer { session.stop() }
+        let deadline = Date().addingTimeInterval(15)
+        while !session.saveReady, session.failure == nil, Date() < deadline {
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        guard session.saveReady, await session.closeAndSave() else {
+            throw SaveStoreError.invalid("existing game save could not be preserved")
+        }
+    }
+
+    static func clearPackageCaches(packageID: UUID) async throws {
+        guard !activePackageIDs.contains(packageID) else { throw SaveStoreError.invalid("game is still open") }
+        let profile = WKWebsiteDataStore(forIdentifier: packageID)
+        await profile.removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache,
+                                          WKWebsiteDataTypeOfflineWebApplicationCache], modifiedSince: .distantPast)
+    }
+
+    static func preparePackageRemoval(package: GamePackage) async throws {
+        // Refresh legacy/live data unless an already-confirmed pending import
+        // is authoritative. Native save directories are never deleted here.
+        try await preserveLegacySave(package: package)
+        try await clearPackageCaches(packageID: package.id)
     }
 
     func setPaused(_ value: Bool) {
@@ -116,6 +296,28 @@ import SwiftUI
               let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
         let text = String((body["message"] as? String ?? "").prefix(500))
         switch type {
+        case "saveReady":
+            let attempt = generation
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == attempt, let view = self.webView else { return }
+                do {
+                    if let snapshotID = self.pendingRestoreID, let package = self.currentPackage {
+                        let store = self.saveStore
+                        try await Task.detached(priority: .userInitiated) {
+                            try store.markRestoreApplied(packageID: package.id, snapshotID: snapshotID)
+                        }.value
+                    }
+                    guard self.generation == attempt else { return }
+                    self.pendingRestoreID = nil
+                    _ = try await view.evaluateJavaScript("window.FlashNest.confirmSaveReady(); true")
+                    guard self.generation == attempt else { return }
+                    self.saveReady = true
+                } catch {
+                    self.saveFailure = L10n.text("Save restoration could not be confirmed. The game was not started.")
+                    self.failure = self.saveFailure
+                    self.stop()
+                }
+            }
         case "ready": status = L10n.text("Runtime ready"); ready = true; if paused { setPaused(true) }
         case "loaded": status = L10n.text("Playing"); ready = true; isLoaded = true
         case "error": failure = text

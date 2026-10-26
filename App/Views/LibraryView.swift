@@ -13,6 +13,13 @@ struct LibraryView: View {
     @State private var playing: GamePackage?
     @State private var pendingPlay: GamePackage?
     @State private var acknowledgments = false
+    @State private var pendingRemoval: GamePackage?
+    @State private var pendingRemovalAfterDismiss: GamePackage?
+    @State private var showingSaveArea = false
+
+    private var libraryUnavailable: Bool {
+        library.busy || library.deletingPackageID != nil || nativeImporter.isPresented || playing != nil
+    }
 
     var body: some View {
         NavigationStack {
@@ -23,12 +30,12 @@ struct LibraryView: View {
                     Text(L10n.text("Import a complete game folder or ZIP. Keep every SWF and its assets together."))
                         .foregroundStyle(.secondary)
                     Button { presentImport(.folder) } label: { Label(L10n.text("Import folder"), systemImage: "folder.badge.plus") }
-                        .disabled(library.busy || nativeImporter.isPresented)
+                        .disabled(libraryUnavailable)
                         .accessibilityIdentifier("import-folder")
                     Button { presentImport(.files) } label: { Label(L10n.text("Import ZIP or SWF"), systemImage: "doc.zipper") }
-                        .disabled(library.busy || nativeImporter.isPresented)
+                        .disabled(libraryUnavailable)
                     Button { showingInbox = true } label: { Label(L10n.text("Import from app folder"), systemImage: "tray.and.arrow.down") }
-                        .disabled(library.busy || nativeImporter.isPresented)
+                        .disabled(libraryUnavailable)
                         .accessibilityIdentifier("import-inbox")
                     Text(L10n.text("Open the game folder, then tap Open. Keep the main SWF and subfolders together."))
                         .font(.caption).foregroundStyle(.secondary)
@@ -64,10 +71,44 @@ struct LibraryView: View {
                                     .font(.caption).foregroundStyle(.secondary).lineLimit(2)
                             }.padding(.vertical, 4)
                         }
+                        .disabled(libraryUnavailable)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) { pendingRemoval = package } label: {
+                                Label(L10n.text("Remove game"), systemImage: "trash")
+                            }.disabled(libraryUnavailable)
+                        }
+                        .contextMenu {
+                            Button(role: .destructive) { pendingRemoval = package } label: {
+                                Label(L10n.text("Remove game"), systemImage: "trash")
+                            }.disabled(libraryUnavailable)
+                        }
+                    }
+                    if library.deletingPackageID != nil {
+                        ProgressView(L10n.text("Removing game copy…"))
+                            .accessibilityIdentifier("removal-progress")
+                    } else if let message = library.deletionMessage {
+                        Text(message).font(.caption).foregroundStyle(.secondary)
+                            .accessibilityIdentifier("removal-result")
+                    }
+                }
+                if !library.unfinishedRemovals.isEmpty {
+                    Section(L10n.text("Unfinished removals")) {
+                        Text(L10n.text("A previous removal did not finish. Retry to remove the remaining app-owned files; saves stay untouched."))
+                            .font(.footnote).foregroundStyle(.secondary)
+                        ForEach(library.unfinishedRemovals) { package in
+                            Button(role: .destructive) { pendingRemoval = package } label: {
+                                Label(L10n.format("Retry removing %@", package.title), systemImage: "trash")
+                            }.disabled(libraryUnavailable)
+                        }
                     }
                 }
                 Section {
-                    Text(L10n.text("Offline by default. Ruffle compatibility varies by game; remote servers and missing assets are not recreated. Game data uses persistent WebKit storage. A save-management area will come after core playback is verified."))
+                    Button { showingSaveArea = true } label: {
+                        Label(L10n.text("Save area"), systemImage: "externaldrive")
+                    }
+                    .disabled(libraryUnavailable)
+                    .accessibilityIdentifier("save-area")
+                    Text(L10n.text("Offline by default. Ruffle compatibility varies by game. Saves are kept separately from imported game copies."))
                         .font(.footnote).foregroundStyle(.secondary)
                     Button(L10n.text("Runtime and acknowledgments")) { acknowledgments = true }
                     Text("FlashNest \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"))")
@@ -86,17 +127,40 @@ struct LibraryView: View {
                 LocalImportInboxView(library: library) { pendingInboxPackage = $0 }
             }
             .sheet(item: $selected, onDismiss: {
-                if let package = pendingPlay { pendingPlay = nil; playing = package }
+                if let package = pendingRemovalAfterDismiss {
+                    pendingRemovalAfterDismiss = nil; pendingRemoval = package
+                }
+                if let package = pendingPlay {
+                    pendingPlay = nil
+                    do { try library.beginPlayback(package); playing = package }
+                    catch { library.error = L10n.error(error) }
+                }
             }) { package in
-                EntrySelectionView(package: package) { movie in
+                EntrySelectionView(package: package, remove: {
+                    selected = nil
+                    // Present from the library only after the entry sheet closes.
+                    pendingRemovalAfterDismiss = package
+                }) { movie in
                     do { pendingPlay = try library.choose(movie, for: package); selected = nil }
                     catch { library.error = L10n.error(error) }
                 }
             }
-            .fullScreenCover(item: $playing) { package in
+            .fullScreenCover(item: $playing, onDismiss: { library.endPlayback() }) { package in
                 PlayerView(package: package, contentRoot: library.content(for: package))
             }
             .sheet(isPresented: $acknowledgments) { AcknowledgmentsView() }
+            .sheet(isPresented: $showingSaveArea) { SaveAreaView(packages: library.packages) }
+            .confirmationDialog(L10n.text("Remove this game copy?"),
+                isPresented: Binding(get: { pendingRemoval != nil }, set: { if !$0 { pendingRemoval = nil } }),
+                titleVisibility: .visible, presenting: pendingRemoval) { package in
+                    Button(L10n.text("Remove game, keep saves"), role: .destructive) {
+                        pendingRemoval = nil
+                        Task { await library.remove(package) }
+                    }
+                    Button(L10n.text("Cancel"), role: .cancel) { pendingRemoval = nil }
+                } message: { package in
+                    Text(L10n.format("Remove %@ from FlashNest? Its copied game folder, assets, manifest, and temporary caches will be removed. Saves are kept. The original folder or ZIP you imported will not be changed.", package.title))
+                }
             .alert("FlashNest", isPresented: Binding(get: { library.error != nil }, set: { if !$0 { library.error = nil } })) {
                 Button(L10n.text("OK")) { library.error = nil }
             } message: { Text(library.error ?? "").accessibilityIdentifier("import-error") }
@@ -123,6 +187,7 @@ struct LibraryView: View {
 
 private struct EntrySelectionView: View {
     let package: GamePackage
+    let remove: () -> Void
     let play: (String) -> Void
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -134,6 +199,11 @@ private struct EntrySelectionView: View {
                         HStack { Text(movie); Spacer(); if movie == package.selectedMovie { Image(systemName: "checkmark") } }
                     }
                     .accessibilityIdentifier("entry-" + movie)
+                }
+                Section {
+                    Button(role: .destructive, action: remove) {
+                        Label(L10n.text("Remove game"), systemImage: "trash")
+                    }.accessibilityIdentifier("remove-game")
                 }
             }
             .navigationTitle(package.title)

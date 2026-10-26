@@ -89,5 +89,13 @@ final class HTTPServerTests: XCTestCase {
         try await server.start()
         let (_, restarted) = try await session.data(from: server.shellURL)
         XCTAssertEqual((restarted as? HTTPURLResponse)?.statusCode, 200)
+        try await server.stopAndWait()
+        let replacement = LoopbackServer(port: server.port, capability: server.capability, webRoot: web)
+        defer { replacement.stop() }
+        try await replacement.start()
+        let (_, replaced) = try await session.data(from: replacement.shellURL)
+        XCTAssertEqual((replaced as? HTTPURLResponse)?.statusCode, 200,
+                       "Awaited close must release the stable port for a new player instance")
+        try await replacement.stopAndWait()
     }
 }

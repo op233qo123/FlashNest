@@ -22,9 +22,9 @@ with sync_playwright() as p:
     assert any(u.endswith('/sibling.txt') for u in requests),'No sibling text loaded'
     assert all(u.startswith('http://127.0.0.1:8766/') for u in requests),'Unexpected remote request'
     assert page.evaluate("document.querySelector('ruffle-player').ruffle().isPlaying"),'Movie not playing'
-    page.get_by_role('button',name='Pause',exact=True).click()
+    page.evaluate('window.FlashNest.pause()')
     assert not page.evaluate("document.querySelector('ruffle-player').ruffle().isPlaying"),'Pause failed'
-    page.get_by_role('button',name='Resume',exact=True).click()
+    page.evaluate('window.FlashNest.resume()')
     assert page.evaluate("document.querySelector('ruffle-player').ruffle().isPlaying"),'Resume failed'
     print(json.dumps({'result':'PASS','requests':requests,'diagnostics':page.evaluate('window.__diagnostics')},indent=2))
     page.screenshot(path=str(ROOT/'fixtures/runtime-test.png'))

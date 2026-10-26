@@ -45,6 +45,14 @@ private enum CrossAppFixtureSeed {
         let handle = try FileHandle(forWritingTo: main)
         defer { try? handle.close() }
         try handle.truncate(atOffset: 44 * 1_048_576)
-        print("FLASHNEST_CROSS_APP_SOURCE ready: 44 MiB + three-level nested child")
+        // A separate, valid movie for fullscreen/control UI tests. The original
+        // 44 MiB importer fixture remains unchanged and is never used as a game.
+        guard let playable = Bundle.main.url(forResource: "multi-swf", withExtension: nil) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        let playerFixture = documents.appendingPathComponent("FlashNest Player Fixture", isDirectory: true)
+        if FileManager.default.fileExists(atPath: playerFixture.path) { try FileManager.default.removeItem(at: playerFixture) }
+        try FileManager.default.copyItem(at: playable, to: playerFixture)
+        print("FLASHNEST_CROSS_APP_SOURCE ready: 44 MiB + three-level nested child + separate playable fixture")
     }
 }
