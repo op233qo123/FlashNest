@@ -2,11 +2,12 @@
 
 ## Verified artifact
 
-- **1.5 / build 6:** [unsigned IPA](https://github.com/op233qo123/FlashNest/actions/runs/40346370319/artifacts/12663010141), [successful build and 89 tests](https://github.com/op233qo123/FlashNest/actions/runs/40346370319), [source `432a139`](https://github.com/op233qo123/FlashNest/commit/432a139610dcf462b1ea34133369f8abb704fa60).
-- IPA: **15,345,590 bytes**. SHA-256: `4745322f9758225e5f1944b923746895ac7d64005cf9761d9043d91f3bfd4987`.
-- XCTest covers real bundled Ruffle in WKWebView, multi-SWF assets, offline denial, 44 MiB Unicode-path transport, SharedObject save/restore, selected-game import, isolation, deletion safeguards and input models.
-- Three iOS 18.2 UI tests passed on the earlier `0d3c` revision, including cross-app folder import and full-screen controls. UI code was unchanged afterward, but storage lifecycle code changed; those results are not a fresh UI run of `432a139`.
-- Actual-device game playback was confirmed before this update. Version 1.5 save/control behavior on the user's device still requires confirmation. Tests do not promise compatibility with every Flash game or preservation of unsaved progress after force termination.
+- **1.5.1 / build 8:** [unsigned IPA](https://github.com/op233qo123/FlashNest/actions/runs/40367909141/artifacts/12670429950), [successful build and 95 tests](https://github.com/op233qo123/FlashNest/actions/runs/40367909141), [source `c1fd6e8`](https://github.com/op233qo123/FlashNest/commit/c1fd6e81f2154f4223c3b40dd0a17c106023a89d).
+- IPA: **15,372,095 bytes**. SHA-256: `bfafe9cba82ba6037232390f588c4879546459e6736d970bf369f44c74c20d1d`.
+- [iOS 18.2 validation on the same source](https://github.com/op233qo123/FlashNest/actions/runs/40368031828): 10 targeted input/save/incident tests plus 3 real Files/full-screen UI tests passed.
+- The real Ruffle/WKWebView input regression verifies child-movie loading and pointer callback, old unfocused-canvas key failure, then repaired host-focus key delivery. The termination test invokes the delegate signal and verifies archive preservation/reopen; it is **not** a reproduction of memory pressure or the user's game crash.
+- Bounded last-session diagnostics persist fixed event/time/state metadata, not raw game output, paths, credentials or save payloads. They can be cleared from Diagnostics. SWF trace forwarding is rate-limited; rendering defaults are unchanged.
+- User-reported scene-transition process termination remains unresolved without actual-device evidence. No test promises every Flash game's compatibility or preservation of unsaved progress after process termination.
 
 ## Build
 
