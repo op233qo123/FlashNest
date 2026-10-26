@@ -36,7 +36,7 @@ import CryptoKit
                 digest.update(data: block)
                 try writer.write(contentsOf: block)
             }
-            let tail = Data("FINAL-17-BYTES-OK!".utf8)
+            let tail = Data((0..<17).map { UInt8(0xe0 + $0) })
             XCTAssertEqual(tail.count, 17)
             digest.update(data: tail)
             try writer.write(contentsOf: tail)
@@ -128,6 +128,11 @@ import CryptoKit
                     XCTAssertEqual((result["count"] as? NSNumber)?.intValue, expectedCount)
                     XCTAssertEqual(result["hash"] as? String, expectedHash)
                     XCTAssertNotNil(view.window)
+                    view.stopLoading()
+                    view.removeFromSuperview()
+                    try await exerciseProductionFetch(package: package, contentRoot: importedRoot,
+                                                      controller: controller, deadline: deadline,
+                                                      count: expectedCount, hash: expectedHash)
                     return
                 }
                 if result["state"] as? String == "error" { XCTFail("WKWebView large-asset fetch failed: \(lastState)"); return }
@@ -136,4 +141,61 @@ import CryptoKit
         }
         XCTFail("WKWebView large-asset fetch exceeded 90 seconds: \(lastState); started=\(started)")
     }
+
+    /// The synthetic SWF is intentionally not a playable movie. This second
+    /// probe asserts transport only, using the real session's persistent profile,
+    /// offline content rules, bundled shell, and capability-protected routing.
+    private func exerciseProductionFetch(package: GamePackage, contentRoot: URL,
+                                         controller: UIViewController, deadline: Date,
+                                         count: Int, hash: String) async throws {
+        let session = PlayerSession()
+        defer { session.stop() }
+        await session.start(package: package, contentRoot: contentRoot)
+        let view = try XCTUnwrap(session.webView, "Production session must create its WebKit view")
+        view.frame = controller.view.bounds
+        controller.view.addSubview(view)
+        defer { view.removeFromSuperview() }
+        let relative = "../games/" + package.id.uuidString + "/" + package.selectedMovie
+        let literal = String(data: try JSONEncoder().encode(relative), encoding: .utf8)!
+        var started = false
+        var lastState = "shell not ready"
+        while Date() < deadline {
+            if !started, (try? await view.evaluateJavaScript("document.getElementById('stage') !== null")) as? Bool == true {
+                _ = try await view.evaluateJavaScript("""
+                window.__productionTransport = {state:'fetching'};
+                (async () => {
+                  try {
+                    const response = await fetch(new URL(\(literal), location.href));
+                    window.__productionTransport = {state:'reading', status:response.status};
+                    const bytes = await response.arrayBuffer();
+                    window.__productionTransport = {state:'hashing', status:response.status, count:bytes.byteLength};
+                    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+                    window.__productionTransport = {state:'complete', status:response.status, count:bytes.byteLength,
+                      hash:Array.from(digest, x => x.toString(16).padStart(2,'0')).join('')};
+                  } catch (_) {
+                    window.__productionTransport = {...window.__productionTransport, state:'error'};
+                  }
+                })(); true;
+                """)
+                started = true
+            }
+            if started, let result = try await view.evaluateJavaScript("window.__productionTransport") as? [String: Any] {
+                lastState = "state=\(result["state"] ?? "unknown"), status=\(result["status"] ?? "unknown"), bytes=\(result["count"] ?? "unknown")"
+                if result["state"] as? String == "complete" {
+                    XCTAssertEqual((result["status"] as? NSNumber)?.intValue, 200)
+                    XCTAssertEqual((result["count"] as? NSNumber)?.intValue, count)
+                    XCTAssertEqual(result["hash"] as? String, hash)
+                    XCTAssertNotNil(view.window)
+                    return
+                }
+                if result["state"] as? String == "error" {
+                    XCTFail("Production-config large-asset transport failed: \(lastState)")
+                    return
+                }
+            }
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        XCTFail("Production-config transport exceeded shared 90-second deadline: \(lastState)")
+    }
+
 }

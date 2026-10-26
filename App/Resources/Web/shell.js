@@ -85,6 +85,13 @@
     await new Promise((resolve,reject) => { const script = document.createElement('script'); script.src = new URL('ruffle.js',runtime).href; script.onload = resolve; script.onerror = () => reject(Error(t('missing'))); document.head.append(script); });
     const ruffle = window.RufflePlayer.newest();
     player = ruffle.createPlayer();
+    let movieLoaded = false;
+    // Ruffle 0.7.1 resolves load() after starting stream_from(), before the
+    // root SWF download finishes. Only loadeddata confirms the movie arrived.
+    player.addEventListener('loadeddata', () => {
+      movieLoaded = true;
+      reconcile(); report('loaded', t('loaded'));
+    }, {once:true});
     document.getElementById('stage').append(player);
     report('ready', t('ready'));
     report('diagnostic', t('initializing'));
@@ -98,9 +105,11 @@
       autoplay:'off', unmuteOverlay:'visible', backgroundExecutionMode:'none', upgradeToHttps:false,
       showSwfDownload:false, contextMenu:'off', logLevel:'warn'});
     } finally { window.clearTimeout?.(loadWatchdog); }
-    report('diagnostic', t('initialized'));
+    // A small movie can dispatch loadeddata before load() resolves; do not
+    // overwrite the completed state with an earlier initialization milestone.
+    if (!movieLoaded) report('diagnostic', t('initialized'));
     player.ruffle().traceObserver = message => report('diagnostic', `SWF: ${message}`);
-    reconcile(); report('loaded', t('loaded'));
+    reconcile();
   }
   boot().catch(error => report('error', t('loadError', error.message)));
 })();
