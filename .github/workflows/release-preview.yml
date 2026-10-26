@@ -1,0 +1,76 @@
+name: Publish verified iOS preview (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: flashnest-ios-preview-20261026
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VERIFIED_RUN: '40293637468'
+      VERIFIED_COMMIT: d345a497d56807a886483ea87f87d938719b57b8
+      VERIFIED_SHA256: 724059fdede6969e398538fcef6b1dd4e1f3bc716e010f37fdd08a4d41d9fc89
+      RELEASE_TAG: ios-preview-20261026
+    steps:
+      - name: Verify allowlisted successful build and download its artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GH_REPO" == op233qo123/FlashNest ]] || { echo 'Unexpected repository' >&2; exit 1; }
+          gh run view "$VERIFIED_RUN" --json databaseId,status,conclusion,headSha > run.json
+          jq -e --arg sha "$VERIFIED_COMMIT" --argjson run "$VERIFIED_RUN" '.databaseId == $run and .status == "completed" and .conclusion == "success" and .headSha == $sha' run.json
+          mkdir downloaded release
+          gh run download "$VERIFIED_RUN" --name FlashNest-unsigned-IPA --dir downloaded
+      - name: Verify exact IPA and supplied checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, os, pathlib, shutil
+          root = pathlib.Path('downloaded')
+          ipas = list(root.rglob('FlashNest-unsigned.ipa'))
+          sums = list(root.rglob('FlashNest-unsigned.ipa.sha256'))
+          if len(ipas) != 1 or len(sums) != 1:
+              raise SystemExit('Expected exactly one IPA and checksum file')
+          ipa, checksum = ipas[0], sums[0]
+          if ipa.is_symlink() or checksum.is_symlink():
+              raise SystemExit('Refusing symlink artifacts')
+          expected = os.environ['VERIFIED_SHA256']
+          lines = checksum.read_text().strip().splitlines()
+          fields = lines[0].split(maxsplit=1) if len(lines) == 1 else []
+          if len(fields) != 2 or fields[0] != expected or pathlib.PurePosixPath(fields[1].lstrip('*')).name != ipa.name:
+              raise SystemExit('Supplied artifact checksum does not match allowlisted IPA')
+          if ipa.stat().st_size != 11006783 or hashlib.file_digest(ipa.open('rb'), 'sha256').hexdigest() != expected:
+              raise SystemExit('IPA size or digest does not match verified successful build')
+          shutil.copyfile(ipa, pathlib.Path('release') / ipa.name)
+          # Normalize the runner-specific original path into a portable checksum.
+          (pathlib.Path('release') / checksum.name).write_text(f'{expected}  {ipa.name}\n')
+          PY
+          (cd release && sha256sum --check FlashNest-unsigned.ipa.sha256)
+          unzip -t release/FlashNest-unsigned.ipa >/dev/null
+      - name: Publish only the verified IPA and checksum at the exact built commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" > tag.json 2> tag-error.txt; then
+            jq -e --arg sha "$VERIFIED_COMMIT" '.object.type == "commit" and .object.sha == $sha' tag.json
+          else
+            # Only a genuine missing ref permits creation; auth/server errors fail.
+            grep -q 'HTTP 404' tag-error.txt || { cat tag-error.txt >&2; exit 1; }
+            gh api --method POST "repos/$GH_REPO/git/refs" -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$VERIFIED_COMMIT"
+          fi
+          cat > notes.md <<'NOTES'
+          iOS 17+ / iPhone、iPad。未签名 IPA，需自行签名后安装。
+
+          已完成 iPhoneOS 构建及 17 项模拟器测试，包括文件夹/ZIP 导入、多 SWF、文本资源和离线拦截。尚未进行实体设备或真实游戏验证；兼容性取决于 Ruffle。
+
+          构建提交：`d345a497d56807a886483ea87f87d938719b57b8`
+          NOTES
+          gh release create "$RELEASE_TAG" --verify-tag --target "$VERIFIED_COMMIT" --title 'FlashNest iOS Preview' --notes-file notes.md --prerelease release/FlashNest-unsigned.ipa release/FlashNest-unsigned.ipa.sha256
