@@ -135,7 +135,12 @@ final class LoopbackServer {
         }
         connection.start(queue: queue)
         receive(connection, accumulated: Data())
-        queue.asyncAfter(deadline: .now() + 60) { [weak connection] in connection?.cancel() }
+        queue.asyncAfter(deadline: .now() + 60) { [weak self, weak connection] in
+            guard let self, let connection,
+                  self.connections[ObjectIdentifier(connection)] != nil else { return }
+            self.onDiagnostic?("Local HTTP connection timed out after 60 seconds")
+            connection.cancel()
+        }
     }
 
     private func receive(_ connection: NWConnection, accumulated: Data) {
@@ -177,6 +182,10 @@ final class LoopbackServer {
             do { range = try LocalHTTPPath.byteRange(parsed.headers["range"], size: size) }
             catch { failure(connection, status: 416, head: parsed.method == "HEAD", extra: "Content-Range: bytes */\(size)\r\n"); return }
             let status = parsed.headers["range"] == nil ? 200 : 206
+            if !isWeb, file.pathExtension.lowercased() == "swf" {
+                // Numeric transport evidence only: never include capability URLs.
+                onDiagnostic?("SWF HTTP response: status=\(status), bytes=\(range.count), method=\(parsed.method)")
+            }
             var extra = "Content-Type: \(Self.mime(file.pathExtension))\r\nAccept-Ranges: bytes\r\n"
             if status == 206 { extra += "Content-Range: bytes \(range.lowerBound)-\(range.upperBound - 1)/\(size)\r\n" }
             // Imported content is data, never an executable document.
@@ -207,15 +216,25 @@ final class LoopbackServer {
         do {
             guard remaining > 0 else { try? handle.close(); connection.cancel(); return }
             let data = try handle.read(upToCount: Int(min(remaining, 262_144))) ?? Data()
-            guard !data.isEmpty else { try? handle.close(); connection.cancel(); return }
+            guard !data.isEmpty else {
+                onDiagnostic?("Local HTTP stream ended early: remaining=\(remaining)")
+                try? handle.close(); connection.cancel(); return
+            }
             connection.send(content: data, completion: .contentProcessed { [weak self] error in
-                guard error == nil, let self = self else { try? handle.close(); connection.cancel(); return }
+                guard error == nil, let self = self else {
+                    self?.onDiagnostic?("Local HTTP stream send failed: remaining=\(remaining)")
+                    try? handle.close(); connection.cancel(); return
+                }
                 self.stream(handle, remaining: remaining - UInt64(data.count), to: connection)
             })
-        } catch { try? handle.close(); connection.cancel() }
+        } catch {
+            onDiagnostic?("Local HTTP stream read failed: remaining=\(remaining)")
+            try? handle.close(); connection.cancel()
+        }
     }
 
     private func failure(_ connection: NWConnection, status: Int, head: Bool = false, extra: String = "") {
+        onDiagnostic?("Local HTTP failure: status=\(status)")
         let body = Data("Local resource request failed (\(status)).".utf8)
         var data = headers(status: status, length: body.count, extra: extra + "Content-Type: text/plain; charset=utf-8\r\n")
         if !head { data.append(body) }
