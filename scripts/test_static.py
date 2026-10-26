@@ -2,6 +2,12 @@
 import hashlib, json, pathlib, struct, unittest, zipfile
 ROOT=pathlib.Path(__file__).resolve().parents[1]; WEB=ROOT/'App/Resources/Web'
 class StaticTests(unittest.TestCase):
+ def test_loopback_listener_port_is_specified_once(self):
+  s=(ROOT/'App/Server/LoopbackServer.swift').read_text()
+  self.assertIn('requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: endpointPort)',s)
+  self.assertIn('requiredInterfaceType = .loopback',s)
+  self.assertIn('NWListener(using: parameters)',s)
+  self.assertNotIn('NWListener(using: parameters, on:',s)
  def test_simulator_selection(self):
   from select_simulator import select
   data={'devices':{

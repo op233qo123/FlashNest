@@ -47,7 +47,10 @@ final class LoopbackServer {
                     parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: endpointPort)
                     parameters.requiredInterfaceType = .loopback
                     parameters.allowLocalEndpointReuse = true
-                    let listener = try NWListener(using: parameters, on: endpointPort)
+                    // requiredLocalEndpoint already specifies both bind address
+                    // and stable port. Passing `on:` as well attempts a second
+                    // port override and Network.framework rejects it with EINVAL.
+                    let listener = try NWListener(using: parameters)
                     self.listener = listener
                     self.startup = continuation
                     listener.stateUpdateHandler = { [weak self, weak listener] state in
