@@ -72,7 +72,9 @@ final class LibraryAccessibilityUITests: XCTestCase {
 
     private func assertReachableTarget(_ element: XCUIElement, in app: XCUIApplication,
                                        file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertTrue(element.exists && element.isEnabled && element.isHittable, file: file, line: line)
+        let interactive = element.exists && element.isEnabled && element.isHittable
+        if !interactive { LibraryNavigation.captureControlState(element.identifier, in: app, context: "Accessibility toolbar guard failed") }
+        XCTAssertTrue(interactive, file: file, line: line)
         XCTAssertGreaterThanOrEqual(element.frame.width, 43, "44-point target, allowing 1-point AX rounding", file: file, line: line)
         XCTAssertGreaterThanOrEqual(element.frame.height, 43, "44-point target, allowing 1-point AX rounding", file: file, line: line)
         XCTAssertTrue(app.frame.insetBy(dx: -1, dy: -1).contains(element.frame), "Target must not be clipped by the viewport", file: file, line: line)

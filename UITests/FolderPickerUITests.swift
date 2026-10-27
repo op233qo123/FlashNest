@@ -22,7 +22,9 @@ final class FolderPickerUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15))
         XCTAssertTrue(app.buttons["import-menu"].waitForExistence(timeout: 15))
-        XCTAssertTrue(waitForImportControl(app), "Import control must be interactive after cold launch")
+        let interactive = waitForImportControl(app)
+        if !interactive { LibraryNavigation.captureControlState("import-menu", in: app, context: "Cold-launch import guard failed") }
+        XCTAssertTrue(interactive, "Import control must be interactive after cold launch")
         return app
     }
 

@@ -8,6 +8,7 @@ on:
         options:
           - all
           - lifecycle
+          - toolbar-diagnostics
         default: all
 permissions:
   contents: read
@@ -55,7 +56,7 @@ jobs:
           xcodebuild -project FlashNest.xcodeproj -scheme FlashNestFixtureSource -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,id=$device_id" -derivedDataPath build-source -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
           xcrun simctl install "$device_id" build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app
       - name: Verify input recovery and save safety on iOS 18.2
-        if: ${{ inputs.scope != 'lifecycle' }}
+        if: ${{ inputs.scope != 'lifecycle' && inputs.scope != 'toolbar-diagnostics' }}
         timeout-minutes: 10
         run: |
           set -o pipefail
@@ -70,6 +71,7 @@ jobs:
           set -o pipefail
           selection=()
           if [ "$TEST_SCOPE" = "lifecycle" ]; then selection=(-only-testing:FlashNestUITests/LifecyclePlayerUITests); fi
+          if [ "$TEST_SCOPE" = "toolbar-diagnostics" ]; then selection=(-only-testing:FlashNestUITests/LibraryToolbarDiagnosticsUITests); fi
           echo "UI validation scope: $TEST_SCOPE"
           xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath PickerTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 480 "${selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee picker-test.log
       - name: Export compact UI evidence

@@ -12,12 +12,34 @@ enum LibraryNavigation {
         return condition()
     }
 
+    static func captureControlState(_ identifier: String, in app: XCUIApplication, context: String) {
+        let matches = app.buttons.matching(identifier: identifier)
+        var lines = ["Context: \(context)", "App state: \(app.state.rawValue)", "App bounds: \(app.frame)",
+                     "Button matches: \(matches.count)",
+                     "All AX type matches: \(app.descendants(matching: .any).matching(identifier: identifier).count)"]
+        for (index, element) in matches.allElementsBoundByIndex.prefix(10).enumerated() {
+            lines.append("match[\(index)] identifier=\(element.identifier) label=\(element.label) value=\(String(describing: element.value)) exists=\(element.exists) enabled=\(element.isEnabled) hittable=\(element.isHittable) frame=\(element.frame)")
+        }
+        let state = lines.joined(separator: "\n")
+        print("FLASHNEST_CONTROL_STATE\n" + state)
+        let hierarchy = String(app.debugDescription.prefix(75_000))
+        print("FLASHNEST_CONTROL_AX\n" + hierarchy)
+        XCTContext.runActivity(named: context) { activity in
+            let detail = XCTAttachment(string: state + "\n\n" + hierarchy)
+            detail.name = "Control state and accessibility — " + identifier
+            detail.lifetime = .keepAlways
+            activity.add(detail)
+        }
+    }
+
     static func revealFolderImport(in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
         let folder = app.buttons["import-folder"].firstMatch
         if folder.exists && folder.isHittable { return folder }
         let menu = app.buttons["import-menu"].firstMatch
         XCTAssertTrue(menu.waitForExistence(timeout: 15), file: file, line: line)
-        XCTAssertTrue(wait { menu.isHittable && menu.isEnabled }, file: file, line: line)
+        let interactive = wait { menu.isHittable && menu.isEnabled }
+        if !interactive { captureControlState("import-menu", in: app, context: "Import menu interaction guard failed") }
+        XCTAssertTrue(interactive, file: file, line: line)
         menu.tap()
         XCTAssertTrue(folder.waitForExistence(timeout: 5), file: file, line: line)
         XCTAssertTrue(wait { folder.isHittable && folder.isEnabled }, file: file, line: line)
