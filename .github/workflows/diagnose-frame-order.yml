@@ -1,4 +1,4 @@
-name: Diagnose AVM2 frame order (manual only)
+name: Historical official Ruffle frame order (manual only)
 on:
   workflow_dispatch:
     inputs:
@@ -24,6 +24,15 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 92ecbeb474b92ce6700b34c494f7d3e905a741a4
+          persist-credentials: false
+      - name: Identify historical official baseline source, not current application
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 92ecbeb474b92ce6700b34c494f7d3e905a741a4
+          mkdir -p frame-order-evidence
+          printf '%s\n' "workflowRunCommit=$GITHUB_SHA" "historicalCheckoutCommit=$(git rev-parse HEAD)" "runtime=unmodified official Ruffle 0.7.1" "scope=historical source baseline; not current application" > frame-order-evidence/source-identity.txt
       - name: Verify original fixtures and stage opt-in capture harness
         run: |
           set -euo pipefail

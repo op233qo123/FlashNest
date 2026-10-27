@@ -14,7 +14,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # verified official v4 ref
-      - name: Fetch checksum-pinned official runtime for bundling
+      - name: Verify checked-in experimental runtime for offline bundling
         run: python3 scripts/fetch_runtime.py
       - name: Validate bundled runtime and shell
         run: |

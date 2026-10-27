@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "description": "Compact source-correspondence index for the unchanged experimental candidate archive; not a complete source archive",
+  "archivePath": "vendor/ruffle-frame-order-40491098384.zip",
+  "archiveSHA256": "57d7eaed19edd006e2a33a9bfa816f22da8b1003becf3719dfca0c97cb38c4af",
+  "archiveBytes": 10950405,
+  "provenanceArchivePath": "frame-order-engine-candidate/provenance.json",
+  "provenanceSHA256": "73829617008e26ffe48bfc29e689c0a719641f6c9e93214b29f8ee3c6bfd22d5",
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "upstreamURL": "https://github.com/ruffle-rs/ruffle/tree/89a7049965f3090e706265670df309a5128233ac",
+  "experimentCommit": "f60ff6a99941937056eee5ad94ed4b4af9c72c99",
+  "experimentURL": "https://github.com/op233qo123/FlashNest/tree/f60ff6a99941937056eee5ad94ed4b4af9c72c99/experiments/frame-order",
+  "patchSHA256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
+  "modifiedSourceSHA256": "af780dae48b842e0756b8cd23f50a539737d0bcbbbdca970feb90f27725e96b0",
+  "sourceCorrespondenceFiles": [
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/Cargo.lock",
+      "sha256": "c63981977750d740c24a70fdd1582f9f4b40f9bb8bf18fd8ed2790e576628e0d",
+      "bytes": 190676
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/Cargo.toml",
+      "sha256": "854668d871ba3d7ce4094abab61b7a3788aad156522403237f916704c9267596",
+      "bytes": 6028
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/LICENSE.md",
+      "sha256": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71",
+      "bytes": 108294
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/MODIFICATIONS.md",
+      "sha256": "4f619bb31fe3efd54ebf88284cf004e98e7298d9b7e45dfe73d2778843d24d25",
+      "bytes": 515
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/build_web_candidate.sh",
+      "sha256": "f37a1949d19d542c04ef58520513192075e7f2beb38a14a169ba9b732656bb00",
+      "bytes": 1311
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/candidate_provenance.py",
+      "sha256": "6bddd56a9eb64c962e363c71e9511b1dc5fc51bbc1eb7a4e247e3bb3ed5ecae5",
+      "bytes": 7230
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/core/src/display_object/movie_clip.rs",
+      "sha256": "af780dae48b842e0756b8cd23f50a539737d0bcbbbdca970feb90f27725e96b0",
+      "bytes": 189360
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
+      "bytes": 659
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/web/package-lock.json",
+      "sha256": "fff432c1cd6a43c1b907dca1ebe438d38f28748368060cd1769bb9cb5bf05147",
+      "bytes": 721670
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/web/package.json",
+      "sha256": "7d208a1ada16acb0cd926ca7e4e3c1b7e67264e9d78f6def77efef3a7b18d5ca",
+      "bytes": 2793
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/web/packages/selfhosted/LICENSE_APACHE",
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+      "bytes": 9723
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/web/packages/selfhosted/LICENSE_MIT",
+      "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c",
+      "bytes": 1097
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/web/version_seal.json",
+      "sha256": "aa93246744d86bb7abedbad87e33b95139f306d290e2bf503b28233a9a642d65",
+      "bytes": 352
+    },
+    {
+      "archivePath": "frame-order-engine-candidate/source-correspondence/workflow-draft.yml",
+      "sha256": "a5e8bd625a20c3e44efd2a920ab1a4389a56600f1536b4d6b4e76273746b72d8",
+      "bytes": 9145
+    }
+  ]
+}

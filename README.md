@@ -2,6 +2,8 @@
 
 iPhone / iPad 离线 Flash 播放器，基于 Ruffle，支持 iOS 17+。
 
+1.5.4（build 17）是含实验性引擎修补的候选版本：修补 AVM2 嵌套跳帧时过早消耗排队跳转的问题。该引擎在此前隔离构建中的原始小型复现、相邻回归及一次 iOS 18.2 原生/保存/界面流程已通过；1.5.4 完整应用验证另行进行，不代表全部游戏、Adobe 行为或间歇性 WebKit 崩溃均已修复。确切引擎、来源和限制见 `vendor/README.md` 与 `App/Resources/Web/Ruffle-MODIFICATIONS.md`。
+
 **[下载 1.5.2 未签名测试 IPA](https://github.com/op233qo123/FlashNest/actions/runs/40435351644/artifacts/12704167540)**：登录 GitHub，下载 ZIP 后取出 IPA 自行签名。更新请使用相同签名覆盖安装，勿先卸载。Actions 下载限时保留。
 
 - 导入完整文件夹、ZIP 或 SWF，递归保留子目录，再选择主 SWF。

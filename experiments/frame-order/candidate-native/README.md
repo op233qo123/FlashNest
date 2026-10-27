@@ -7,6 +7,10 @@ draft; publication and dispatch require separate authorization. The candidate
 has an experimental name/channel, even though its upstream package base version
 is `0.7.1`. It is not an official unmodified Ruffle binary or upstream approval.
 
+The isolated native run has now passed all three measured scopes; see
+[NATIVE_RESULTS.md](NATIVE_RESULTS.md). Production-candidate integration and
+its complete application validation remain separate.
+
 ## Fail-closed artifact → native-bundle chain
 
 1. A reviewed `candidate.lock.json` identifies one successful engine build:
@@ -87,7 +91,8 @@ The lock may be created only after authenticating the actual successful build
 and verifying its artifact. The supplied lock pins successful web build
 `40491098384`, artifact `12729069965`; offline verification and staging have
 passed against that actual ZIP and its API metadata. This establishes the
-artifact chain above, **not native execution or a lifecycle-stability result**.
+artifact chain above; the separately measured native result is recorded in
+[NATIVE_RESULTS.md](NATIVE_RESULTS.md), not inferred from offline verification.
 
 ## Native test semantics
 
@@ -142,11 +147,9 @@ establish these additional stability gates.
 Scheduling correctness and WebContent process stability are different claims.
 The stock build's 18/18 native tests did not rule out the separately observed
 intermittent WebContent crash during real UI save/restart. The queued-goto guard
-is not an established fix for that crash. Even a passing candidate lifecycle
-run would establish only that observed run, not absence of an intermittent
-failure. **All candidate native semantic and lifecycle results remain pending
-until the separately authorized diagnostic is executed and its evidence is
-checked.**
+is not an established fix for that crash. The passing candidate lifecycle
+run establishes only that observed run, not absence of an intermittent failure.
+Its actual raw evidence and limitations are recorded in [NATIVE_RESULTS.md](NATIVE_RESULTS.md).
 
 ## Checks and remaining boundary
 
@@ -162,8 +165,8 @@ tests use explicitly synthetic artifacts and mock only the synthetic modified
 source hash; they do not bless or execute a candidate. Exact embedded JavaScript
 is checked in Node, while Swift source contracts are checked as text.
 
-Native compile and candidate execution still require the separately authorized
-standard `macos-14` / Xcode 16.2 / iOS Simulator 18.2 manual diagnostic. Linux
-helper checks, headless engine tests, and a successful web build must not be
+Native compile and candidate execution were verified by the separately authorized
+standard `macos-14` / Xcode 16.2 / iOS Simulator 18.2 run linked above. Linux
+helper checks, headless engine tests, and a successful web build alone must not be
 reported as an iOS/WebKit pass. The draft retains traces, crash evidence, the
 reviewed ZIP, and source/license correspondence; it never packages an IPA.

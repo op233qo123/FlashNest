@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import hashlib, json, pathlib, struct, unittest, zipfile
+from test_runtime_bundle import RuntimeBundleTests
 ROOT=pathlib.Path(__file__).resolve().parents[1]; WEB=ROOT/'App/Resources/Web'
 class StaticTests(unittest.TestCase):
  def test_declared_versions_match_native_test_and_debug_bundle(self):
@@ -116,7 +117,22 @@ class StaticTests(unittest.TestCase):
   self.assertTrue((ROOT/'experiments/half-resolution/Tests/ViewportRenderingRuntimeTests.swift').is_file())
   self.assertNotIn('RenderSettings',(ROOT/'App/Views/PlayerView.swift').read_text())
   self.assertNotIn('renderMode',(ROOT/'App/Player/PlayerSession.swift').read_text())
+ def test_default_frame_order_regression_identity_and_capture_equivalence(self):
+  import re
+  default=(ROOT/'Tests/FrameOrderRuntimeTests.swift').read_text()
+  candidate=(ROOT/'experiments/frame-order/candidate-native/FrameOrderCandidateRuntimeTests.swift').read_text()
+  identity=(WEB/'runtime-identity.json').read_bytes()
+  self.assertIn('private static let identitySHA256 = "'+hashlib.sha256(identity).hexdigest()+'"',default)
+  for name in ('installObserver','snapshot'):
+   pattern=r'private static let '+name+r' = """(.*?)"""'
+   self.assertEqual(re.search(pattern,default,re.S).group(1),re.search(pattern,candidate,re.S).group(1),name)
+  for name in ('nested-child-goto.swf','control-no-child-goto.swf'):
+   self.assertEqual((ROOT/'fixtures/frame-order'/name).read_bytes(),(ROOT/'experiments/frame-order/fixtures'/name).read_bytes())
+  for name in ('nested-repair-target.txt','control.txt'):
+   self.assertEqual((ROOT/'fixtures/frame-order'/name).read_bytes(),(ROOT/'experiments/frame-order/engine-patch/expectations'/name).read_bytes())
+
  def test_manifest(self):
   manifest=json.loads((ROOT/'runtime.files.json').read_text())
+  self.assertEqual({p.name for p in (WEB/'runtime').iterdir()},set(manifest))
   for name,digest in manifest.items(): self.assertEqual(hashlib.sha256((WEB/'runtime'/name).read_bytes()).hexdigest(),digest,name)
 if __name__=='__main__': unittest.main()

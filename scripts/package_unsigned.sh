@@ -10,7 +10,14 @@ file "$app/$exe" | grep -q 'Mach-O' || { echo 'Not Mach-O' >&2; exit 1; }
 xcrun lipo -archs "$app/$exe" | grep -qw arm64 || { echo 'Not arm64' >&2; exit 1; }
 platform=$(/usr/libexec/PlistBuddy -c 'Print DTPlatformName' "$app/Info.plist")
 [[ "$platform" == iphoneos ]] || { echo 'Not an iPhoneOS device build' >&2; exit 1; }
-[[ -f "$app/Web/runtime/ruffle.js" ]] || { echo 'Bundled runtime missing' >&2; exit 1; }
+python3 "$(dirname "$0")/verify_bundled_runtime.py" "$app/Web"
+python3 - "$app/Info.plist" "$(dirname "$0")/../App/Info-Debug.plist" <<'PY_VERSION'
+import plistlib, sys
+with open(sys.argv[1], "rb") as f: actual = plistlib.load(f)
+with open(sys.argv[2], "rb") as f: expected = plistlib.load(f)
+for key in ("CFBundleShortVersionString", "CFBundleVersion"):
+    assert actual[key] == expected[key], f"Packaged version mismatch: {key}"
+PY_VERSION
 [[ -z "$(find "$app" -name embedded.mobileprovision -print -quit)" ]] || { echo 'Unexpected provisioning profile' >&2; exit 1; }
 if codesign -dv "$app" 2>/dev/null; then echo 'Expected unsigned app, found signature' >&2; exit 1; fi
 out=$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$out")
