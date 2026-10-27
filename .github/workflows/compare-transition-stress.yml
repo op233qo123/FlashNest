@@ -23,7 +23,10 @@ jobs:
           set -euo pipefail
           python3 scripts/fetch_runtime.py
           python3 scripts/test_static.py
-          python3 -m pip install --user PyYAML==6.0.2
+          python3 -m venv "$RUNNER_TEMP/transition-python"
+          export PATH="$RUNNER_TEMP/transition-python/bin:$PATH"
+          echo "$RUNNER_TEMP/transition-python/bin" >> "$GITHUB_PATH"
+          python3 -m pip install PyYAML==6.0.2
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/transition-stress -p 'test_*.py'
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/transition-stress/fixture -p 'test_*.py'
           curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
@@ -60,6 +63,7 @@ jobs:
           GUARDED: ${{ steps.guarded.outcome }}
         run: |
           set -euo pipefail
+          mkdir -p transition-evidence
           printf 'baseline=%s\nguarded=%s\n' "$BASELINE" "$GUARDED" > transition-evidence/outcomes.txt
           test "$BASELINE" = success
           test "$GUARDED" = success
