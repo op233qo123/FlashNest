@@ -39,6 +39,7 @@ struct LibraryCollectionControls: View {
     let count: Int
     let disabled: Bool
     @FocusState private var searchFocused: Bool
+    @State private var showingSortOptions = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -60,9 +61,9 @@ struct LibraryCollectionControls: View {
             }.frame(minHeight: 44).padding(.horizontal, 12)
                 .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
             if typeSize.isAccessibilitySize {
-                VStack(alignment: .leading, spacing: 8) { filterButton; sortMenu }
+                VStack(alignment: .leading, spacing: 8) { filterButton; sortButton }
             } else {
-                HStack { filterButton; Spacer(); sortMenu }
+                HStack { filterButton; Spacer(); sortButton }
             }
             Text(count == 1 ? L10n.text("1 game") : L10n.format("%d games", count))
                 .font(.caption).foregroundStyle(.secondary)
@@ -80,20 +81,22 @@ struct LibraryCollectionControls: View {
             .accessibilityValue(L10n.text(preferences.favoritesOnly ? "Favorites only" : "All games"))
     }
 
-    private var sortMenu: some View {
-        Menu {
-            Picker(L10n.text("Sort games"), selection: $preferences.sortOrder) {
-                Text(L10n.text("Recently imported")).tag(LibraryPreferences.SortOrder.imported)
-                Text(L10n.text("Recently opened")).tag(LibraryPreferences.SortOrder.recentlyOpened)
-                Text(L10n.text("Title")).tag(LibraryPreferences.SortOrder.title)
-            }
+    private var sortButton: some View {
+        Button {
+            searchFocused = false
+            showingSortOptions = true
         } label: {
             Label(sortTitle, systemImage: "arrow.up.arrow.down")
                 .font(.subheadline).frame(minHeight: 44)
-                .accessibilityIdentifier("library-sort")
         }
-        // These controls share a List row. Avoid its automatic row-button style.
-        .buttonStyle(.borderless)
+        .buttonStyle(.plain).foregroundStyle(.indigo)
+        .accessibilityIdentifier("library-sort")
+        .confirmationDialog(L10n.text("Sort games"), isPresented: $showingSortOptions, titleVisibility: .visible) {
+            Button(L10n.text("Recently imported")) { preferences.sortOrder = .imported }
+            Button(L10n.text("Recently opened")) { preferences.sortOrder = .recentlyOpened }
+            Button(L10n.text("Title")) { preferences.sortOrder = .title }
+            Button(L10n.text("Cancel"), role: .cancel) {}
+        }
     }
     private var sortTitle: String {
         switch preferences.sortOrder {
@@ -111,7 +114,7 @@ struct LibraryGameCard: View {
     let play: () -> Void
     let chooseEntry: () -> Void
     let favoriteAction: () -> Void
-    let remove: () -> Void
+    let showOptions: () -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -143,9 +146,9 @@ struct LibraryGameCard: View {
             if typeSize.isAccessibilitySize {
                 VStack(spacing: 8) { playButton; entryButton }
             } else {
-                HStack(spacing: 10) { playButton; entryButton; optionsMenu }
+                HStack(spacing: 10) { playButton; entryButton; optionsButton }
             }
-            if typeSize.isAccessibilitySize { optionsMenu }
+            if typeSize.isAccessibilitySize { optionsButton }
         }.libraryCardSurface().disabled(disabled)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("game-row-" + package.id.uuidString)
@@ -162,17 +165,43 @@ struct LibraryGameCard: View {
             Text(L10n.text("Choose entry")).frame(maxWidth: .infinity, minHeight: 44)
         }.buttonStyle(.bordered).accessibilityIdentifier("entries-" + package.id.uuidString)
     }
-    private var optionsMenu: some View {
-        Menu {
-            Button(action: chooseEntry) { Label(L10n.text("Choose entry"), systemImage: "list.bullet") }
-            Button(role: .destructive, action: remove) { Label(L10n.text("Remove game"), systemImage: "trash") }
-        } label: {
+    private var optionsButton: some View {
+        Button(action: showOptions) {
             Label(L10n.text("Game options"), systemImage: "ellipsis")
                 .labelStyle(.iconOnly)
                 .frame(minWidth: 44, minHeight: 44)
-                .accessibilityIdentifier("game-options-" + package.id.uuidString)
         }
-        .buttonStyle(.borderless)
+        .buttonStyle(.plain).foregroundStyle(.indigo)
+        .accessibilityIdentifier("game-options-" + package.id.uuidString)
+    }
+}
+
+struct LibraryGameOptionsView: View {
+    let package: GamePackage
+    let chooseEntry: () -> Void
+    let remove: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Text(package.title).font(.headline).fixedSize(horizontal: false, vertical: true)
+                Button(action: chooseEntry) {
+                    Label(L10n.text("Choose entry"), systemImage: "list.bullet")
+                        .frame(minHeight: 44)
+                }.buttonStyle(.plain).accessibilityIdentifier("game-options-choose-entry")
+                Button(role: .destructive, action: remove) {
+                    Label(L10n.text("Remove game"), systemImage: "trash")
+                        .frame(minHeight: 44).foregroundStyle(.red)
+                }.buttonStyle(.plain).accessibilityIdentifier("game-options-remove-game")
+            }
+            .accessibilityIdentifier("game-options-sheet-" + package.id.uuidString)
+            .navigationTitle(L10n.text("Game options"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) {
+                Button(L10n.text("Cancel")) { dismiss() }.accessibilityIdentifier("game-options-cancel")
+            } }
+        }
     }
 }
 

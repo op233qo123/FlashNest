@@ -88,7 +88,7 @@ struct LibraryView: View {
                     LibraryGameCard(package: package, favorite: preferences.isFavorite(package.id),
                         disabled: !canPresent, play: { openPlayer(package) },
                         chooseEntry: { present(.entry(package)) }, favoriteAction: { toggleFavorite(package.id) },
-                        remove: { if canPresent { pendingRemoval = package } })
+                        showOptions: { present(.gameOptions(package)) })
                         .homeCardRow()
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) { if canPresent { pendingRemoval = package } } label: {
@@ -160,6 +160,12 @@ struct LibraryView: View {
         case .saves: SaveAreaView(packages: library.packages)
         case .inbox:
             LocalImportInboxView(library: library) { package in pendingAction = .entry(package) }
+        case .gameOptions(let package):
+            LibraryGameOptionsView(package: package, chooseEntry: {
+                pendingAction = .entry(package); sheet = nil
+            }, remove: {
+                pendingAction = .remove(package); sheet = nil
+            })
         case .entry(let package):
             EntrySelectionView(package: package, remove: {
                 pendingAction = .remove(package); sheet = nil
@@ -223,13 +229,14 @@ struct LibraryView: View {
 }
 
 private enum LibrarySheet: Identifiable {
-    case settings, diagnostics, inbox, entry(GamePackage), saves
+    case settings, diagnostics, inbox, entry(GamePackage), gameOptions(GamePackage), saves
     var id: String {
         switch self {
         case .settings: return "settings"
         case .diagnostics: return "diagnostics"
         case .inbox: return "inbox"
         case .entry(let package): return "entry-" + package.id.uuidString
+        case .gameOptions(let package): return "game-options-" + package.id.uuidString
         case .saves: return "saves"
         }
     }

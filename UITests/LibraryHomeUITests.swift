@@ -67,13 +67,18 @@ final class LibraryHomeUITests: XCTestCase {
 
         let options = app.buttons["game-options-" + packageID].firstMatch
         XCTAssertTrue(options.isHittable); options.tap()
-        let chooseActions = app.buttons.matching(NSPredicate(format: "label == %@", "Choose entry"))
-        XCTAssertTrue(LibraryNavigation.wait {
-            chooseActions.allElementsBoundByIndex.contains { $0.identifier != "entries-" + packageID && $0.isHittable }
-        })
-        let menuChoice = try XCTUnwrap(chooseActions.allElementsBoundByIndex.first {
-            $0.identifier != "entries-" + packageID && $0.isHittable
-        })
+        let optionsSheet = app.descendants(matching: .any)["game-options-sheet-" + packageID].firstMatch
+        XCTAssertTrue(optionsSheet.waitForExistence(timeout: 5))
+        let cancelOptions = app.buttons["game-options-cancel"].firstMatch
+        XCTAssertTrue(cancelOptions.isEnabled && cancelOptions.isHittable); cancelOptions.tap()
+        XCTAssertTrue(LibraryNavigation.wait { quickPlay.isHittable && options.isHittable })
+        XCTAssertFalse(app.buttons["player-menu"].exists && app.buttons["player-menu"].isHittable,
+                       "Cancelling game options must not launch playback")
+        options.tap()
+        XCTAssertTrue(optionsSheet.waitForExistence(timeout: 5))
+        let menuChoice = app.buttons["game-options-choose-entry"].firstMatch
+        XCTAssertTrue(menuChoice.waitForExistence(timeout: 5))
+        XCTAssertTrue(menuChoice.isEnabled && menuChoice.isHittable)
         menuChoice.tap()
         LibraryNavigation.requireEntry("main.swf", in: app)
         let entryOptions = app.buttons["entry-options"].firstMatch
