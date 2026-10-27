@@ -54,7 +54,8 @@ final class LibraryHomeUITests: XCTestCase {
 
         // Exercise native menus as real controls, not just their visible labels.
         let sort = app.buttons["library-sort"].firstMatch
-        XCTAssertTrue(sort.isHittable); sort.tap()
+        LibraryNavigation.captureControlState("library-sort", in: app, context: "Sort before genuine menu action")
+        XCTAssertTrue(sort.isEnabled && sort.isHittable); sort.tap()
         let titleSort = app.buttons["Title"].firstMatch
         XCTAssertTrue(titleSort.waitForExistence(timeout: 5)); titleSort.tap()
         XCTAssertTrue(LibraryNavigation.wait { sort.label.contains("Title") })

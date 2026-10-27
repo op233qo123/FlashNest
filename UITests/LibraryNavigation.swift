@@ -84,7 +84,20 @@ enum LibraryNavigation {
             var navigated = false
             for label in [name, "FlashNest Source", "On My iPhone"] {
                 let cell = fileCell(named: label, in: app)
-                if cell.exists && cell.isHittable { cell.tap(); navigated = true; break }
+                if cell.exists && cell.isHittable {
+                    // Cold Files providers can leave the old row visible while
+                    // loading. One tap must settle before choosing another action.
+                    cell.tap()
+                    let nextName = label == "On My iPhone" ? "FlashNest Source" : (label == "FlashNest Source" ? name : "main.swf")
+                    let settled = wait({
+                        let next = fileCell(named: nextName, in: app)
+                        return next.exists && next.isHittable
+                    }, timeout: 30)
+                    if !settled { captureControlState(label + ", Actions Menu", in: app, context: "Files provider did not finish location transition") }
+                    XCTAssertTrue(settled, "A real Files tap must reach its requested location before further navigation", file: file, line: line)
+                    navigated = true
+                    break
+                }
             }
             if navigated { continue }
             if navigateBack(in: app) { continue }

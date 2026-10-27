@@ -4,7 +4,9 @@
 original SWFs are deliberately **not** in the normal `fixtures` resources.
 The default app and test targets remain unchanged. The separate manual-only
 `diagnose-frame-order.yml` workflow stages this harness in a disposable checkout
-and captures measurements without producing an IPA.
+and captures measurements without producing an IPA. Its `variant` choice defaults to
+`both`; `control` and `nested` select only the named test without weakening checks.
+Completed native measurements are recorded in [NATIVE_RESULTS.md](NATIVE_RESULTS.md).
 
 ## What it measures
 
@@ -45,8 +47,10 @@ and captures measurements without producing an IPA.
 **A passing test means the observation was captured completely.** It does not
 mean the nested-goto implementation is Flash-compatible. No assertion requires
 `FO_P2_TARGET`, `FO_P3_REACHED`, `FO_B_CLOSED_STOP`, or `FO_B_OPENING`, and no
-`isPlaying` assertion is made. Final P/B frame numbers come from the original
-fixture's trace, not a guessed Ruffle inspection API. Compare both raw outputs.
+`isPlaying` assertion is made. Sampled P/B frame numbers come from the original
+fixture's trace, not a guessed Ruffle inspection API. `FO_DONE` occurs during
+ENTER_FRAME12, not after all its scripts: queued scripts can still execute and
+restart playback afterward. Compare both raw outputs.
 
 There has been **no Adobe Flash execution** of this original fixture. An engine
 corner case reproduced here would still not prove the user's full game follows
@@ -54,10 +58,10 @@ that path. Upstream Flash-reference test outputs are separate evidence.
 
 ## Manual staging in a disposable checkout
 
-Use the existing pinned Xcode 16.4, XcodeGen 2.42.0, exact Swift dependency,
-runtime-fetch/checksum, and simulator-selection setup documented in
-`.github/workflows/build-unsigned.yml`. Do not edit that workflow merely to run
-this diagnostic, and do not run its IPA release steps.
+Use the pinned Xcode 16.2, XcodeGen 2.42.0, exact Swift dependency,
+runtime-fetch/checksum, and installed iOS Simulator 18.2 selection documented in
+`.github/workflows/diagnose-frame-order.yml` (`macos-14`). Keep this diagnostic
+separate from release workflows; do not run IPA release steps for a capture.
 
 After approval, stage these files **before** `xcodegen generate`:
 
@@ -119,13 +123,15 @@ an iOS/WebKit pass. Do not publish or upload user SWFs as part of this harness.
 
 ## Validation status
 
-- Native compile/execution: **not run** in this Linux workspace (no Xcode or
-  Swift toolchain).
+- Native compile/execution: **completed in standard GitHub macOS runners**,
+  using iPhone 16 arm64 iOS Simulator 18.2. Both variants have complete captures
+  across the two runs documented in [NATIVE_RESULTS.md](NATIVE_RESULTS.md).
+  No native execution occurred in the Linux authoring workspace.
 - `python3 experiments/frame-order/test_harness_js.py` passes embedded observer
   JavaScript syntax/unit checks (late setter replacement, ordered 12-tick
   capture, completion validation, snapshot, truncation, overflow, missing
   player), plus source-only bounded-evaluation/awaited-teardown contracts.
   These validate capture plumbing, not Swift compilation, actual callback
   deadlines, Ruffle, or the fixture.
-- A fresh native execution remains required before treating the diagnostic as
-  measured iOS behavior.
+- A passing capture is measured simulator behavior, not physical-device or
+  Adobe-equivalence validation. Exact Adobe reference remains unmeasured.

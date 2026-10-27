@@ -1,6 +1,6 @@
 # Original AVM2 nested-goto diagnostic (SWF37)
 
-**Status: generated and structurally validated; not executed in Ruffle, iOS, or Adobe Flash.** Local Chromium launch failed before a page opened (`socket() ... Operation not permitted`). See `runtime-status.json`. This experiment is not part of the default release gate, and it does not prove the cause of any user's game failure.
+**Status: both original variants captured on pinned Ruffle 0.7.1 in iOS Simulator 18.2.** The nested variant reached the closed-stop path; the control executed the target/opening path. See [native measurements and limitations](NATIVE_RESULTS.md) and `runtime-status.json`. There has been **no exact Adobe Flash reference run or physical-device validation**. This isolated experiment is not part of the default release gate and does not establish a particular third-party game's cause. The earlier local Chromium launch failed before page/SWF execution and remains a separate unsuccessful attempt.
 
 ## Purpose and scope
 
@@ -42,7 +42,7 @@ python3 experiments/frame-order/validate_fixtures.py
 - `FO_STATE <tick> <P-frame> <B-frame>` observes each ENTER_FRAME callback.
 - `FO_DONE 12 <P-frame> <B-frame>` finishes the measurement **during the twelfth observed ENTER_FRAME callback, before that tick's frame scripts**. It unregisters the observer and stops both clips after reporting.
 
-Trace calls do not perform a goto or mutate timelines. The observer stops clips only after `FO_DONE`. Ignore `isPlaying` as an oracle: that getter has separate upstream compatibility issues. An incomplete trace, missing start marker, timeout, VerifyError, or buffer overflow is an **incomplete measurement**, never evidence that the target script was skipped.
+Trace calls do not perform a goto or mutate timelines. The observer calls `stop()` on both clips only after `FO_DONE`; already-queued scripts can still run later in that tick and restart playback. Therefore `FO_DONE` is not a final settled-state report. Ignore `isPlaying` as an oracle: that getter has separate upstream compatibility issues. An incomplete trace, missing start marker, timeout, VerifyError, or buffer overflow is an **incomplete measurement**, never evidence that the target script was skipped.
 
 ## What source research establishes
 
@@ -55,8 +55,10 @@ At pinned commit `89a7049965f3090e706265670df309a5128233ac`:
 5. The [contribution guide](https://github.com/ruffle-rs/ruffle/blob/89a7049965f3090e706265670df309a5128233ac/CONTRIBUTING.md#L167-L196) identifies such expected traces as Flash Player reference output. These upstream fixtures are **not the exact stripped fixture here**. No expected `output.txt` has been invented for this experiment.
 6. [PR 24684](https://github.com/ruffle-rs/ruffle/pull/24684), already merged and represented in pinned code, expressly notes another case where nested processing runs a queued goto early. It does not prove this experiment or the user's game shares its final outcome. Current master inspected on 2026-10-27 retained the same relevant guard/drain structure; upgrading is not evidence of a fix.
 
-## Next measurement
+## Measurements and next discriminator
 
-Use the standalone `FrameOrderRuntimeTests.swift` and `HARNESS.md` to stage an **opt-in diagnostic** in a disposable checkout. Capture raw trace and engine version/hash provenance for both variants; assert only that measurement completed reliably. Do not modify runtime behavior to force a presumed result. A Linux run would establish bundled-engine behavior, not iOS behavior. A native WKWebView run would establish iOS harness behavior, not Adobe reference behavior or a particular game's cause.
+The native captures and exact run/commit/runtime provenance are recorded in [NATIVE_RESULTS.md](NATIVE_RESULTS.md). Both variants have complete observations, obtained across two runs after one pre-load WebContent crash. The next discriminator is an exact Adobe-reference trace of these same original binaries; nearby upstream reference fixtures do not replace that comparison.
 
-The exact Adobe comparison remains open. Only after obtaining reliable traces should a separate minimal runtime change/regression test be considered; no such fix is included here.
+For a new independently authorized capture, use the standalone `FrameOrderRuntimeTests.swift` and `HARNESS.md` to stage an **opt-in diagnostic** in a disposable checkout. Capture raw trace and engine version/hash provenance for both variants; assert only that measurement completed reliably. Do not modify runtime behavior to force a presumed result. A Linux run would establish bundled-engine behavior, not iOS behavior. A native WKWebView run would establish iOS harness behavior, not Adobe reference behavior or a particular game's cause.
+
+The exact Adobe comparison remains open. Reliable Ruffle traces alone do not select a compatibility fix: an engine experiment must preserve the observed Flash playhead and script ordering. No runtime change or claimed compatibility fix is included here.

@@ -1,8 +1,67 @@
 {
-  "status": "NOT_EXECUTED",
+  "status": "NATIVE_SIMULATOR_CAPTURED_BOTH_VARIANTS",
   "date": "2026-10-27",
-  "localBrowser": "Launch failed before any page or SWF execution",
-  "nativeIOSExecuted": false,
+  "localBrowser": "Earlier launch failed before any page or SWF execution",
+  "nativeIOSExecuted": true,
+  "nativePhysicalDeviceExecuted": false,
   "adobeReferenceExecuted": false,
-  "notes": "Fixture generation and structural validation succeeded. Native measurement is pending; structural checks are not runtime evidence."
+  "runtimeVersion": "0.7.1",
+  "pinnedSourceCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "platform": {
+    "device": "iPhone 16",
+    "architecture": "arm64",
+    "environment": "iOS Simulator",
+    "iOS": "18.2",
+    "Xcode": "16.2",
+    "runner": "macos-14",
+    "hostOS": "macOS 14.8.9"
+  },
+  "harnessSHA256": "5beb4b3205cf5b7b8fe09a8b5cc0b946a235612501d2072a50ab255c7db92308",
+  "runs": [
+    {
+      "runID": 40473436551,
+      "commit": "a0ab1ffffee212903ea67e5d768aec4ad93f4b29",
+      "selection": "both",
+      "workflowConclusion": "failure",
+      "nestedCapture": "complete",
+      "controlCapture": "incomplete_before_SWF_request",
+      "artifactID": 12719988411,
+      "artifactSHA256": "3aefee2c8a4855d9ab12151a9d2ef979232d63ed9e912fececa0b2f58750aa44"
+    },
+    {
+      "runID": 40474781959,
+      "commit": "f086ac58cde9a085096b6402488456bc60c173c3",
+      "selection": "control",
+      "workflowConclusion": "success",
+      "controlCapture": "complete",
+      "artifactID": 12719534918,
+      "artifactSHA256": "347e9e7ab4a5cac9b11688ee88b6d3065011a7132ad3a972fbe3cd9092b4dc7d"
+    }
+  ],
+  "observations": {
+    "nested": {
+      "traceRows": 20,
+      "targetScriptSeen": false,
+      "openingScriptSeen": false,
+      "closedStopScriptSeen": true,
+      "doneMarker": "FO_DONE 12 3 4"
+    },
+    "control": {
+      "traceRows": 31,
+      "targetScriptSeen": true,
+      "openingScriptSeen": true,
+      "closedStopScriptSeen": false,
+      "doneMarker": "FO_DONE 12 2 7",
+      "postDoneTraces": [
+        "FO_B_LOOP 7",
+        "FO_B_OPENING 5"
+      ]
+    }
+  },
+  "notes": [
+    "Both successful captures have complete ticks1\u201312, matching raw/JSON traces, and no overflow/truncation/operation/snapshot/cleanup errors.",
+    "FO_DONE occurs during ENTER_FRAME12 before its scripts; it is not a final settled-state report.",
+    "The original reduced fixture contrast is measured; exact Adobe equivalence, historical regression, and third-party-game causality are not established.",
+    "See NATIVE_RESULTS.md for provenance, first-attempt startup crash, source correspondence, and remaining evidence gap."
+  ]
 }

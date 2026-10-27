@@ -92,6 +92,8 @@ struct LibraryCollectionControls: View {
                 .font(.subheadline).frame(minHeight: 44)
                 .accessibilityIdentifier("library-sort")
         }
+        // These controls share a List row. Avoid its automatic row-button style.
+        .buttonStyle(.borderless)
     }
     private var sortTitle: String {
         switch preferences.sortOrder {
@@ -170,6 +172,7 @@ struct LibraryGameCard: View {
                 .frame(minWidth: 44, minHeight: 44)
                 .accessibilityIdentifier("game-options-" + package.id.uuidString)
         }
+        .buttonStyle(.borderless)
     }
 }
 
