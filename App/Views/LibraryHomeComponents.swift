@@ -64,7 +64,8 @@ struct LibraryCollectionControls: View {
             } else {
                 HStack { filterButton; Spacer(); sortMenu }
             }
-            Text(L10n.format("%d games", count)).font(.caption).foregroundStyle(.secondary)
+            Text(count == 1 ? L10n.text("1 game") : L10n.format("%d games", count))
+                .font(.caption).foregroundStyle(.secondary)
                 .accessibilityIdentifier("library-result-count")
         }.disabled(disabled)
     }
@@ -89,7 +90,8 @@ struct LibraryCollectionControls: View {
         } label: {
             Label(sortTitle, systemImage: "arrow.up.arrow.down")
                 .font(.subheadline).frame(minHeight: 44)
-        }.accessibilityIdentifier("library-sort")
+                .accessibilityIdentifier("library-sort")
+        }
     }
     private var sortTitle: String {
         switch preferences.sortOrder {
@@ -162,9 +164,12 @@ struct LibraryGameCard: View {
         Menu {
             Button(action: chooseEntry) { Label(L10n.text("Choose entry"), systemImage: "list.bullet") }
             Button(role: .destructive, action: remove) { Label(L10n.text("Remove game"), systemImage: "trash") }
-        } label: { Image(systemName: "ellipsis").frame(minWidth: 44, minHeight: 44) }
-            .accessibilityLabel(L10n.text("Game options"))
-            .accessibilityIdentifier("game-options-" + package.id.uuidString)
+        } label: {
+            Label(L10n.text("Game options"), systemImage: "ellipsis")
+                .labelStyle(.iconOnly)
+                .frame(minWidth: 44, minHeight: 44)
+                .accessibilityIdentifier("game-options-" + package.id.uuidString)
+        }
     }
 }
 

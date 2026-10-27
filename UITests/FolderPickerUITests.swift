@@ -68,36 +68,8 @@ final class FolderPickerUITests: XCTestCase {
             }
         }
         XCTAssertTrue(systemNavigation.waitForExistence(timeout: 15), "Files must be presented before navigating; never tap underlying library controls")
-        // Captured iOS 18.2 AX identifies the title as an Actions Menu button,
-        // not a bare title string or a navigation-bar identifier.
-        let title = app.navigationBars.buttons["FlashNest Cross-App Fixture, Actions Menu"].firstMatch
-        if !title.waitForExistence(timeout: 8) {
-            // directoryURL is a best-effort hint. Navigate only known UI labels,
-            // then require the exact fixture title before accepting Open.
-            for label in ["Browse", "On My iPhone", "FlashNest Source", "FlashNest Cross-App Fixture"] {
-                if title.exists { break }
-                // Select the separate source app's Files cell, not an app title
-                // behind the picker or FlashNest's own Documents container.
-                let cells = app.collectionViews["File View"].cells.containing(.staticText, identifier: label)
-                _ = cells.firstMatch.waitForExistence(timeout: 2)
-                if let cell = cells.allElementsBoundByIndex.first(where: { $0.isHittable }) {
-                    cell.tap()
-                } else if let button = app.buttons.matching(identifier: label).allElementsBoundByIndex.first(where: { $0.isHittable }) {
-                    button.tap()
-                } else if let text = app.staticTexts.matching(identifier: label).allElementsBoundByIndex.first(where: { $0.isHittable }) {
-                    text.tap()
-                }
-            }
-        }
+        LibraryNavigation.navigateToSourceFolder(named: "FlashNest Cross-App Fixture", in: app)
         capture(app, "Files picker before Open")
-        XCTAssertTrue(title.waitForExistence(timeout: 10), "Must select the seeded folder, never an arbitrary Files location")
-        XCTAssertTrue(title.isHittable, "The fixture folder must be the visible location")
-        // Do not assert Files' private browsing-root identifier: the captured
-        // 18.2 screenshot showed the correct visible folder while that identifier
-        // still contained its parent title. Visible title + inventory is the gate.
-        let files = app.collectionViews["File View"]
-        XCTAssertTrue(files.cells.containing(.staticText, identifier: "main.swf").firstMatch.waitForExistence(timeout: 5))
-        XCTAssertTrue(files.cells.containing(.staticText, identifier: "sub").firstMatch.waitForExistence(timeout: 5))
     }
 
     func testSystemOpenImportsNestedFolderFromSeparateAppContainer() {
@@ -124,11 +96,7 @@ final class FolderPickerUITests: XCTestCase {
         // display a back breadcrumb instead, as seen in the real 18.2 capture.
         for _ in 0..<4 {
             if cancel.exists && cancel.isHittable { break }
-            let back = app.navigationBars.buttons.allElementsBoundByIndex.first {
-                ["FlashNest Source", "On My iPhone", "Browse"].contains($0.label) && $0.isHittable
-            }
-            guard let back else { break }
-            back.tap()
+            if !LibraryNavigation.navigateBack(in: app) { break }
         }
         XCTAssertTrue(cancel.waitForExistence(timeout: 5))
         cancel.tap()

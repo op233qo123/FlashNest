@@ -50,6 +50,19 @@ final class LibraryAccessibilityUITests: XCTestCase {
                       "Simulator launch override produced no observable text growth; Accessibility XXXL coverage is unverified. Chinese baseline was checked.")
         XCTAssertTrue(app.frame.insetBy(dx: -1, dy: -1).contains(languageLabel.frame),
                       "The enlarged visible Language label must remain within the display")
+        let languageControl = app.buttons["settings-language"].firstMatch
+        assertReachableTarget(languageControl, in: app)
+        XCTAssertTrue(languageControl.label.contains("简体中文"), "The selected language remains exposed in full")
+        languageControl.tap()
+        let chinese = app.buttons["settings-language-option-zh-Hans"].firstMatch
+        XCTAssertTrue(chinese.waitForExistence(timeout: 5))
+        reveal(chinese, in: app)
+        assertReachableTarget(chinese, in: app)
+        XCTAssertEqual(chinese.label, "简体中文")
+        let choices = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        choices.name = "Chinese language choices at Accessibility XXXL"; choices.lifetime = .keepAlways; add(choices)
+        chinese.tap()
+        XCTAssertTrue(languageControl.waitForExistence(timeout: 5))
         let done = app.buttons["settings-done"].firstMatch
         XCTAssertTrue(done.isHittable)
         let diagnostics = app.buttons["settings-import-diagnostics"].firstMatch
@@ -72,8 +85,9 @@ final class LibraryAccessibilityUITests: XCTestCase {
 
     private func assertReachableTarget(_ element: XCUIElement, in app: XCUIApplication,
                                        file: StaticString = #filePath, line: UInt = #line) {
+        print("FLASHNEST_TARGET_GEOMETRY id=\(element.identifier) frame=\(element.frame) app=\(app.frame) enabled=\(element.isEnabled) hittable=\(element.isHittable)")
         let interactive = element.exists && element.isEnabled && element.isHittable
-        if !interactive { LibraryNavigation.captureControlState(element.identifier, in: app, context: "Accessibility toolbar guard failed") }
+        if !interactive || !app.frame.insetBy(dx: -1, dy: -1).contains(element.frame) { LibraryNavigation.captureControlState(element.identifier, in: app, context: "Accessibility toolbar guard failed") }
         XCTAssertTrue(interactive, file: file, line: line)
         XCTAssertGreaterThanOrEqual(element.frame.width, 43, "44-point target, allowing 1-point AX rounding", file: file, line: line)
         XCTAssertGreaterThanOrEqual(element.frame.height, 43, "44-point target, allowing 1-point AX rounding", file: file, line: line)
@@ -81,7 +95,11 @@ final class LibraryAccessibilityUITests: XCTestCase {
     }
 
     private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
-        for _ in 0..<8 { if element.exists && element.isHittable { return }; app.swipeUp() }
+        for _ in 0..<8 {
+            if element.exists && element.isHittable && app.frame.insetBy(dx: -1, dy: -1).contains(element.frame) { return }
+            app.swipeUp()
+        }
+        LibraryNavigation.captureControlState(element.identifier, in: app, context: "Settings target did not become fully visible")
         XCTAssertTrue(element.isHittable)
     }
 }

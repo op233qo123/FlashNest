@@ -109,25 +109,8 @@ final class FullscreenPlayerUITests: XCTestCase {
         importButton.tap()
         let systemNavigation = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"]
         XCTAssertTrue(systemNavigation.waitForExistence(timeout: 15))
-        let title = app.navigationBars.buttons["FlashNest Player Fixture, Actions Menu"].firstMatch
-        for _ in 0..<10 {
-            if title.exists { break }
-            let files = app.collectionViews["File View"]
-            var navigated = false
-            for label in ["FlashNest Player Fixture", "FlashNest Source", "On My iPhone"] {
-                let cell = files.cells.containing(.staticText, identifier: label).firstMatch
-                if cell.exists && cell.isHittable { cell.tap(); navigated = true; break }
-            }
-            if navigated { continue }
-            let back = app.navigationBars.buttons.allElementsBoundByIndex.first {
-                ["FlashNest Source", "On My iPhone", "Browse"].contains($0.label) && $0.isHittable
-            }
-            if let back { back.tap(); continue }
-            if let browse = app.buttons.matching(identifier: "Browse").allElementsBoundByIndex.first(where: { $0.isHittable }) { browse.tap() }
-        }
+        LibraryNavigation.navigateToSourceFolder(named: "FlashNest Player Fixture", in: app)
         capture(app, "Playable fixture selected through Files")
-        XCTAssertTrue(title.waitForExistence(timeout: 10))
-        XCTAssertTrue(app.collectionViews["File View"].cells.containing(.staticText, identifier: "main.swf").firstMatch.exists)
         app.buttons["Open"].firstMatch.tap()
         LibraryNavigation.requireEntry("main.swf", in: app)
         LibraryNavigation.requireEntry("sub/child.swf", in: app)

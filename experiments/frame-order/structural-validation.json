@@ -1,0 +1,436 @@
+{
+  "result": "STRUCTURAL_PASS_ONLY",
+  "runtimeExecuted": false,
+  "flashReferenceExecuted": false,
+  "fixtures": [
+    {
+      "file": "control-no-child-goto.swf",
+      "bytes": 1538,
+      "sha256": "dd85e9f2b63b32199b7d04def4efbd80ccf68fb42da63cfe987e94358c49f030",
+      "swfVersion": 37,
+      "rootFrames": 3,
+      "childFrames": 7,
+      "childLabels": {
+        "reset": 1,
+        "open": 5
+      },
+      "abc": {
+        "methods": [
+          {
+            "method": "BClip$iinit",
+            "instructions": 19,
+            "maxObservedStack": 9,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$frame1",
+            "instructions": 8,
+            "maxObservedStack": 3,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$frame4",
+            "instructions": 10,
+            "maxObservedStack": 3,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$frame5",
+            "instructions": 8,
+            "maxObservedStack": 3,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$frame7",
+            "instructions": 11,
+            "maxObservedStack": 3,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$cinit",
+            "instructions": 3,
+            "maxObservedStack": 1,
+            "maxObservedScope": 9
+          },
+          {
+            "method": "PClip$iinit",
+            "instructions": 24,
+            "maxObservedStack": 7,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$frame1",
+            "instructions": 39,
+            "maxObservedStack": 5,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$frame2",
+            "instructions": 19,
+            "maxObservedStack": 5,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$frame3",
+            "instructions": 15,
+            "maxObservedStack": 5,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$onTick",
+            "instructions": 43,
+            "maxObservedStack": 5,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$cinit",
+            "instructions": 3,
+            "maxObservedStack": 1,
+            "maxObservedScope": 9
+          },
+          {
+            "method": "fixture$script",
+            "instructions": 53,
+            "maxObservedStack": 2,
+            "maxObservedScope": 8
+          }
+        ],
+        "strings": [
+          "B",
+          "frame1",
+          "frame4",
+          "frame5",
+          "frame7",
+          "addFrameScript",
+          "BClip$iinit",
+          "void",
+          "stop",
+          "open",
+          "gotoAndPlay",
+          "currentFrame",
+          "trace",
+          "FO_B_RESET",
+          "BClip$frame1",
+          "FO_B_CLOSED_STOP",
+          "BClip$frame4",
+          "FO_B_OPENING",
+          "BClip$frame5",
+          "FO_B_LOOP",
+          "BClip$frame7",
+          "BClip$cinit",
+          "BClip",
+          "ticks",
+          "frame2",
+          "frame3",
+          "enterFrame",
+          "onTick",
+          "addEventListener",
+          "PClip$iinit",
+          "FO_VARIANT:control-no-child-goto",
+          "FO_P1_BEGIN",
+          "target",
+          "FO_P1_AFTER_SELF_GOTO",
+          "FO_P1_END",
+          "PClip$frame1",
+          "FO_P2_TARGET",
+          "PClip$frame2",
+          "FO_P3_REACHED",
+          "PClip$frame3",
+          "FO_STATE",
+          "removeEventListener",
+          "FO_DONE",
+          "PClip$onTick",
+          "PClip$cinit",
+          "PClip",
+          "Object",
+          "flash.events",
+          "EventDispatcher",
+          "flash.display",
+          "DisplayObject",
+          "InteractiveObject",
+          "DisplayObjectContainer",
+          "Sprite",
+          "MovieClip",
+          "fixture$script"
+        ],
+        "classes": [
+          [
+            "BClip",
+            0,
+            [
+              [
+                "frame1",
+                1,
+                0,
+                1
+              ],
+              [
+                "frame4",
+                1,
+                0,
+                2
+              ],
+              [
+                "frame5",
+                1,
+                0,
+                3
+              ],
+              [
+                "frame7",
+                1,
+                0,
+                4
+              ]
+            ]
+          ],
+          [
+            "PClip",
+            6,
+            [
+              [
+                "frame1",
+                1,
+                0,
+                7
+              ],
+              [
+                "frame2",
+                1,
+                0,
+                8
+              ],
+              [
+                "frame3",
+                1,
+                0,
+                9
+              ],
+              [
+                "onTick",
+                1,
+                0,
+                10
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "file": "nested-child-goto.swf",
+      "bytes": 1548,
+      "sha256": "ae3e561e8695a0be147e2192cd6d067eaa9462daedf92213bed86c9e4c4a4d8b",
+      "swfVersion": 37,
+      "rootFrames": 3,
+      "childFrames": 7,
+      "childLabels": {
+        "reset": 1,
+        "open": 5
+      },
+      "abc": {
+        "methods": [
+          {
+            "method": "BClip$iinit",
+            "instructions": 19,
+            "maxObservedStack": 9,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$frame1",
+            "instructions": 8,
+            "maxObservedStack": 3,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$frame4",
+            "instructions": 10,
+            "maxObservedStack": 3,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$frame5",
+            "instructions": 8,
+            "maxObservedStack": 3,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$frame7",
+            "instructions": 11,
+            "maxObservedStack": 3,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "BClip$cinit",
+            "instructions": 3,
+            "maxObservedStack": 1,
+            "maxObservedScope": 9
+          },
+          {
+            "method": "PClip$iinit",
+            "instructions": 24,
+            "maxObservedStack": 7,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$frame1",
+            "instructions": 43,
+            "maxObservedStack": 5,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$frame2",
+            "instructions": 19,
+            "maxObservedStack": 5,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$frame3",
+            "instructions": 15,
+            "maxObservedStack": 5,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$onTick",
+            "instructions": 43,
+            "maxObservedStack": 5,
+            "maxObservedScope": 10
+          },
+          {
+            "method": "PClip$cinit",
+            "instructions": 3,
+            "maxObservedStack": 1,
+            "maxObservedScope": 9
+          },
+          {
+            "method": "fixture$script",
+            "instructions": 53,
+            "maxObservedStack": 2,
+            "maxObservedScope": 8
+          }
+        ],
+        "strings": [
+          "B",
+          "frame1",
+          "frame4",
+          "frame5",
+          "frame7",
+          "addFrameScript",
+          "BClip$iinit",
+          "void",
+          "stop",
+          "open",
+          "gotoAndPlay",
+          "currentFrame",
+          "trace",
+          "FO_B_RESET",
+          "BClip$frame1",
+          "FO_B_CLOSED_STOP",
+          "BClip$frame4",
+          "FO_B_OPENING",
+          "BClip$frame5",
+          "FO_B_LOOP",
+          "BClip$frame7",
+          "BClip$cinit",
+          "BClip",
+          "ticks",
+          "frame2",
+          "frame3",
+          "enterFrame",
+          "onTick",
+          "addEventListener",
+          "PClip$iinit",
+          "FO_VARIANT:nested-child-goto",
+          "FO_P1_BEGIN",
+          "target",
+          "FO_P1_AFTER_SELF_GOTO",
+          "reset",
+          "FO_P1_END",
+          "PClip$frame1",
+          "FO_P2_TARGET",
+          "PClip$frame2",
+          "FO_P3_REACHED",
+          "PClip$frame3",
+          "FO_STATE",
+          "removeEventListener",
+          "FO_DONE",
+          "PClip$onTick",
+          "PClip$cinit",
+          "PClip",
+          "Object",
+          "flash.events",
+          "EventDispatcher",
+          "flash.display",
+          "DisplayObject",
+          "InteractiveObject",
+          "DisplayObjectContainer",
+          "Sprite",
+          "MovieClip",
+          "fixture$script"
+        ],
+        "classes": [
+          [
+            "BClip",
+            0,
+            [
+              [
+                "frame1",
+                1,
+                0,
+                1
+              ],
+              [
+                "frame4",
+                1,
+                0,
+                2
+              ],
+              [
+                "frame5",
+                1,
+                0,
+                3
+              ],
+              [
+                "frame7",
+                1,
+                0,
+                4
+              ]
+            ]
+          ],
+          [
+            "PClip",
+            6,
+            [
+              [
+                "frame1",
+                1,
+                0,
+                7
+              ],
+              [
+                "frame2",
+                1,
+                0,
+                8
+              ],
+              [
+                "frame3",
+                1,
+                0,
+                9
+              ],
+              [
+                "onTick",
+                1,
+                0,
+                10
+              ]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -52,6 +52,44 @@ final class LibraryHomeUITests: XCTestCase {
         cancelEntryPicker(app)
         XCTAssertTrue(quickPlay.isHittable)
 
+        // Exercise native menus as real controls, not just their visible labels.
+        let sort = app.buttons["library-sort"].firstMatch
+        XCTAssertTrue(sort.isHittable); sort.tap()
+        let titleSort = app.buttons["Title"].firstMatch
+        XCTAssertTrue(titleSort.waitForExistence(timeout: 5)); titleSort.tap()
+        XCTAssertTrue(LibraryNavigation.wait { sort.label.contains("Title") })
+        sort.tap()
+        let importedSort = app.buttons["Recently imported"].firstMatch
+        XCTAssertTrue(importedSort.waitForExistence(timeout: 5)); importedSort.tap()
+        XCTAssertTrue(LibraryNavigation.wait { sort.label.contains("Recently imported") })
+        XCTAssertTrue(LibraryNavigation.wait { quickPlay.isHittable })
+
+        let options = app.buttons["game-options-" + packageID].firstMatch
+        XCTAssertTrue(options.isHittable); options.tap()
+        let chooseActions = app.buttons.matching(NSPredicate(format: "label == %@", "Choose entry"))
+        XCTAssertTrue(LibraryNavigation.wait {
+            chooseActions.allElementsBoundByIndex.contains { $0.identifier != "entries-" + packageID && $0.isHittable }
+        })
+        let menuChoice = try XCTUnwrap(chooseActions.allElementsBoundByIndex.first {
+            $0.identifier != "entries-" + packageID && $0.isHittable
+        })
+        menuChoice.tap()
+        LibraryNavigation.requireEntry("main.swf", in: app)
+        let entryOptions = app.buttons["entry-options"].firstMatch
+        XCTAssertTrue(entryOptions.isHittable); entryOptions.tap()
+        let requestRemoval = app.buttons["remove-game"].firstMatch
+        XCTAssertTrue(requestRemoval.waitForExistence(timeout: 5)); requestRemoval.tap()
+        let confirmRemoval = app.buttons["Remove game, keep saves"].firstMatch
+        XCTAssertTrue(confirmRemoval.waitForExistence(timeout: 10), "Removal is only a confirmation request, never immediate deletion")
+        XCTAssertTrue(confirmRemoval.isHittable)
+        let cancelRemoval = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancelRemoval.isHittable); cancelRemoval.tap()
+        XCTAssertTrue(LibraryNavigation.wait { quickPlay.exists && quickPlay.isEnabled && quickPlay.isHittable },
+                      "Cancelled removal must retain the exact package and its quick-open action")
+        XCTAssertFalse(app.descendants(matching: .any)["removal-progress"].exists)
+        XCTAssertFalse(app.buttons["player-menu"].exists && app.buttons["player-menu"].isHittable,
+                       "Options, entry selection and removal cancellation must not start playback")
+
         let search = app.textFields["library-search"].firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.tap(); search.typeText("lifecycle\n")
@@ -116,7 +154,16 @@ final class LibraryHomeUITests: XCTestCase {
         XCTAssertTrue(LibraryNavigation.wait { audioPlay.isEnabled }); audioPlay.tap()
         let trace = app.webViews.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "LIFECYCLE_ROOT_READY:")).firstMatch
         XCTAssertTrue(trace.waitForExistence(timeout: 20), "The real SWF must execute; a visible web view alone is not success")
-        XCTAssertEqual(app.webViews.count, 1, "Quick Play must create only one runtime surface")
+        LibraryNavigation.captureControlState("player-menu", in: app, context: "Quick Play foreground accessibility tree")
+        let outerWeb = app.webViews.firstMatch
+        let webAreaCount = app.webViews.count
+        XCTAssertGreaterThanOrEqual(webAreaCount, 1)
+        XCTAssertEqual(outerWeb.descendants(matching: .webView).count, webAreaCount - 1,
+                       "Every web accessibility area must belong to one foreground root, not sibling players; this is not a native WK instance count")
+        let stage = app.webViews["player-stage"].firstMatch
+        XCTAssertTrue(stage.exists && stage.isHittable)
+        XCTAssertFalse(stage.frame.isEmpty)
+        XCTAssertTrue(app.frame.insetBy(dx: -1, dy: -1).contains(stage.frame))
         XCTAssertEqual(app.buttons.matching(identifier: "player-menu").count, 1)
         let menu = app.buttons["player-menu"].firstMatch
         XCTAssertTrue(menu.isHittable); menu.tap()

@@ -66,11 +66,18 @@ enum LibraryNavigation {
             name, name + ",", name, name + ",")).firstMatch
     }
 
-    static func openSourceFolder(named name: String, in app: XCUIApplication,
-                                 file: StaticString = #filePath, line: UInt = #line) {
-        revealFolderImport(in: app, file: file, line: line).tap()
+    /// Resolve each action afresh by observed Files labels, never a stale index.
+    @discardableResult static func navigateBack(in app: XCUIApplication) -> Bool {
         let navigation = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"]
-        XCTAssertTrue(navigation.waitForExistence(timeout: 15), file: file, line: line)
+        for label in ["FlashNest Source", "On My iPhone", "Browse"] {
+            let back = navigation.buttons.matching(NSPredicate(format: "label == %@", label)).firstMatch
+            if back.exists && back.isHittable { back.tap(); return true }
+        }
+        return false
+    }
+
+    static func navigateToSourceFolder(named name: String, in app: XCUIApplication,
+                                       file: StaticString = #filePath, line: UInt = #line) {
         let title = app.navigationBars.buttons[name + ", Actions Menu"].firstMatch
         for _ in 0..<12 {
             if title.exists && title.isHittable { break }
@@ -80,17 +87,24 @@ enum LibraryNavigation {
                 if cell.exists && cell.isHittable { cell.tap(); navigated = true; break }
             }
             if navigated { continue }
-            if let back = navigation.buttons.allElementsBoundByIndex.first(where: {
-                ["FlashNest Source", "On My iPhone", "Browse"].contains($0.label) && $0.isHittable
-            }) { back.tap(); continue }
+            if navigateBack(in: app) { continue }
             let browse = app.tabBars.buttons["Browse"].firstMatch
             if browse.exists && browse.isHittable && !browse.isSelected { browse.tap(); continue }
             break
         }
-        XCTAssertTrue(title.waitForExistence(timeout: 10), "Select the exact source fixture, not an arbitrary Files location", file: file, line: line)
-        XCTAssertTrue(title.isHittable, file: file, line: line)
+        let located = title.waitForExistence(timeout: 10) && title.isHittable
+        if !located { captureControlState(name + ", Actions Menu", in: app, context: "Files location guard failed") }
+        XCTAssertTrue(located, "Select the exact source fixture, not an arbitrary Files location", file: file, line: line)
         XCTAssertTrue(fileCell(named: "main.swf", in: app).waitForExistence(timeout: 5), file: file, line: line)
         XCTAssertTrue(fileCell(named: "sub", in: app).exists, file: file, line: line)
+    }
+
+    static func openSourceFolder(named name: String, in app: XCUIApplication,
+                                 file: StaticString = #filePath, line: UInt = #line) {
+        revealFolderImport(in: app, file: file, line: line).tap()
+        let navigation = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"]
+        XCTAssertTrue(navigation.waitForExistence(timeout: 15), file: file, line: line)
+        navigateToSourceFolder(named: name, in: app, file: file, line: line)
         let open = app.buttons["Open"].firstMatch
         XCTAssertTrue(open.isEnabled && open.isHittable, file: file, line: line)
         open.tap()

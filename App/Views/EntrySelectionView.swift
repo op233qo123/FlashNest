@@ -61,8 +61,12 @@ struct EntrySelectionView: View {
                         Button(role: .destructive, action: remove) {
                             Label(L10n.text("Remove game"), systemImage: "trash")
                         }.accessibilityIdentifier("remove-game")
-                    } label: { Image(systemName: "ellipsis.circle").frame(minWidth: 44, minHeight: 44) }
-                        .accessibilityLabel(L10n.text("Game options")).accessibilityIdentifier("entry-options")
+                    } label: {
+                        Label(L10n.text("Game options"), systemImage: "ellipsis.circle")
+                            .labelStyle(.iconOnly)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .accessibilityIdentifier("entry-options")
+                    }
                 }
             }
         }
