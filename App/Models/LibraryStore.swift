@@ -118,6 +118,7 @@ import SwiftUI
                 try files.validateRemoval(id: package.id)
             }.value
             do { try await prepareRemoval(verifiedPackage) }
+            catch let error as CacheCleanupError { throw error }
             catch { throw LibraryRemovalError.websiteData }
             try await Task.detached(priority: .userInitiated) { try files.removeCopy(id: package.id) }.value
             error = nil
@@ -126,7 +127,13 @@ import SwiftUI
             return true
         } catch {
             reload()
-            self.error = (error as? LibraryRemovalError)?.errorDescription ?? L10n.text("The game could not be removed. Its files and saves have been kept.")
+            if let cleanup = error as? CacheCleanupError {
+                // Preparation failed before removeCopy. Keep the existing
+                // safety explanation and only add its fixed diagnostic code.
+                self.error = L10n.error(cleanup)
+            } else {
+                self.error = (error as? LibraryRemovalError)?.errorDescription ?? L10n.text("The game could not be removed. Its files and saves have been kept.")
+            }
             return false
         }
     }

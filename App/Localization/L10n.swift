@@ -37,6 +37,10 @@ enum L10n {
     /// Unknown OS/runtime errors must not leak raw machine-English into the main UI.
     /// Detailed diagnostic information may be recorded separately by the caller.
     static func error(_ error: Error) -> String {
+        if let cleanup = error as? CacheCleanupError {
+            return text("Game storage could not be safely cleared. The game copy was kept; saves were not deleted.") + "\n" +
+                format("Diagnostic code: %@", cleanup.diagnosticCode)
+        }
         if let preservation = error as? LegacySavePreservationError {
             // Only the fixed enum-derived code is presented. An underlying
             // WebKit error may contain a capability URL or storage details.

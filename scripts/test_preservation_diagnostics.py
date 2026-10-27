@@ -11,7 +11,7 @@ class CollectorTests(unittest.TestCase):
         def run(command, **kwargs):
             self.assertEqual(command, ['xcrun', 'simctl', 'spawn', 'synthetic-id', 'log', 'show',
                                       '--last', '20m', '--style', 'compact', '--predicate',
-                                      'eventMessage CONTAINS "SAVE-PRESERVE-"'])
+                                      'eventMessage CONTAINS "SAVE-PRESERVE-" OR eventMessage CONTAINS "CACHE-CLEANUP-"'])
             self.assertEqual(kwargs['timeout'], 30)
             self.assertEqual(kwargs['stderr'], subprocess.DEVNULL)
             kwargs['stdout'].write(b'x' * (collector.MAX_BYTES + 20) if oversized else b'SAVE-PRESERVE-ready\n')

@@ -443,15 +443,21 @@ import SwiftUI
     }
 
     static func clearPackageCaches(packageID: UUID) async throws {
-        guard !activePackageIDs.contains(packageID) else { throw SaveStoreError.invalid("game is still open") }
+        let supported = CacheCleanupError.supportedMask(WKWebsiteDataStore.allWebsiteDataTypes())
+        guard !activePackageIDs.contains(packageID) else {
+            throw CacheCleanupError(reason: .active, elapsedMilliseconds: 0, supportedTypeMask: supported)
+        }
         let profile = PackageWebKitProfiles.shared.store(for: packageID, retaining: activePackageIDs)
+        let started = Date()
+        NSLog("CACHE-CLEANUP-BEGIN supportedMask=%d", supported)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             var completed = false
-            profile.removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache,
-                                         WKWebsiteDataTypeOfflineWebApplicationCache], modifiedSince: .distantPast) {
+            profile.removeData(ofTypes: CacheCleanupError.requestedTypes, modifiedSince: .distantPast) {
                 Task { @MainActor in
                     guard !completed else { return }
                     completed = true
+                    let elapsed = max(0, min(3_600_000, Int(Date().timeIntervalSince(started) * 1000)))
+                    NSLog("CACHE-CLEANUP-COMPLETE elapsedMs=%d supportedMask=%d", elapsed, supported)
                     continuation.resume()
                 }
             }
@@ -459,7 +465,10 @@ import SwiftUI
                 try? await Task.sleep(nanoseconds: 15_000_000_000)
                 guard !completed else { return }
                 completed = true
-                continuation.resume(throwing: SaveStoreError.invalid("temporary cache cleanup timed out; game copy retained"))
+                let elapsed = max(0, min(3_600_000, Int(Date().timeIntervalSince(started) * 1000)))
+                let error = CacheCleanupError(reason: .deadline, elapsedMilliseconds: elapsed, supportedTypeMask: supported)
+                NSLog("%@", error.redactedSummary)
+                continuation.resume(throwing: error)
             }
         }
     }

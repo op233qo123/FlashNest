@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect only fixed-code preservation events from a synthetic CI simulator."""
+"""Collect only fixed-code preservation/cache events from a synthetic CI simulator."""
 import pathlib
 import subprocess
 import sys
@@ -10,7 +10,7 @@ MAX_BYTES = 256 * 1024
 
 def collect(device_id, destination):
     command = ['xcrun', 'simctl', 'spawn', device_id, 'log', 'show', '--last', '20m',
-               '--style', 'compact', '--predicate', 'eventMessage CONTAINS "SAVE-PRESERVE-"']
+               '--style', 'compact', '--predicate', 'eventMessage CONTAINS "SAVE-PRESERVE-" OR eventMessage CONTAINS "CACHE-CLEANUP-"']
     # File-backed output avoids an unbounded in-memory subprocess buffer. Only a
     # bounded prefix is retained as evidence; temporary output is always removed.
     status = 'completed'
