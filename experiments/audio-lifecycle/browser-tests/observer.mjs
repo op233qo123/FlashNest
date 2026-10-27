@@ -1,4 +1,24 @@
 // Diagnostic-only passthrough hooks. No callback wrapping or strong nodes in normal arms.
+const category=value=>value===null?'null':typeof value;
+
+// Uses the real native descriptor before observer installation, without a live
+// AudioContext, playback, startRendering, callback dispatch or retained references.
+export function nativeOnendedPreflight(g){
+  if(typeof g.OfflineAudioContext!=='function')throw Error('OfflineAudioContext required for native onended preflight');
+  const context=new g.OfflineAudioContext(1,1,44100),node=context.createBufferSource();
+  function descriptor(object){for(let p=object;p;p=Object.getPrototypeOf(p)){const d=Object.getOwnPropertyDescriptor(p,'onended');if(d)return d}throw Error('Native onended descriptor unavailable')}
+  const actual=descriptor(node),scheduled=descriptor(g.AudioScheduledSourceNode.prototype);
+  const report={kind:'offline-native-onended',descriptorMatched:actual.get===scheduled.get&&actual.set===scheduled.set,cases:[],cleanupGetterCategory:null,passed:false};
+  function handler(){}
+  try{
+    for(const value of [handler,null,handler,undefined]){
+      node.onended=value;const getter=node.onended;
+      report.cases.push({setterCategory:category(value),getterCategory:category(getter),identityPreserved:typeof value==='function'?getter===value:null,cleared:value==null?getter===null:null});
+    }
+  }finally{node.onended=null;report.cleanupGetterCategory=category(node.onended)}
+  report.passed=report.descriptorMatched&&report.cleanupGetterCategory==='null'&&report.cases.every(c=>c.setterCategory==='function'?c.getterCategory==='function'&&c.identityPreserved===true:c.getterCategory==='null'&&c.cleared===true);
+  return report;
+}
 export function installAudioObserver(g, {mode='normal', maxEvents=4096, maxNodes=4096}={}) {
   if (!['normal','start-first','start-second','synthetic-ended'].includes(mode)) throw new Error('Unknown fault arm');
   const contexts=new WeakMap(), nodes=new WeakMap(), contextRows=[], nodeRows=[], events=[], patches=[];
@@ -27,10 +47,13 @@ export function installAudioObserver(g, {mode='normal', maxEvents=4096, maxNodes
       return {...old,set:function(value){
         Reflect.apply(old.set,this,[value]);
         const row=nodes.get(this);if(!row)return;
-        const attached=typeof value==='function';row.attached=attached;
-        if(attached)row.attaches++;else row.detaches++;
-        const identityPreserved=Reflect.apply(old.get,this,[])===value;
-        record(attached?'attach':'detach',{context:row.context,node:row.id,identityPreserved});
+        const getter=Reflect.apply(old.get,this,[]),attach=typeof value==='function',detach=value===null||value===undefined;
+        // Be conservative: only an observed exact native null counts as empty.
+        row.attached=getter!==null;
+        if(attach)row.attaches++;else if(detach&&getter===null)row.detaches++;
+        record(attach?'attach':detach?'detach':'unsupported-onended',{context:row.context,node:row.id,
+          setterCategory:category(value),getterCategory:category(getter),
+          identityPreserved:attach?getter===value:null,cleared:detach?getter===null:null});
       }};
     });
     replace(g.AudioBufferSourceNode.prototype,'start',old=>({...old,value:function(...args){

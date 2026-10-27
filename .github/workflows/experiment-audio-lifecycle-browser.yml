@@ -1,0 +1,103 @@
+name: Experiment WebAudio browser (locked existing candidate)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-audio-lifecycle-browser
+  cancel-in-progress: false
+jobs:
+  browser-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      REUSE: ${{ github.workspace }}/audio-reused-build
+      EVIDENCE: ${{ github.workspace }}/audio-browser-reuse-evidence
+    steps:
+      - name: Checkout corrected original observer and reuse verifier
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Retrieve exact existing artifact and terminal build API records
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = op233qo123/FlashNest
+          mkdir -p "$EVIDENCE/build-api"
+          gh api /repos/op233qo123/FlashNest/actions/runs/40540513351 > "$EVIDENCE/build-api/run.json"
+          gh api '/repos/op233qo123/FlashNest/actions/runs/40540513351/jobs?filter=latest&per_page=100' > "$EVIDENCE/build-api/jobs.json"
+          gh api /repos/op233qo123/FlashNest/actions/artifacts/12752805773 > "$EVIDENCE/build-api/artifact.json"
+          gh api /repos/op233qo123/FlashNest/actions/artifacts/12752805773/zip > "$RUNNER_TEMP/locked-audio-build.zip"
+          python3 experiments/audio-lifecycle/browser-reuse/verify_artifact.py "$RUNNER_TEMP/locked-audio-build.zip" "$REUSE" --metadata "$EVIDENCE/build-api" > "$EVIDENCE/reuse-verification.json"
+      - name: Checkout dependency tree for the unchanged WebDriver lock only
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ruffle-rs/ruffle
+          ref: 89a7049965f3090e706265670df309a5128233ac
+          path: .audio-browser-dependencies
+          persist-credentials: false
+      - name: Install pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Validate corrected observer, verifier negatives and locked dependencies
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          test "$(git -C .audio-browser-dependencies rev-parse HEAD)" = 89a7049965f3090e706265670df309a5128233ac
+          cmp .audio-browser-dependencies/web/package-lock.json "$REUSE/audio-lifecycle-candidate/source-correspondence/upstream/web/package-lock.json"
+          cmp .audio-browser-dependencies/web/package.json "$REUSE/audio-lifecycle-candidate/source-correspondence/upstream/web/package.json"
+          (cd .audio-browser-dependencies/web && npm ci --ignore-scripts)
+          python3 experiments/audio-lifecycle/fixtures/validate_fixture.py
+          python3 experiments/audio-lifecycle/browser-reuse/test_verifier.py --verified-root "$REUSE"
+          node experiments/audio-lifecycle/browser-tests/test_observer.mjs
+          node experiments/audio-lifecycle/browser-tests/test_console_observer.mjs
+          node experiments/audio-lifecycle/browser-tests/test_contracts.mjs
+          node experiments/audio-lifecycle/browser-tests/test_runner_guards.mjs
+          node experiments/audio-lifecycle/browser-tests/test_preflight.mjs
+          node experiments/audio-lifecycle/browser-tests/test_wait_until.mjs
+          node --check experiments/audio-lifecycle/browser-tests/run.mjs
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver || { test -n "${CHROMEWEBDRIVER:-}" && test -x "$CHROMEWEBDRIVER/chromedriver" && printf "%s" "$CHROMEWEBDRIVER/chromedriver"; })
+          "$chrome" --version | tee "$EVIDENCE/chrome.txt"
+          "$driver" --version | tee "$EVIDENCE/chromedriver.txt"
+      - name: Corrected complete WebAudio ownership browser gate (22 rows)
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver || { test -n "${CHROMEWEBDRIVER:-}" && test -x "$CHROMEWEBDRIVER/chromedriver" && printf "%s" "$CHROMEWEBDRIVER/chromedriver"; })
+          baseline_manifest="$REUSE/audio-lifecycle-baseline/runtime.browser-manifest.json"
+          candidate_manifest="$REUSE/audio-lifecycle-candidate/runtime.browser-manifest.json"
+          node experiments/audio-lifecycle/browser-tests/run.mjs \
+            --baseline "$REUSE/audio-lifecycle-baseline/runtime" \
+            --candidate "$REUSE/audio-lifecycle-candidate/runtime" \
+            --baseline-manifest "$baseline_manifest" --candidate-manifest "$candidate_manifest" \
+            --baseline-manifest-sha256 "$(sha256sum "$baseline_manifest" | cut -d' ' -f1)" \
+            --candidate-manifest-sha256 "$(sha256sum "$candidate_manifest" | cut -d' ' -f1)" \
+            --webdriverio "$GITHUB_WORKSPACE/.audio-browser-dependencies/web/node_modules/webdriverio" \
+            --chrome "$chrome" --driver "$driver" \
+            --fixtures "$GITHUB_WORKSPACE/experiments/audio-lifecycle/fixtures" \
+            --output "$EVIDENCE/browser"
+          python3 experiments/audio-lifecycle/browser-reuse/check_browser_results.py "$EVIDENCE/browser" > "$EVIDENCE/browser-gate-summary.json"
+      - name: Preserve previous failure and corrected observer provenance separately
+        if: always()
+        run: |
+          mkdir -p "$EVIDENCE/current-experiment"
+          cp -R experiments/audio-lifecycle "$EVIDENCE/current-experiment/audio-lifecycle"
+          cp .github/workflows/experiment-audio-lifecycle-browser.yml "$EVIDENCE/current-experiment/"
+          printf '%s\n' "repository=$GITHUB_REPOSITORY" "observerCommit=$GITHUB_SHA" "browserRun=$GITHUB_RUN_ID" "runtimeBuildCommit=d3b402aec064f326a6b03c022253ccea559aa62f" "runtimeBuildRun=40540513351" "runtimeArtifact=12752805773" "runtimeRebuilt=false" "priorBrowserStatus=failed_after_11_of_22_rows" > "$EVIDENCE/run.txt"
+      - name: Retain browser evidence and unchanged complete candidate correspondence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-audio-lifecycle-corrected-browser
+          path: |
+            audio-browser-reuse-evidence
+            audio-reused-build
+          retention-days: 7
+          if-no-files-found: warn

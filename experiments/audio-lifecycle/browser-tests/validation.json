@@ -1,26 +1,34 @@
 {
   "schemaVersion": 1,
-  "status": "MOCK_AND_STRUCTURAL_PASS_ONLY",
+  "status": "CORRECTED_OBSERVER_MOCK_AND_SYNTAX_PASS_ONLY",
   "rustCompiled": false,
   "browserExecuted": false,
   "nativeExecuted": false,
   "crashCauseEstablished": false,
   "checks": {
-    "observerMockGroups": 10,
+    "observerMockGroups": 13,
     "consoleObserverMockGroups": 8,
-    "contractMockGroups": 27,
+    "contractMockGroups": 37,
     "runnerGuardMockGroups": 6,
     "allMjsSyntax": "PASS",
     "originalFixtureStructural": "PASS",
-    "exactPinnedSourcePatch": "PASS"
+    "exactPinnedSourcePatch": "PASS",
+    "nativePreflightMockGroups": 7,
+    "failFastWaitMockGroups": 9
   },
   "commands": [
     "node test_observer.mjs",
     "node test_console_observer.mjs",
     "node test_contracts.mjs",
     "node test_runner_guards.mjs",
-    "node --check each .mjs",
-    "PYTHONDONTWRITEBYTECODE=1 python3 ../fixtures/validate_fixture.py"
+    "node test_preflight.mjs",
+    "node test_wait_until.mjs",
+    "node --check each .mjs"
   ],
-  "sourcePatchSHA256": "b588d0bc9995c2bb60ecc4738fce071fe39b930231fb7f30d38cb48ca9b73639"
+  "sourcePatchSHA256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9",
+  "currentObserverRevisionExecuted": false,
+  "historicalRuntimeRun": 40540513351,
+  "historicalRuntimeResult": "Built candidate; baseline11 rows passed; candidate-normal0 failed old getter===setter detach assertion before teardown",
+  "reuseCandidateArtifact": 12752805773,
+  "sourcePatchIdentityBasis": "Byte-identical to successful build run40540513351 source-correspondence patch; no rebuild or source edit in this harness correction"
 }

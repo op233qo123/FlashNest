@@ -7,7 +7,7 @@ function environment() {
   class Scheduled {
     constructor(){this.handler=null;this.startResult=Symbol('start-result');this.dispatchResult=true}
     get onended(){return this.handler}
-    set onended(value){if(this.setterError)throw this.setterError;calls.setter.push({receiver:this,value});this.handler=value}
+    set onended(value){if(this.setterError)throw this.setterError;calls.setter.push({receiver:this,value});this.handler=value==null?null:value}
     dispatchEvent(event){calls.dispatch.push({receiver:this,event});if(typeof this.handler==='function')Reflect.apply(this.handler,this,[event]);return this.dispatchResult}
   }
   class Source extends Scheduled {
@@ -174,6 +174,19 @@ await check('unsupported install rolls back already-installed hooks; restore det
 await check('source attempt is recorded before a throwing native factory',async()=>{
  const e=environment(),o=installAudioObserver(e.g);o.setCycle(0);
  try{const ctx=new e.Context(),failure=new Error('Closed context diagnostic');ctx.factoryError=failure;assert.throws(()=>ctx.createBufferSource(),x=>x===failure);const c=o.snapshot().contexts[0];assert.equal(c.sourceAttempts,1);assert.equal(c.sourceThrows,1);assert.equal(c.nodes,0)}finally{o.restore();e.restored()}
+});
+
+await check('undefined and null detach normalize to actual null with unchanged callback identity',async()=>{
+ const e=environment(),o=installAudioObserver(e.g);o.setCycle(0);
+ try{const ctx=new e.Context(),node=ctx.createBufferSource();function handler(){};for(const clear of [undefined,null]){node.onended=handler;assert.strictEqual(node.onended,handler);node.onended=clear;assert.strictEqual(node.onended,null)}const events=o.snapshot().events.filter(x=>x.kind==='detach');assert.deepEqual(events.map(x=>x.setterCategory),['undefined','null']);assert(events.every(x=>x.getterCategory==='null'&&x.cleared===true&&x.identityPreserved===null));assert.equal(o.snapshot().nodes[0].attached,false)}finally{o.restore();e.restored()}
+});
+await check('non-null native getter remains attached and unsupported setter categories stay visible',async()=>{
+ const e=environment(),o=installAudioObserver(e.g);o.setCycle(0);
+ try{const ctx=new e.Context(),node=ctx.createBufferSource();node.onended=42;const event=o.snapshot().events.at(-1);assert.equal(event.kind,'unsupported-onended');assert.equal(event.setterCategory,'number');assert.equal(o.snapshot().nodes[0].attached,true)}finally{o.restore();e.restored()}
+});
+
+await check('wrong native getter or replacement callback fails semantics and stays conservatively attached',async()=>{
+ for(const replace of [false,true]){const e=environment();const original=Object.getOwnPropertyDescriptor(e.Scheduled.prototype,'onended');Object.defineProperty(e.Scheduled.prototype,'onended',{...original,set(value){this.handler=replace&&typeof value==='function'?function replacement(){}:value}});const o=installAudioObserver(e.g);o.setCycle(0);try{const node=new e.Context().createBufferSource();node.onended=replace?function actual(){}:undefined;const event=o.snapshot().events.at(-1);assert.equal(event.kind,replace?'attach':'detach');assert.equal(replace?event.identityPreserved:event.cleared,false);assert.equal(o.snapshot().nodes[0].attached,true)}finally{o.restore()}}
 });
 
 console.log(`PASS ${cases} WebAudio observer mock groups; no real browser, audio, SWF or WASM execution`);

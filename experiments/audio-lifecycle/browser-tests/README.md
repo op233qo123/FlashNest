@@ -1,6 +1,6 @@
 # Isolated WebAudio lifecycle browser gate
 
-Preparation status: mocks and original SWF structural checks only. No real browser/WASM/audio run has been performed for this gate. [`SOURCE_PROOF.md`](SOURCE_PROOF.md) explains the bounded source-level self-`Rc` cycle and why it is not an established native crash cause.
+Current corrected harness revision: mocks and original SWF structural checks only; its actual rerun is still pending. Historical run40540513351 built the candidate and completed the eleven baseline cases, then failed the old observer during candidate-normal0 before candidate teardown. See [OBSERVER_CORRECTION.md](OBSERVER_CORRECTION.md). [`SOURCE_PROOF.md`](SOURCE_PROOF.md) explains the bounded source-level self-`Rc` cycle and why it is not an established native crash cause.
 
 ## Inputs and invocation
 
@@ -20,10 +20,11 @@ node run.mjs \
   --fixtures ../fixtures --output /isolated/audio-evidence
 ```
 
-Only backend `wgpu-webgl`, quality low, DPR1 is selected. Require its actual live WebGL2 context and positive drawing-buffer dimensions as well as its renderer log. Baseline and candidate must select the same actual ON/OFF WASM extension path. Exactly **22 rows** are required: eight normal cycles plus first-start, second-start and synthetic-ended fault arms per runtime. Normal cycles share a page for each runtime; each fault arm uses a fresh page. No zero-case/partial success is possible. A global 10-minute deadline, per-wait bounds, bounded capture and cleanup surround the run; provenance, incremental case journal, active case, raw per-case JSON and final summary survive failures where the process can write them.
+Only backend `wgpu-webgl`, quality low, DPR1 is selected. Require its actual live WebGL2 context and positive drawing-buffer dimensions as well as its renderer log. Baseline and candidate must select the same actual ON/OFF WASM extension path. Exactly **22 rows** are required: eight normal cycles plus first-start, second-start and synthetic-ended fault arms per runtime. Normal cycles share a page for each runtime; each fault arm uses a fresh page. No zero-case/partial success is possible. A global 10-minute deadline, per-wait bounds, bounded capture and cleanup surround the run; false readiness still polls, but fatal sync/async assertions (including falsy thrown values) are latched and rethrown after ending the underlying WebdriverIO wait, so they cannot cause repeated post-failure execution or false success; provenance, incremental case journal, active case, raw per-case JSON and final summary survive failures where the process can write them.
 
 ## Evidence contract
 
+- Before installing any observer, a real OfflineAudioContext-created AudioBufferSourceNode preflight checks the same native onended descriptor: identical function round-trip, null→null and undefined→null, with exact-null cleanup. It does not start playback/rendering or create an extra live AudioContext. Missing/failed preflight fails.
 - WebDriver's actual button click supplies trusted activation, never synthetic `.click()` or JS-generated input.
 - Require original AVM2 ENTER_FRAME activity and natural audio source refill (>2 sources).
 - Each resume/pause action requires a fresh native method call and that action's own fulfilled Promise ID, not an old startup Promise. After the second resume Promise settles, require a newly created source and a heartbeat newer than the trusted resume callback, while playing=true.
@@ -31,7 +32,7 @@ Only backend `wgpu-webgl`, quality low, DPR1 is selected. Require its actual liv
 - Baseline is expected to retain explicit handlers at close entry; candidate must detach every recorded attachment. An unexpectedly clean baseline is a control mismatch, not a pass. This is setter evidence, not GC evidence.
 - Constructor start-error faults require exactly one known NullAudioBackend fallback ERROR and the expected one/two sources. Other errors fail; recorded native source-factory throws also fail outside the single explicitly dispatched baseline synthetic event. Exact pinned styled ERROR/WARN logger signatures are captured without coercing logged objects.
 - Synthetic-ended deliberately retains one latest node. Baseline must attempt source creation during the dispatched event; candidate must not. No direct call into a dropped Rust closure occurs. The arm is fault injection, not spontaneous post-destroy event or SIGBUS reproduction.
-- Normal observation does not retain node/context references, wrap onended callbacks, force GC, or change native Promise return identity. Hooks preserve callback identity, `this`, arguments and native exceptions. Promise observers add ordinary JS reaction microtasks in both arms while returning the native Promise unchanged; this is instrumentation, not a no-overhead execution path. Plain metadata arrays contain no nodes/callbacks.
+- Normal observation does not retain node/context references, wrap onended callbacks, force GC, or change native Promise return identity. Attaches require exact function identity; detaches require an actual null/undefined input and native getter exactly null. Unexpected setter categories, a changed callback, or a non-null getter fail. Native getter state—not merely the requested assignment—drives conservative attachment bookkeeping. Hooks preserve callback identity, `this`, arguments and native exceptions. Promise observers add ordinary JS reaction microtasks in both arms while returning the native Promise unchanged; this is instrumentation, not a no-overhead execution path. Plain metadata arrays contain no nodes/callbacks.
 - AL_ACTIVE traces are coalesced into a counter to avoid trace flood; unexpected trace records and errors remain bounded, with overflow failing the gate.
 
 Mock-only checks (no browser, audio device, network, WASM or SWF execution):
@@ -41,6 +42,8 @@ node test_observer.mjs
 node test_console_observer.mjs
 node test_contracts.mjs
 node test_runner_guards.mjs
+node test_preflight.mjs
+node test_wait_until.mjs
 for file in *.mjs; do node --check "$file"; done
 ```
 

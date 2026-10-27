@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Loopback-only diagnostic; explicit installed binaries; no downloads or publishing.
 import fs from 'node:fs';import path from 'node:path';import http from 'node:http';import assert from 'node:assert/strict';import {fileURLToPath} from 'node:url';
+import {waitUntilFailFast} from './wait-until.mjs';
 import {webdriverNodeEntry} from './webdriver-node-entry.mjs';import {parseArgs,verifyRuntime,route,sha,freshAction,prepareOutput} from './runner-guards.mjs';import {checkHealthy,verifyCycle,verifyMatrix} from './contracts.mjs';
 const here=path.dirname(fileURLToPath(import.meta.url)),args=parseArgs(process.argv.slice(2)),output=path.resolve(args.output);
 for(const key of ['baseline','candidate','fixtures'])args[key]=path.resolve(args[key]);
@@ -13,14 +14,14 @@ function record(kind,data){const s=JSON.stringify({kind,at:new Date().toISOStrin
 function artifact(name,data){assert(!name.includes('/')&&!name.includes('..'));const bytes=Buffer.from(typeof data==='string'?data:JSON.stringify(data,null,2)+'\n');artifactBytes+=bytes.length;assert(artifactBytes<=64*1024*1024);fs.writeFileSync(path.join(output,name),bytes);return{file:name,bytes:bytes.length,sha256:sha(bytes)}}
 function active(config){result.activeCase=config;record('start',config);const p=path.join(output,'active-case.json');fs.writeFileSync(p+'.tmp',JSON.stringify(config,null,2));fs.renameSync(p+'.tmp',p)}
 async function evidence(){return browser.execute(()=>window.snapshot?.())}
-async function waitFor(fn,message,timeout=20000){await browser.waitUntil(async()=>{assert(Date.now()<deadline,'Global 10-minute deadline');return fn()},{timeout,interval:50,timeoutMsg:message})}
+async function waitFor(fn,message,timeout=20000){await waitUntilFailFast(browser.waitUntil.bind(browser),async()=>{assert(Date.now()<deadline,'Global 10-minute deadline');return await fn()},{timeout,interval:50,timeoutMsg:message})}
 function context(e,cycle){const rows=e.audio.contexts.filter(c=>c.cycle===cycle);assert.equal(rows.length,1,'Expected one context');return rows[0]}
 async function trustedAudio(kind,cycle,mode){const before=context(await evidence(),cycle);await(await browser.$(kind==='suspend'?'#pause':'#resume')).click();let after;await waitFor(async()=>{const e=await evidence();checkHealthy(e,{mode});after=context(e,cycle);const key=kind==='resume'?'resumes':'suspends';return after[key]>before[key]&&after[kind+'Fulfilled']>before[kind+'Fulfilled']&&after[kind+'FulfilledLast']>before[key]&&e.playing===(kind==='resume')},'Fresh trusted '+kind+' call and its settled Promise');freshAction(before,after,kind);return{kind,before,after}}
 try{
  for(const arm of ['baseline','candidate'])result.provenance[arm]=verifyRuntime(args[arm],args[arm+'-manifest'],args[arm+'-manifest-sha256']);
  assert(!fs.lstatSync(args.fixtures).isSymbolicLink());const fixture=path.join(args.fixtures,'silent.swf');assert(fs.lstatSync(fixture).isFile()&&!fs.lstatSync(fixture).isSymbolicLink());assert.equal(sha(fs.readFileSync(fixture)),'e25f5dba4162a25b9a07832be4e6f8f62242734f6f39e92983c53467a28e7fd2');
  const manifest=fs.readFileSync(path.join(args.fixtures,'manifest.json'));assert.equal(sha(manifest),'40687509557be41070b3a3eb19e550870e3ca8d902f2bfea2cedb03c8995ae0f');result.provenance.fixture={manifestSha256:sha(manifest),sha256:sha(fs.readFileSync(fixture))};
- const helpers=['page.mjs','observer.mjs','console-observer.mjs'];result.provenance.helpers=Object.fromEntries([...helpers,'page.html','run.mjs','contracts.mjs','runner-guards.mjs','webdriver-node-entry.mjs'].map(x=>[x,sha(fs.readFileSync(path.join(here,x)))]));
+ const helpers=['page.mjs','observer.mjs','console-observer.mjs'];result.provenance.helpers=Object.fromEntries([...helpers,'page.html','run.mjs','contracts.mjs','runner-guards.mjs','webdriver-node-entry.mjs','wait-until.mjs'].map(x=>[x,sha(fs.readFileSync(path.join(here,x)))]));
  const pkg=JSON.parse(fs.readFileSync(path.join(args.webdriverio,'package.json'))),entry=webdriverNodeEntry(pkg,args.webdriverio);assert(fs.statSync(args.chrome).isFile()&&fs.statSync(args.driver).isFile(),'Explicit installed browser/driver required');const {remote}=await import(entry);
  artifact('provenance.json',result.provenance);
  const roots={baseline:args.baseline,candidate:args.candidate,fixtures:args.fixtures,helpers:here};

@@ -1,10 +1,9 @@
-import {installAudioObserver} from './observer.mjs';
+import {installAudioObserver,nativeOnendedPreflight} from './observer.mjs';
 import {installConsoleObserver} from './console-observer.mjs';
 const params=new URLSearchParams(location.search),runtime=params.get('runtime'),mode=params.get('mode');
 if(!['baseline','candidate'].includes(runtime))throw Error('Unknown runtime');
 const evidence={runtime,mode,rows:[],errors:[],warnings:[],overflow:false};window.evidence=evidence;
 let player=null,api=null,current=null,disposed=false;
-const observer=installAudioObserver(window,{mode});
 function push(list,value,max=64){if(list.length>=max){evidence.overflow=true;return}list.push(value)}
 function report(value){push(evidence.errors,{cycle:current?.cycle??-1,message:String(value).slice(0,2048)})}
 window.addEventListener('error',e=>report('window.error: '+e.message));
@@ -17,8 +16,10 @@ const consoleObserver=installConsoleObserver(console,{
   if(match&&current){current.extensions=match[1];current.renderer=match[2]}
  },
 });
+try{evidence.preflight=nativeOnendedPreflight(window)}catch(error){evidence.preflight={passed:false,error:String(error)};report('Native onended preflight failed: '+String(error))}
+const observer=installAudioObserver(window,{mode});
 window.RufflePlayer={config:{autoplay:'off',unmuteOverlay:'hidden',warnOnUnsupportedContent:false,backgroundExecutionMode:'none'}};
-const script=document.createElement('script');script.src='/'+runtime+'/ruffle.js';script.onload=()=>{window.runtimeReady=true};script.onerror=()=>report('Runtime loader failed');document.head.append(script);
+const script=document.createElement('script');script.src='/'+runtime+'/ruffle.js';script.onload=()=>{window.runtimeReady=true};script.onerror=()=>report('Runtime loader failed');if(evidence.preflight.passed)document.head.append(script);
 for(const name of ['resume','pause','remove'])document.getElementById(name).onclick=event=>{
  if(!current||!api)return;
  push(current.actions,{name,trusted:event.isTrusted,heartbeatBefore:current.heartbeats},12);

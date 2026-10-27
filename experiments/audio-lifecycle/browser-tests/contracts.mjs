@@ -6,7 +6,14 @@ export function checkHealthy(e,{mode}) {
  const unexpected=e.errors.filter(x=>!(expected&&x.message.includes('Unable to create audio backend. No audio will be played.')));
  assert.equal(unexpected.length,0,JSON.stringify(unexpected));
  assert(e.errors.length<=(expected?1:0),'Duplicate/unexpected errors');
- assert(e.audio.events.filter(x=>x.kind==='attach'||x.kind==='detach').every(x=>x.identityPreserved),'Native onended identity changed');
+ const preflight=e.preflight;assert(preflight?.passed===true&&preflight.descriptorMatched===true&&preflight.cleanupGetterCategory==='null','Native onended preflight failed/missing');
+ assert.deepEqual(preflight.cases.map(c=>c.setterCategory),['function','null','function','undefined'],'Missing native null/undefined preflight cases');
+ for(const c of preflight.cases)assert(c.setterCategory==='function'?c.getterCategory==='function'&&c.identityPreserved===true:c.getterCategory==='null'&&c.cleared===true,'Native preflight setter/getter mismatch');
+ for(const x of e.audio.events){
+  if(x.kind==='attach')assert(x.setterCategory==='function'&&x.getterCategory==='function'&&x.identityPreserved===true,'Native onended function identity changed');
+  else if(x.kind==='detach')assert(['null','undefined'].includes(x.setterCategory)&&x.getterCategory==='null'&&x.cleared===true,'Native onended detach did not produce exact null');
+  else assert(x.kind!=='unsupported-onended','Unsupported onended setter input');
+ }
 }
 export function verifyCycle(e,{arm,mode,cycle,synthetic=null,actions=[],playback=null,preRemove=null}) {
  checkHealthy(e,{mode});const row=e.rows.find(x=>x.cycle===cycle);assert(row?.loaded&&row.removed&&row.removeRequested,'Missing loaded/remove milestone');
