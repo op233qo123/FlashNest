@@ -15,12 +15,10 @@ final class FullscreenPlayerUITests: XCTestCase {
 
     func testLandscapeSingleOverlayHideRecoverOpacityAndRotation() {
         let app = importPlayableFixture()
-        defer {
-            // Milestone screenshots, hierarchy and the test video already
-            // preserve evidence. A redundant cleanup screenshot timed out in
-            // the simulator after all functional assertions had succeeded.
-            XCUIDevice.shared.orientation = .portrait
-        }
+        // Functional rotation/restoration checks below intentionally end in
+        // landscape. Do not rotate the live player/menu again in cleanup:
+        // run40480757389 stalled inside that redundant XCTest orientation call.
+        defer { app.terminate() }
         let play = app.webViews.buttons["Play / enable audio"].firstMatch
         XCTAssertTrue(play.waitForExistence(timeout: 60))
         XCTAssertTrue(wait { play.isEnabled })

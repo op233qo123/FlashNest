@@ -78,6 +78,10 @@ final class LibraryAccessibilityUITests: XCTestCase {
     }
 
     private func launch(_ app: XCUIApplication, category: UIContentSizeCategory) {
+        // Establish this test's orientation independently, with no live player
+        // or presented player sheet involved in XCTest's rotation handshake.
+        if app.state != .notRunning { app.terminate() }
+        XCUIDevice.shared.orientation = .portrait
         app.launchArguments = ["-FlashNest.language", "zh-Hans", "-AppleLanguages", "(zh-Hans)",
                                "-AppleLocale", "zh_CN", "-UIPreferredContentSizeCategoryName", category.rawValue]
         app.launch()
