@@ -125,6 +125,11 @@ final class LifecyclePlayerUITests: XCTestCase {
         source.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         source.launch(); XCTAssertTrue(source.staticTexts["source-ready"].waitForExistence(timeout: 30)); source.terminate()
         let app = XCUIApplication()
+        defer {
+            capture("Lifecycle Files import final state")
+            let hierarchy = XCTAttachment(string: app.debugDescription)
+            hierarchy.name = "Lifecycle Files import accessibility"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+        }
         app.launchArguments = ["--flashnest-cross-container-ui-test", "-FlashNest.language", "en", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         let importButton = app.buttons["import-folder"].firstMatch
@@ -133,23 +138,41 @@ final class LifecyclePlayerUITests: XCTestCase {
         let title = app.navigationBars.buttons[fixtureTitle + ", Actions Menu"].firstMatch
         for _ in 0..<12 {
             if title.exists { break }
-            let files = app.collectionViews["File View"]
             var navigated = false
             for label in [fixtureTitle, "FlashNest Source", "On My iPhone"] {
-                let cell = files.cells.containing(.staticText, identifier: label).firstMatch
+                let cell = fileCell(named: label, in: app)
                 if cell.exists && cell.isHittable { cell.tap(); navigated = true; break }
             }
             if navigated { continue }
-            let back = app.navigationBars.buttons.allElementsBoundByIndex.first {
+            let back = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"].buttons.allElementsBoundByIndex.first {
                 ["FlashNest Source", "On My iPhone", "Browse"].contains($0.label) && $0.isHittable
             }
             if let back { back.tap(); continue }
-            if let browse = app.buttons.matching(identifier: "Browse").allElementsBoundByIndex.first(where: { $0.isHittable }) { browse.tap() }
+            let browse = app.tabBars.buttons["Browse"].firstMatch
+            if browse.exists && browse.isHittable && !browse.isSelected { browse.tap(); continue }
+            // Do not repeatedly tap an already-selected Browse tab. Preserve
+            // the real picker hierarchy when no recognized route is present.
+            break
         }
-        XCTAssertTrue(title.waitForExistence(timeout: 10)); app.buttons["Open"].firstMatch.tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 10))
+        XCTAssertTrue(fileCell(named: "main.swf", in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(fileCell(named: "sub", in: app).exists)
+        app.buttons["Open"].firstMatch.tap()
         let entry = app.buttons["entry-main.swf"].firstMatch
-        XCTAssertTrue(entry.waitForExistence(timeout: 45)); entry.tap()
+        XCTAssertTrue(entry.waitForExistence(timeout: 45))
+        XCTAssertTrue(app.buttons["entry-sub/scene.swf"].exists)
+        entry.tap()
         return app
+    }
+
+    private func fileCell(named name: String, in app: XCUIApplication) -> XCUIElement {
+        // iOS18.2 evidence shows the actual remote cell identifiers are
+        // "FlashNest Source, Container" / "<name>, Folder". The prior nested
+        // containing(staticText:) query missed this visible cell and looped on
+        // Browse. Match the cell itself, never a screen-absolute coordinate.
+        app.cells.matching(NSPredicate(format:
+            "identifier == %@ OR identifier BEGINSWITH %@ OR label == %@ OR label BEGINSWITH %@",
+            name, name + ",", name, name + ",")).firstMatch
     }
 
     private func wait(_ condition: () -> Bool) -> Bool {
