@@ -1,6 +1,16 @@
 name: Diagnose AVM2 frame order (manual only)
 on:
   workflow_dispatch:
+    inputs:
+      variant:
+        description: Original fixture capture selection (not a Flash compatibility assertion)
+        type: choice
+        required: true
+        default: both
+        options:
+          - both
+          - control
+          - nested
 permissions:
   contents: read
 concurrency:
@@ -42,12 +52,21 @@ jobs:
           xcrun simctl list runtimes
           device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.2)
           echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
-      - name: Capture both original frame-order variants without asserting Flash compatibility
+      - name: Capture selected original frame-order variants without asserting Flash compatibility
         timeout-minutes: 10
+        env:
+          FRAME_ORDER_VARIANT: ${{ inputs.variant }}
         run: |
-          set -o pipefail
+          set -euo pipefail
+          case "${FRAME_ORDER_VARIANT:-both}" in
+            both) test_target=FlashNestTests/FrameOrderRuntimeTests ;;
+            control) test_target=FlashNestTests/FrameOrderRuntimeTests/testCaptureControlWithoutChildGoto ;;
+            nested) test_target=FlashNestTests/FrameOrderRuntimeTests/testCaptureNestedChildGoto ;;
+            *) echo "Unsupported original fixture selection" >&2; exit 2 ;;
+          esac
+          echo "Frame-order capture selection: ${FRAME_ORDER_VARIANT:-both}; test target: $test_target"
           touch frame-order-start.marker
-          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath frame-order-build -resultBundlePath FrameOrderResults.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/FrameOrderRuntimeTests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee frame-order-test.log
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath frame-order-build -resultBundlePath FrameOrderResults.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 "-only-testing:$test_target" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee frame-order-test.log
       - name: Export measurements including incomplete captures
         if: always()
         run: |
