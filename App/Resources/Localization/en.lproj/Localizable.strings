@@ -223,9 +223,6 @@
 "Previous session diagnostics" = "Previous session diagnostics";
 
 "Clear previous diagnostics" = "Clear previous diagnostics";
-"Rendering" = "Rendering";
-"Low-resolution compatibility mode" = "Low-resolution compatibility mode";
-"Applies after closing and reopening this game. Off keeps the sharper original rendering. On reduces canvas resolution, not game asset memory; it may blur text or change layouts in noScale games. This is experimental and does not guarantee fewer crashes." = "Applies after closing and reopening this game. Off keeps the sharper original rendering. On reduces canvas resolution, not game asset memory; it may blur text or change layouts in noScale games. This is experimental and does not guarantee fewer crashes.";
 "Open save management?" = "Open save management?";
 "Continue to save management" = "Continue to save management";
 "Opening save management ends the current running scene. Saves written by the game are kept, but this is not an instant scene snapshot. Returning reloads the game; progress the game has not saved may be lost." = "Opening save management ends the current running scene. Saves written by the game are kept, but this is not an instant scene snapshot. Returning reloads the game; progress the game has not saved may be lost.";

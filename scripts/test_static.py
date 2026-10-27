@@ -83,6 +83,25 @@ class StaticTests(unittest.TestCase):
   self.assertNotIn(0x4f,opcodes(readonly))
   self.assertEqual(opcodes(explicit).count(0x52),2)  # getLocal + flush.
   self.assertEqual(opcodes(close).count(0x52),1)
+ def test_lifecycle_fixture_is_separate_from_rendering_experiment(self):
+  base=ROOT/'fixtures/lifecycle'
+  main=(base/'main.swf').read_bytes(); child=(base/'sub/scene.swf').read_bytes()
+  for data in (main,child):
+   self.assertEqual(data[:3],b'FWS')
+   self.assertEqual(struct.unpack('<I',data[4:8])[0],len(data))
+   self.assertIn(b'LifecycleFixture',data); self.assertIn(b'flush',data)
+   for vector in (b'createEmptyMovieClip',b'beginFill',b'lineTo'):
+    self.assertNotIn(vector,data)
+  self.assertIn(b'LIFECYCLE_ROOT_READY:',main); self.assertIn(b'sub/scene.swf',main)
+  self.assertIn(b'removeListener',main)
+  self.assertIn(b'LIFECYCLE_CHILD_KEY:',child); self.assertIn(b'LIFECYCLE_CHILD_POINTER:',child)
+  project=(ROOT/'project.yml').read_text()
+  self.assertIn('path: fixtures/lifecycle',project)
+  self.assertNotIn('path: fixtures/viewport-input',project)
+  self.assertNotIn('experiments/',project)
+  self.assertTrue((ROOT/'experiments/half-resolution/Tests/ViewportRenderingRuntimeTests.swift').is_file())
+  self.assertNotIn('RenderSettings',(ROOT/'App/Views/PlayerView.swift').read_text())
+  self.assertNotIn('renderMode',(ROOT/'App/Player/PlayerSession.swift').read_text())
  def test_manifest(self):
   manifest=json.loads((ROOT/'runtime.files.json').read_text())
   for name,digest in manifest.items(): self.assertEqual(hashlib.sha256((WEB/'runtime'/name).read_bytes()).hexdigest(),digest,name)

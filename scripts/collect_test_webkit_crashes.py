@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded WebKit crash evidence from a dedicated, ephemeral macOS CI runner.
+"""Bounded WebKit / SimMetalHost crash evidence from a dedicated, ephemeral macOS CI runner.
 Only .ips reports newer than this test's marker are copied; no general logs.
 """
 from pathlib import Path
@@ -16,7 +16,8 @@ def collect(marker, output, reports):
     if marker.is_file() and reports.is_dir():
         since = marker.stat().st_mtime
         for path in sorted(reports.rglob('*.ips')):
-            if path.is_symlink() or not ('WebKit' in path.name and ('GPU' in path.name or 'WebContent' in path.name)):
+            allowed_process = ('WebKit' in path.name and ('GPU' in path.name or 'WebContent' in path.name)) or 'SimMetalHost' in path.name
+            if path.is_symlink() or not allowed_process:
                 continue
             try:
                 info = path.stat()
@@ -34,7 +35,7 @@ def collect(marker, output, reports):
             except OSError:
                 skipped += 1
     (output / 'collection.json').write_text(json.dumps({'reports': copied, 'skipped': skipped, 'maximumReports': 10, 'maximumTotalBytes': 10 * 1024 * 1024}, indent=2) + '\n')
-    print(f'Collected {len(copied)} test-time WebKit crash reports; skipped {skipped}')
+    print(f'Collected {len(copied)} test-time WebKit / SimMetalHost crash reports; skipped {skipped}')
 
 
 if __name__ == '__main__':

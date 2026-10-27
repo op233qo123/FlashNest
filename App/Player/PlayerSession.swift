@@ -13,8 +13,6 @@ import SwiftUI
     @Published var webView: WKWebView?
     private var server: LoopbackServer?
     private var generation = UUID()
-    private(set) var activeRenderSettings: RenderSettings?
-    private var renderSettingsPackageID: UUID?
     private var ready = false
     private var processTerminated = false
     @Published private(set) var saveFailure: String?
@@ -87,12 +85,6 @@ import SwiftUI
         ownsPackageLease = true
         restartFailure = nil
         currentPackage = package; currentContentRoot = contentRoot
-        // Snapshot once per opened game, not on foreground/save-panel restart.
-        // A preference edit never changes the live movie's coordinate system.
-        if !storageOnly, activeRenderSettings == nil || renderSettingsPackageID != package.id {
-            activeRenderSettings = RenderSettings.load(for: package.id)
-            renderSettingsPackageID = package.id
-        }
         pendingRestoreID = nil
         saveReady = false; saveFailure = nil; checkpointFailure = nil; checkpointDidChange = nil; processTerminated = false
         memoryWarningCount = 0; lastMemoryWarning = nil
@@ -171,9 +163,6 @@ import SwiftUI
             components.queryItems = [URLQueryItem(name: "entry", value: package.selectedMovie), URLQueryItem(name: "package", value: package.id.uuidString), URLQueryItem(name: "language", value: L10n.languageCode)]
             components.queryItems?.append(URLQueryItem(name: "nativeSaveHandshake", value: "1"))
             if storageOnly { components.queryItems?.append(URLQueryItem(name: "storageOnly", value: "1")) }
-            else if activeRenderSettings?.usesHalfResolution == true {
-                components.queryItems?.append(URLQueryItem(name: "renderMode", value: "half"))
-            }
             guard let url = components.url else { throw PackageError.invalidPath(package.selectedMovie) }
             view.load(URLRequest(url: url))
         } catch {
@@ -254,8 +243,6 @@ import SwiftUI
                 restartFailure = L10n.text("The game was saved, but temporary cache cleanup failed. It was not restarted.")
                 return false
             }
-            activeRenderSettings = nil
-            renderSettingsPackageID = nil
             await startConfigured(package: package, contentRoot: root)
             guard failure == nil, webView != nil else {
                 restartFailure = failure ?? L10n.text("The game was saved, but could not be restarted.")

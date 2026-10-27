@@ -251,27 +251,53 @@ import CryptoKit
         }
         XCTAssertTrue(session.saveReady)
         let view = try XCTUnwrap(session.webView)
-        _ = try await view.evaluateJavaScript("""
-        window.FlashNest.captureWrittenSaves = () => new Promise(resolve => { window.__resolveCheckpoint = resolve; }); true;
-        """)
+        try await replaceBridgeMethod("captureWrittenSaves",
+            implementation: "() => new Promise(resolve => { window.__resolveCheckpoint = resolve; })", in: view)
         let checkpoint = Task { @MainActor in await session.checkpointWrittenSaves() }
+        var closing: Task<Bool, Never>?
+        do {
         var waiting = false
         while !waiting, Date() < deadline {
             waiting = (try await view.evaluateJavaScript("typeof window.__resolveCheckpoint === 'function'") as? Bool) == true
             if !waiting { try await Task.sleep(nanoseconds: 20_000_000) }
         }
         XCTAssertTrue(waiting)
-        let closing = Task { @MainActor in await session.closeAndSave() }
+        guard waiting else { throw SaveStoreError.invalid("fixture checkpoint never entered injected wait") }
+        let close = Task { @MainActor in await session.closeAndSave() }
+        closing = close
         await Task.yield()
         let duplicate = await session.checkpointWrittenSaves()
         XCTAssertFalse(duplicate, "No checkpoint may start while close owns the lifecycle")
         _ = try await view.evaluateJavaScript("window.__resolveCheckpoint({version:1,entries:[]}); true")
         let copied = await checkpoint.value
-        let closed = await closing.value
+        let closed = await close.value
         XCTAssertFalse(copied, "Empty read is not a save")
         XCTAssertTrue(closed, "Close must not merely return checkpoint's false result")
         XCTAssertNil(session.webView)
         XCTAssertNotNil(try store.currentSnapshot(packageID: package.id), "Final close still captures the completed shutdown")
+        } catch {
+            checkpoint.cancel()
+            _ = await checkpoint.value
+            if let closing { _ = await closing.value }
+            try? await session.closeWithoutSaving()
+            throw error
+        }
+    }
+
+    /// The production API object is frozen. Replace the global object rather
+    /// than silently assigning one of its non-writable method properties.
+    private func replaceBridgeMethod(_ method: String, implementation: String, in view: WKWebView) async throws {
+        let methodLiteral = String(decoding: try JSONEncoder().encode(method), as: UTF8.self)
+        let installed = try await view.evaluateJavaScript("""
+        (() => {
+          const original = window.FlashNest;
+          const replacement = (\(implementation));
+          window.FlashNest = Object.freeze({...original, [\(methodLiteral)]: replacement});
+          return window.FlashNest !== original && window.FlashNest[\(methodLiteral)] === replacement;
+        })();
+        """) as? Bool
+        XCTAssertEqual(installed, true, "Fault injection must be verified before exercising failure behavior")
+        guard installed == true else { throw SaveStoreError.invalid("fixture fault injection failed") }
     }
 
     private func fixturePackage(in root: URL) throws -> GamePackage {
@@ -296,13 +322,18 @@ import CryptoKit
         window.makeKeyAndVisible()
         let session = PlayerSession(saveStore: store)
         defer { session.stop(); window.isHidden = true; previous?.makeKey() }
+        do {
         await session.start(package: package, contentRoot: content)
         let view = try XCTUnwrap(session.webView)
         view.frame = controller.view.bounds
         controller.view.addSubview(view)
         var started = false
         while Date() < deadline {
-            if session.failure != nil { XCTFail("SharedObject fixture failed to load"); return }
+            if session.failure != nil {
+                try? await session.closeWithoutSaving()
+                XCTFail("SharedObject fixture failed to load")
+                return
+            }
             if !started && session.isLoaded {
                 let bootstrap = try await view.evaluateJavaScript("""
                 window.FlashNestSaveBridge.create({storage:localStorage, location:location.href,
@@ -349,9 +380,8 @@ import CryptoKit
                     XCTAssertTrue(observedRestoredValue, "The same actual SWF must read its saved42 on the replacement page")
                     let archive = store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")
                     let savedBytes = try Data(contentsOf: archive)
-                    _ = try await replacement.evaluateJavaScript("""
-                    window.FlashNest.shutdownAndCapture = () => Promise.reject(new Error('fixture final-save failure')); true;
-                    """)
+                    try await replaceBridgeMethod("shutdownAndCapture",
+                        implementation: "() => Promise.reject(new Error('fixture final-save failure'))", in: replacement)
                     let failedRestart = await session.saveAndRestart()
                     XCTAssertFalse(failedRestart)
                     XCTAssertNotNil(session.restartFailure)
@@ -399,22 +429,23 @@ import CryptoKit
                                        "Unchanged written saves must retain the same archive and timestamp")
                         // Rejecting a read must preserve archive and live player,
                         // not enter the uncertain-shutdown quarantine.
-                        _ = try await view.evaluateJavaScript("""
-                        window.__originalCheckpoint = window.FlashNest.captureWrittenSaves;
-                        window.FlashNest.captureWrittenSaves = () => Promise.reject(new Error('fixture read failure')); true;
-                        """)
+                        _ = try await view.evaluateJavaScript("window.__originalCheckpoint = window.FlashNest.captureWrittenSaves; true")
+                        try await replaceBridgeMethod("captureWrittenSaves",
+                            implementation: "() => Promise.reject(new Error('fixture read failure'))", in: view)
                         let failed = await session.checkpointWrittenSaves()
                         XCTAssertFalse(failed)
                         XCTAssertFalse(session.restartRequired)
                         XCTAssertNil(session.saveFailure)
                         XCTAssertTrue(session.webView === view)
                         XCTAssertEqual(try Data(contentsOf: store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")), savedBytes)
-                        _ = try await view.evaluateJavaScript("window.FlashNest.captureWrittenSaves = () => Promise.resolve({version:1,entries:[]}); true")
+                        try await replaceBridgeMethod("captureWrittenSaves",
+                            implementation: "() => Promise.resolve({version:1,entries:[]})", in: view)
                         let empty = await session.checkpointWrittenSaves()
                         XCTAssertFalse(empty)
                         XCTAssertEqual(try Data(contentsOf: store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")), savedBytes,
                                        "An empty checkpoint must not erase a previous nonempty archive")
-                        _ = try await view.evaluateJavaScript("window.FlashNest.captureWrittenSaves = window.__originalCheckpoint; true")
+                        try await replaceBridgeMethod("captureWrittenSaves",
+                            implementation: "window.__originalCheckpoint", in: view)
                     } else {
                         XCTAssertNotNil(session.checkpointFailure)
                         XCTAssertEqual(try store.currentSnapshot(packageID: package.id)?.id, beforeArchive?.id)
@@ -442,6 +473,13 @@ import CryptoKit
             }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
+        try? await session.closeWithoutSaving()
         XCTFail("Real SharedObject fixture exceeded shared 105-second deadline")
+        } catch {
+            // Even a fixture assertion/JS exception must drain the old stable
+            // port before the next test creates a fresh PlayerSession.
+            try? await session.closeWithoutSaving()
+            throw error
+        }
     }
 }

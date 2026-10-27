@@ -53,12 +53,12 @@ private enum CrossAppFixtureSeed {
         let playerFixture = documents.appendingPathComponent("FlashNest Player Fixture", isDirectory: true)
         if FileManager.default.fileExists(atPath: playerFixture.path) { try FileManager.default.removeItem(at: playerFixture) }
         try FileManager.default.copyItem(at: playable, to: playerFixture)
-        guard let viewport = Bundle.main.url(forResource: "viewport-input", withExtension: nil) else {
+        guard let lifecycle = Bundle.main.url(forResource: "lifecycle", withExtension: nil) else {
             throw CocoaError(.fileNoSuchFile)
         }
-        let viewportFixture = documents.appendingPathComponent("FlashNest Viewport Fixture", isDirectory: true)
-        if FileManager.default.fileExists(atPath: viewportFixture.path) { try FileManager.default.removeItem(at: viewportFixture) }
-        try FileManager.default.copyItem(at: viewport, to: viewportFixture)
+        let lifecycleFixture = documents.appendingPathComponent("FlashNest Lifecycle Fixture", isDirectory: true)
+        if FileManager.default.fileExists(atPath: lifecycleFixture.path) { try FileManager.default.removeItem(at: lifecycleFixture) }
+        try FileManager.default.copyItem(at: lifecycle, to: lifecycleFixture)
         print("FLASHNEST_CROSS_APP_SOURCE ready: 44 MiB + three-level nested child + separate playable fixture")
     }
 }

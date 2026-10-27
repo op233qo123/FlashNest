@@ -9,7 +9,6 @@ struct PlayerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @State private var settings: TouchControlSettings
-    @State private var renderSettings: RenderSettings
     @State private var sheet: PlayerSheet?
     @State private var editingControls = false
     @State private var selectedControlID: String?
@@ -23,7 +22,6 @@ struct PlayerView: View {
     init(package: GamePackage, contentRoot: URL) {
         self.package = package; self.contentRoot = contentRoot
         _settings = State(initialValue: TouchControlSettings.load(for: package.id))
-        _renderSettings = State(initialValue: RenderSettings.load(for: package.id))
     }
 
     var body: some View {
@@ -81,7 +79,6 @@ struct PlayerView: View {
             releaseKeys(); value.save(for: package.id)
         }
         .onChange(of: session.paused) { _, value in if value { releaseKeys() } }
-        .onChange(of: renderSettings) { _, value in value.save(for: package.id) }
         .onChange(of: scenePhase) { old, value in handleScenePhase(old: old, new: value) }
         .sheet(item: $sheet, onDismiss: resumeFromPanel) { panel in
             switch panel {
@@ -123,7 +120,6 @@ struct PlayerView: View {
                     Button { handleSaveManagementEntry(.request) } label: { Label(L10n.text("Save management"), systemImage: "externaldrive") }
                         .disabled(closing).accessibilityIdentifier("player-saves")
                 }
-                renderingSection
                 Section(L10n.text("Touch controls")) {
                     Toggle(L10n.text("Show touch controls"), isOn: $settings.isVisible)
                         .accessibilityIdentifier("controls-visible")
@@ -153,16 +149,6 @@ struct PlayerView: View {
             }
             .navigationTitle(package.title).navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("Done")) { sheet = nil } } }
-        }
-    }
-
-    private var renderingSection: some View {
-        Section(L10n.text("Rendering")) {
-            Toggle(L10n.text("Low-resolution compatibility mode"), isOn: $renderSettings.usesHalfResolution)
-                .accessibilityIdentifier("render-half-resolution")
-            Text(L10n.text("Applies after closing and reopening this game. Off keeps the sharper original rendering. On reduces canvas resolution, not game asset memory; it may blur text or change layouts in noScale games. This is experimental and does not guarantee fewer crashes."))
-                .font(.footnote).foregroundStyle(.secondary)
-                .accessibilityIdentifier("render-mode-explanation")
         }
     }
 

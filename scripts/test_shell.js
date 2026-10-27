@@ -54,13 +54,11 @@ async function exercise(timing) {
   };
   if (['storageonly','invalidrestore','livewins','replace'].includes(timing)) context.location.href += '&storageOnly=1';
   if (timing === 'handshake') context.location.href += '&nativeSaveHandshake=1';
-  if (timing === 'half') context.location.href += '&renderMode=half';
-  if (timing === 'invalidrender') context.location.href += '&renderMode=half%20';
   context.location.search = new URL(context.location.href).search;
   context.document = {
     documentElement:{}, getElementById:id => elements[id], querySelectorAll:() => controls,
     addEventListener:(type, callback) => documentListeners.set(type, callback),
-    createElement:type => type === 'div' ? {children:[], append(child) { this.children.push(child); }} : ({}),
+    createElement:() => ({}),
     head:{append:script => { context.window.RufflePlayer.newest = () => ({createPlayer:() => player}); script.onload(); }}
   };
   context.window = {
@@ -128,15 +126,7 @@ async function exercise(timing) {
   assert.equal(config.base, 'http://127.0.0.1:8766/cap/games/11111111-1111-4111-8111-111111111111/folder/');
   assert.equal(config.publicPath, 'http://127.0.0.1:8766/cap/web/runtime/');
   assert.equal(config.allowNetworking, 'internal'); assert.equal(config.allowScriptAccess, false);
-  if (timing === 'half') {
-    assert.equal(appended.id, 'half-render-viewport');
-    assert.deepEqual(appended.children, [player]);
-    assert(!appended.children.includes(elements.start), 'Audio/start affordance must remain outside scaled rendering');
-    const css = fs.readFileSync(path.join(__dirname, '../App/Resources/Web/shell.css'), 'utf8');
-    assert.match(css, /#half-render-viewport\{[^}]*width:50%;height:50%;transform:scale\(2\);transform-origin:0 0/);
-  } else {
-    assert.equal(appended, player, 'Normal/invalid render mode must preserve the original direct stage child');
-  }
+  assert.equal(appended, player, 'Fullscreen stage must directly contain the Ruffle player');
   assert.equal(context.document.documentElement.lang, language);
   assert.equal(elements.start.textContent, language === 'zh-Hans' ? '播放 / 开启声音' : 'Play / enable audio');
   assert(messages.some(m => m.type === 'ready'));
@@ -151,10 +141,8 @@ async function exercise(timing) {
     return;
   }
   assert.equal(typeof api.traceObserver, 'function');
-  const activeMode = timing === 'half' ? 'half' : 'normal';
   windowListeners.get('resize')();
   assert(messages.at(-1).message.includes('390x844'));
-  assert(messages.at(-1).message.includes('renderMode=' + activeMode) || messages.at(-1).message.includes('渲染模式=' + activeMode));
   windowListeners.get('orientationchange')();
   assert(messages.at(-1).message.includes('orientation'));
   if (timing !== 'early') {
@@ -335,8 +323,8 @@ async function exercise(timing) {
 }
 
 (async () => {
-  for (const timing of ['delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake','half','invalidrender']) await exercise(timing);
-  console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, opt-in render mode, bounded scene/trace/runtime-console diagnostics, live written-save checkpoints, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
+  for (const timing of ['delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake']) await exercise(timing);
+  console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, baseline fullscreen, bounded scene/trace/runtime-console diagnostics, live written-save checkpoints, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
 require("./test_save_bridge.js");
