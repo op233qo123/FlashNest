@@ -26,6 +26,7 @@ def check(source=None):
             modified=target.read_text()
             assert modified.index('self.buffers.clear();')<modified.index('let _ = self.context.close();')
             assert modified.count('scheduled.set_onended(None);')==3
+            assert 'return Err(error.into());' in modified  # same conversion as the original ?
             for x in ('let _ = self.context.resume();','let _ = self.context.suspend();','let _ = self.context.close();'):
                 assert data.decode().count(x)==modified.count(x)==1
             assert 'spawn_local' not in modified and 'forget(' not in modified

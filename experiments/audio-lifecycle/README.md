@@ -62,3 +62,18 @@ Artifacts retain modified source, patches, original fixture sources, MPL 2.0 and
 MIT/Apache license texts, existing third-party notices and a modification notice.
 No package is labeled official stable. This is source correspondence, not a legal
 compliance certification. Publication or shipment requires separate review.
+
+## First build result and narrow compiler correction
+
+Run [40536964358](https://github.com/op233qo123/FlashNest/actions/runs/40536964358),
+source `07365dba3a9d67427ed55ca79b4f406edd003f86`, passed the two ownership-model
+tests, two original frame-order tests and all 31 adjacent gates. WASM compilation
+then failed with E0308: the explicit failed-start cleanup branch returned
+`ruffle_web_common::JsError`, while the function returns `wasm_bindgen::JsError`.
+The original question-mark operator supplied this conversion implicitly. The
+reviewed correction is exactly `return Err(error.into())`, preserving detachment
+and the original conversion. No decoder, callback ordering or test predicate is
+changed. No candidate web build, core-JS gate or real WebAudio observation
+completed in that failed run. Its retained artifact `12749088918` has SHA256
+`0d11560bf16fe0574b3c1efd947f43f9b7544f97c25a9cbefdcca41e2f4b2605`.
+A full corrected build and actual browser gate remain required.

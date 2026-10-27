@@ -54,7 +54,7 @@
 +            // This node is not stored in self.audio_node on an error path.
 +            // Detach its callback before the Buffer can drop its closure.
 +            scheduled.set_onended(None);
-+            return Err(error);
++            return Err(error.into());
 +        }
          self.time.set(self.time.get() + buffer_timestep);
  

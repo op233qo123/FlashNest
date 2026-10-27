@@ -7,8 +7,8 @@
   ],
   "files": {
     "README.md": {
-      "bytes": 5364,
-      "sha256": "233b584f0b53d3df1550bed95fd8dd6f6f1293c27b29204f2a24fd2e2437925f"
+      "bytes": 5724,
+      "sha256": "9933e4c6e457b83c0f88236742d84f29703624fc48d103494ccf0d1688f46ce1"
     },
     "console-observer.mjs": {
       "bytes": 3103,
@@ -28,11 +28,11 @@
     },
     "run.mjs": {
       "bytes": 9462,
-      "sha256": "4fee3afe9d4b41b3d1ad18f5ac3975e88ffb5dc72ef160217d2d2aa81e065580"
+      "sha256": "2dfb5f8f317b78b3b8011e4a42791d2329c917273f1bd6b7ec2257146b089223"
     },
     "runner-guards.mjs": {
       "bytes": 2955,
-      "sha256": "6926ef59126026f9bbc7f58420ffd50212983e51df6b8835c02bb5ebe8de3ff6"
+      "sha256": "775ee441eed27e7f6281dc4e5fe7cb4f78d94e58d55008330c37e1cf7cee0957"
     },
     "test_console_observer.mjs": {
       "bytes": 7087,

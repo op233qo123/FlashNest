@@ -8,7 +8,7 @@ import abc_subset as f
 
 ROOT = Path(__file__).resolve().parent
 PIN = '89a7049965f3090e706265670df309a5128233ac'
-HELPER_SHA = 'd8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701'
+HELPER_SHA = '41a549bf200bac3bb97d55273d36da8bd6311ca3ed6922979d0faa6865843fef'
 FIELDS = ['generation', 'rootHeartbeat', 'pointerCount', 'keyCount', 'ready', 'observedChildGeneration', 'observedChildHeartbeat', 'errors', 'unloadCalls', 'unloadEvents']
 
 class Code:

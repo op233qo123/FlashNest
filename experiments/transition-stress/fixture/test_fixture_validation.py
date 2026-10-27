@@ -48,6 +48,21 @@ class FixtureTests(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 validate.validate_code(code,[None],[''],1,9,10,20,1,'bad')
 
+    def test_pushstring_empty_uses_explicit_nonzero_entry(self):
+        a=make.f.ABC()
+        self.assertEqual(a.string(''),0)  # valid namespace-name default
+        first=a.push(''); second=a.push('')
+        self.assertEqual(first,second)
+        self.assertEqual(first,b'\x2c\x01')
+        self.assertEqual(a.strings,['',''])
+        self.assertEqual(a.string(''),0)
+
+    def test_reject_reserved_pushstring_but_accept_real_empty_string(self):
+        with self.assertRaisesRegex(AssertionError,'pushstring requires nonzero'):
+            validate.validate_code(b'\xd0\x30\xd0\x2c\x00\x4f\x01\x01\x47',[None,('','consume')],['',''],1,9,10,20,1,'bad-empty')
+        good=validate.validate_code(b'\xd0\x30\xd0\x2c\x01\x4f\x01\x01\x47',[None,('','consume')],['',''],1,9,10,20,1,'real-empty')
+        self.assertEqual(good['decoded'][3]['string'],'')
+
     def test_reject_truncated_abc(self):
         data=make.root_abc('unload')
         for cut in (1,2,10):

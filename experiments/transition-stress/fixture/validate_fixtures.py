@@ -157,7 +157,9 @@ def validate_code(code, names, strings, locals_, init_scope, max_scope, max_stac
             effect = 1
         elif op == 0x2c:
             args = [r.u30()]
-            assert 0 <= args[0] < len(strings)
+            assert 0 < args[0] < len(strings), (
+                f'{method_name}@{pos}: pushstring requires nonzero string pool index; got {args[0]}'
+            )
             effect = 1
         elif op in (0x60, 0x5d, 0x66, 0x61, 0x68):
             args = [r.u30()]

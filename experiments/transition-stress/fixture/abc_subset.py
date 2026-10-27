@@ -66,7 +66,18 @@ class ABC:
         if isinstance(value, int):
             assert 0 <= value < 128
             return bytes([0x24, value])
-        return self.op(0x2c, self.string(value))
+        # pushstring must reference a real pool entry. Reserved index 0 is
+        # allowed for package namespace names, but rejected by AVM2 PushString.
+        if value == '':
+            try:
+                index = self.strings.index('', 1)
+            except ValueError:
+                index = len(self.strings)
+                self.strings.append('')
+        else:
+            index = self.string(value)
+        assert index > 0
+        return self.op(0x2c, index)
 
     def prop(self, name):
         return self.op(0x66, self.qname(name))

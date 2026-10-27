@@ -15,7 +15,7 @@
   "unselectedPrototypeSupport": "root_abc(unloadAndStop) retained for in-memory checks only; no alternate SWF emitted",
   "runtimeExecuted": false,
   "adobeReferenceExecuted": false,
-  "abcHelperSha256": "d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701",
+  "abcHelperSha256": "41a549bf200bac3bb97d55273d36da8bd6311ca3ed6922979d0faa6865843fef",
   "traceFields": [
     "LT",
     "kind",
@@ -33,8 +33,8 @@
   ],
   "files": {
     "main.swf": {
-      "bytes": 2743,
-      "sha256": "7671411b8be327cb9cc105a782d14c9e999e828dbd2125268f2c913d5ddae151"
+      "bytes": 2744,
+      "sha256": "9e6f0768d08018c2ae324dbc61d33eb1d62378f8c7de7b30bc054e1a74a63878"
     },
     "sub/child.swf": {
       "bytes": 965,

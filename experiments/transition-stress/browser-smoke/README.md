@@ -1,6 +1,6 @@
 # Original Loader transition — existing-runtime Chrome smoke
 
-This narrow diagnostic tests the unchanged original SWF37 normal-unload fixture with the immutable existing queued-goto-guard runtime. It does not patch the engine or application. Preparation checks are mocks/syntax only; actual browser execution is recorded separately by a manual diagnostic workflow.
+This narrow diagnostic tests the corrected original SWF37 normal-unload diagnostic fixture with the immutable existing queued-goto-guard runtime. It does not patch the engine or application. Preparation checks are mocks/syntax only; actual browser execution is recorded separately by a manual diagnostic workflow.
 
 **Chrome `webgl` is intentionally selected, not iOS/WKWebView's renderer.** Success would show that this tiny original bytecode/Loader path reaches its milestones on that specific runtime/browser/backend. It would not establish native stability, a fix for WebContent termination, Adobe ordering, large-SWF/media stress, rotation/background survival, or fresh child activity after those native operations. No user-game assets or saves are used.
 
@@ -20,13 +20,13 @@ node run.mjs \
 
 The runtime manifest maps every relative JS/WASM path to its SHA256. The runner requires the exact full inventory and its supplied digest; the separate workflow/extraction verifier must establish the immutable vendor archive provenance. The runner cannot establish provenance merely because a caller supplied a matching digest. Output must be a fresh/empty real directory and cannot alias an input/helper tree.
 
-Fixture pins (unchanged):
+Fixture pins after the reviewed reserved-string-index correction:
 
-- `main.swf`: `7671411b8be327cb9cc105a782d14c9e999e828dbd2125268f2c913d5ddae151`
+- `main.swf`: `9e6f0768d08018c2ae324dbc61d33eb1d62378f8c7de7b30bc054e1a74a63878`
 - `sub/child.swf`: `7f5015789f368ac2221d47930d255b204828f9d33384c14f36e6ed947edf58c8`
-- fixture `manifest.json`: `fdcd95be4ab55c0101544a3e6c7d4ecaec2b9dd31a578642abb52bcc25926c98`
+- fixture `manifest.json`: `fec69c81759258f345793cd79afb966492731d30e4ccc1a588733a9b457b504f`
 
-The alternative unloadAndStop prototype is not served or selected. Existing fixture sources/binaries/manifest remain untouched.
+The alternative unloadAndStop prototype is not served or selected. The original child/reference ActionScript and milestone predicates are unchanged. The initial root contained an invalid reserved pushstring operand; its reviewed literal-pool correction and historical failed run are documented in [correction-audit.md](../correction-audit.md). The compiled engine remains unchanged; corrected actual Chrome acceptance is still required.
 
 ## Milestones
 

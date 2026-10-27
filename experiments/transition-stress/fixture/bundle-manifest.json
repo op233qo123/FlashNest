@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "status": "frozen-original-normal-unload-structural-only",
+  "status": "corrected-original-normal-unload-structural-only",
   "fileCount": 12,
   "files": {
     "README.md": {
-      "bytes": 7804,
-      "sha256": "5b8fe75016e73ccb280c66b380062fe52e1ad941696e4e07ca8686d4eab59e02"
+      "bytes": 8336,
+      "sha256": "9d88f0b9c00bc67134b38aeffbfd2c135b5c26b7227b245d0a5967c0acdfdb9c"
     },
     "ReferenceChild.as": {
       "bytes": 1049,
@@ -16,40 +16,40 @@
       "sha256": "859cedfc60d965c40bd68619491314fef76360648c91a824ef8a3245113c6d28"
     },
     "abc_subset.py": {
-      "bytes": 10254,
-      "sha256": "d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701"
+      "bytes": 10678,
+      "sha256": "41a549bf200bac3bb97d55273d36da8bd6311ca3ed6922979d0faa6865843fef"
     },
     "main.swf": {
-      "bytes": 2743,
-      "sha256": "7671411b8be327cb9cc105a782d14c9e999e828dbd2125268f2c913d5ddae151"
+      "bytes": 2744,
+      "sha256": "9e6f0768d08018c2ae324dbc61d33eb1d62378f8c7de7b30bc054e1a74a63878"
     },
     "make_fixtures.py": {
       "bytes": 9818,
-      "sha256": "dfa9b42fb4ab60b443992eb849bd4fb4c0880026b5a1b9002f1ed74b1b84936e"
+      "sha256": "d1a5aaba89bfaff9e5aa6d228dd86815f8d156f446614f71bb910027a6115b9c"
     },
     "manifest.json": {
       "bytes": 1135,
-      "sha256": "fdcd95be4ab55c0101544a3e6c7d4ecaec2b9dd31a578642abb52bcc25926c98"
+      "sha256": "fec69c81759258f345793cd79afb966492731d30e4ccc1a588733a9b457b504f"
     },
     "structural-validation.json": {
-      "bytes": 139080,
-      "sha256": "a2648a433c63fd6d53c963185649d9284073c35cd93ebccbaed6a8cf6e6fa6d2"
+      "bytes": 139100,
+      "sha256": "5c9b59d71f8dd2754fbbd96ca418f604d43ac71d72d546fb3eda2b90281ce01b"
     },
     "sub/child.swf": {
       "bytes": 965,
       "sha256": "7f5015789f368ac2221d47930d255b204828f9d33384c14f36e6ed947edf58c8"
     },
     "test_fixture_validation.py": {
-      "bytes": 3159,
-      "sha256": "1eada9ddbf4c11c1bd459e92184da0c41a77ed716d1aea192b91cb05f3e0914a"
+      "bytes": 4013,
+      "sha256": "8a1239bece9d87c69bd542381ac5f702f3ba5134b2e7428ad98c5c698bdb80f3"
     },
     "validate_fixtures.py": {
-      "bytes": 12724,
-      "sha256": "c6dcd72839222bbe3cc339f1c2f27933ce52b2f2c246bd393afccb8072329aec"
+      "bytes": 12841,
+      "sha256": "ebe09096903780f60602f1403b0b981a9d6eb0edd733f3f2c41408e4a93daec3"
     },
     "validation.json": {
-      "bytes": 881,
-      "sha256": "37c8019e49d5b227c010a2bc4249108952b5f5686cf2861c5e5ca85dfa1fcd25"
+      "bytes": 1109,
+      "sha256": "0e05b27c6f5df0aef97c940034b4db76159324d3da6aa58beb8a77eaf4f2413f"
     }
   }
 }

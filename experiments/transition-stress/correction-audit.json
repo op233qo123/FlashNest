@@ -1,0 +1,95 @@
+{
+  "sourcePin": "89a7049965f3090e706265670df309a5128233ac",
+  "sources": {
+    "verify.rs": {
+      "url": "https://github.com/ruffle-rs/ruffle/blob/89a7049965f3090e706265670df309a5128233ac/core/src/avm2/verify.rs",
+      "gitBlob": "008ae1dc72e1c5293a0080f46c09478f3908d665",
+      "sha256": "ac922a86155aa33fc93c85c0cbcfb2f1746c85b79a53efc9b014ca363e6eda9e"
+    },
+    "script.rs": {
+      "url": "https://github.com/ruffle-rs/ruffle/blob/89a7049965f3090e706265670df309a5128233ac/core/src/avm2/script.rs",
+      "gitBlob": "460db42ae6d98e61986cb236010c924c905acc02",
+      "sha256": "6cc1999ea726918a57a7d3811a4619f2adf7f6807a8a0bf147cb5d3bc932c320"
+    },
+    "error.rs": {
+      "url": "https://github.com/ruffle-rs/ruffle/blob/89a7049965f3090e706265670df309a5128233ac/core/src/avm2/error.rs",
+      "gitBlob": "2d81fb552010dc320fe9997b7b01f6a3e5b0512e",
+      "sha256": "a7f5f11163036fe2e90df105883af6e642749fcc0427a872044a24db4109752c"
+    }
+  },
+  "historicalRun": 40537957524,
+  "historicalResult": "FAIL VerifyError #1032 before any LT trace",
+  "correctedRuntimeExecuted": false,
+  "strictAudit": [
+    {
+      "label": "original-root",
+      "sha256": "7671411b8be327cb9cc105a782d14c9e999e828dbd2125268f2c913d5ddae151",
+      "bytes": 2743,
+      "status": "STRICT_SUBSET_REJECT",
+      "reason": "mark@126: pushstring requires nonzero string pool index; got 0"
+    },
+    {
+      "label": "original-child",
+      "sha256": "7f5015789f368ac2221d47930d255b204828f9d33384c14f36e6ed947edf58c8",
+      "bytes": 965,
+      "status": "STRICT_SUBSET_PASS",
+      "methods": 6,
+      "pushstringCount": 7,
+      "zeroPushstrings": 0
+    },
+    {
+      "label": "corrected-root",
+      "sha256": "9e6f0768d08018c2ae324dbc61d33eb1d62378f8c7de7b30bc054e1a74a63878",
+      "bytes": 2744,
+      "status": "STRICT_SUBSET_PASS",
+      "methods": 19,
+      "pushstringCount": 55,
+      "zeroPushstrings": 0
+    },
+    {
+      "label": "audio-running",
+      "sha256": "e25f5dba4162a25b9a07832be4e6f8f62242734f6f39e92983c53467a28e7fd2",
+      "bytes": 799,
+      "status": "STRICT_SUBSET_PASS",
+      "methods": 5,
+      "pushstringCount": 4,
+      "zeroPushstrings": 0
+    }
+  ],
+  "semanticDiff": {
+    "status": "SAME_DECODED_SEMANTICS_EXCEPT_POOL_ENCODING",
+    "methodsCompared": 19,
+    "allInstructionOffsetsEqual": true,
+    "allBranchTargetsEqual": true,
+    "allResolvedPropertyNamesEqual": true,
+    "allResolvedStringValuesEqual": true,
+    "correctedEmptyStringSites": [
+      {
+        "method": "mark",
+        "offset": 126,
+        "newPoolIndex": 22
+      },
+      {
+        "method": "onResize",
+        "offset": 9,
+        "newPoolIndex": 22
+      },
+      {
+        "method": "onKey",
+        "offset": 23,
+        "newPoolIndex": 22
+      },
+      {
+        "method": "onClick",
+        "offset": 20,
+        "newPoolIndex": 22
+      },
+      {
+        "method": "onComplete",
+        "offset": 90,
+        "newPoolIndex": 22
+      }
+    ]
+  },
+  "unitTestsPassed": 8
+}

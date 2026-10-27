@@ -1,6 +1,6 @@
 # Original AVM2 Loader transition fixture — selected normal-unload diagnostic
 
-**Not executed in Ruffle, WebKit or Adobe Flash.** No user files, saves, game
+**Corrected revision: not yet executed in Ruffle, WebKit or Adobe Flash.** The prior root failed the Chrome smoke with VerifyError #1032 before its first trace; see [`../correction-audit.md`](../correction-audit.md). No user files, saves, game
 assets, compiler downloads or external network dependencies were used. These are
 original SWF37 one-frame/24fps movies assembled from a deliberately small ABC
 subset. Root and child retain ENTER_FRAME listeners after their timelines stop.
@@ -103,20 +103,18 @@ python3 validate_fixtures.py
 python3 -m unittest -v test_fixture_validation
 ```
 
-`abc_subset.py` is copied **byte-for-byte** from the earlier original fixture
-writer, SHA-256 `d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701`.
+`abc_subset.py` derives from the earlier original fixture writer (former SHA-256 `d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701`). The sole assembler correction interns a real nonzero empty-string entry for pushstring; current SHA-256 is `41a549bf200bac3bb97d55273d36da8bd6311ca3ed6922979d0faa6865843fef`. Reserved zero remains valid for package-namespace names.
 Its binary format reference is pinned Ruffle
 [`swf/src/avm2/write.rs`](https://github.com/ruffle-rs/ruffle/blob/89a7049965f3090e706265670df309a5128233ac/swf/src/avm2/write.rs)
 and [`opcode.rs`](https://github.com/ruffle-rs/ruffle/blob/89a7049965f3090e706265670df309a5128233ac/swf/src/avm2/opcode.rs).
 The independent byte-reader is adapted from the earlier structural validator; new
-subset support is local2, pushnull, callproperty, convert_s, add and ifeq, plus
-valid empty-string constant index 0. It checks pools/references/class scopes,
+subset support is local2, pushnull, callproperty, convert_s, add and ifeq, and explicitly rejects reserved zero for pushstring operands while allowing valid zero package-namespace names. It checks pools/references/class scopes,
 branch targets and stack/scope balance, plus explicit load/marker/counter paths.
 It is not a substitute for AVM2 verification or a real runtime run.
 
-Six unit tests cover deterministic binaries/helper identity, both selected binary
+Eight unit tests cover deterministic binaries/helper identity, both selected binary
 structures plus the alternative ABC in memory, exact field order and marker sites, separated unload arms, malformed
-branches/stack underflow, and truncated ABC rejection. `ReferenceRoot.as` and
+branches/stack underflow, truncated ABC rejection, real nonzero empty-string interning, and reserved pushstring-index rejection. `ReferenceRoot.as` and
 `ReferenceChild.as` are human-readable equivalents, not compiler inputs or Adobe
 reference outputs. The root reference shows the selected normal arm; the in-memory alternative
 changes the called API and BOOT detail only. Python cache files are not bundle

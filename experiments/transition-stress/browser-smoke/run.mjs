@@ -17,7 +17,7 @@ async function clickCanvas(){const rect=await browser.execute(()=>window.canvasR
 try{
  result.provenance.runtime=verifyRuntime(args.runtime,args['runtime-manifest'],args['runtime-manifest-sha256']);
  assert(!fs.lstatSync(args.fixtures).isSymbolicLink());for(const [rel,hash]of Object.entries(fixturePins)){const file=path.join(args.fixtures,rel);assert(fs.lstatSync(file).isFile()&&!fs.lstatSync(file).isSymbolicLink());assert.equal(sha(fs.readFileSync(file)),hash)}
- const fixtureManifest=fs.readFileSync(path.join(args.fixtures,'manifest.json'));assert.equal(sha(fixtureManifest),'fdcd95be4ab55c0101544a3e6c7d4ecaec2b9dd31a578642abb52bcc25926c98');result.provenance.fixtures={manifestSha256:sha(fixtureManifest),files:fixturePins};
+ const fixtureManifest=fs.readFileSync(path.join(args.fixtures,'manifest.json'));assert.equal(sha(fixtureManifest),'fec69c81759258f345793cd79afb966492731d30e4ccc1a588733a9b457b504f');result.provenance.fixtures={manifestSha256:sha(fixtureManifest),files:fixturePins};
  const helpers=['page.html','page.mjs','console-observer.mjs','contracts.mjs','run.mjs','runner-guards.mjs','webdriver-node-entry.mjs'];result.provenance.helpers=Object.fromEntries(helpers.map(f=>[f,sha(fs.readFileSync(path.join(here,f)))]));
  const pkg=JSON.parse(fs.readFileSync(path.join(args.webdriverio,'package.json'))),entry=webdriverNodeEntry(pkg,args.webdriverio);assert(fs.statSync(args.chrome).isFile()&&fs.statSync(args.driver).isFile(),'Explicit installed browser/driver required');const {remote}=await import(entry);artifact('provenance.json',result.provenance);
  const roots={runtime:args.runtime,fixtures:args.fixtures,helpers:here};

@@ -11,7 +11,7 @@
     },
     {
       "path": "experiments/audio-lifecycle/engine-patch/audio-lifecycle.patch",
-      "sha256": "b588d0bc9995c2bb60ecc4738fce071fe39b930231fb7f30d38cb48ca9b73639"
+      "sha256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9"
     }
   ],
   "expectedOriginalCoreJSTests": 59,
