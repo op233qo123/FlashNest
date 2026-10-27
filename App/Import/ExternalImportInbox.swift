@@ -5,11 +5,20 @@ import SwiftUI
 /// holds any security grant while another game/modal/import is active. Nothing
 /// is opened, copied, or executed until the user imports from the Library.
 @MainActor final class ExternalImportInbox: ObservableObject {
+    enum Kind { case game, save }
+
     struct Request: Identifiable {
         let id = UUID()
         let selection: NativeImportSelection
         let key: String
         var name: String { selection.urls[0].lastPathComponent }
+        // Routing hint only: the save reader validates bounded file bytes before
+        // confirmation. Never trust an extension or a JSON-authored package ID.
+        var kind: Kind {
+            let url = selection.urls[0]
+            guard !url.hasDirectoryPath else { return .game }
+            return ["json", "flashnestsave", "sol"].contains(url.pathExtension.lowercased()) ? .save : .game
+        }
     }
     @Published private(set) var pending: [Request] = []
     @Published private(set) var active: Request?

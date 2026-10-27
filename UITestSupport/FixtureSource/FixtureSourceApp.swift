@@ -1,6 +1,7 @@
 import SwiftUI
 import Foundation
 import UIKit
+import CryptoKit
 
 /// Installed only by the diagnostic UI workflow. Its separate app sandbox is
 /// the source of Files selections and real system Open-In handoffs. It never
@@ -8,7 +9,7 @@ import UIKit
 @main struct FixtureSourceApp: App {
     @State private var state = "Preparing cross-app fixture…"
     @State private var ready = false
-    @State private var shareZIP = false
+    @State private var sharedDocument: SourceDocument?
 
     var body: some Scene {
         WindowGroup {
@@ -16,11 +17,17 @@ import UIKit
                 Text("FlashNest Source").font(.title)
                 Text(state).accessibilityIdentifier(ready ? "source-ready" : "source-status")
                 Text("Documents / FlashNest Cross-App Fixture")
-                Button("Open ZIP in another app") { shareZIP = true }
+                Button("Open ZIP in another app") { sharedDocument = .zip }
                     .disabled(!ready).accessibilityIdentifier("source-open-zip")
-                    .sheet(isPresented: $shareZIP) { SourceDocumentHandoff() }
+                Button("Open save JSON in another app") { sharedDocument = .saveJSON }
+                    .disabled(!ready).accessibilityIdentifier("source-open-save-json")
+                Button("Open invalid JSON in another app") { sharedDocument = .invalidJSON }
+                    .disabled(!ready).accessibilityIdentifier("source-open-invalid-json")
+                Button("Open SOL in another app") { sharedDocument = .sol }
+                    .disabled(!ready).accessibilityIdentifier("source-open-sol")
             }
             .padding()
+            .sheet(item: $sharedDocument) { SourceDocumentHandoff(filename: $0.rawValue) }
             .task {
                 guard !ready else { return }
                 do {
@@ -35,12 +42,37 @@ import UIKit
     }
 }
 
+private enum SourceDocument: String, Identifiable {
+    case zip = "FlashNest External Fixture.zip"
+    case saveJSON = "FlashNest Original Save.json"
+    case invalidJSON = "Not a FlashNest Save.json"
+    case sol = "FlashNest Original Object.sol"
+    var id: String { rawValue }
+}
+
 private enum CrossAppFixtureSeed {
     static func prepare() throws {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         guard let zip = Bundle.main.url(forResource: "multi-swf", withExtension: "zip") else { throw CocoaError(.fileNoSuchFile) }
         let sharedZIP = documents.appendingPathComponent("FlashNest External Fixture.zip")
         if !FileManager.default.fileExists(atPath: sharedZIP.path) { try FileManager.default.copyItem(at: zip, to: sharedZIP) }
+        // Original synthetic AMF3 fixture authored for this project; no user save
+        // data. Snapshot authorship never selects the destination package.
+        let sol = Data(base64Encoded: "AL8AAAAsVENTTwAEAAAAAAAQRmxhc2hOZXN0Rml4dHVyZQAAAAMRcHJvZ3Jlc3MEBwA=")!
+        let digest = SHA256.hash(data: sol).map { String(format: "%02x", $0) }.joined()
+        let backup: [String: Any] = [
+            "id": "11111111-1111-4111-8111-111111111111", "schemaVersion": 1,
+            "runtimeVersion": "0.7.1", "packageID": "22222222-2222-4222-8222-222222222222",
+            "packageTitle": "Original Open-In fixture", "movie": "main.swf",
+            "name": "Original progress seven", "createdAt": "2026-01-01T00:00:00Z",
+            "entries": [["scope": "origin", "key": "FlashNestFixture", "value": sol.base64EncodedString(), "sha256": digest]],
+            "decodedBytes": sol.count
+        ]
+        try JSONSerialization.data(withJSONObject: backup, options: [.sortedKeys])
+            .write(to: documents.appendingPathComponent(SourceDocument.saveJSON.rawValue), options: .atomic)
+        try Data("{\"ordinaryJSON\":true}".utf8)
+            .write(to: documents.appendingPathComponent(SourceDocument.invalidJSON.rawValue), options: .atomic)
+        try sol.write(to: documents.appendingPathComponent(SourceDocument.sol.rawValue), options: .atomic)
         let root = documents.appendingPathComponent("FlashNest Cross-App Fixture", isDirectory: true)
         let child = root.appendingPathComponent("sub/level2/level3/child.swf")
         try FileManager.default.createDirectory(at: child.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -74,10 +106,14 @@ private enum CrossAppFixtureSeed {
 
 /// The system document interaction menu, not a test URL scheme or callback.
 private struct SourceDocumentHandoff: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> UIViewController { HandoffController() }
+    let filename: String
+    func makeUIViewController(context: Context) -> UIViewController { HandoffController(filename: filename) }
     func updateUIViewController(_ controller: UIViewController, context: Context) {}
 
     final class HandoffController: UIViewController, UIDocumentInteractionControllerDelegate {
+        private let filename: String
+        init(filename: String) { self.filename = filename; super.init(nibName: nil, bundle: nil) }
+        required init?(coder: NSCoder) { fatalError("Not storyboard based") }
         private var document: UIDocumentInteractionController?
         private var presented = false
         override func viewDidAppear(_ animated: Bool) {
@@ -85,12 +121,12 @@ private struct SourceDocumentHandoff: UIViewControllerRepresentable {
             guard !presented else { return }
             presented = true
             let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("FlashNest External Fixture.zip")
+                .appendingPathComponent(filename)
             let controller = UIDocumentInteractionController(url: url)
             controller.delegate = self
             document = controller
             if !controller.presentOpenInMenu(from: view.bounds, in: view, animated: true) {
-                let label = UILabel(); label.text = "No app accepts this ZIP"; label.accessibilityIdentifier = "source-no-handler"
+                let label = UILabel(); label.text = "No app accepts this document"; label.accessibilityIdentifier = "source-no-handler"
                 label.frame = view.bounds; label.textAlignment = .center; view.addSubview(label)
             }
         }

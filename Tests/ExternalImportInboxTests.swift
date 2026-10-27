@@ -49,8 +49,34 @@ import UniformTypeIdentifiers
     func testBundleDeclaresOnlySupportedOpenInDocumentKinds() throws {
         let documents = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: "CFBundleDocumentTypes") as? [[String: Any]])
         let kinds = Set(documents.flatMap { $0["LSItemContentTypes"] as? [String] ?? [] })
-        XCTAssertEqual(kinds, Set([UTType.zip.identifier, UTType.folder.identifier, "com.adobe.flash"]))
+        XCTAssertEqual(kinds, Set([UTType.zip.identifier, UTType.folder.identifier, "com.adobe.flash", UTType.json.identifier, "com.flashnest.save", "com.flashnest.shared-object"]))
         XCTAssertEqual(UTType(filenameExtension: "swf")?.identifier, "com.adobe.flash")
+        XCTAssertEqual(UTType(filenameExtension: "flashnestsave")?.identifier, "com.flashnest.save")
+        XCTAssertTrue(UTType(importedAs: "com.flashnest.shared-object").conforms(to: .data))
+        XCTAssertTrue(documents.allSatisfy { $0["LSHandlerRank"] as? String == "Alternate" })
+    }
+
+    func testSaveHandoffsAreSeparatedFromGameImportAndRetainedUntilDismissal() throws {
+        let inbox = ExternalImportInbox()
+        for name in ["backup.JSON", "backup.flashnestsave", "counter.SOL"] {
+            let source = URL(fileURLWithPath: "/provider/" + name)
+            XCTAssertTrue(inbox.receive(source))
+            let pending = try XCTUnwrap(inbox.pending.first)
+            XCTAssertEqual(pending.kind, .save)
+            XCTAssertNil(inbox.begin(pending.id, allowed: false))
+            let active = try XCTUnwrap(inbox.begin(pending.id, allowed: true))
+            XCTAssertEqual(active.selection.urls, [source])
+            XCTAssertFalse(inbox.receive(source))
+            inbox.finish(active.id)
+            XCTAssertNil(inbox.active)
+        }
+        for source in [URL(fileURLWithPath: "/provider/game.zip"),
+                       URL(fileURLWithPath: "/provider/game.swf"),
+                       URL(fileURLWithPath: "/provider/folder.json", isDirectory: true)] {
+            XCTAssertTrue(inbox.receive(source))
+            let pending = try XCTUnwrap(inbox.pending.last)
+            XCTAssertEqual(pending.kind, .game)
+        }
     }
 
     func testRemoteURLDoesNotAcquireARequest() {

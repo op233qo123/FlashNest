@@ -64,7 +64,29 @@ targets:
               - public.zip-archive
               - com.adobe.flash
               - public.folder
+          - CFBundleTypeName: FlashNest saved game data
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.json
+              - com.flashnest.save
+              - com.flashnest.shared-object
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.flashnest.save
+            UTTypeDescription: FlashNest save backup
+            UTTypeConformsTo:
+              - public.json
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - flashnestsave
         UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.flashnest.shared-object
+            UTTypeDescription: Flash local shared object
+            UTTypeConformsTo:
+              - public.data
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - sol
           - UTTypeIdentifier: com.adobe.flash
             UTTypeDescription: Flash movie
             UTTypeConformsTo:

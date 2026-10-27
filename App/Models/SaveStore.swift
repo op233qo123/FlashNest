@@ -167,6 +167,20 @@ struct SaveStore: Sendable {
         return snapshot
     }
 
+    /// Raw-SOL preview is not authority to overwrite newer data. Re-read and
+    /// compare the complete current snapshot while holding the transaction lock,
+    /// then preserve its preimage and replace exactly one verified logical entry.
+    @discardableResult
+    func importRawSOL(_ plan: RawSOLImportPlan, selecting target: RawSOLTarget, to package: GamePackage) throws -> SaveSnapshot {
+        Self.transactionLock.lock()
+        defer { Self.transactionLock.unlock() }
+        guard plan.packageID == package.id, let current = try readLatest(package.id) else {
+            throw SaveStoreError.invalid("raw save target game or current save unavailable")
+        }
+        let merged = try plan.mergedSnapshot(current: current, selecting: target)
+        return try importSnapshot(merged, to: package)
+    }
+
     /// Call only after user confirmation and after the target player is stopped.
     /// The previous current save is durably backed up before atomic replacement.
     @discardableResult

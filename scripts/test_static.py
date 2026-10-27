@@ -20,8 +20,12 @@ class StaticTests(unittest.TestCase):
   info=plistlib.loads((ROOT/'App/Info-Debug.plist').read_bytes())
   kinds=info['CFBundleDocumentTypes'][0]['LSItemContentTypes']
   self.assertEqual(set(kinds),{'public.zip-archive','com.adobe.flash','public.folder'})
+  saves=info['CFBundleDocumentTypes'][1]
+  self.assertEqual(saves['LSHandlerRank'],'Alternate')
+  self.assertEqual(set(saves['LSItemContentTypes']),{'public.json','com.flashnest.save','com.flashnest.shared-object'})
+  self.assertNotIn('public.data',kinds+saves['LSItemContentTypes'])
   project=(ROOT/'project.yml').read_text()
-  for kind in kinds: self.assertIn('- '+kind,project)
+  for kind in kinds+saves['LSItemContentTypes']: self.assertIn('- '+kind,project)
   self.assertIn('.onOpenURL { externalImports.receive($0) }',(ROOT/'App/FlashNestApp.swift').read_text())
   self.assertIn('LibraryNavigation.navigateToSourceFolder(named: fixtureTitle, in: app)',(ROOT/'UITests/LifecyclePlayerUITests.swift').read_text())
 
@@ -125,8 +129,8 @@ class StaticTests(unittest.TestCase):
   self.assertNotIn('path: fixtures/viewport-input',project)
   self.assertNotIn('experiments/',project)
   self.assertTrue((ROOT/'experiments/half-resolution/Tests/ViewportRenderingRuntimeTests.swift').is_file())
-  self.assertNotIn('RenderSettings',(ROOT/'App/Views/PlayerView.swift').read_text())
   self.assertNotIn('renderMode',(ROOT/'App/Player/PlayerSession.swift').read_text())
+  self.assertNotIn('usesHalfResolution',(ROOT/'App/Player/PlayerSession.swift').read_text())
  def test_default_frame_order_regression_identity_and_capture_equivalence(self):
   import re
   default=(ROOT/'Tests/FrameOrderRuntimeTests.swift').read_text()
@@ -146,4 +150,3 @@ class StaticTests(unittest.TestCase):
   self.assertEqual({p.name for p in (WEB/'runtime').iterdir()},set(manifest))
   for name,digest in manifest.items(): self.assertEqual(hashlib.sha256((WEB/'runtime'/name).read_bytes()).hexdigest(),digest,name)
 if __name__=='__main__': unittest.main()
-

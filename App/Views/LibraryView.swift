@@ -180,6 +180,8 @@ struct LibraryView: View {
             NavigationStack { LibraryImportDiagnosticsView(nativeImporter: nativeImporter)
                 .toolbar { Button(L10n.text("Done")) { sheet = nil } } }
         case .saves: SaveAreaView(packages: library.packages)
+        case .externalSave(let request):
+            SaveAreaView(packages: library.packages, externalImport: request)
         case .inbox:
             LocalImportInboxView(library: library) { package in pendingAction = .entry(package) }
         case .gameOptions(let package):
@@ -204,6 +206,12 @@ struct LibraryView: View {
     }
 
     private func finishSheetAction() {
+        // The sheet owns the retained grant through target selection, validation,
+        // confirmation or cancellation. Never release it when only a nested page
+        // disappears; only the complete external-save presentation ends intake.
+        if let active = externalImports.active, active.kind == .save {
+            externalImports.finish(active.id)
+        }
         let action = pendingAction; pendingAction = nil
         guard !operationUnavailable, library.error == nil else { return }
         switch action {
@@ -240,7 +248,10 @@ struct LibraryView: View {
 
     private func beginExternalImport(_ id: UUID) {
         guard let request = externalImports.begin(id, allowed: canPresent) else { return }
-        beginImport(request.selection, externalID: request.id)
+        switch request.kind {
+        case .game: beginImport(request.selection, externalID: request.id)
+        case .save: sheet = .externalSave(request)
+        }
     }
 
     private func beginImport(_ selection: NativeImportSelection) {
@@ -261,7 +272,7 @@ struct LibraryView: View {
 }
 
 private enum LibrarySheet: Identifiable {
-    case settings, diagnostics, inbox, entry(GamePackage), gameOptions(GamePackage), saves
+    case settings, diagnostics, inbox, entry(GamePackage), gameOptions(GamePackage), saves, externalSave(ExternalImportInbox.Request)
     var id: String {
         switch self {
         case .settings: return "settings"
@@ -270,6 +281,7 @@ private enum LibrarySheet: Identifiable {
         case .entry(let package): return "entry-" + package.id.uuidString
         case .gameOptions(let package): return "game-options-" + package.id.uuidString
         case .saves: return "saves"
+        case .externalSave(let request): return "external-save-" + request.id.uuidString
         }
     }
 }
