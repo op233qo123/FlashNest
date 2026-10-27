@@ -69,7 +69,11 @@
     "experiments/render-density/fixtures/showAll-center.swf": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac",
     "experiments/render-density/scripts/make_fixture.py": "cd2569faf47ea2e4e86f1a1c8da58c90c5d6b8d1fa1f46e6cdd858cfd559d42e",
     "experiments/render-density/scripts/test_fixture.py": "3ba0562480855373e0da856f4e224b96091a8eac7e43d1bc922663fd3852d597",
-    "experiments/render-density/browser-tests/run.mjs": "4fe8da02fb6e2cbfed597f58fa43360b76746ec365e9729ecc385874f59921f0",
-    "experiments/render-density/browser-tests/page.html": "696dbac54303d3c908e8c61f4af268c43332b1574b9c2b747a581b58a2bf0648"
+    "experiments/render-density/browser-tests/run.mjs": "1b8c189ea48ae7640f0eacc9e01ddcc2034b9e81bc704f9cdc6aae30017c0f64",
+    "experiments/render-density/browser-tests/page.html": "43f8fc7d19d50e44fdce632aace0e2b86dde44fb8bebed8c811e765816513116",
+    "experiments/render-density/browser-tests/screenshot.mjs": "78c7d03813ea68bf4fbc3f8a476a362c595fdd847286dd319cd69c73338531ab",
+    "experiments/render-density/browser-tests/test_screenshot.mjs": "2cf3fa28e9ccdd84541e95a1f062bad3ccb9d5c2d1fd2e352c27d286cfa49a0e",
+    "experiments/render-density/browser-tests/test_helpers.mjs": "582b0f207869fef8213085646f7009ab54bc5c4f4ec360922bc5c3c2a6273c2d",
+    "experiments/render-density/browser-tests/test_page.mjs": "7e62b3b01c8ce04d232f1afd23384c52f5dd798b1ea48f77b2e8c512c5ea2ad9"
   }
 }

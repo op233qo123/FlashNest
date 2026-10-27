@@ -1,9 +1,10 @@
 // Lifecycle contracts only; deliberately not a renderer/SWF execution claim.
 import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
 const html=fs.readFileSync(new URL('./page.html',import.meta.url),'utf8');const script=html.match(/<script>([\s\S]*)<\/script>/)[1];
+const listeners={};
 const instances=[];const host={style:{},append(){}};const button={};
 class Canvas{getContext(){return null}}
-const context={console:{log(){}},URLSearchParams,location:{search:'?runtime=candidate'},HTMLCanvasElement:Canvas,WeakMap,document:{getElementById:id=>id==='host'?host:button,createElement:()=>({}),head:{append(){}}}};context.window=context;
+const context={console:{log(){}},URLSearchParams,location:{search:'?runtime=candidate'},HTMLCanvasElement:Canvas,WeakMap,document:{addEventListener(type,callback,options){listeners[type]={callback,options}},getElementById:id=>id==='host'?host:button,createElement:()=>({}),head:{append(){}}}};context.window=context;
 vm.createContext(context);vm.runInContext(script,context);
 context.RufflePlayer.newest=()=>({createPlayer:()=>{
  const events={};let resolve;const api={load(){return new Promise(r=>{resolve=r})},resume(){this.resumed=true}};
@@ -16,3 +17,13 @@ const previous=context.evidence;const second=context.startCase('/fixtures/b.swf'
 a.events.loadeddata();a.api.traceObserver('late old event');assert.equal(context.evidence.loaded,false);assert.equal(context.evidence.traces.length,0);assert(previous.traces.includes('late old event'));
 b.resolve();await second;b.events.loadeddata();assert(context.evidence.loaded&&context.evidence.observerInstalled);
 console.log('PASS post-instance observer, resume API, old-case callback isolation');
+
+for(const type of ['pointerdown','pointerup']){
+ assert.equal(listeners[type].options.capture,true);assert.equal(listeners[type].options.passive,true);
+ listeners[type].callback({isTrusted:false});assert.equal(context.pointerEvents.length,0);
+}
+const event={isTrusted:true,clientX:12,clientY:19,button:0,type:'pointerdown',target:{tagName:'RUFFLE-PLAYER',id:'host'},composedPath:()=>[{tagName:'CANVAS',id:'stage'}]};
+for(let i=0;i<40;i++)listeners.pointerdown.callback(event);
+assert.equal(context.pointerEvents.length,32);assert.equal(context.pointerEvents[0].path[0].tag,'CANVAS');
+assert(context.pointerEvents.every(e=>e.trusted&&e.x===12&&e.y===19));
+console.log('PASS trusted passive pointer observations are bounded and synthetic events ignored');

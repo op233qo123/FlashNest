@@ -18,3 +18,4 @@ for(const filter of [1,2,3,4]){
 assert.throws(()=>decodePNG(png().subarray(0,40)));assert.throws(()=>decodePNG(png(5)));
 assert.throws(()=>comparePixels({...p,pixels:Buffer.alloc(p.pixels.length)},p));
 console.log('PASS PNG decoding, exact self-comparison, truncated/invalid/blank rejection');
+await import('./test_screenshot.mjs');

@@ -21,7 +21,7 @@ const script=document.createElement('script'); script.src='/'+runtime+'/ruffle.j
 script.onload=()=>{window.runtimeReady=true};script.onerror=()=>{window.evidence.errors.push('loader failed')};
 window.startCase=async function(fixture,scale,width,height,renderer,quality){
  if(window.player)window.player.remove();
- window.evidence={traces:[],errors:[],overflow:false,loaded:false};
+ window.evidence={traces:[],errors:[],overflow:false,loaded:false};window.pointerEvents=[];
  const host=document.getElementById('host');host.style.width=width+'px';host.style.height=height+'px';
  const p=window.RufflePlayer.newest().createPlayer();window.player=p;host.append(p);
  const api=p.ruffle(),e=window.evidence;
@@ -38,6 +38,27 @@ window.startCase=async function(fixture,scale,width,height,renderer,quality){
   api.traceObserver=observe;e.observerInstalled=true;
  } catch {e.errors.push('load rejected')}
 
+};
+// Passive observations only: never synthesize or alter input events.
+window.pointerEvents=[];
+for(const type of ['pointerdown','pointerup'])document.addEventListener(type,event=>{
+ if(!event.isTrusted)return;
+ const describe=e=>({tag:String(e?.tagName||'').slice(0,40),id:String(e?.id||'').slice(0,80)});
+ window.pointerEvents.push({type,x:event.clientX,y:event.clientY,button:event.button,trusted:event.isTrusted,
+  target:describe(event.target),path:event.composedPath().slice(0,8).map(describe)});
+ if(window.pointerEvents.length>32)window.pointerEvents.shift();
+},{capture:true,passive:true});
+window.screenshotGeometry=function(){
+ const r=document.getElementById('host').getBoundingClientRect();
+ return {rect:[r.x,r.y,r.width,r.height],viewport:[innerWidth,innerHeight],dpr:devicePixelRatio};
+};
+window.pointerContext=function(){
+ const r=document.getElementById('host').getBoundingClientRect();
+ const describe=e=>{const s=getComputedStyle(e);return {tag:e.tagName,id:String(e.id||'').slice(0,80),display:s.display,visibility:s.visibility,pointerEvents:s.pointerEvents,opacity:s.opacity}};
+ const points=[[.05,.05],[.95,.05],[.05,.95],[.95,.95],[.5,.5]];
+ return {events:window.pointerEvents.slice(-32),focused:document.hasFocus(),visibility:document.visibilityState,active:document.activeElement?describe(document.activeElement):null,
+  targets:points.map(([x,y])=>({point:[r.x+x*r.width,r.y+y*r.height],stack:document.elementsFromPoint(r.x+x*r.width,r.y+y*r.height).slice(0,6).map(describe),shadowStack:window.player?.shadowRoot?.elementsFromPoint?.(r.x+x*r.width,r.y+y*r.height).slice(0,8).map(describe)||[]})),
+  shadow:window.player?.shadowRoot?[...window.player.shadowRoot.querySelectorAll('canvas,button,[role="button"],#play-button,#splash-screen,#unmute-overlay,#message-overlay,#panic,.play-overlay,.unmute-overlay')].slice(0,12).map(describe):[]};
 };
 window.measure=function(){
  const c=window.player?.shadowRoot?.querySelector('canvas');if(!c)return null;

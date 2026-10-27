@@ -21,6 +21,41 @@ updates the independent structural decoder and negative tests. Add2 and all
 renderer code are unchanged. Only an actual rerun can establish corrected
 fixture execution and geometry results.
 
+## Corrected-fixture run and harness repair
+
+Geometry-only run
+[40521059412](https://github.com/op233qo123/FlashNest/actions/runs/40521059412),
+harness commit `bfa826dd9b0b1fec306a3902bf8c28a941e2162a`, verified and reused
+that exact compiled artifact. The corrected AVM1 fixture produced valid READY
+and pointer traces. No complete matrix or candidate tier was validated:
+
+- The first full-resolution WebGL control completed its Stage/pointer/hit-test/
+  drag observations, then failed screenshot capture. The runner had imported
+  WebdriverIO's browser entry rather than its pinned Node entry.
+- The first WGPU-WebGL control received only the last two of five click pairs.
+  That timeout did not establish an engine failure or successful input coverage.
+
+The repaired harness now requires the exact
+[WebdriverIO 9.32.0 Node export](https://github.com/webdriverio/webdriverio/blob/v9.32.0/packages/webdriverio/package.json),
+uses the raw WebDriver screenshot protocol, validates the native viewport/DPR,
+and crops exact physical pixels without resizing. It waits for actual visible
+original vector/background pixels, then requires each single trusted click's
+own DOWN/UP acknowledgements before continuing; it never retries a click.
+Bounded trusted DOM pointer observations and actual pinned overlay hit stacks
+are retained on failure. Capture errors are retained independently.
+
+The drag start is selected from the visible intersection of the original vector
+using its observed SWF coordinate transform. A hard-coded center is invalid for
+some portrait/noBorder/edge-alignment controls even when the vector is visible.
+All modes and alignments remain in the matrix, with real SWF hitTest and drag
+assertions unchanged. Local helper checks cover 72 mode/alignment/aspect
+transforms, DPR 1/2/3 crops, transparent-pixel rejection, and bounds. These are
+harness checks, not an executed renderer pass. Completed-case counts now include
+all applicable visual assertions, not only input observations.
+
+The engine patches, candidate bytes, fixture bytes and required matrix counts
+are unchanged. A new real browser run is still required.
+
 ## Evidence that is reused, not rerun
 
 `verify_artifact.py` verifies the exact ZIP before safe bounded extraction, the
