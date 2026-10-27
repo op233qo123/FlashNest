@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Darwin
 
 /// App-owned logical storage identities; no filesystem path is derived from a key.
 struct SaveEntry: Codable, Sendable, Equatable {
@@ -69,6 +70,36 @@ struct RecoverableSaveSummaryListing: Sendable {
     let invalidFileCount: Int
 }
 
+/// Immutable confirmation token. Only native save files in one UUID group are
+/// included; no game files or WebKit profile are deletion targets.
+struct ArchivedSaveDeletion: Identifiable, Sendable {
+    let id: UUID
+    let title: String
+    let currentFileCount: Int
+    let backupFileCount: Int
+    let totalBytes: Int
+    var fileCount: Int { currentFileCount + backupFileCount }
+    fileprivate let rootIdentity: String
+    fileprivate let directoryIdentity: String
+    fileprivate let files: [ArchivedSaveFileIdentity]
+}
+
+enum ArchivedSaveDeletionError: LocalizedError {
+    case partial(removedFileCount: Int)
+    var errorDescription: String? {
+        switch self {
+        case .partial(let count): return "Archived save deletion stopped after deleting \(count) file(s). Remaining files were kept; refresh before retrying."
+        }
+    }
+}
+
+fileprivate struct ArchivedSaveFileIdentity: Sendable, Equatable {
+    let name: String
+    let identity: String
+    let size: Int
+    let checksum: String
+}
+
 enum SaveStoreError: LocalizedError {
     case invalid(String), limit(String)
     var errorDescription: String? {
@@ -98,6 +129,140 @@ struct SaveStore: Sendable {
     init(root: URL? = nil) {
         self.root = root ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("save", isDirectory: true)
+    }
+
+    /// Preview is read-only and bounded. Unsafe/unrecognized folder contents
+    /// require manual recovery, never recursive cleanup.
+    func prepareArchivedDeletion(packageID: UUID, installedPackageIDs: Set<UUID>) throws -> ArchivedSaveDeletion {
+        Self.transactionLock.lock()
+        defer { Self.transactionLock.unlock() }
+        guard !installedPackageIDs.contains(packageID) else { throw SaveStoreError.invalid("game is still installed") }
+        return try withArchivedDirectory(packageID) { rootFD, directoryFD, directory in
+            try archivedDeletionState(packageID, rootFD: rootFD, directoryFD: directoryFD, directory: directory)
+        }
+    }
+
+    /// Permanently removes only individually verified leaf files, never recurses.
+    /// Failure after the first unlink can be partial; callers must refresh and
+    /// must not describe this operation as an all-or-nothing rollback.
+    func deleteArchived(_ selection: ArchivedSaveDeletion, installedPackageIDs: Set<UUID>) throws {
+        try deleteArchived(selection, installedPackageIDs: installedPackageIDs,
+                           removeEntry: { unlinkat($0, $1, $2) })
+    }
+
+    /// Internal synchronous syscall seam for deterministic failure tests only.
+    /// App callers use the overload above; no global hook/configuration exists.
+    /// Validation, locking, exact descriptors and names are never injectable.
+    func deleteArchived(_ selection: ArchivedSaveDeletion, installedPackageIDs: Set<UUID>,
+                        removeEntry: (Int32, String, Int32) -> Int32) throws {
+        Self.transactionLock.lock()
+        defer { Self.transactionLock.unlock() }
+        guard !installedPackageIDs.contains(selection.id) else { throw SaveStoreError.invalid("game is still installed") }
+        try withArchivedDirectory(selection.id) { rootFD, directoryFD, directory in
+            let live = try archivedDeletionState(selection.id, rootFD: rootFD, directoryFD: directoryFD, directory: directory)
+            guard live.rootIdentity == selection.rootIdentity,
+                  live.directoryIdentity == selection.directoryIdentity, live.files == selection.files else {
+                throw SaveStoreError.invalid("archived save files changed; review them again before deleting")
+            }
+            var removed = 0
+            do {
+                for file in selection.files {
+                    var info = stat()
+                    guard fstatat(directoryFD, file.name, &info, AT_SYMLINK_NOFOLLOW) == 0,
+                          archiveFileIdentity(info) == file.identity,
+                          (info.st_mode & S_IFMT) == S_IFREG else {
+                        throw SaveStoreError.invalid("archived save file changed during deletion")
+                    }
+                    guard removeEntry(directoryFD, file.name, 0) == 0 else {
+                        throw SaveStoreError.invalid("archived save file could not be deleted")
+                    }
+                    removed += 1
+                }
+                var named = stat(), opened = stat()
+                guard fstat(directoryFD, &opened) == 0,
+                      fstatat(rootFD, selection.id.uuidString, &named, AT_SYMLINK_NOFOLLOW) == 0,
+                      archiveObjectIdentity(named) == archiveObjectIdentity(opened),
+                      (named.st_mode & S_IFMT) == S_IFDIR,
+                      removeEntry(rootFD, selection.id.uuidString, AT_REMOVEDIR) == 0 else {
+                    throw SaveStoreError.invalid("archived save folder changed or is not empty")
+                }
+            } catch {
+                if removed > 0 {
+                    throw ArchivedSaveDeletionError.partial(removedFileCount: removed)
+                }
+                throw error
+            }
+        }
+    }
+
+    private func withArchivedDirectory<T>(_ id: UUID, body: (Int32, Int32, URL) throws -> T) throws -> T {
+        guard let directory = try packageDirectory(id, create: false) else { throw SaveStoreError.invalid("archived save folder is unavailable") }
+        let rootFD = open(root.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+        guard rootFD >= 0 else { throw SaveStoreError.invalid("unsafe save root") }
+        defer { close(rootFD) }
+        let directoryFD = openat(rootFD, id.uuidString, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+        guard directoryFD >= 0 else { throw SaveStoreError.invalid("unsafe archived save folder") }
+        defer { close(directoryFD) }
+        return try body(rootFD, directoryFD, directory)
+    }
+
+    private func archiveObjectIdentity(_ info: stat) -> String { "\(info.st_dev):\(info.st_ino)" }
+    private func archiveFileIdentity(_ info: stat) -> String {
+        "\(archiveObjectIdentity(info)):\(info.st_size):\(info.st_mtimespec.tv_sec):\(info.st_mtimespec.tv_nsec):\(info.st_ctimespec.tv_sec):\(info.st_ctimespec.tv_nsec)"
+    }
+
+    private func archivedDeletionState(_ id: UUID, rootFD: Int32, directoryFD: Int32, directory: URL) throws -> ArchivedSaveDeletion {
+        var rootInfo = stat(), directoryInfo = stat()
+        guard fstat(rootFD, &rootInfo) == 0, fstat(directoryFD, &directoryInfo) == 0 else { throw SaveStoreError.invalid("save folder identity unavailable") }
+        let urls = try boundedContents(directory).sorted { $0.lastPathComponent < $1.lastPathComponent }
+        var files: [ArchivedSaveFileIdentity] = []
+        var total = 0
+        var title: String?
+        for url in urls {
+            let name = url.lastPathComponent
+            guard name == "current.json" || (url.pathExtension == "json" && UUID(uuidString: url.deletingPathExtension().lastPathComponent) != nil) else {
+                throw SaveStoreError.invalid("unrecognized files in archived save folder; nothing deleted")
+            }
+            let fd = openat(directoryFD, name, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
+            guard fd >= 0 else { throw SaveStoreError.invalid("unsafe archived save file") }
+            let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+            defer { try? handle.close() }
+            var before = stat()
+            guard fstat(fd, &before) == 0, (before.st_mode & S_IFMT) == S_IFREG,
+                  before.st_size >= 0, before.st_size <= Self.maximumArchiveBytes,
+                  before.st_size <= Self.maximumListingBytes - total else { throw SaveStoreError.limit("archived deletion verification size or file type") }
+            var hash = SHA256()
+            var count = 0
+            while let chunk = try handle.read(upToCount: 65_536), !chunk.isEmpty {
+                guard chunk.count <= Self.maximumListingBytes - total - count,
+                      chunk.count <= Self.maximumArchiveBytes - count else { throw SaveStoreError.limit("archived deletion verification size") }
+                count += chunk.count; hash.update(data: chunk)
+            }
+            var after = stat()
+            guard fstat(fd, &after) == 0, archiveFileIdentity(before) == archiveFileIdentity(after), count == Int(before.st_size) else {
+                throw SaveStoreError.invalid("archived save changed during verification")
+            }
+            if title == nil || name == "current.json" {
+                try handle.seek(toOffset: 0)
+                let bytes = try handle.read(upToCount: Self.maximumArchiveBytes + 1) ?? Data()
+                if bytes.count <= Self.maximumArchiveBytes, let snapshot = try? decodeImport(bytes), snapshot.packageID == id {
+                    title = snapshot.packageTitle
+                }
+            }
+            files.append(ArchivedSaveFileIdentity(name: name, identity: archiveFileIdentity(before), size: count,
+                checksum: hash.finalize().map { String(format: "%02x", $0) }.joined()))
+            total += count
+        }
+        // Recheck the named directory against the descriptor; a renamed/replaced
+        // UUID directory cannot authorize deletion of a different directory.
+        var named = stat()
+        guard fstatat(rootFD, id.uuidString, &named, AT_SYMLINK_NOFOLLOW) == 0,
+              archiveFileIdentity(named) == archiveFileIdentity(directoryInfo),
+              (named.st_mode & S_IFMT) == S_IFDIR else { throw SaveStoreError.invalid("archived save folder changed during verification") }
+        let currentCount = files.filter { $0.name == "current.json" }.count
+        return ArchivedSaveDeletion(id: id, title: title ?? id.uuidString, currentFileCount: currentCount,
+            backupFileCount: files.count - currentCount, totalBytes: total,
+            rootIdentity: archiveObjectIdentity(rootInfo), directoryIdentity: archiveFileIdentity(directoryInfo), files: files)
     }
 
     func capture(_ capture: SaveCapture, package: GamePackage, name: String) throws -> SaveSnapshot {

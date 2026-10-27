@@ -5,15 +5,17 @@ import UniformTypeIdentifiers
     let packages: [GamePackage]
     let package: GamePackage?
     let externalImport: ExternalImportInbox.Request?
+    let library: LibraryStore?
     @Environment(\.dismiss) private var dismiss
     @State private var operationBusy = false
     @State private var archived: [SavedPackageSummary] = []
     @State private var archiveError: String?
 
-    init(packages: [GamePackage], package: GamePackage? = nil, externalImport: ExternalImportInbox.Request? = nil) {
+    init(packages: [GamePackage], package: GamePackage? = nil, externalImport: ExternalImportInbox.Request? = nil, library: LibraryStore? = nil) {
         self.packages = packages
         self.package = package
         self.externalImport = externalImport
+        self.library = library
     }
 
     var body: some View {
@@ -46,21 +48,22 @@ import UniformTypeIdentifiers
                         if externalImport == nil, !archived.isEmpty {
                             Section(L10n.text("Archived saves")) {
                                 ForEach(archived) { summary in
-                                    NavigationLink { ArchivedSaveAreaView(summary: summary, busy: $operationBusy) } label: {
+                                    NavigationLink { ArchivedSaveAreaView(summary: summary, busy: $operationBusy, library: library) } label: {
                                         VStack(alignment: .leading, spacing: 5) {
                                             Label(summary.title, systemImage: "archivebox")
-                                            Text(L10n.text("Game removed · export only"))
+                                            Text(L10n.text("Game removed · archived saves"))
                                                 .font(.caption).foregroundStyle(.secondary)
                                             if summary.warning != nil {
                                                 Text(L10n.text("The save could not be verified. Existing saves were kept."))
                                                     .font(.caption).foregroundStyle(.orange)
                                             }
                                         }
-                                    }
+                                    }.accessibilityIdentifier("archive-" + summary.id.uuidString)
                                 }
                             }
                         }
                     }
+                    .task { await loadArchivedGroups() }
                     .navigationTitle(L10n.text("Save area"))
                     .disabled(operationBusy)
                     .accessibilityIdentifier(externalImport == nil ? "save-area-games" : "external-save-chooser")
@@ -69,19 +72,20 @@ import UniformTypeIdentifiers
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("Done")) { dismiss() }.disabled(operationBusy) } }
             .interactiveDismissDisabled(operationBusy)
         }
-        .task {
-            guard package == nil, externalImport == nil else { return }
-            operationBusy = true
-            defer { operationBusy = false }
-            do {
-                let summaries = try await Task.detached(priority: .userInitiated) { try SaveStore().savedPackages() }.value
-                let installed = Set(packages.map(\.id))
-                archived = summaries.filter { !installed.contains($0.id) }
-            } catch { archiveError = L10n.error(error) }
-        }
         .alert(L10n.text("Save error"), isPresented: Binding(get: { archiveError != nil }, set: { if !$0 { archiveError = nil } })) {
             Button(L10n.text("OK"), role: .cancel) { archiveError = nil }
         } message: { Text(archiveError ?? "") }
+    }
+
+    private func loadArchivedGroups() async {
+        guard package == nil, externalImport == nil, !operationBusy else { return }
+        operationBusy = true
+        defer { operationBusy = false }
+        do {
+            let summaries = try await Task.detached(priority: .userInitiated) { try SaveStore().savedPackages() }.value
+            let installed = Set((library?.packages ?? packages).map(\.id))
+            archived = summaries.filter { !installed.contains($0.id) }
+        } catch { archiveError = L10n.error(error) }
     }
 }
 
@@ -409,58 +413,172 @@ import UniformTypeIdentifiers
     }
 }
 
-/// Deliberately accepts no GamePackage and exposes no import/play/create actions.
+/// Archived groups can be exported or explicitly deleted, never imported or played.
 @MainActor private struct ArchivedSaveAreaView: View {
     let summary: SavedPackageSummary
     @Binding var busy: Bool
+    let library: LibraryStore?
     @State private var current: SaveSnapshotSummary?
     @State private var snapshots: [SaveSnapshotSummary] = []
     @State private var error: String?
+    @State private var deletionError = false
     @State private var exporting = false
     @State private var document = SaveJSONDocument(data: Data())
     @State private var filename = "FlashNest-save.json"
+    @State private var pendingDeletion: ArchivedSaveDeletion?
+    @State private var confirmingDeletion = false
+    @State private var deletionFinished = false
 
     var body: some View {
+        exportPresentation
+            .alert(L10n.text("Save error"), isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+                Button(L10n.text("OK"), role: .cancel) { error = nil }
+            } message: {
+                Text(error ?? "").accessibilityIdentifier(deletionError ? "archive-delete-error" : "archive-error")
+            }
+    }
+
+    private var archiveList: some View {
         List {
-            Section {
-                Text(L10n.text("This game's files were removed. Its saves are retained for export. Import a compatible game separately before restoring a save."))
-                    .font(.footnote).foregroundStyle(.secondary)
-            }
-            if let current {
-                Section(L10n.text("Current save")) { exportRow(current) }
-            }
-            Section(L10n.text("Backups")) {
-                if snapshots.isEmpty { Text(L10n.text("No named backups yet.")) .foregroundStyle(.secondary) }
-                ForEach(snapshots) { snapshot in exportRow(snapshot) }
+            if deletionFinished {
+                Text(L10n.text("Archived save files deleted."))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("archive-delete-success")
+            } else {
+                Section {
+                    Text(L10n.text("This game's files were removed. Its saves are retained for export. Import a compatible game separately before restoring a save."))
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                if library != nil {
+                    Section {
+                        Button(role: .destructive) { Task { await prepareDeletion() } } label: {
+                            Label(L10n.text("Delete archived save files"), systemImage: "trash")
+                                .fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
+                        }.accessibilityIdentifier("archive-delete")
+                    }
+                }
+                if let current {
+                    Section(L10n.text("Current save")) { exportRow(current) }
+                }
+                Section(L10n.text("Backups")) {
+                    if snapshots.isEmpty { Text(L10n.text("No named backups yet.")).foregroundStyle(.secondary) }
+                    ForEach(snapshots) { snapshot in exportRow(snapshot) }
+                }
             }
             if busy { ProgressView(L10n.text("Working…")) }
         }
         .disabled(busy)
         .navigationTitle(summary.title)
         .navigationBarBackButtonHidden(busy)
-        .task {
-            busy = true
-            defer { busy = false }
-            let id = summary.id
-            let state = await Task.detached(priority: .userInitiated) {
-                let store = SaveStore()
-                return (Result { try store.currentSummary(packageID: id) }, Result { try store.recoverableSummaryList(packageID: id) })
-            }.value
-            do { current = try state.0.get() } catch { current = nil; self.error = L10n.error(error) }
-            do {
-                let listing = try state.1.get()
-                snapshots = listing.summaries
-                if listing.invalidFileCount > 0 || summary.warning != nil {
-                    self.error = L10n.text("The save could not be verified. Existing saves were kept.")
+        .accessibilityIdentifier("archive-detail-" + summary.id.uuidString)
+        .task { await refresh() }
+    }
+
+    private var deletionPresentation: some View {
+        archiveList.confirmationDialog(L10n.text("Delete all files in this archive?"),
+            isPresented: $confirmingDeletion, titleVisibility: .visible) {
+                if let selection = pendingDeletion {
+                    Button(L10n.text("Delete archived save files"), role: .destructive) {
+                        Task { await deleteArchive(selection) }
+                    }.accessibilityIdentifier("archive-delete-confirm")
                 }
-            } catch { self.error = L10n.error(error) }
+                Button(L10n.text("Cancel"), role: .cancel) { pendingDeletion = nil }
+                    .accessibilityIdentifier("archive-delete-cancel")
+            } message: {
+                Text(deletionMessage).accessibilityIdentifier("archive-delete-preview")
+            }
+            .onChange(of: confirmingDeletion) { _, presented in
+                // The confirmed action already captured its immutable token.
+                if !presented { pendingDeletion = nil }
+            }
+    }
+
+    private var exportPresentation: some View {
+        deletionPresentation.fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: filename) { result in
+            if case .failure(let error) = result { deletionError = false; self.error = L10n.error(error) }
         }
-        .fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: filename) { result in
-            if case .failure(let error) = result { self.error = L10n.error(error) }
+    }
+
+    private var deletionMessage: String {
+        guard let selection = pendingDeletion else { return "" }
+        return [
+            L10n.text("Archived saves") + ": " + selection.title,
+            L10n.text("Archive ID") + ": " + selection.id.uuidString,
+            L10n.format("Current files: %d · Backup files: %d", selection.currentFileCount, selection.backupFileCount),
+            L10n.format("Total: %d files · %@", selection.fileCount,
+                ByteCountFormatter.string(fromByteCount: Int64(selection.totalBytes), countStyle: .file)),
+            "",
+            L10n.text("Only this archive's current save and backups in Documents/save are deleted. Original game files, other games and WebKit storage are not changed. This cannot be undone.")
+        ].joined(separator: "\n")
+    }
+
+    private func refresh() async {
+        guard !busy, !deletionFinished else { return }
+        busy = true
+        defer { busy = false }
+        if let warning = await loadState() { deletionError = false; error = warning }
+    }
+
+    /// Refresh metadata even after a partial deletion; never retain stale export rows.
+    private func loadState() async -> String? {
+        let id = summary.id
+        let state = await Task.detached(priority: .userInitiated) {
+            let store = SaveStore()
+            return (Result { try store.currentSummary(packageID: id) }, Result { try store.recoverableSummaryList(packageID: id) })
+        }.value
+        var warning: String?
+        do { current = try state.0.get() } catch { current = nil; warning = L10n.error(error) }
+        do {
+            let listing = try state.1.get()
+            snapshots = listing.summaries
+            if listing.invalidFileCount > 0 { warning = L10n.text("The save could not be verified. Existing saves were kept.") }
+        } catch { snapshots = []; warning = L10n.error(error) }
+        return warning
+    }
+
+    private func prepareDeletion() async {
+        guard !busy, !deletionFinished, let library else { return }
+        busy = true
+        defer { busy = false }
+        await Task.yield()
+        do {
+            pendingDeletion = try library.prepareArchivedSaveDeletion(packageID: summary.id)
+            confirmingDeletion = true
+        } catch {
+            let warning = await loadState()
+            deletionError = true
+            self.error = deletionFailureMessage(partialCount: nil, refreshFailed: warning != nil)
         }
-        .alert(L10n.text("Save error"), isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-            Button(L10n.text("OK"), role: .cancel) { error = nil }
-        } message: { Text(error ?? "") }
+    }
+
+    private func deleteArchive(_ selection: ArchivedSaveDeletion) async {
+        guard !busy, !deletionFinished, let library else { return }
+        busy = true
+        defer { busy = false; pendingDeletion = nil }
+        await Task.yield()
+        do {
+            try library.deleteArchivedSave(selection)
+            current = nil; snapshots = []; document = SaveJSONDocument(data: Data())
+            deletionFinished = true
+        } catch {
+            let warning = await loadState()
+            let partialCount: Int?
+            if case ArchivedSaveDeletionError.partial(let count) = error { partialCount = count }
+            else { partialCount = nil }
+            if partialCount != nil { document = SaveJSONDocument(data: Data()) }
+            deletionError = true
+            self.error = deletionFailureMessage(partialCount: partialCount, refreshFailed: warning != nil)
+        }
+    }
+
+    private func deletionFailureMessage(partialCount: Int?, refreshFailed: Bool) -> String {
+        let message: String
+        if let partialCount {
+            message = L10n.format("Deletion stopped after removing %d files. Some archive files or the folder may remain. Review the refreshed archive before trying again.", partialCount)
+        } else {
+            message = L10n.text("Deletion was not started. The archive may have changed or may still belong to an installed game. Review it and try again.")
+        }
+        return refreshFailed ? message + "\n\n" + L10n.text("Some remaining archive files could not be verified.") : message
     }
 
     private func exportRow(_ snapshot: SaveSnapshotSummary) -> some View {
@@ -476,7 +594,7 @@ import UniformTypeIdentifiers
     }
 
     private func export(_ snapshot: SaveSnapshotSummary) async {
-        guard !busy else { return }
+        guard !busy, !deletionFinished else { return }
         busy = true
         defer { busy = false }
         do {
@@ -485,7 +603,7 @@ import UniformTypeIdentifiers
             document = SaveJSONDocument(data: bytes)
             filename = "FlashNest-save-\(snapshot.id.uuidString).json"
             exporting = true
-        } catch { self.error = L10n.error(error) }
+        } catch { deletionError = false; self.error = L10n.error(error) }
     }
 }
 

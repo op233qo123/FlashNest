@@ -66,9 +66,12 @@ final class ExternalDocumentImportUITests: XCTestCase {
         XCTAssertTrue(confirm.isEnabled && confirm.isHittable)
         XCTAssertFalse(app.buttons["player-menu"].exists)
         confirm.tap()
-        XCTAssertTrue(app.staticTexts["save-import-success"].waitForExistence(timeout: 30))
-        app.buttons["OK"].firstMatch.tap()
-        app.buttons["Done"].firstMatch.tap()
+        let success = app.alerts["Save area"]
+        XCTAssertTrue(success.waitForExistence(timeout: 30))
+        XCTAssertTrue(success.staticTexts["Save imported. It will be applied when this game next opens."].exists,
+                      "Require actual successful replacement, not just any alert")
+        success.buttons["OK"].tap()
+        closeSaveAreaFromDetail(in: app)
         XCTAssertTrue(app.buttons["play-" + packageID].waitForExistence(timeout: 10))
 
         handoffDocument(button: "source-open-sol", kind: "raw SOL")
@@ -87,21 +90,79 @@ final class ExternalDocumentImportUITests: XCTestCase {
         let cancel = app.buttons["save-import-cancel"]
         XCTAssertTrue(cancel.isEnabled && cancel.isHittable); cancel.tap()
         XCTAssertFalse(confirm.exists)
-        app.buttons["Done"].firstMatch.tap()
+        closeSaveAreaFromDetail(in: app)
 
         handoffDocument(button: "source-open-invalid-json", kind: "ordinary JSON")
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20))
         tapPendingImport(in: app)
         chooseSaveTarget(packageID, in: app)
-        let rejected = app.staticTexts["save-import-error"].waitForExistence(timeout: 30)
+        let errorAlert = app.alerts["Save error"]
+        let rejected = errorAlert.waitForExistence(timeout: 30)
         captureSaveSurface("Ordinary JSON validation rejection", in: app)
         XCTAssertTrue(rejected, "Ordinary JSON must fail validation, not become a game or overwrite a save")
         XCTAssertFalse(confirm.exists)
-        app.buttons["OK"].firstMatch.tap()
-        app.buttons["Done"].firstMatch.tap()
+        XCTAssertTrue(errorAlert.staticTexts.allElementsBoundByIndex.contains {
+            !$0.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.label != "Save error"
+        }, "Validation failure must show a meaningful explanation")
+        errorAlert.buttons["OK"].tap()
+        closeSaveAreaFromDetail(in: app)
         XCTAssertTrue(app.buttons["play-" + packageID].waitForExistence(timeout: 10))
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "play-")).count, libraryCount)
         XCTAssertFalse(app.buttons["player-menu"].exists)
+        verifySyntheticArchiveDeletion(packageID, in: app)
+    }
+
+    private func verifySyntheticArchiveDeletion(_ packageID: String, in app: XCUIApplication) {
+        // Archive only the synthetic package created by this test through the
+        // same visible removal flow a user uses. No container writes or hooks.
+        let options = app.buttons["game-options-" + packageID]
+        XCTAssertTrue(options.isEnabled && options.isHittable); options.tap()
+        let remove = app.buttons["game-options-remove-game"]
+        XCTAssertTrue(remove.waitForExistence(timeout: 10)); XCTAssertTrue(remove.isHittable); remove.tap()
+        let keepSaves = app.buttons["Remove game, keep saves"]
+        XCTAssertTrue(keepSaves.waitForExistence(timeout: 10)); XCTAssertTrue(keepSaves.isHittable); keepSaves.tap()
+        XCTAssertTrue(LibraryNavigation.wait { !app.buttons["play-" + packageID].exists })
+        let saveArea = app.buttons["save-area"].firstMatch
+        XCTAssertTrue(LibraryNavigation.wait { saveArea.isEnabled && saveArea.isHittable }); saveArea.tap()
+        let archive = app.buttons["archive-" + packageID]
+        XCTAssertTrue(archive.waitForExistence(timeout: 20)); XCTAssertTrue(archive.isHittable); archive.tap()
+        let delete = app.buttons["archive-delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 20)); XCTAssertTrue(delete.isHittable); delete.tap()
+        let confirm = app.buttons["archive-delete-confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 20))
+        let dialog = app.sheets["Delete all files in this archive?"]
+        XCTAssertTrue(dialog.exists)
+        let details = dialog.staticTexts.allElementsBoundByIndex.map(\.label).joined(separator: "\n")
+        XCTAssertTrue(details.contains(packageID), "Destructive confirmation must identify the exact archived group")
+        XCTAssertTrue(details.contains("Current files: 1 · Backup files: 2"))
+        XCTAssertTrue(details.contains("Total: 3 files"))
+        XCTAssertTrue(details.contains("Original game files, other games and WebKit storage are not changed."))
+        captureSaveSurface("Archived synthetic save deletion confirmation", in: app)
+        let cancel = app.buttons["archive-delete-cancel"]
+        XCTAssertTrue(cancel.isHittable); cancel.tap()
+        XCTAssertTrue(delete.waitForExistence(timeout: 10) && delete.isEnabled)
+        XCTAssertTrue(app.buttons.matching(identifier: "Export").count > 0, "Cancel must leave saved data exportable")
+        delete.tap()
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10)); XCTAssertTrue(confirm.isEnabled && confirm.isHittable); confirm.tap()
+        XCTAssertTrue(app.staticTexts["archive-delete-success"].waitForExistence(timeout: 20))
+        XCTAssertFalse(delete.exists)
+        XCTAssertEqual(app.buttons.matching(identifier: "Export").count, 0)
+        let back = app.navigationBars["FlashNest External Fixture"].buttons["Save area"].firstMatch
+        XCTAssertTrue(back.isHittable); back.tap()
+        XCTAssertTrue(LibraryNavigation.wait { !archive.exists }, "Deleted group must disappear after root refresh")
+        app.buttons["Done"].firstMatch.tap()
+        XCTAssertFalse(app.buttons["play-" + packageID].exists)
+    }
+
+    private func closeSaveAreaFromDetail(in app: XCUIApplication) {
+        // Observed native back control displays Back, but AX labels it Save area.
+        // Scope it to this fixture's detail bar, never the Library toolbar.
+        let back = app.navigationBars["FlashNest External Fixture"].buttons["Save area"].firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 10))
+        XCTAssertTrue(back.isEnabled && back.isHittable); back.tap()
+        let done = app.buttons["Done"].firstMatch
+        XCTAssertTrue(done.waitForExistence(timeout: 10))
+        XCTAssertTrue(done.isEnabled && done.isHittable); done.tap()
     }
 
     private func captureSaveSurface(_ name: String, in app: XCUIApplication) {

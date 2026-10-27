@@ -331,3 +331,14 @@
 "Storage scope" = "Storage scope";
 "Only the selected saved object will be replaced. Other saved objects stay unchanged. A backup is created before import." = "Only the selected saved object will be replaced. Other saved objects stay unchanged. A backup is created before import.";
 "Import selected object" = "Import selected object";
+"Game removed · archived saves" = "Game removed · archived saves";
+"Archived save files deleted." = "Archived save files deleted.";
+"Delete archived save files" = "Delete archived save files";
+"Delete all files in this archive?" = "Delete all files in this archive?";
+"Archive ID" = "Archive ID";
+"Current files: %d · Backup files: %d" = "Current files: %d · Backup files: %d";
+"Total: %d files · %@" = "Total: %d files · %@";
+"Only this archive's current save and backups in Documents/save are deleted. Original game files, other games and WebKit storage are not changed. This cannot be undone." = "Only this archive's current save and backups in Documents/save are deleted. Original game files, other games and WebKit storage are not changed. This cannot be undone.";
+"Deletion stopped after removing %d files. Some archive files or the folder may remain. Review the refreshed archive before trying again." = "Deletion stopped after removing %d files. Some archive files or the folder may remain. Review the refreshed archive before trying again.";
+"Deletion was not started. The archive may have changed or may still belong to an installed game. Review it and try again." = "Deletion was not started. The archive may have changed or may still belong to an installed game. Review it and try again.";
+"Some remaining archive files could not be verified." = "Some remaining archive files could not be verified.";

@@ -68,6 +68,34 @@ import SwiftUI
 
     func endPlayback() { activePackageID = nil }
 
+    /// Synchronous MainActor authority: no import/play/removal can interleave
+    /// between the live Library checks and SaveStore's locked transaction.
+    func prepareArchivedSaveDeletion(packageID: UUID, store: SaveStore = SaveStore()) throws -> ArchivedSaveDeletion {
+        try requireArchivedSaveDeletion(packageID)
+        return try store.prepareArchivedDeletion(packageID: packageID, installedPackageIDs: Set(packages.map(\.id)))
+    }
+
+    func deleteArchivedSave(_ selection: ArchivedSaveDeletion, store: SaveStore = SaveStore()) throws {
+        try requireArchivedSaveDeletion(selection.id)
+        try store.deleteArchived(selection, installedPackageIDs: Set(packages.map(\.id)))
+    }
+
+    private func requireArchivedSaveDeletion(_ id: UUID) throws {
+        guard !busy, deletingPackageID == nil, activePackageID == nil,
+              !packages.contains(where: { $0.id == id }),
+              !unfinishedRemovals.contains(where: { $0.id == id }) else {
+            throw SaveStoreError.invalid("archived save deletion is unavailable while a game is installed or active")
+        }
+        try files.prepareRoot()
+        // An unreadable manifest is not evidence that a game was removed.
+        // Checking names also detects dangling links and unfinished removals.
+        let names = try FileManager.default.contentsOfDirectory(atPath: root.path)
+        guard !names.contains(where: {
+            UUID(uuidString: $0) == id ||
+            ($0.hasPrefix(LibraryPackageFiles.removalPrefix) && UUID(uuidString: String($0.dropFirst(LibraryPackageFiles.removalPrefix.count))) == id)
+        }) else { throw SaveStoreError.invalid("the selected game still has an installed or unfinished copy") }
+    }
+
     /// Removes only the verified app-owned copy. Import-source URLs and native
     /// save roots are intentionally absent from this API and its file helper.
     @discardableResult func remove(_ package: GamePackage) async -> Bool {

@@ -179,9 +179,9 @@ struct LibraryView: View {
         case .diagnostics:
             NavigationStack { LibraryImportDiagnosticsView(nativeImporter: nativeImporter)
                 .toolbar { Button(L10n.text("Done")) { sheet = nil } } }
-        case .saves: SaveAreaView(packages: library.packages)
+        case .saves: SaveAreaView(packages: library.packages, library: library)
         case .externalSave(let request):
-            SaveAreaView(packages: library.packages, externalImport: request)
+            SaveAreaView(packages: library.packages, externalImport: request, library: library)
         case .inbox:
             LocalImportInboxView(library: library) { package in pendingAction = .entry(package) }
         case .gameOptions(let package):

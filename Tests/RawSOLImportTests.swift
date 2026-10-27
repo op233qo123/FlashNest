@@ -16,11 +16,28 @@ enum RawSOLTestFixtures {
     static func string(_ value: String) -> [UInt8] { u29(UInt32(value.utf8.count * 2 + 1)) + Array(value.utf8) }
     static func sol(name: String = "FlashNestFixture", encoding: UInt32 = 3, body: [UInt8]? = nil, progress: UInt8 = 7) -> Data {
         let nameBytes = Array(name.utf8)
-        let value = body ?? (encoding == 3 ? string("progress") + [4, progress, 0] :
-            [0, 8] + Array("progress".utf8) + [0] + bigEndian(Double(progress).bitPattern, width: 8) + [0])
-        let tail: [UInt8] = [84,67,83,79,0,4,0,0,0,0,UInt8(nameBytes.count >> 8),UInt8(nameBytes.count & 255)] + nameBytes +
-            [0,0,0,UInt8(encoding)] + value
-        return Data([0,191] + bigEndian(UInt64(tail.count), width: 4) + tail)
+        var value: [UInt8]
+        if let body = body {
+            value = body
+        } else if encoding == 3 {
+            value = string("progress")
+            value.append(contentsOf: [4, progress, 0])
+        } else {
+            value = [0, 8]
+            value.append(contentsOf: "progress".utf8)
+            value.append(0)
+            value.append(contentsOf: bigEndian(Double(progress).bitPattern, width: 8))
+            value.append(0)
+        }
+        var tail: [UInt8] = [84, 67, 83, 79, 0, 4, 0, 0, 0, 0]
+        tail.append(contentsOf: bigEndian(UInt64(nameBytes.count), width: 2))
+        tail.append(contentsOf: nameBytes)
+        tail.append(contentsOf: [0, 0, 0, UInt8(encoding)])
+        tail.append(contentsOf: value)
+        var result: [UInt8] = [0, 191]
+        result.append(contentsOf: bigEndian(UInt64(tail.count), width: 4))
+        result.append(contentsOf: tail)
+        return Data(result)
     }
     static func capture(progress: UInt8 = 42, extra: Bool = false) -> SaveCapture {
         var entries = [SaveEntry(scope: "origin", key: "FlashNestFixture", value: sol(progress: progress).base64EncodedString())]
