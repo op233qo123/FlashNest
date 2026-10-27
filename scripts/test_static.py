@@ -2,6 +2,18 @@
 import hashlib, json, pathlib, struct, unittest, zipfile
 ROOT=pathlib.Path(__file__).resolve().parents[1]; WEB=ROOT/'App/Resources/Web'
 class StaticTests(unittest.TestCase):
+ def test_declared_versions_match_native_test_and_debug_bundle(self):
+  import plistlib, re
+  project=(ROOT/'project.yml').read_text()
+  info=plistlib.loads((ROOT/'App/Info-Debug.plist').read_bytes())
+  native=(ROOT/'Tests/LocalizationTests.swift').read_text()
+  for key, setting in [('CFBundleShortVersionString','MARKETING_VERSION'),('CFBundleVersion','CURRENT_PROJECT_VERSION')]:
+   value=info[key]
+   self.assertIn(key+": '"+value+"'",project)
+   self.assertIn(setting+": '"+value+"'",project)
+   pattern=re.escape('forInfoDictionaryKey: "'+key+'") as? String, "')+'([^"\n]+)'
+   self.assertEqual(re.search(pattern,native).group(1),value)
+
  def test_loopback_listener_port_is_specified_once(self):
   s=(ROOT/'App/Server/LoopbackServer.swift').read_text()
   self.assertIn('requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: endpointPort)',s)
