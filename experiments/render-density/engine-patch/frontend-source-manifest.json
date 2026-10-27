@@ -1,0 +1,62 @@
+{
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "sourceVerification": "Original Git blobs independently checked against the pinned official repository",
+  "files": [
+    {
+      "path": "core/src/player.rs",
+      "originalGitBlob": "675ef3a78e7a92652e8076b99921771d91818094",
+      "originalSHA256": "8c9902b9d7eb469c80e2a2b9c0e071ddd433de9110a5e8c5e97dbe0515384657",
+      "modifiedSHA256": "55b30e11b3afe0f27f2c492eedabc95baed37d10368d9b924733765916ca626b",
+      "bytes": 127109
+    },
+    {
+      "path": "render/src/backend.rs",
+      "originalGitBlob": "0200a4677b6dd95f0a6a38fb4143457ca2c02ad9",
+      "originalSHA256": "ba4b31efb6201683190b1b3eb50676fcdde4eae7b8c257f1684c957823ca20fc",
+      "modifiedSHA256": "7fa4fe412b019aa8c0e7d0e892a83239e4246135cf2343f3af085dc1d77b5f33",
+      "bytes": 18220
+    },
+    {
+      "path": "render/webgl/src/lib.rs",
+      "originalGitBlob": "925bf8d648896293778a16a6e5a4850d906b3c0c",
+      "originalSHA256": "ea860a0692fb6eeaf1fdaf77db32071831b2417efff5b2d66b72a5f0a057a9ab",
+      "modifiedSHA256": "2979d295bc76550d6c13d706cd7e8bb0794faa3aecf9ec6704a87187ded037a9",
+      "bytes": 67038
+    },
+    {
+      "path": "web/packages/core/src/internal/builder.ts",
+      "originalGitBlob": "927f60667a965b0ca579c97cb203c5da2a80dc25",
+      "originalSHA256": "186ece6a5c89bcf956c8e1c22c2c378da5d3d7b242173eda3b51c415e92e6ee1",
+      "modifiedSHA256": "e2a5fec80bb51399d933b431c4156172fef837135c515355f9e1612d62f20b56",
+      "bytes": 6615
+    },
+    {
+      "path": "web/packages/core/src/public/config/load-options.ts",
+      "originalGitBlob": "617d53c17a158c229a2f11c5ea009373ace8f9aa",
+      "originalSHA256": "52f05646eb43caa3340d382cf11610e2127923cd1651b03b4c9ed707e0d34de3",
+      "modifiedSHA256": "0e7c8f60193368263eb8830c42fd2fdff117dbe802f5c4cffba259988eeeb38f",
+      "bytes": 23048
+    },
+    {
+      "path": "web/packages/core/test/render-scale.ts",
+      "originalGitBlob": null,
+      "originalSHA256": null,
+      "modifiedSHA256": "bc8cc93c4fb7c5ad0b5b00853cfed2a2f1df20e311c49f9467c74dfe51d0ad81",
+      "bytes": 1833
+    },
+    {
+      "path": "web/src/builder.rs",
+      "originalGitBlob": "b1f2dc55a8658454124d8427fed2a1bddfaa4060",
+      "originalSHA256": "e0a49db6d32e4e209d8c299b1506d7bc881943b07e70b506ab82dfbd9e63da0d",
+      "modifiedSHA256": "1de5e6b9c21b2def41e6c692e0f6993557602f6a94fd9e9840f0c61d94067b65",
+      "bytes": 30266
+    },
+    {
+      "path": "web/src/lib.rs",
+      "originalGitBlob": "87d6f0147a6829b92a7a21505d1c7f83c5826e23",
+      "originalSHA256": "96a591743e2cac645c92acac8e2d93d70de4c7886fed04c93e80e51b1584049d",
+      "modifiedSHA256": "b28a878ccc1909e5e55b8ee134323421a978163de330f866d289fbab5948dd8f",
+      "bytes": 56335
+    }
+  ]
+}

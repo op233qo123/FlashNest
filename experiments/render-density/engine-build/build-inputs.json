@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "baselineArchive": "vendor/ruffle-frame-order-40491098384.zip",
+  "baselineArchiveSHA256": "57d7eaed19edd006e2a33a9bfa816f22da8b1003becf3719dfca0c97cb38c4af",
+  "baselineProvenanceSHA256": "73829617008e26ffe48bfc29e689c0a719641f6c9e93214b29f8ee3c6bfd22d5",
+  "patches": [
+    {
+      "path": "experiments/frame-order/engine-patch/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f"
+    },
+    {
+      "path": "experiments/render-density/engine-patch/frontend-webgl-density.patch",
+      "sha256": "ecf06b18cb83dbd0a415a1c0e04f0472004643b6f1350aa66f65c7006a9146e6"
+    },
+    {
+      "path": "experiments/render-density/engine-patch/wgpu-density.patch",
+      "sha256": "dee72fec368345d1d91bbad7e2a16b19328ce48f3e97f8f35217672639b91e09"
+    }
+  ],
+  "expectedOriginalCoreJSTests": 59,
+  "expectedNewConfigTests": 4,
+  "newConfigTestTitlePrefix": "FlashNest onscreen rendering density ",
+  "newConfigTestPath": "web/packages/core/test/render-scale.ts"
+}

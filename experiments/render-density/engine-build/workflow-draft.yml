@@ -1,0 +1,208 @@
+name: Experiment render-density engine (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-render-density-engine
+  cancel-in-progress: false
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+      CARGO_BUILD_JOBS: 2
+      CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+      PYTHONDONTWRITEBYTECODE: '1'
+      DENSITY_BASELINE_DIR: ${{ github.workspace }}/render-density-guard-baseline
+      DENSITY_CANDIDATE_DIR: ${{ github.workspace }}/render-density-engine-candidate
+      RUFFLE_SOURCE_DIR: ${{ github.workspace }}/.render-density-ruffle
+      DENSITY_EVIDENCE_DIR: ${{ github.workspace }}/render-density-engine-evidence
+    steps:
+      - name: Checkout experiment source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Checkout exact official Ruffle source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ruffle-rs/ruffle
+          ref: 89a7049965f3090e706265670df309a5128233ac
+          path: .render-density-ruffle
+          persist-credentials: false
+      - name: Install explicit Rust and checksum-pinned Java compiler runtime
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          mkdir -p "$DENSITY_EVIDENCE_DIR"
+          rustup toolchain install 1.99.1 --profile minimal --component rust-src --target wasm32-unknown-unknown
+          curl --fail --location --retry 2 --max-time 180 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.13_9.tar.gz' -o "$RUNNER_TEMP/frame-order-jre.tar.gz"
+          echo "a535a1df9c6284d9618872984e026ae0352d1f7e9e0605425c0e6114f47351dd  $RUNNER_TEMP/frame-order-jre.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/frame-order-jre"
+          tar -xzf "$RUNNER_TEMP/frame-order-jre.tar.gz" -C "$RUNNER_TEMP/frame-order-jre" --strip-components=1
+          echo "$RUNNER_TEMP/frame-order-jre/bin" >> "$GITHUB_PATH"
+          rustc -vV | tee "$DENSITY_EVIDENCE_DIR/rustc.txt"
+          cargo --version | tee "$DENSITY_EVIDENCE_DIR/cargo.txt"
+          "$RUNNER_TEMP/frame-order-jre/bin/java" -version 2>&1 | tee "$DENSITY_EVIDENCE_DIR/java.txt"
+      - name: Verify and stage original-only integration tests
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          test "$(git -C "$RUFFLE_SOURCE_DIR" rev-parse HEAD)" = 89a7049965f3090e706265670df309a5128233ac
+          test -z "$(git -C "$RUFFLE_SOURCE_DIR" status --porcelain)"
+          python3 experiments/frame-order/validate_fixtures.py
+          python3 experiments/render-density/scripts/test_fixture.py
+          python3 experiments/frame-order/engine-patch/check_patch_bundle.py
+          python3 experiments/frame-order/engine-patch/stage_original_tests.py "$RUFFLE_SOURCE_DIR"
+          (cd "$RUFFLE_SOURCE_DIR" && cargo metadata --locked --no-deps --format-version 1) > "$DENSITY_EVIDENCE_DIR/cargo-metadata.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          metadata = json.loads((Path(os.environ['DENSITY_EVIDENCE_DIR']) / 'cargo-metadata.json').read_text())
+          package = next(p for p in metadata['packages'] if p['name'] == 'tests')
+          target = next(t for t in package['targets'] if t['name'] == 'flashnest_frame_order')
+          assert target['kind'] == ['test'] and target['test'], target
+          print('Verified auto-discovered original fixture integration target')
+          PY
+      - name: Preserve unchanged browser control and apply existing queued-goto guard
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          python3 experiments/render-density/engine-build/candidate_provenance.py baseline "$RUFFLE_SOURCE_DIR" "$DENSITY_BASELINE_DIR"
+          patch="$GITHUB_WORKSPACE/experiments/frame-order/engine-patch/queued-goto-guard.patch"
+          echo "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f  $patch" | sha256sum --check
+          git -C "$RUFFLE_SOURCE_DIR" apply --check "$patch"
+          git -C "$RUFFLE_SOURCE_DIR" apply "$patch"
+          python3 experiments/render-density/engine-build/candidate_provenance.py verify-guard "$RUFFLE_SOURCE_DIR" "$DENSITY_EVIDENCE_DIR/baseline-source.json"
+      - name: Compile guard-only baseline headless test targets
+        timeout-minutes: 40
+        run: |
+          set -euo pipefail
+          cd "$RUFFLE_SOURCE_DIR"
+          cargo test --locked -p tests --test tests --test flashnest_frame_order --profile ci --no-run 2>&1 | tee "$DENSITY_EVIDENCE_DIR/baseline-compile.log"
+      - name: Verify guard-only original traces and unchanged upstream goldens
+        timeout-minutes: 12
+        env:
+          FRAME_ORDER_ENGINE_PHASE: patched
+          FRAME_ORDER_TRACE_DIR: ${{ github.workspace }}/render-density-engine-evidence/baseline/original
+        run: |
+          set -euo pipefail
+          (cd "$RUFFLE_SOURCE_DIR" && cargo test --locked -p tests --test flashnest_frame_order --profile ci -- --nocapture --test-threads=1) 2>&1 | tee "$DENSITY_EVIDENCE_DIR/baseline-original.log"
+          grep -Eq 'test result: ok\. 2 passed; 0 failed; 0 ignored;' "$DENSITY_EVIDENCE_DIR/baseline-original.log"
+          python3 experiments/frame-order/engine-build/run_adjacent_tests.py "$RUFFLE_SOURCE_DIR" "$DENSITY_EVIDENCE_DIR" baseline
+      - name: Apply only reviewed additive render-density patches
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          for filename in frontend-webgl-density.patch wgpu-density.patch; do
+            patch="$GITHUB_WORKSPACE/experiments/render-density/engine-patch/$filename"
+            git -C "$RUFFLE_SOURCE_DIR" apply --check "$patch"
+            git -C "$RUFFLE_SOURCE_DIR" apply "$patch"
+          done
+          git -C "$RUFFLE_SOURCE_DIR" diff --check
+          python3 experiments/render-density/engine-build/candidate_provenance.py verify-density "$RUFFLE_SOURCE_DIR" "$DENSITY_EVIDENCE_DIR/patched-source.json"
+          git -C "$RUFFLE_SOURCE_DIR" diff HEAD > "$DENSITY_EVIDENCE_DIR/applied-source.diff"
+      - name: Compile patched headless test targets
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          cd "$RUFFLE_SOURCE_DIR"
+          cargo test --locked -p tests --test tests --test flashnest_frame_order --profile ci --no-run 2>&1 | tee "$DENSITY_EVIDENCE_DIR/patched-compile.log"
+      - name: Verify density preserves original guard traces and all upstream goldens
+        timeout-minutes: 12
+        env:
+          FRAME_ORDER_ENGINE_PHASE: patched
+          FRAME_ORDER_TRACE_DIR: ${{ github.workspace }}/render-density-engine-evidence/patched/original
+        run: |
+          set -euo pipefail
+          (cd "$RUFFLE_SOURCE_DIR" && cargo test --locked -p tests --test flashnest_frame_order --profile ci -- --nocapture --test-threads=1) 2>&1 | tee "$DENSITY_EVIDENCE_DIR/patched-original.log"
+          grep -Eq 'test result: ok\. 2 passed; 0 failed; 0 ignored;' "$DENSITY_EVIDENCE_DIR/patched-original.log"
+          python3 experiments/frame-order/engine-build/run_adjacent_tests.py "$RUFFLE_SOURCE_DIR" "$DENSITY_EVIDENCE_DIR" patched
+      - name: Install pinned Node for candidate build
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Validate browser harness helpers and installed browser pair
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          node experiments/render-density/browser-tests/test_helpers.mjs
+          node experiments/render-density/browser-tests/test_page.mjs
+          node --check experiments/render-density/browser-tests/run.mjs
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver || { test -n "${CHROMEWEBDRIVER:-}" && test -x "$CHROMEWEBDRIVER/chromedriver" && printf "%s" "$CHROMEWEBDRIVER/chromedriver"; })
+          "$chrome" --version | tee "$DENSITY_EVIDENCE_DIR/chrome-version.txt"
+          "$driver" --version | tee "$DENSITY_EVIDENCE_DIR/chromedriver-version.txt"
+      - name: Install pinned web build tools
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y clang-18 libclang-18-dev libssl-dev pkg-config
+          cargo install --locked wasm-bindgen-cli --version 0.2.127
+          curl --fail --location --retry 2 --max-time 180 https://github.com/WebAssembly/binaryen/releases/download/version_129/binaryen-version_129-x86_64-linux.tar.gz -o "$RUNNER_TEMP/frame-order-binaryen.tar.gz"
+          echo "50b9fa62b9abea752da92ec57e0c555fee578760cd237c40107957715d2976ba  $RUNNER_TEMP/frame-order-binaryen.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/frame-order-binaryen"
+          tar -xzf "$RUNNER_TEMP/frame-order-binaryen.tar.gz" -C "$RUNNER_TEMP/frame-order-binaryen" --strip-components=1
+          echo "$RUNNER_TEMP/frame-order-binaryen/bin" >> "$GITHUB_PATH"
+          dpkg-query -W clang-18 libclang-18-dev libssl-dev pkg-config > "$DENSITY_EVIDENCE_DIR/web-system-packages.txt"
+      - name: Build isolated dual-WASM candidate (not promoted)
+        id: web-build
+        timeout-minutes: 60
+        run: |
+          set -euo pipefail
+          bash experiments/render-density/engine-build/build_web_candidate.sh "$RUFFLE_SOURCE_DIR" "$DENSITY_CANDIDATE_DIR"
+      - name: Browser matrix - WebGL
+        timeout-minutes: 65
+        run: |
+          set -euo pipefail
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver || { test -n "${CHROMEWEBDRIVER:-}" && test -x "$CHROMEWEBDRIVER/chromedriver" && printf "%s" "$CHROMEWEBDRIVER/chromedriver"; })
+          "$chrome" --version | tee "$DENSITY_EVIDENCE_DIR/chrome-version.txt"
+          "$driver" --version | tee "$DENSITY_EVIDENCE_DIR/chromedriver-version.txt"
+          node experiments/render-density/browser-tests/run.mjs \
+            --baseline "$DENSITY_BASELINE_DIR/runtime" \
+            --candidate "$DENSITY_CANDIDATE_DIR/runtime" \
+            --baseline-manifest "$DENSITY_BASELINE_DIR/runtime.browser-manifest.json" \
+            --candidate-manifest "$DENSITY_CANDIDATE_DIR/runtime.browser-manifest.json" \
+            --webdriverio "$RUFFLE_SOURCE_DIR/web/node_modules/webdriverio" \
+            --chrome "$chrome" --driver "$driver" --backend webgl --output "$DENSITY_EVIDENCE_DIR/browser-webgl"
+      - name: Browser matrix - WGPU WebGL
+        if: ${{ !cancelled() && steps.web-build.outcome == 'success' }}
+        timeout-minutes: 65
+        run: |
+          set -euo pipefail
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver || { test -n "${CHROMEWEBDRIVER:-}" && test -x "$CHROMEWEBDRIVER/chromedriver" && printf "%s" "$CHROMEWEBDRIVER/chromedriver"; })
+          node experiments/render-density/browser-tests/run.mjs \
+            --baseline "$DENSITY_BASELINE_DIR/runtime" \
+            --candidate "$DENSITY_CANDIDATE_DIR/runtime" \
+            --baseline-manifest "$DENSITY_BASELINE_DIR/runtime.browser-manifest.json" \
+            --candidate-manifest "$DENSITY_CANDIDATE_DIR/runtime.browser-manifest.json" \
+            --webdriverio "$RUFFLE_SOURCE_DIR/web/node_modules/webdriverio" \
+            --chrome "$chrome" --driver "$driver" --backend wgpu-webgl --output "$DENSITY_EVIDENCE_DIR/browser-wgpu-webgl"
+      - name: Retain source and test provenance even on failure
+        if: always()
+        run: |
+          mkdir -p "$DENSITY_EVIDENCE_DIR/experiment"
+          cp -R experiments/render-density "$DENSITY_EVIDENCE_DIR/experiment/render-density"
+          mkdir -p "$DENSITY_EVIDENCE_DIR/experiment/frame-order"
+          cp -R experiments/frame-order/engine-build "$DENSITY_EVIDENCE_DIR/experiment/frame-order/"
+          cp -R experiments/frame-order/engine-patch "$DENSITY_EVIDENCE_DIR/experiment/frame-order/"
+          cp -R experiments/frame-order/fixtures "$DENSITY_EVIDENCE_DIR/experiment/frame-order/"
+          cp experiments/frame-order/make_fixtures.py experiments/frame-order/validate_fixtures.py "$DENSITY_EVIDENCE_DIR/experiment/frame-order/"
+          cp experiments/frame-order/fixtures/manifest.json "$DENSITY_EVIDENCE_DIR/experiment/original-fixture-manifest.json"
+          printf '%s\n' "repository=$GITHUB_REPOSITORY" "experimentCommit=$GITHUB_SHA" "runID=$GITHUB_RUN_ID" "runAttempt=$GITHUB_RUN_ATTEMPT" "imageOS=${ImageOS:-unknown}" "imageVersion=${ImageVersion:-unknown}" > "$DENSITY_EVIDENCE_DIR/run.txt"
+          git -C "$RUFFLE_SOURCE_DIR" status --short > "$DENSITY_EVIDENCE_DIR/upstream-status.txt" || true
+      - name: Upload experiment evidence and unpromoted density candidate
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-experimental-render-density-engine
+          path: |
+            render-density-engine-evidence
+            render-density-engine-candidate
+            render-density-guard-baseline
+          retention-days: 7
+          if-no-files-found: warn

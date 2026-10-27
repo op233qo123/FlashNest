@@ -1,0 +1,18 @@
+// Lifecycle contracts only; deliberately not a renderer/SWF execution claim.
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const html=fs.readFileSync(new URL('./page.html',import.meta.url),'utf8');const script=html.match(/<script>([\s\S]*)<\/script>/)[1];
+const instances=[];const host={style:{},append(){}};const button={};
+class Canvas{getContext(){return null}}
+const context={console:{log(){}},URLSearchParams,location:{search:'?runtime=candidate'},HTMLCanvasElement:Canvas,WeakMap,document:{getElementById:id=>id==='host'?host:button,createElement:()=>({}),head:{append(){}}}};context.window=context;
+vm.createContext(context);vm.runInContext(script,context);
+context.RufflePlayer.newest=()=>({createPlayer:()=>{
+ const events={};let resolve;const api={load(){return new Promise(r=>{resolve=r})},resume(){this.resumed=true}};
+ const p={ruffle:()=>api,addEventListener:(n,fn)=>events[n]=fn,remove(){this.removed=true}};
+ instances.push({p,api,events,resolve:()=>resolve()});return p;
+}});
+const first=context.startCase('/fixtures/a.swf',1,443,287,'webgl','low');const a=instances[0];assert.equal(a.api.traceObserver,undefined);a.resolve();await first;
+assert.equal(typeof a.api.traceObserver,'function');a.api.traceObserver('DENSITY|READY|320|240');button.onclick();assert(a.api.resumed);
+const previous=context.evidence;const second=context.startCase('/fixtures/b.swf',.5,443,287,'webgl','low');const b=instances[1];assert(a.p.removed);
+a.events.loadeddata();a.api.traceObserver('late old event');assert.equal(context.evidence.loaded,false);assert.equal(context.evidence.traces.length,0);assert(previous.traces.includes('late old event'));
+b.resolve();await second;b.events.loadeddata();assert(context.evidence.loaded&&context.evidence.observerInstalled);
+console.log('PASS post-instance observer, resume API, old-case callback isolation');

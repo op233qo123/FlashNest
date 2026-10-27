@@ -1,0 +1,49 @@
+<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:#111}#host{width:443px;height:287px}ruffle-player{display:block;width:100%;height:100%}#play{position:fixed;right:0;bottom:0;z-index:9}</style><div id="host"></div><button id="play">Play</button><script>
+'use strict';
+window.evidence={traces:[],errors:[],overflow:false,loaded:false};
+const originalLog=console.log;
+console.log=function(...args){
+ const text=String(args[0]);const match=text.match(/New Ruffle instance created .*\| Used renderer: ([^)]+)\)/);
+ if(match)window.evidence.actualRenderer=match[1];
+ return originalLog.apply(console,args);
+};
+window.contexts=new WeakMap();
+const getContext=HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext=function(type,...args){
+ const context=getContext.call(this,type,...args);
+ if(context) window.contexts.set(this,{type,context});
+ return context;
+};
+window.RufflePlayer={config:{autoplay:'off',unmuteOverlay:'hidden',warnOnUnsupportedContent:false}};
+const runtime=new URLSearchParams(location.search).get('runtime');
+if(!['baseline','candidate'].includes(runtime)) throw Error('Unknown runtime');
+const script=document.createElement('script'); script.src='/'+runtime+'/ruffle.js';document.head.append(script);
+script.onload=()=>{window.runtimeReady=true};script.onerror=()=>{window.evidence.errors.push('loader failed')};
+window.startCase=async function(fixture,scale,width,height,renderer,quality){
+ if(window.player)window.player.remove();
+ window.evidence={traces:[],errors:[],overflow:false,loaded:false};
+ const host=document.getElementById('host');host.style.width=width+'px';host.style.height=height+'px';
+ const p=window.RufflePlayer.newest().createPlayer();window.player=p;host.append(p);
+ const api=p.ruffle(),e=window.evidence;
+ const observe=(message)=>{
+  const text=String(message);if(e.traces.length>=512||text.length>2048){e.overflow=true;return}e.traces.push(text);
+ };
+ p.addEventListener('loadeddata',()=>{e.loaded=true},{once:true});
+ document.getElementById('play').onclick=()=>api.resume();
+ // Diagnostic-only explicit backend selection; production shell is unchanged.
+ try {
+  await api.load({url:fixture,renderScale:scale,preferredRenderer:renderer,quality:quality||'low',autoplay:'off',unmuteOverlay:'hidden',allowScriptAccess:false});
+  // The pinned API has no pre-instance trace-observer cache. load resolves
+  // after instance creation but before trusted resume / frame execution.
+  api.traceObserver=observe;e.observerInstalled=true;
+ } catch {e.errors.push('load rejected')}
+
+};
+window.measure=function(){
+ const c=window.player?.shadowRoot?.querySelector('canvas');if(!c)return null;
+ const r=c.getBoundingClientRect(),entry=window.contexts.get(c);
+ const gl=entry&&/^webgl/.test(entry.type)?[entry.context.drawingBufferWidth,entry.context.drawingBufferHeight]:null;
+ return {width:c.width,height:c.height,css:[r.x,r.y,r.width,r.height],client:[c.clientWidth,c.clientHeight],dpr:devicePixelRatio,
+  backend:entry?.type||null,actualRenderer:window.evidence.actualRenderer||null,gl,attributes:Object.fromEntries([...c.attributes].filter(a=>a.name.startsWith('data-flashnest-')).map(a=>[a.name,a.value]))};
+};
+</script>
