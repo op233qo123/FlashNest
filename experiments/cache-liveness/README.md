@@ -1,0 +1,7 @@
+# Cache callback liveness probe (not a production fix)
+
+The `cache-warm-import` CI-only scope overlays a temporary script-free, off-window WKWebView using the same package data store. It loads only `about:blank` with JavaScript disabled and CSP `default-src 'none'`, waits for public navigation completion, retains that view during the unchanged three-type cache removal, then releases it. There is no Ruffle, save bridge, movie execution, input overlay, localStorage/IndexedDB removal, or save capture in the lease.
+
+The lease bootstrap and cache removal share the original **15-second overall deadline**; bootstrap is not an extra allowance. A navigation/timeout failure retains the existing game-copy deletion gate. The source patch rejects any production Session other than the reviewed SHA. Only this explicit experiment scope copies the helper into App; ordinary builds remain unchanged.
+
+Control evidence: run40532597223's actual OS import route reached valid JSON confirmation, raw SOL cancellation and invalid-JSON rejection, then cache removal logged supportedMask7 and a deadline at16055ms with no completion. Isolated native fresh/stopped-profile cache removals completed372ms/4ms. This contrast suggests a lifecycle variable worth testing; it does not identify WebKit's cause. Both outcomes, exact test counts, synthetic UI route and fixed-code logs must be retained. A passing probe alone is not proof of general correctness or permission to weaken save/deletion protection.

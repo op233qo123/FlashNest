@@ -10,7 +10,7 @@ MAX_BYTES = 256 * 1024
 
 def collect(device_id, destination):
     command = ['xcrun', 'simctl', 'spawn', device_id, 'log', 'show', '--last', '20m',
-               '--style', 'compact', '--predicate', 'eventMessage CONTAINS "SAVE-PRESERVE-" OR eventMessage CONTAINS "CACHE-CLEANUP-"']
+               '--style', 'compact', '--predicate', 'eventMessage BEGINSWITH "SAVE-PRESERVE-" OR eventMessage BEGINSWITH "CACHE-CLEANUP-"']
     # File-backed output avoids an unbounded in-memory subprocess buffer. Only a
     # bounded prefix is retained as evidence; temporary output is always removed.
     status = 'completed'

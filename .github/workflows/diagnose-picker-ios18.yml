@@ -16,6 +16,7 @@ on:
           - external-save-ui
           - preservation-import
           - cache-import
+          - cache-warm-import
         default: all
 permissions:
   contents: read
@@ -39,6 +40,15 @@ jobs:
           python3 scripts/test_localization.py
           python3 scripts/test_preservation_diagnostics.py
           python3 scripts/test_licenses.py
+          if [ "$TEST_SCOPE" = "cache-warm-import" ]; then
+            mkdir -p picker-evidence/cache-warm-source
+            cp App/Player/PlayerSession.swift picker-evidence/cache-warm-source/PlayerSession.original.swift
+            python3 experiments/cache-liveness/test_apply_probe.py
+            python3 experiments/cache-liveness/apply_probe.py . | tee picker-evidence/cache-warm-source/overlay.log
+            git diff -- App/Player/PlayerSession.swift > picker-evidence/cache-warm-source/PlayerSession.diff
+            cp App/Player/PlayerSession.swift App/Player/CacheCleanupWarmLease.swift picker-evidence/cache-warm-source/
+            shasum -a 256 picker-evidence/cache-warm-source/*.swift > picker-evidence/cache-warm-source/SHA256SUMS
+          fi
           curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
           echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
           unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
@@ -72,7 +82,7 @@ jobs:
           native_selection=(-only-testing:FlashNestTests/InputFocusRuntimeTests -only-testing:FlashNestTests/SaveManagementEntryPolicyTests -only-testing:FlashNestTests/SharedObjectPersistenceTests -only-testing:FlashNestTests/LastSessionDiagnosticsTests)
           if [ "$TEST_SCOPE" = "external-import" ]; then native_selection=(-only-testing:FlashNestTests/ArchivedSaveDeletionTests -only-testing:FlashNestTests/SaveImportReaderTests -only-testing:FlashNestTests/RawSOLImportTests -only-testing:FlashNestTests/RawSOLWebKitTests -only-testing:FlashNestTests/ExternalImportInboxTests -only-testing:FlashNestTests/ExternalImportCopyTests -only-testing:FlashNestTests/ImportFlowTests -only-testing:FlashNestTests/PackageImporterTests); fi
           if [ "$TEST_SCOPE" = "preservation-import" ]; then native_selection=(-only-testing:FlashNestTests/LegacySavePreservationDiagnosticsTests -only-testing:FlashNestTests/LegacySavePreservationWebKitTests -only-testing:FlashNestTests/LegacySaveDiagnosticLocalizationTests); fi
-          if [ "$TEST_SCOPE" = "cache-import" ]; then native_selection=(-only-testing:FlashNestTests/CacheCleanupTests -only-testing:FlashNestTests/CacheCleanupPresentationTests); fi
+          if [ "$TEST_SCOPE" = "cache-import" ] || [ "$TEST_SCOPE" = "cache-warm-import" ]; then native_selection=(-only-testing:FlashNestTests/CacheCleanupTests -only-testing:FlashNestTests/CacheCleanupPresentationTests); fi
           xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath SaveInputTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 "${native_selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee save-input-test.log
       - name: Tap the real Files Open and Cancel controls
         # Collect independent UI evidence even if a native diagnostic test fails.
@@ -87,14 +97,14 @@ jobs:
           if [ "$TEST_SCOPE" = "home-import" ]; then selection=(-only-testing:FlashNestUITests/FolderPickerUITests -only-testing:FlashNestUITests/LibraryHomeUITests); fi
           if [ "$TEST_SCOPE" = "home" ]; then selection=(-only-testing:FlashNestUITests/LibraryHomeUITests); fi
           if [ "$TEST_SCOPE" = "fullscreen" ]; then selection=(-only-testing:FlashNestUITests/FullscreenPlayerUITests); fi
-          if [ "$TEST_SCOPE" = "external-import" ] || [ "$TEST_SCOPE" = "external-save-ui" ] || [ "$TEST_SCOPE" = "preservation-import" ] || [ "$TEST_SCOPE" = "cache-import" ]; then selection=(-only-testing:FlashNestUITests/ExternalDocumentImportUITests); fi
+          if [ "$TEST_SCOPE" = "external-import" ] || [ "$TEST_SCOPE" = "external-save-ui" ] || [ "$TEST_SCOPE" = "preservation-import" ] || [ "$TEST_SCOPE" = "cache-import" ] || [ "$TEST_SCOPE" = "cache-warm-import" ]; then selection=(-only-testing:FlashNestUITests/ExternalDocumentImportUITests); fi
           echo "UI validation scope: $TEST_SCOPE"
           xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath PickerTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 480 "${selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee picker-test.log
       - name: Export compact UI evidence
         if: always()
         run: |
           mkdir -p picker-evidence
-          if [ "$TEST_SCOPE" = "preservation-import" ] || [ "$TEST_SCOPE" = "cache-import" ]; then python3 scripts/collect_preservation_diagnostics.py '${{ steps.simulator.outputs.device_id }}' picker-evidence/preservation-diagnostics.log; fi
+          if [ "$TEST_SCOPE" = "preservation-import" ] || [ "$TEST_SCOPE" = "cache-import" ] || [ "$TEST_SCOPE" = "cache-warm-import" ]; then python3 scripts/collect_preservation_diagnostics.py '${{ steps.simulator.outputs.device_id }}' picker-evidence/preservation-diagnostics.log; fi
           python3 scripts/collect_test_webkit_crashes.py "$RUNNER_TEMP/flashnest-wk-tests-start" picker-evidence/webkit-crashes
           xcrun xcresulttool help export attachments > picker-evidence/export-help.txt 2>&1 || true
           if [ -d SaveInputTests.xcresult ]; then
