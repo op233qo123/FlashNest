@@ -344,3 +344,15 @@
 "Some remaining archive files could not be verified." = "Some remaining archive files could not be verified.";
 "Game save preparation did not finish." = "Game save preparation did not finish.";
 "Diagnostic code: %@" = "Diagnostic code: %@";
+
+// Per-game opt-in renderer compatibility; separate from resolution experiments.
+"Graphics compatibility" = "Graphics compatibility";
+"WebGL compatibility may change the picture" = "WebGL compatibility may change the picture";
+"Filters, offscreen bitmap effects, Stage3D, PixelBender shaders and some blend modes are not supported by this WebGL renderer. Pictures or effects may be missing or incorrect." = "Filters, offscreen bitmap effects, Stage3D, PixelBender shaders and some blend modes are not supported by this WebGL renderer. Pictures or effects may be missing or incorrect.";
+"Try this only for a game that has problems with Automatic. It is not a general crash fix. Choose Automatic again if the picture is wrong." = "Try this only for a game that has problems with Automatic. It is not a general crash fix. Choose Automatic again if the picture is wrong.";
+"Current player" = "Current player";
+"Actual renderer" = "Actual renderer";
+"This Ruffle build does not report its actual renderer. The requested mode is not confirmation that it was selected." = "This Ruffle build does not report its actual renderer. The requested mode is not confirmation that it was selected.";
+"Automatic (default)" = "Automatic (default)";
+"WebGL compatibility" = "WebGL compatibility";
+"The renderer preference could not be saved. The current game was not changed." = "The renderer preference could not be saved. The current game was not changed.";

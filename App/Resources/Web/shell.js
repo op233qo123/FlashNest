@@ -3,6 +3,9 @@
   'use strict';
   const status = document.getElementById('status');
   const requestedLanguage = new URLSearchParams(location.search).get('language');
+  // Automatic intentionally leaves Ruffle's existing backend order unchanged.
+  // This opt-in preference is not proof of which backend ultimately initialized.
+  const requestedRenderer = new URLSearchParams(location.search).get('renderer') === 'webgl' ? 'webgl' : null;
   const language = (requestedLanguage || window.navigator?.language || 'en').toLowerCase().startsWith('zh') ? 'zh-Hans' : 'en';
   const strings = {
     en: {
@@ -280,7 +283,8 @@
     await player.ruffle().load({url:url.href, base:new URL('./',url).href, publicPath:runtime.href,
       allowScriptAccess:false, allowNetworking:'internal', openUrlMode:'deny', socketProxy:[],
       autoplay:'off', unmuteOverlay:'visible', backgroundExecutionMode:'none', upgradeToHttps:false,
-      showSwfDownload:false, contextMenu:'off', logLevel:'warn'});
+      showSwfDownload:false, contextMenu:'off', logLevel:'warn',
+      ...(requestedRenderer ? {preferredRenderer:requestedRenderer} : {})});
     } finally { window.clearTimeout?.(loadWatchdog); }
     watchRenderer();
     // A small movie can dispatch loadeddata before load() resolves; do not

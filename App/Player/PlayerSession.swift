@@ -5,6 +5,11 @@ import SwiftUI
 @MainActor final class PlayerSession: NSObject, ObservableObject, WKNavigationDelegate, WKScriptMessageHandler {
     @Published var status = L10n.text("Starting local player…")
     @Published private(set) var isLoaded = false
+    /// Snapshot for this new player page; preference changes never reconfigure a live page.
+    @Published private(set) var requestedRendererSettings: RendererSettings?
+    /// Pinned Ruffle's public API exposes requested config, not the actual backend.
+    /// Nil is intentionally honest; do not infer success from preferredRenderer.
+    @Published private(set) var activeRendererBackend: String?
     @Published var failure: String?
     @Published var diagnostics: [String] = []
     @Published private(set) var previousSessionDiagnostic: String?
@@ -90,6 +95,8 @@ import SwiftUI
         ownsPackageLease = true
         restartFailure = nil
         currentPackage = package; currentContentRoot = contentRoot
+        requestedRendererSettings = storageOnly ? nil : RendererSettings.load(for: package.id)
+        activeRendererBackend = nil
         pendingRestoreID = nil
         saveReady = false; saveFailure = nil; checkpointFailure = nil; checkpointDidChange = nil; processTerminated = false
         memoryWarningCount = 0; lastMemoryWarning = nil
@@ -171,6 +178,9 @@ import SwiftUI
             components.queryItems = [URLQueryItem(name: "entry", value: package.selectedMovie), URLQueryItem(name: "package", value: package.id.uuidString), URLQueryItem(name: "language", value: L10n.languageCode)]
             components.queryItems?.append(URLQueryItem(name: "nativeSaveHandshake", value: "1"))
             if storageOnly { components.queryItems?.append(URLQueryItem(name: "storageOnly", value: "1")) }
+            if let renderer = requestedRendererSettings?.mode.queryValue {
+                components.queryItems?.append(URLQueryItem(name: "renderer", value: renderer))
+            }
             guard let url = components.url else { throw PackageError.invalidPath(package.selectedMovie) }
             preservationStage = .handshake
             view.load(URLRequest(url: url))
@@ -185,6 +195,7 @@ import SwiftUI
     func stop() {
         generation = UUID()
         isLoaded = false; saveReady = false
+        requestedRendererSettings = nil; activeRendererBackend = nil
         if ownsPackageLease, let id = currentPackage?.id { Self.activePackageIDs.remove(id) }
         ownsPackageLease = false
         webView?.evaluateJavaScript("window.FlashNest?.releaseKeys(); window.FlashNest?.pause(); true")

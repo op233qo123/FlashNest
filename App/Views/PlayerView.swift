@@ -9,6 +9,8 @@ struct PlayerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @State private var settings: TouchControlSettings
+    @State private var rendererSettings: RendererSettings
+    @State private var rendererSettingsFailure: String?
     @State private var sheet: PlayerSheet?
     @State private var editingControls = false
     @State private var selectedControlID: String?
@@ -22,6 +24,7 @@ struct PlayerView: View {
     init(package: GamePackage, contentRoot: URL) {
         self.package = package; self.contentRoot = contentRoot
         _settings = State(initialValue: TouchControlSettings.load(for: package.id))
+        _rendererSettings = State(initialValue: RendererSettings.load(for: package.id))
     }
 
     var body: some View {
@@ -153,6 +156,19 @@ struct PlayerView: View {
                         .accessibilityIdentifier("controls-reset")
                     Text(L10n.text("Touch controls are saved separately for each game."))
                         .font(.footnote).foregroundStyle(.secondary)
+                }.disabled(closing || checkpointing)
+                Section {
+                    NavigationLink {
+                        PlayerRendererSettingsView(selection: rendererSettings,
+                            requested: session.requestedRendererSettings,
+                            activeBackend: session.activeRendererBackend,
+                            failure: rendererSettingsFailure, select: selectRenderer)
+                    } label: {
+                        Label(L10n.text("Graphics compatibility"), systemImage: "display")
+                            .fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
+                    }
+                    .accessibilityIdentifier("player-renderer-settings")
+                    .accessibilityValue(PlayerRendererSettingsView.title(for: rendererSettings.mode))
                 }.disabled(closing || checkpointing)
                 Section {
                     Button { sheet = .diagnostics } label: { Label(L10n.text("Diagnostics"), systemImage: "info.circle") }
@@ -338,6 +354,17 @@ struct PlayerView: View {
     private func releaseKeys() {
         input.releaseAll(send: session.key)
         session.releaseAllKeys()
+    }
+
+    private func selectRenderer(_ mode: RendererSettings.Mode) {
+        guard !closing && !checkpointing else { return }
+        let next = RendererSettings(mode: mode)
+        guard next.save(for: package.id) else {
+            rendererSettingsFailure = L10n.text("The renderer preference could not be saved. The current game was not changed.")
+            return
+        }
+        rendererSettings = next
+        rendererSettingsFailure = nil
     }
 
     private func openMenu() {
