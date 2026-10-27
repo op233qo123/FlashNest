@@ -1,0 +1,74 @@
+{
+  "files": {
+    "Host/NativeAudioHost.swift": {
+      "bytes": 17809,
+      "sha256": "01bb92d531502031c238f34bf9e5c1aa4d392f1ca40162d3a0f0b058b3749917"
+    },
+    "README.md": {
+      "bytes": 8390,
+      "sha256": "092dfda9124bca108a068c05507970a58818e40244f676c868546016eb8da2a0"
+    },
+    "UITests/NativeAudioLifecycleUITests.swift": {
+      "bytes": 6408,
+      "sha256": "adbef7e417ae1714c6c2de88d75f2e5cca0a24c8c8df0feba41cbaa80adbcbea"
+    },
+    "Web/assert.mjs": {
+      "bytes": 846,
+      "sha256": "7de3cfc698daaccc05f7baec1786afd2279b4ca02bf2466fcd5245718bdad9c3"
+    },
+    "Web/fresh-action.mjs": {
+      "bytes": 458,
+      "sha256": "598ec47d8970325a8477a2f37f7390ad6769d1cf6cb769595ebe58395ba284f7"
+    },
+    "Web/index.html": {
+      "bytes": 550,
+      "sha256": "7b58dd7bfe8ec4beb22a12d4ad1fcf279baa2d45c37550da6b5d790b2d83a160"
+    },
+    "Web/native-runner.mjs": {
+      "bytes": 5445,
+      "sha256": "5853a1212e33a624b45f0fced8c05a77bbeae104abc05e176a471705e02c52c4"
+    },
+    "browser-approval.json": {
+      "bytes": 627,
+      "sha256": "3daa568934953609b3e98ea5576ba504cc6bc895db342c289a95ba164a8b3bcf"
+    },
+    "check_native_evidence.mjs": {
+      "bytes": 6242,
+      "sha256": "941c5e35aa188be1a10eddb00eb3d95ad0d1735a35409c3d98db220b2eedede0"
+    },
+    "prepare_browser_archive.py": {
+      "bytes": 1425,
+      "sha256": "23f35af3bdf0aef0502af96b9572189aadf784b3f704303eb97523c524553f41"
+    },
+    "project.yml": {
+      "bytes": 1889,
+      "sha256": "d85c355db6a8b7c390d8ea69d1747b3128d842bbfd913e32cf4252f84655feea"
+    },
+    "stage_native.py": {
+      "bytes": 21221,
+      "sha256": "c2b4653f0f074de37cd8ba3c0bd8fcba4be598e576a6de030a0ca27461b8028a"
+    },
+    "test_native.py": {
+      "bytes": 8701,
+      "sha256": "ab7bb553853a9d6ecc6a0202c90d33beb6572611ea25b4cb8c9489c8916667e7"
+    },
+    "test_raw_replay.mjs": {
+      "bytes": 5619,
+      "sha256": "760ddd8bbe019c4b38ab80b114665126a13fe9dd709881a74c39fce187471ec8"
+    },
+    "test_stage_native.py": {
+      "bytes": 17430,
+      "sha256": "879f02a87382f32e9018844c5c0132612874d034d813127956d96a75643c3710"
+    },
+    "verify_xctest.py": {
+      "bytes": 2300,
+      "sha256": "c594c202389c276d8e4994233daba0b99fafed649866bd498d7edaeed6416f7f"
+    },
+    "workflow-draft.yml": {
+      "bytes": 8912,
+      "sha256": "cc5bc7bca1267bf6090cc324d861f43bee12a5ebda59148ddfc795b0c78e2c74"
+    }
+  },
+  "schemaVersion": 1,
+  "scope": "Prepared isolated native Canvas WebAudio gate; no Swift compile/native execution/publication/dispatch"
+}

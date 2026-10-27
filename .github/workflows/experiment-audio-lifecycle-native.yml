@@ -1,0 +1,134 @@
+name: Isolated Canvas WebAudio lifecycle on iOS 18.5 (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-isolated-native-audio
+  cancel-in-progress: false
+jobs:
+  audio-native:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Pin Node for offline source tests and evidence replay
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Validate preparation and reviewed successful browser prerequisite
+        run: |
+          set -euo pipefail
+          test -f experiments/audio-lifecycle/native/browser-approval.json
+          python3 -m unittest discover -s experiments/audio-lifecycle/native -p 'test_*.py'
+          node experiments/audio-lifecycle/native/test_raw_replay.mjs
+          for file in experiments/audio-lifecycle/native/Web/*.mjs experiments/audio-lifecycle/native/check_native_evidence.mjs; do node --check "$file"; done
+      - name: Fetch only reviewed successful corrected-browser artifact and exact metadata
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_HOST: github.com
+        run: |
+          set -euo pipefail
+          mkdir -p audio-native-download/metadata
+          read -r run_id artifact_id < <(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('experiments/audio-lifecycle/native/browser-approval.json').read_text())
+          assert a['repository']=='op233qo123/FlashNest'
+          assert type(a['runID']) is int and type(a['artifactID']) is int
+          print(a['runID'], a['artifactID'])
+          PY
+          )
+          gh api "repos/op233qo123/FlashNest/actions/runs/$run_id" > audio-native-download/metadata/run.json
+          gh api "repos/op233qo123/FlashNest/actions/runs/$run_id/jobs?per_page=100" > audio-native-download/metadata/jobs.json
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$artifact_id" > audio-native-download/metadata/artifact.json
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$artifact_id/zip" > audio-native-download/browser.zip
+      - name: Fail-closed exact artifact and native bundle staging
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python3 experiments/audio-lifecycle/native/prepare_browser_archive.py --archive audio-native-download/browser.zip --metadata audio-native-download/metadata --approval experiments/audio-lifecycle/native/browser-approval.json --output audio-native-input
+          python3 experiments/audio-lifecycle/native/stage_native.py --verified-root audio-native-input/audio-reused-build --browser-results audio-native-input/audio-browser-reuse-evidence/browser/results.json --browser-provenance audio-native-input/audio-browser-reuse-evidence/browser/provenance.json --browser-approval experiments/audio-lifecycle/native/browser-approval.json --browser-metadata audio-native-download/metadata --stage audio-native-stage --repo-root .
+          git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
+      - name: Prepare pinned project tool and exact simulator toolchain
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          xcodebuild -version
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate --spec experiments/audio-lifecycle/native/project.yml --project audio-native-stage
+          git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
+      - name: Select and reset one exact iOS 18.5 simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.5)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+          xcrun simctl shutdown "$device_id" 2>/dev/null || true
+          xcrun simctl erase "$device_id"
+      - name: Actual trusted UI WebAudio matrix with Canvas isolation
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          mkdir -p audio-native-evidence
+          touch audio-native-start.marker
+          xcodebuild test -project audio-native-stage/NativeAudioLifecycle.xcodeproj -scheme NativeAudioLifecycle -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 90 -derivedDataPath audio-native-build -resultBundlePath AudioNativeResults.xcresult -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 660 -maximum-test-execution-time-allowance 660 -only-testing:NativeAudioLifecycleUITests/NativeAudioLifecycleUITests/testImmutableBaselineAndCandidateAudioLifecycleMatrix CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee audio-native-test.log
+          xcrun xcresulttool get test-results summary --path AudioNativeResults.xcresult > audio-native-evidence/xctest-summary.json
+          python3 experiments/audio-lifecycle/native/verify_xctest.py --summary audio-native-evidence/xctest-summary.json --log audio-native-test.log
+      - name: Preserve actual mode evidence and crash reports even on failure
+        if: always()
+        run: |
+          mkdir -p audio-native-evidence
+          if [ -n '${{ steps.simulator.outputs.device_id }}' ]; then
+            container=$(xcrun simctl get_app_container '${{ steps.simulator.outputs.device_id }}' com.flashnest.audio-lifecycle.diagnostic data 2>/dev/null) || container=''
+            if [ -n "$container" ] && [ -d "$container/Documents/audio-native-evidence" ]; then cp -R "$container/Documents/audio-native-evidence" audio-native-evidence/raw; fi
+          fi
+          if [ -d AudioNativeResults.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path AudioNativeResults.xcresult > audio-native-evidence/xctest-summary.json || true
+            xcrun xcresulttool export attachments --path AudioNativeResults.xcresult --output-path audio-native-evidence/attachments || true
+          fi
+          python3 scripts/collect_test_webkit_crashes.py audio-native-start.marker audio-native-evidence/crashes || true
+          git diff -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json > audio-native-evidence/production-source.diff
+      - name: Independently replay complete raw22 and require no collected process crash
+        run: |
+          set -euo pipefail
+          read -r suite manifest_sha < <(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          roots=list(Path('audio-native-evidence/raw').iterdir())
+          assert len(roots)==1 and roots[0].is_dir() and not roots[0].is_symlink()
+          verification=json.loads(Path('audio-native-stage/verification.json').read_text())
+          assert verification['verified'] is True and verification['nativeExecutionPerformed'] is False
+          crashes=json.loads(Path('audio-native-evidence/crashes/collection.json').read_text())
+          assert crashes['reports']==[] and crashes['skipped']==0
+          assert Path('audio-native-evidence/production-source.diff').read_text()==''
+          print(roots[0], verification['manifestSHA256'])
+          PY
+          )
+          node experiments/audio-lifecycle/native/check_native_evidence.mjs --web audio-native-stage/Web --manifest-sha "$manifest_sha" --suite "$suite" --output audio-native-evidence/results.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-isolated-Canvas-WebAudio-native
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            audio-native-evidence
+            audio-native-test.log
+            AudioNativeResults.xcresult
+            audio-native-stage/verification.json
+            audio-native-stage/Web/native-manifest.json
+            audio-native-stage/NativeAudioIdentity.swift
+            audio-native-stage/prerequisite-evidence
+            audio-native-download/metadata
+            experiments/audio-lifecycle/native
