@@ -37,6 +37,14 @@ enum L10n {
     /// Unknown OS/runtime errors must not leak raw machine-English into the main UI.
     /// Detailed diagnostic information may be recorded separately by the caller.
     static func error(_ error: Error) -> String {
+        if let preservation = error as? LegacySavePreservationError {
+            // Only the fixed enum-derived code is presented. An underlying
+            // WebKit error may contain a capability URL or storage details.
+            // Do not claim no native write occurred: a later drain can fail
+            // after a verified capture was already persisted.
+            return text("Game save preparation did not finish.") + "\n" +
+                format("Diagnostic code: %@", preservation.diagnosticCode)
+        }
         if let packageError = error as? PackageError { return packageError.errorDescription ?? text("The operation could not be completed. Please try again.") }
         if let saveError = error as? SaveStoreError {
             switch saveError {

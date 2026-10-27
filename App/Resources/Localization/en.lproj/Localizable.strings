@@ -342,3 +342,5 @@
 "Deletion stopped after removing %d files. Some archive files or the folder may remain. Review the refreshed archive before trying again." = "Deletion stopped after removing %d files. Some archive files or the folder may remain. Review the refreshed archive before trying again.";
 "Deletion was not started. The archive may have changed or may still belong to an installed game. Review it and try again." = "Deletion was not started. The archive may have changed or may still belong to an installed game. Review it and try again.";
 "Some remaining archive files could not be verified." = "Some remaining archive files could not be verified.";
+"Game save preparation did not finish." = "Game save preparation did not finish.";
+"Diagnostic code: %@" = "Diagnostic code: %@";

@@ -342,3 +342,5 @@
 "Deletion stopped after removing %d files. Some archive files or the folder may remain. Review the refreshed archive before trying again." = "删除了 %d 个文件后操作中止，可能仍有归档文件或文件夹残留。请先检查刷新后的归档，再决定是否重试。";
 "Deletion was not started. The archive may have changed or may still belong to an installed game. Review it and try again." = "尚未开始删除。归档可能已发生变化，或仍属于已安装的游戏。请检查后重试。";
 "Some remaining archive files could not be verified." = "无法验证部分剩余的归档文件。";
+"Game save preparation did not finish." = "游戏存档准备未完成。";
+"Diagnostic code: %@" = "诊断代码：%@";

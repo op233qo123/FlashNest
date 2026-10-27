@@ -34,6 +34,11 @@ import SwiftUI
     private var ownsPackageLease = false
     private var pendingRestoreID: UUID?
     private var preserveNativeOnEmptyCapture = false
+    private var preservationStage: LegacySavePreservationError.Stage = .startup
+    private var acceptedMessages = 0
+    private var rejectedIdentityMessages = 0
+    private var rejectedEnvelopeMessages = 0
+    private var receivedSaveReady = false
     private var memoryWarningObserver: NSObjectProtocol?
     private var memoryWarningCount = 0
     private var lastMemoryWarning: Date?
@@ -88,6 +93,9 @@ import SwiftUI
         pendingRestoreID = nil
         saveReady = false; saveFailure = nil; checkpointFailure = nil; checkpointDidChange = nil; processTerminated = false
         memoryWarningCount = 0; lastMemoryWarning = nil
+        preservationStage = .startup
+        acceptedMessages = 0; rejectedIdentityMessages = 0; rejectedEnvelopeMessages = 0
+        receivedSaveReady = false
         let attempt = UUID()
         generation = attempt
         ready = false; isLoaded = false; paused = false; failure = nil; status = L10n.text("Starting local player…")
@@ -164,6 +172,7 @@ import SwiftUI
             components.queryItems?.append(URLQueryItem(name: "nativeSaveHandshake", value: "1"))
             if storageOnly { components.queryItems?.append(URLQueryItem(name: "storageOnly", value: "1")) }
             guard let url = components.url else { throw PackageError.invalidPath(package.selectedMovie) }
+            preservationStage = .handshake
             view.load(URLRequest(url: url))
         } catch {
             guard generation == attempt else { return }
@@ -210,6 +219,7 @@ import SwiftUI
             let result = await captureAndPersistIfReady()
             let closingServer = server
             stop()
+            if result { preservationStage = .drain }
             do { try await closingServer?.stopAndWait() }
             catch {
                 saveFailure = L10n.text("The local player did not finish closing. Please reopen the app.")
@@ -318,9 +328,11 @@ import SwiftUI
         releaseAllKeys()
         var shutdownConfirmed = false
         do {
+            preservationStage = .capture
             let object = try await captureObject(from: view)
             guard !processTerminated else { return false }
             shutdownConfirmed = true
+            preservationStage = .validation
             let data = try JSONSerialization.data(withJSONObject: object)
             guard data.count <= SaveStore.maximumArchiveBytes else { throw SaveStoreError.limit("archive size") }
             let capture = try JSONDecoder().decode(SaveCapture.self, from: data)
@@ -330,6 +342,7 @@ import SwiftUI
                 return true
             }
             let store = saveStore
+            preservationStage = .persistence
             _ = try await Task.detached(priority: .userInitiated) {
                 try store.persistLatest(capture, package: package)
             }.value
@@ -406,15 +419,27 @@ import SwiftUI
         session.preserveNativeOnEmptyCapture = !forceCaptureLive && prior?.entries.isEmpty == false
         let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Packages").appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        let started = Date()
         await session.start(package: package, contentRoot: root, storageOnly: true)
         defer { session.stop() }
         let deadline = Date().addingTimeInterval(15)
         while !session.saveReady, session.failure == nil, Date() < deadline {
             try await Task.sleep(nanoseconds: 100_000_000)
         }
-        guard session.saveReady, await session.closeAndSave() else {
-            throw SaveStoreError.invalid("existing game save could not be preserved")
+        func evidence(_ outcome: LegacySavePreservationError.Outcome) -> LegacySavePreservationError {
+            let error = LegacySavePreservationError(stage: session.preservationStage, outcome: outcome,
+                elapsedMilliseconds: max(0, min(3_600_000, Int(Date().timeIntervalSince(started) * 1000))),
+                acceptedMessages: session.acceptedMessages, rejectedIdentity: session.rejectedIdentityMessages,
+                rejectedEnvelope: session.rejectedEnvelopeMessages, receivedSaveReady: session.receivedSaveReady)
+            NSLog("%@", error.redactedSummary)
+            return error
         }
+        if let outcome = LegacySavePreservationError.handshakeOutcome(ready: session.saveReady,
+            failed: session.failure != nil, terminated: session.processTerminated, now: Date(), deadline: deadline) {
+            throw evidence(outcome)
+        }
+        guard session.saveReady else { throw evidence(.failed) }
+        guard await session.closeAndSave() else { throw evidence(session.processTerminated ? .terminated : .failed) }
     }
 
     static func clearPackageCaches(packageID: UUID) async throws {
@@ -492,14 +517,22 @@ import SwiftUI
     /// a released page must not acknowledge restoration or mutate its successor.
     /// Structured input keeps this boundary testable without private WebKit APIs.
     func receiveScriptMessage(from source: WKWebView?, isMainFrame: Bool, requestURL: URL?, body payload: Any) {
-        guard let active = webView, source === active, !processTerminated, isMainFrame,
-              let current = requestURL, let shell = server?.shellURL,
+        guard let active = webView, source === active, !processTerminated else {
+            rejectedIdentityMessages = min(999, rejectedIdentityMessages + 1)
+            return
+        }
+        guard isMainFrame, let current = requestURL, let shell = server?.shellURL,
               current.scheme == shell.scheme, current.host == shell.host, current.port == shell.port,
               current.path == shell.path,
-              let body = payload as? [String: Any], let type = body["type"] as? String else { return }
+              let body = payload as? [String: Any], let type = body["type"] as? String else {
+            rejectedEnvelopeMessages = min(999, rejectedEnvelopeMessages + 1)
+            return
+        }
+        acceptedMessages = min(999, acceptedMessages + 1)
         let text = String((body["message"] as? String ?? "").prefix(500))
         switch type {
         case "saveReady":
+            receivedSaveReady = true
             let attempt = generation
             Task { @MainActor [weak self] in
                 guard let self, self.generation == attempt, let view = self.webView else { return }
