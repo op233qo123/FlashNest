@@ -20,7 +20,8 @@ def trace(label,*values):
     return code+action(0x26)
 def function(code):
     body=code+b'\0'
-    return action(0x9b,b'\0'+struct.pack('<HH',0,len(body))+body)
+    # DefineFunction ActionLength excludes its separately sized code body.
+    return action(0x9b,b'\0'+struct.pack('<HH',0,len(body)))+body
 def tag(n,b=b''):
     return struct.pack('<H',n<<6|min(len(b),63))+(struct.pack('<I',len(b)) if len(b)>=63 else b'')+b
 def rect():

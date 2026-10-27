@@ -28,11 +28,19 @@ the experiment makes no measured total-RAM or crash-fix claim.
 
 ## Evidence status and first gate
 
-Source/fixture/helper checks have been run locally. Rust compilation, actual
-browser/GPU execution and native iOS execution have **not** yet run for this
-patch. The manual workflow draft first verifies the unchanged queued-goto
-control and 31 adjacent upstream cases, then the additive patch, 63 core JS
-tests, and full original-geometry browser matrices on standard runners.
+Run [40514553456](https://github.com/op233qo123/FlashNest/actions/runs/40514553456),
+source `a744b8b75ae9eacec28332b0ccf87822ddaae265`, compiled both WASM variants
+and passed 63 core JS tests. Both guard-only and density headless phases passed
+the two original frame-order cases and 31 adjacent upstream gates (29 strict
+reference outputs plus two existing known-failure preservation cases).
+
+Both browser matrices then failed on the first unchanged control: the original
+geometry fixture encoded DefineFunction ActionLength incorrectly, so no geometry
+case completed. This is not a passing renderer result. The corrected assembler
+and stronger boundary checks are now supplied. The separate manual geometry
+workflow reuses that exact checksum-locked compiled artifact rather than rebuilding
+identical source. Its full matrices and native iOS validation remain pending;
+see `geometry-reuse/README.md` for the exact inherited evidence and limitations.
 
 The browser control is the unchanged verified queued-goto runtime ZIP, not an
 unmodified official Ruffle release. The new candidate is separately named and
