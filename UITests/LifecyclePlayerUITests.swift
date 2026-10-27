@@ -15,7 +15,7 @@ final class LifecyclePlayerUITests: XCTestCase {
 
     func testBackgroundDirectSaveCancelManagementAndRestartSameGame() {
         let app = importFixture()
-        defer { capture("Lifecycle final screen"); XCUIDevice.shared.orientation = .portrait }
+        defer { XCUIDevice.shared.orientation = .portrait }
         startMovie(app)
         trace("LIFECYCLE_ROOT_READY:undefined", in: app)
         let menu = app.buttons["player-menu"].firstMatch

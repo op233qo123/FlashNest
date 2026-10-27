@@ -16,7 +16,9 @@ final class FullscreenPlayerUITests: XCTestCase {
     func testLandscapeSingleOverlayHideRecoverOpacityAndRotation() {
         let app = importPlayableFixture()
         defer {
-            capture(app, "Fullscreen player final state")
+            // Milestone screenshots, hierarchy and the test video already
+            // preserve evidence. A redundant cleanup screenshot timed out in
+            // the simulator after all functional assertions had succeeded.
             XCUIDevice.shared.orientation = .portrait
         }
         let play = app.webViews.buttons["Play / enable audio"].firstMatch

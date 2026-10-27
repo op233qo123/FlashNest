@@ -94,6 +94,8 @@ class StaticTests(unittest.TestCase):
     self.assertNotIn(vector,data)
   self.assertIn(b'LIFECYCLE_ROOT_READY:',main); self.assertIn(b'sub/scene.swf',main)
   self.assertIn(b'removeListener',main)
+  self.assertIn(b'rootListener',main); self.assertIn(b'childListener',child)
+  self.assertNotIn(b'_root',main); self.assertNotIn(b'_root',child)
   self.assertIn(b'LIFECYCLE_CHILD_KEY:',child); self.assertIn(b'LIFECYCLE_CHILD_POINTER:',child)
   project=(ROOT/'project.yml').read_text()
   self.assertIn('path: fixtures/lifecycle',project)
