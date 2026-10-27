@@ -52,6 +52,13 @@ window.screenshotGeometry=function(){
  const r=document.getElementById('host').getBoundingClientRect();
  return {rect:[r.x,r.y,r.width,r.height],viewport:[innerWidth,innerHeight],dpr:devicePixelRatio};
 };
+window.gameHitTarget=function(x,y){
+ const player=window.player,shadow=player?.shadowRoot,canvas=shadow?.querySelector('canvas');
+ const outer=document.elementFromPoint(x,y),inner=shadow?.elementFromPoint(x,y);
+ return {canvasTopmost:!!canvas&&outer===player&&inner===canvas,
+  outer:{tag:String(outer?.tagName||'').slice(0,40),id:String(outer?.id||'').slice(0,80)},
+  inner:{tag:String(inner?.tagName||'').slice(0,40),id:String(inner?.id||'').slice(0,80)}};
+};
 window.hardwareWarningState=function(){
  const shadow=window.player?.shadowRoot,modal=shadow?.querySelector('#hardware-acceleration-modal');
  if(!modal)return {visible:false};

@@ -69,12 +69,12 @@
     "experiments/render-density/fixtures/showAll-center.swf": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac",
     "experiments/render-density/scripts/make_fixture.py": "cd2569faf47ea2e4e86f1a1c8da58c90c5d6b8d1fa1f46e6cdd858cfd559d42e",
     "experiments/render-density/scripts/test_fixture.py": "3ba0562480855373e0da856f4e224b96091a8eac7e43d1bc922663fd3852d597",
-    "experiments/render-density/browser-tests/run.mjs": "bb4fea7fee914c1019e7517ad973658103d08a1f92c9baed383b180838521e37",
-    "experiments/render-density/browser-tests/page.html": "164812b536dff73f1d39ba7217e3e2b70a2523a6797af28e61cb2811dfaa172d",
+    "experiments/render-density/browser-tests/run.mjs": "59cbb04c5d41863ecd04addf09d14f18738a05f302e1f00a3fd58fcfecbff267",
+    "experiments/render-density/browser-tests/page.html": "42f3539d4896b126d0d70c432d91ca51e8c64e4d02f7c16c935b5696c4eb3843",
     "experiments/render-density/browser-tests/screenshot.mjs": "78c7d03813ea68bf4fbc3f8a476a362c595fdd847286dd319cd69c73338531ab",
     "experiments/render-density/browser-tests/test_screenshot.mjs": "2cf3fa28e9ccdd84541e95a1f062bad3ccb9d5c2d1fd2e352c27d286cfa49a0e",
     "experiments/render-density/browser-tests/test_helpers.mjs": "97a6ea5c5b9bc9968df3e03a319810c8acd57e86c4ba7fd3ad966711a407d5fd",
-    "experiments/render-density/browser-tests/test_page.mjs": "7e62b3b01c8ce04d232f1afd23384c52f5dd798b1ea48f77b2e8c512c5ea2ad9",
+    "experiments/render-density/browser-tests/test_page.mjs": "363ab45bb7c184daeae054f0017f276f2b68c36cc3e4934a29aa07b222ecc182",
     "experiments/render-density/browser-tests/hardware-warning.mjs": "7e5953d0db9e4ee244089cc3b6c4705283450fbe694eac13a9c4904887ed3636",
     "experiments/render-density/browser-tests/test_hardware_warning.mjs": "1f4c8136942c4e77509a2c4d73bbc5519be7ff72db49929170c48d0018ac8560"
   }

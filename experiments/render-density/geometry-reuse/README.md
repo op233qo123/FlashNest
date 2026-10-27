@@ -83,6 +83,25 @@ candidate bytes and original fixture bytes are unchanged. WGPU success remains
 unestablished until the corrected real browser gate completes, and a software-GPU
 Ubuntu result would not establish native iOS GPU compatibility.
 
+## Source-correct hover ordering
+
+The WGPU-only run [40533798697](https://github.com/op233qo123/FlashNest/actions/runs/40533798697)
+(commit `44bd5d02452301c5e8ade702aba713c0522867e5`) also completed zero cases.
+No warning acknowledgement occurred before the first input; the raw trusted
+pointer path again hit the hardware-acceleration modal. Actual GL debug metadata
+identified ANGLE SwiftShader. The retained artifact `12747976686` has SHA256
+`f197651b6562b1b9287be664d2965b9e420cd84576cfc8fbdac12b5d618df0a8`.
+
+The [pinned frontend](https://github.com/ruffle-rs/ruffle/blob/89a7049965f3090e706265670df309a5128233ac/web/packages/core/src/internal/player/inner.tsx#L743-L752)
+registers a **one-shot mouseover** listener for a CPU adapter. Thus the combined
+pointerMove+pointerDown action itself opened the modal between hover and press;
+this was not an arbitrary asynchronous timer. The corrected harness first sends
+one trusted hover-only action, then captures and acknowledges only the exact
+known modal. It rechecks backend/backing and visible pixels. Before every game
+pointerDown, a separate hover and composed hit-test require the real canvas to be
+topmost. A reappearing/unknown overlay fails; no game click or acknowledgement is
+retried. No timeout, engine byte, fixture, matrix count or assertion is relaxed.
+
 ## Evidence that is reused, not rerun
 
 `verify_artifact.py` verifies the exact ZIP before safe bounded extraction, the

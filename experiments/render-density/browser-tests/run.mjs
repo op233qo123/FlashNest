@@ -80,6 +80,17 @@ async function closeKnownHardwareWarning(){
   record:async evidence=>{(result.hardwareWarnings??=[]).push({...result.activeCase,...evidence});record('hardware-warning',{...result.activeCase,...evidence})}
  });
 }
+async function prepareGamePoint(x,y){
+ const point=[Math.round(x),Math.round(y)];
+ await move(...point); // Hover only; never retry a game click.
+ await waitFor(async()=>{
+  const target=await browser.execute((x,y)=>window.gameHitTarget(x,y),...point);
+  result.lastInputTarget={point,...target};
+  const warning=await browser.execute(()=>window.hardwareWarningState());
+  assert(!warning.visible,'Hardware warning appeared again after its single acknowledgement');
+  return target.canvasTopmost===true;
+ },'Trusted game input point is not on the actual canvas',5000);
+}
 async function exactInputCounts(down,up,label){
  await waitFor(async()=>{const e=await traces();assert(!e.overflow&&!e.errors.length,'Input trace error');const d=parse(e.traces,'DOWN').length,u=parse(e.traces,'UP').length;assert(d<=down&&u<=up,'Unexpected extra pointer acknowledgement');return d===down&&u===up},label,5000);
 }
@@ -105,11 +116,17 @@ async function geometry(arm,scale,fixture,w,h,dpr){
  await waitFor(async()=>{const e=await traces();if(e.errors.length||e.overflow)throw Error(JSON.stringify(e));return e.loaded&&e.observerInstalled},'real loadeddata');await play();
  await waitFor(async()=>(await traces()).traces.some(s=>s.startsWith('DENSITY|READY|')),'real SWF READY');
  await waitFor(async()=>{const m=await browser.execute(()=>window.measure());return m&&m.width===Math.max(1,Math.round(Math.floor(w*dpr)*scale))&&m.height===Math.max(1,Math.round(Math.floor(h*dpr)*scale))},'backing resize');
+ const points=[[.05,.05],[.95,.05],[.05,.95],[.95,.95],[.5,.5]].map(([x,y])=>[Math.round(w*x),Math.round(h*y)]);
+ // Pinned CPU-adapter warning is opened by the first mouseover, not a timer.
+ // Separate hover from DOWN so the real UI decision occurs before game input.
+ await move(...points[0]);
  await closeKnownHardwareWarning();
  const canvas=await browser.execute(()=>window.measure());checkCanvas(canvas,arm,scale,w,h,dpr);
  const readiness=await visualReady();
- const points=[[.05,.05],[.95,.05],[.05,.95],[.95,.95],[.5,.5]].map(([x,y])=>[Math.round(w*x),Math.round(h*y)]);
- for(let i=0;i<points.length;i++){const [x,y]=points[i];await move(x,y,true,true);await exactInputCounts(i+1,i+1,`Pointer ${i+1} DOWN/UP acknowledgement`);}
+ for(let i=0;i<points.length;i++){
+  const [x,y]=points[i];await prepareGamePoint(x,y);
+  await move(x,y,true,true);await exactInputCounts(i+1,i+1,`Pointer ${i+1} DOWN/UP acknowledgement`);
+ }
  await waitFor(async()=>parse((await traces()).traces,'UP').length===5,'five trusted pointer sequences');
  let e=await traces(),downs=parse(e.traces,'DOWN');assert.equal(downs.length,5);
  // Infer stock coordinate transform from real SWF pointer observations, then
@@ -119,7 +136,7 @@ async function geometry(arm,scale,fixture,w,h,dpr){
  const sy=(Number(downs[2][1])-Number(downs[0][1]))/(points[2][1]-points[0][1]);assert(sx>0&&sy>0);
  const [tx,ty]=visibleDragTarget({sx,sy,rootX:Number(downs[0][0]),rootY:Number(downs[0][1]),cssX:points[0][0],cssY:points[0][1],width:w,height:h});
  assert(tx>0&&tx<w&&ty>0&&ty<h,'Vector center outside test viewport');
- await move(tx,ty,true,false);await exactInputCounts(6,5,'Drag DOWN acknowledgement');await move(tx+12,ty+9);await move(tx+12,ty+9,false,true);await browser.releaseActions();
+ await prepareGamePoint(tx,ty);await move(tx,ty,true,false);await exactInputCounts(6,5,'Drag DOWN acknowledgement');await move(tx+12,ty+9);await move(tx+12,ty+9,false,true);await browser.releaseActions();
  await waitFor(async()=>parse((await traces()).traces,'UP').length===6,'trusted drag completion');e=await traces();assert(!e.overflow&&!e.errors.length);
  assert(e.traces.every(x=>/^DENSITY\|(READY|RESIZE|DOWN|UP)\|/.test(x)),'Unexpected geometry trace');
  const down=parse(e.traces,'DOWN'),up=parse(e.traces,'UP');assert.equal(down.length,6);assert.equal(down[5][2],'true','actual SWF hitTest');
