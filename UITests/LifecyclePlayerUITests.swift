@@ -25,8 +25,7 @@ final class LifecyclePlayerUITests: XCTestCase {
         trace("LIFECYCLE_CHILD_READY", in: app)
         tapChildPointer(count: 1, in: app)
 
-        XCUIDevice.shared.press(.home)
-        XCTAssertTrue(wait { app.state != .runningForeground })
+        showHomeAndRequireBackground(app, phase: "Running child")
         app.activate()
         XCTAssertTrue(menu.waitForExistence(timeout: 15))
         XCTAssertFalse(app.webViews.buttons["Play / enable audio"].firstMatch.exists,
@@ -39,8 +38,7 @@ final class LifecyclePlayerUITests: XCTestCase {
         // Opening a menu is a pause intent, which background/foreground must
         // not turn into playback or an implicit new page.
         menu.tap()
-        XCUIDevice.shared.press(.home)
-        XCTAssertTrue(wait { app.state != .runningForeground })
+        showHomeAndRequireBackground(app, phase: "Paused menu")
         app.activate()
         XCTAssertTrue(app.buttons["player-resume"].firstMatch.waitForExistence(timeout: 15))
         app.buttons["player-saves"].firstMatch.tap()
@@ -90,6 +88,21 @@ final class LifecyclePlayerUITests: XCTestCase {
     private func tapChildPointer(count: Int, in app: XCUIApplication) {
         app.webViews.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         trace("LIFECYCLE_CHILD_POINTER:\(count)", in: app)
+    }
+
+    private func showHomeAndRequireBackground(_ app: XCUIApplication, phase: String) {
+        XCUIDevice.shared.press(.home)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let homeIcon = springboard.icons.matching(NSPredicate(format: "label == %@", "FlashNest")).firstMatch
+        // The 18.2 video showed Home while app.state still reported foreground.
+        // Require an actual hittable SpringBoard icon instead of treating that
+        // stale process-state value as evidence that Home was never delivered.
+        XCTAssertTrue(homeIcon.waitForExistence(timeout: 15), "Home must actually become visible")
+        XCTAssertTrue(wait { homeIcon.isHittable }, "The game must be covered by the real Home screen")
+        let observedState = app.state.rawValue
+        print("LIFECYCLE_HOME phase=\(phase) visibleHomeIcon=true reportedAppState=\(observedState)")
+        let evidence = XCTAttachment(string: "phase=\(phase); reportedAppState=\(observedState)\n\(springboard.debugDescription)")
+        evidence.name = phase + " actual Home accessibility"; evidence.lifetime = .keepAlways; add(evidence)
     }
 
     private func trace(_ value: String, in app: XCUIApplication) {
