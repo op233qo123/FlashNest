@@ -1,0 +1,16 @@
+{
+  "artifactArchiveSHA256": "57d7eaed19edd006e2a33a9bfa816f22da8b1003becf3719dfca0c97cb38c4af",
+  "artifactID": 12729069965,
+  "artifactName": "FlashNest-experimental-frame-order-engine",
+  "headSHA": "f60ff6a99941937056eee5ad94ed4b4af9c72c99",
+  "originalSourceSHA256": "fc229d96ab6fced20391cf810d9d89a2118803cb7f5ce48ddf6967e52e35700a",
+  "patchSHA256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
+  "patchedSourceSHA256": "af780dae48b842e0756b8cd23f50a539737d0bcbbbdca970feb90f27725e96b0",
+  "provenanceSHA256": "73829617008e26ffe48bfc29e689c0a719641f6c9e93214b29f8ee3c6bfd22d5",
+  "repository": "op233qo123/FlashNest",
+  "runAttempt": 1,
+  "runID": 40491098384,
+  "schemaVersion": 1,
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "workflowPath": ".github/workflows/experiment-frame-order-engine.yml"
+}

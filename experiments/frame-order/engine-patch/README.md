@@ -5,6 +5,11 @@ an isolated candidate patch against Ruffle 0.7.1, source commit
 `89a7049965f3090e706265670df309a5128233ac`. It does not modify the application's
 bundled runtime, runtime locks, default tests, or any third-party game.
 
+The isolated baseline/patched headless gate has now passed; see
+[HEADLESS_RESULTS.md](HEADLESS_RESULTS.md) for exact traces, 29 strict neighboring
+reference cases plus two preserved known failures, provenance, and limitations.
+That result does not establish exact Adobe equivalence or native WebKit stability.
+
 ## Minimal behavior change
 
 `queued-goto-guard.patch` adds a guard immediately before `queued_goto.take()`
@@ -40,7 +45,8 @@ The expectation files are deliberately separate from official Flash goldens:
   required to remain unchanged.
 - `nested-repair-target.txt`: **experimental desired output**, derived from the
   control while retaining the nested variant's synchronous child reset. It is
-  neither observed Adobe output nor a claim that the patch has already passed.
+  not observed Adobe output. The later measured headless result is documented
+  separately rather than relabeling this target as an Adobe golden.
 
 The Rust test runs at most 20 frames with bounded script execution and preload,
 records raw output before assertions, requires all 12 observation ticks, and

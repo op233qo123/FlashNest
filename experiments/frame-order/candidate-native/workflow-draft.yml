@@ -1,0 +1,176 @@
+name: Experiment candidate frame order on iOS 18.2 (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: Both also runs separate save/restart and real UI lifecycle gates; single variants are targeted capture diagnostics
+        type: choice
+        required: true
+        default: both
+        options:
+          - both
+          - control
+          - nested
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-frame-order-native-candidate
+  cancel-in-progress: false
+jobs:
+  capture-candidate:
+    runs-on: macos-14
+    timeout-minutes: 40
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+    steps:
+      - name: Checkout isolated candidate diagnostic
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Validate unchanged application and original fixtures
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python3 scripts/fetch_runtime.py
+          python3 scripts/test_static.py
+          python3 scripts/test_localization.py
+          python3 scripts/test_licenses.py
+          python3 experiments/frame-order/validate_fixtures.py
+          python3 -m unittest discover -s experiments/frame-order/candidate-native -p 'test_*.py'
+      - name: Download only the reviewed successful candidate artifact
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir candidate-native-download
+          read -r run_id artifact_id < <(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          lock = json.loads(Path('experiments/frame-order/candidate-native/candidate.lock.json').read_text())
+          for key in ('runID', 'artifactID'):
+              assert type(lock[key]) is int and lock[key] > 0, key
+          assert lock['repository'] == 'op233qo123/FlashNest'
+          print(lock['runID'], lock['artifactID'])
+          PY
+          )
+          gh api "repos/op233qo123/FlashNest/actions/runs/$run_id" > candidate-native-download/run.json
+          gh api "repos/op233qo123/FlashNest/actions/runs/$run_id/jobs?per_page=100" > candidate-native-download/jobs.json
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$artifact_id" > candidate-native-download/artifact.json
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$artifact_id/zip" > candidate-native-download/candidate.zip
+      - name: Attest candidate and stage only isolated Web/test resources
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python3 experiments/frame-order/candidate-native/verify_candidate.py \
+            --archive candidate-native-download/candidate.zip \
+            --lock experiments/frame-order/candidate-native/candidate.lock.json \
+            --run-metadata candidate-native-download/run.json \
+            --jobs-metadata candidate-native-download/jobs.json \
+            --artifact-metadata candidate-native-download/artifact.json \
+            --stage candidate-native-stage --repo-root .
+          python3 experiments/frame-order/candidate-native/stage_project.py --repo-root .
+          git diff --exit-code -- App Tests fixtures project.yml runtime.lock.json runtime.files.json
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate --spec candidate-native-project.yml
+          git diff --exit-code -- App Tests fixtures project.yml runtime.lock.json runtime.files.json
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+          xcodebuild -version
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Require installed iOS 18.2 simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          xcrun simctl list runtimes
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.2)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+      - name: Capture and assert experimental candidate contracts
+        id: frame_order
+        timeout-minutes: 10
+        env:
+          FRAME_ORDER_VARIANT: ${{ inputs.variant }}
+        run: |
+          set -euo pipefail
+          case "${FRAME_ORDER_VARIANT:-both}" in
+            both) test_target=FlashNestTests/FrameOrderCandidateRuntimeTests ;;
+            control) test_target=FlashNestTests/FrameOrderCandidateRuntimeTests/testCandidateControlContract ;;
+            nested) test_target=FlashNestTests/FrameOrderCandidateRuntimeTests/testCandidateNestedRepairContract ;;
+            *) echo "Unsupported original fixture selection" >&2; exit 2 ;;
+          esac
+          echo "Experimental candidate selection: ${FRAME_ORDER_VARIANT:-both}; target: $test_target"
+          touch candidate-native-start.marker
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath candidate-native-build -resultBundlePath CandidateFrameOrderResults.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 "-only-testing:$test_target" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee candidate-native-test.log
+          mkdir -p candidate-native-evidence
+          xcrun xcresulttool get test-results summary --path CandidateFrameOrderResults.xcresult > candidate-native-evidence/summary.json
+          python3 experiments/frame-order/candidate-native/verify_native_result.py --summary candidate-native-evidence/summary.json --log candidate-native-test.log --variant "$FRAME_ORDER_VARIANT"
+          git diff --exit-code -- App Tests fixtures project.yml runtime.lock.json runtime.files.json
+      - name: Prepare unchanged separate source app for candidate lifecycle test
+        if: inputs.variant == 'both'
+        id: source_app
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          device_id='${{ steps.simulator.outputs.device_id }}'
+          xcrun simctl bootstatus "$device_id" -b
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNestFixtureSource -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,id=$device_id" -derivedDataPath candidate-native-source-build -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+          xcrun simctl install "$device_id" candidate-native-source-build/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app
+      - name: Independently verify actual SharedObject save and restart on candidate
+        if: inputs.variant == 'both'
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath candidate-native-build -resultBundlePath CandidateSaveLifecycleResults.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/SharedObjectPersistenceTests/testExplicitSaveAndRestartUsesNewPageAndPreservesSaveAndGameFiles -only-testing:FlashNestTests/SharedObjectPersistenceTests/testDestroyFlushPersistsAndRestartReadsActualSharedObject CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee candidate-save-lifecycle-test.log
+          xcrun xcresulttool get test-results summary --path CandidateSaveLifecycleResults.xcresult > candidate-native-evidence/save-lifecycle-summary.json
+          python3 experiments/frame-order/candidate-native/verify_native_result.py --summary candidate-native-evidence/save-lifecycle-summary.json --log candidate-save-lifecycle-test.log --variant both --scope save-lifecycle
+          git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
+      - name: Independently exercise real background, direct-save, cancel and restart UI path
+        # Preserve independent evidence if the save tests fail. Such a failure
+        # still fails the workflow; this step never replaces that result.
+        if: ${{ !cancelled() && inputs.variant == 'both' && steps.frame_order.outcome == 'success' && steps.source_app.outcome == 'success' }}
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath candidate-native-build -resultBundlePath CandidateUILifecycleResults.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 480 -only-testing:FlashNestUITests/LifecyclePlayerUITests/testBackgroundDirectSaveCancelManagementAndRestartSameGame CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee candidate-ui-lifecycle-test.log
+          xcrun xcresulttool get test-results summary --path CandidateUILifecycleResults.xcresult > candidate-native-evidence/ui-lifecycle-summary.json
+          python3 experiments/frame-order/candidate-native/verify_native_result.py --summary candidate-native-evidence/ui-lifecycle-summary.json --log candidate-ui-lifecycle-test.log --variant both --scope ui-lifecycle
+          git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
+      - name: Retain native traces, crash evidence and exact candidate provenance
+        if: always()
+        run: |
+          mkdir -p candidate-native-evidence
+          python3 scripts/collect_test_webkit_crashes.py candidate-native-start.marker candidate-native-evidence/webkit-crashes || true
+          if [ -d CandidateFrameOrderResults.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path CandidateFrameOrderResults.xcresult > candidate-native-evidence/summary.json || true
+            xcrun xcresulttool export attachments --path CandidateFrameOrderResults.xcresult --output-path candidate-native-evidence/attachments || true
+          fi
+          for scope in SaveLifecycle UILifecycle; do
+            bundle="Candidate${scope}Results.xcresult"
+            if [ -d "$bundle" ]; then
+              xcrun xcresulttool get test-results summary --path "$bundle" > "candidate-native-evidence/${scope}-summary.json" || true
+              xcrun xcresulttool export attachments --path "$bundle" --output-path "candidate-native-evidence/${scope}-attachments" || true
+            fi
+          done
+          printf '%s\n' "repository=$GITHUB_REPOSITORY" "diagnosticCommit=$GITHUB_SHA" "runID=$GITHUB_RUN_ID" "runAttempt=$GITHUB_RUN_ATTEMPT" "imageOS=${ImageOS:-unknown}" "imageVersion=${ImageVersion:-unknown}" > candidate-native-evidence/run.txt
+          git diff -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json > candidate-native-evidence/production-source.diff
+      - name: Upload evidence and complete source/license correspondence, never an IPA
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-experimental-candidate-native-evidence
+          path: |
+            candidate-native-test.log
+            candidate-save-lifecycle-test.log
+            candidate-ui-lifecycle-test.log
+            candidate-native-evidence
+            candidate-native-download
+            candidate-native-stage/frame-order-candidate
+            candidate-native-stage/FrameOrderCandidateIdentity.generated.swift
+            candidate-native-stage/verification.json
+            candidate-native-project.yml
+            experiments/frame-order/candidate-native
+          if-no-files-found: warn
+          retention-days: 7
