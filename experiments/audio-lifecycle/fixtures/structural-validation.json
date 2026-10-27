@@ -1,0 +1,33 @@
+{
+  "status": "STRUCTURAL_PASS_ONLY",
+  "runtimeExecuted": false,
+  "bytes": 799,
+  "sha256": "e25f5dba4162a25b9a07832be4e6f8f62242734f6f39e92983c53467a28e7fd2",
+  "methods": [
+    {
+      "method": "AudioLifecycleRoot$iinit",
+      "maxObservedStack": 3,
+      "maxObservedScope": 10
+    },
+    {
+      "method": "AudioLifecycleRoot$frame1",
+      "maxObservedStack": 5,
+      "maxObservedScope": 10
+    },
+    {
+      "method": "AudioLifecycleRoot$onTick",
+      "maxObservedStack": 3,
+      "maxObservedScope": 10
+    },
+    {
+      "method": "AudioLifecycleRoot$cinit",
+      "maxObservedStack": 1,
+      "maxObservedScope": 9
+    },
+    {
+      "method": "audiofixture$script",
+      "maxObservedStack": 2,
+      "maxObservedScope": 8
+    }
+  ]
+}

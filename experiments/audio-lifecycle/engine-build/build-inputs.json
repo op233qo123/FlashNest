@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "baselineArchive": "vendor/ruffle-frame-order-40491098384.zip",
+  "baselineArchiveSHA256": "57d7eaed19edd006e2a33a9bfa816f22da8b1003becf3719dfca0c97cb38c4af",
+  "baselineProvenanceSHA256": "73829617008e26ffe48bfc29e689c0a719641f6c9e93214b29f8ee3c6bfd22d5",
+  "patches": [
+    {
+      "path": "experiments/frame-order/engine-patch/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f"
+    },
+    {
+      "path": "experiments/audio-lifecycle/engine-patch/audio-lifecycle.patch",
+      "sha256": "b588d0bc9995c2bb60ecc4738fce071fe39b930231fb7f30d38cb48ca9b73639"
+    }
+  ],
+  "expectedOriginalCoreJSTests": 59,
+  "expectedNewConfigTests": 0,
+  "newConfigTestTitlePrefix": "FlashNest WebAudio lifecycle "
+}

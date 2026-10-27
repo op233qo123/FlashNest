@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "status": "MOCK_AND_STRUCTURAL_PASS_ONLY",
+  "rustCompiled": false,
+  "browserExecuted": false,
+  "nativeExecuted": false,
+  "crashCauseEstablished": false,
+  "checks": {
+    "observerMockGroups": 10,
+    "consoleObserverMockGroups": 8,
+    "contractMockGroups": 27,
+    "runnerGuardMockGroups": 6,
+    "allMjsSyntax": "PASS",
+    "originalFixtureStructural": "PASS",
+    "exactPinnedSourcePatch": "PASS"
+  },
+  "commands": [
+    "node test_observer.mjs",
+    "node test_console_observer.mjs",
+    "node test_contracts.mjs",
+    "node test_runner_guards.mjs",
+    "node --check each .mjs",
+    "PYTHONDONTWRITEBYTECODE=1 python3 ../fixtures/validate_fixture.py"
+  ],
+  "sourcePatchSHA256": "b588d0bc9995c2bb60ecc4738fce071fe39b930231fb7f30d38cb48ca9b73639"
+}

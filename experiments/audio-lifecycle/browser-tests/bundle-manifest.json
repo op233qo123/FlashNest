@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "runtimeExecuted": false,
+  "files": {
+    "README.md": {
+      "bytes": 4969,
+      "sha256": "8a7f1c9bedd089513792b22a9a684633ec00cee3facb5de3f4399e27a2cf2aa3"
+    },
+    "SOURCE_PROOF.md": {
+      "bytes": 7734,
+      "sha256": "7ccffa1a649a3c9c73fe21d95b6275f5f072e7a7195c7649c8dcad51e23555e7"
+    },
+    "console-observer.mjs": {
+      "bytes": 3103,
+      "sha256": "e3444ba2b50b9d634c7aaf84859db96e7acd06876e31fafd2dc3841a5b0fe1e9"
+    },
+    "contracts.mjs": {
+      "bytes": 4883,
+      "sha256": "e09d976187f6ae1a3e996ea5618af8ae691002a49be6b29bdd1c3ee74d821e0f"
+    },
+    "observer.mjs": {
+      "bytes": 6842,
+      "sha256": "459c80e31b0ff458163813ef05d59730af25f793c70702e26f2f135cf3c17327"
+    },
+    "page.html": {
+      "bytes": 395,
+      "sha256": "b4b22e26f86fba516a5cd99d1324fd600561366b4c3d9841d4d52b76646dc910"
+    },
+    "page.mjs": {
+      "bytes": 4064,
+      "sha256": "617320adbf648d50467bdafd61a55d6f8d5ac12f0b6071d684b42eb826bcd4f9"
+    },
+    "run.mjs": {
+      "bytes": 9809,
+      "sha256": "0f0b372cdb5ef57aa21be0b1c155f3cabc790a7d3660b3d0c791b21827743638"
+    },
+    "runner-guards.mjs": {
+      "bytes": 3259,
+      "sha256": "aa16b5949d6db4e8d3a46813df503b8bb2f38d81d1c4a428ec3f36e73befeffe"
+    },
+    "test_console_observer.mjs": {
+      "bytes": 7087,
+      "sha256": "915ce0f9c373ca0a875fe5c672183d304a89940f778b35ee30d585524dd48683"
+    },
+    "test_contracts.mjs": {
+      "bytes": 4266,
+      "sha256": "bc35b0c63457fd882e4e4130390c322e1758294e85c3e3d86c6a8691bd63b353"
+    },
+    "test_observer.mjs": {
+      "bytes": 13189,
+      "sha256": "efc714b508574515dd2a135652681f63f492452005707c43abb94fbfd1201d1c"
+    },
+    "test_runner_guards.mjs": {
+      "bytes": 3191,
+      "sha256": "b9e1be3f6cc5db05073ccb15cd8770bf7e71a3f5a7482a288107bd0da3194f73"
+    },
+    "validation.json": {
+      "bytes": 785,
+      "sha256": "f77cc4fea6777827b21a75372c7fea069f9256d927b2719b859848542bff6f09"
+    },
+    "webdriver-node-entry.mjs": {
+      "bytes": 497,
+      "sha256": "f76bf9887c5e4c5385afa130e0146af934b728b52514c0760104ef9cccda1685"
+    }
+  }
+}

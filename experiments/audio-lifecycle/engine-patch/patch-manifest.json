@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "sourcePin": "89a7049965f3090e706265670df309a5128233ac",
+  "scope": [
+    "web/src/audio.rs"
+  ],
+  "compiled": false,
+  "runtimeExecuted": false,
+  "crashCauseEstablished": false,
+  "baseGitBlob": "0d1c436ca5f09ddf963b6adc8d4cf8a60abbd4a9",
+  "baseSHA256": "0cca2bc14a593060a233ec68a2ae725efc381c9068626a92a82c67a3bc732b8b",
+  "modifiedSHA256": "d0c20596f7075f81fe8a645decc321851e69b2804ee44681a0a2e06371d3374a",
+  "patchSHA256": "b588d0bc9995c2bb60ecc4738fce071fe39b930231fb7f30d38cb48ca9b73639",
+  "preserved": "decoder/mixer/adaptive buffers/resume/suspend/close Promise scheduling/RAF unchanged"
+}

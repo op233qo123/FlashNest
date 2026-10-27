@@ -1,0 +1,153 @@
+name: Experiment WebAudio ownership lifecycle (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-audio-lifecycle
+  cancel-in-progress: false
+jobs:
+  validate-build-observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+      CARGO_BUILD_JOBS: 2
+      CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+      RUFFLE_SOURCE_DIR: ${{ github.workspace }}/.audio-lifecycle-ruffle
+      ENGINE_EVIDENCE_DIR: ${{ github.workspace }}/audio-lifecycle-evidence
+    steps:
+      - name: Checkout original experiment
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Checkout exact official Ruffle source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ruffle-rs/ruffle
+          ref: 89a7049965f3090e706265670df309a5128233ac
+          path: .audio-lifecycle-ruffle
+          persist-credentials: false
+      - name: Install pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Validate original fixture and diagnostic observer before compilation
+        timeout-minutes: 3
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          python3 experiments/audio-lifecycle/fixtures/validate_fixture.py
+          python3 experiments/audio-lifecycle/engine-build/test_helpers.py
+          node experiments/audio-lifecycle/browser-tests/test_observer.mjs
+          node experiments/audio-lifecycle/browser-tests/test_console_observer.mjs
+          node experiments/audio-lifecycle/browser-tests/test_contracts.mjs
+          node experiments/audio-lifecycle/browser-tests/test_runner_guards.mjs
+          node --check experiments/audio-lifecycle/browser-tests/run.mjs
+      - name: Install pinned Rust and checksum-pinned Java runtime
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          mkdir -p "$ENGINE_EVIDENCE_DIR"
+          rustup toolchain install 1.99.1 --profile minimal --component rust-src --target wasm32-unknown-unknown
+          curl --fail --location --retry 2 --max-time 180 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.13_9.tar.gz' -o "$RUNNER_TEMP/audio-jre.tar.gz"
+          echo "a535a1df9c6284d9618872984e026ae0352d1f7e9e0605425c0e6114f47351dd  $RUNNER_TEMP/audio-jre.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/audio-jre"
+          tar -xzf "$RUNNER_TEMP/audio-jre.tar.gz" -C "$RUNNER_TEMP/audio-jre" --strip-components=1
+          echo "$RUNNER_TEMP/audio-jre/bin" >> "$GITHUB_PATH"
+          rustc -vV > "$ENGINE_EVIDENCE_DIR/rustc.txt"
+          cargo --version > "$ENGINE_EVIDENCE_DIR/cargo.txt"
+      - name: Verify exact guard baseline and additive audio patch
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          test "$(git -C "$RUFFLE_SOURCE_DIR" rev-parse HEAD)" = 89a7049965f3090e706265670df309a5128233ac
+          test -z "$(git -C "$RUFFLE_SOURCE_DIR" status --porcelain)"
+          python3 experiments/frame-order/validate_fixtures.py
+          python3 experiments/frame-order/engine-patch/check_patch_bundle.py --source-file "$RUFFLE_SOURCE_DIR/core/src/display_object/movie_clip.rs"
+          python3 experiments/audio-lifecycle/engine-patch/check_patch.py --source-file "$RUFFLE_SOURCE_DIR/web/src/audio.rs"
+          python3 experiments/frame-order/engine-patch/stage_original_tests.py "$RUFFLE_SOURCE_DIR"
+          git -C "$RUFFLE_SOURCE_DIR" apply "$GITHUB_WORKSPACE/experiments/frame-order/engine-patch/queued-goto-guard.patch"
+          python3 experiments/audio-lifecycle/engine-build/candidate_provenance.py verify-guard "$RUFFLE_SOURCE_DIR" "$ENGINE_EVIDENCE_DIR/guard-source.json"
+          python3 experiments/audio-lifecycle/engine-build/candidate_provenance.py baseline "$RUFFLE_SOURCE_DIR" "$GITHUB_WORKSPACE/audio-lifecycle-baseline"
+          git -C "$RUFFLE_SOURCE_DIR" apply --check "$GITHUB_WORKSPACE/experiments/audio-lifecycle/engine-patch/audio-lifecycle.patch"
+          git -C "$RUFFLE_SOURCE_DIR" apply "$GITHUB_WORKSPACE/experiments/audio-lifecycle/engine-patch/audio-lifecycle.patch"
+          git -C "$RUFFLE_SOURCE_DIR" diff --check
+          python3 experiments/audio-lifecycle/engine-build/candidate_provenance.py verify-audio "$RUFFLE_SOURCE_DIR" "$ENGINE_EVIDENCE_DIR/patched-source.json"
+          git -C "$RUFFLE_SOURCE_DIR" diff HEAD > "$ENGINE_EVIDENCE_DIR/applied-source.diff"
+          rustc --test experiments/audio-lifecycle/engine-patch/ownership_graph.rs -o "$RUNNER_TEMP/audio-ownership-model"
+          "$RUNNER_TEMP/audio-ownership-model" 2>&1 | tee "$ENGINE_EVIDENCE_DIR/ownership-model.log"
+          grep -Eq 'test result: ok\. 2 passed; 0 failed; 0 ignored;' "$ENGINE_EVIDENCE_DIR/ownership-model.log"
+      - name: Compile exact guarded core regression targets
+        timeout-minutes: 40
+        run: |
+          set -euo pipefail
+          (cd "$RUFFLE_SOURCE_DIR" && cargo test --locked -p tests --test tests --test flashnest_frame_order --profile ci --no-run) 2>&1 | tee "$ENGINE_EVIDENCE_DIR/core-compile.log"
+      - name: Preserve original frame order and 31 adjacent gates
+        timeout-minutes: 12
+        env:
+          FRAME_ORDER_ENGINE_PHASE: patched
+          FRAME_ORDER_TRACE_DIR: ${{ github.workspace }}/audio-lifecycle-evidence/patched/original
+        run: |
+          set -euo pipefail
+          (cd "$RUFFLE_SOURCE_DIR" && cargo test --locked -p tests --test flashnest_frame_order --profile ci -- --nocapture --test-threads=1) 2>&1 | tee "$ENGINE_EVIDENCE_DIR/patched-original.log"
+          grep -Eq 'test result: ok\. 2 passed; 0 failed; 0 ignored;' "$ENGINE_EVIDENCE_DIR/patched-original.log"
+          python3 experiments/frame-order/engine-build/run_adjacent_tests.py "$RUFFLE_SOURCE_DIR" "$ENGINE_EVIDENCE_DIR" patched
+      - name: Install pinned web toolchain
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y clang-18 libclang-18-dev libssl-dev pkg-config
+          cargo install --locked wasm-bindgen-cli --version 0.2.127
+          curl --fail --location --retry 2 --max-time 180 https://github.com/WebAssembly/binaryen/releases/download/version_129/binaryen-version_129-x86_64-linux.tar.gz -o "$RUNNER_TEMP/audio-binaryen.tar.gz"
+          echo "50b9fa62b9abea752da92ec57e0c555fee578760cd237c40107957715d2976ba  $RUNNER_TEMP/audio-binaryen.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/audio-binaryen"
+          tar -xzf "$RUNNER_TEMP/audio-binaryen.tar.gz" -C "$RUNNER_TEMP/audio-binaryen" --strip-components=1
+          echo "$RUNNER_TEMP/audio-binaryen/bin" >> "$GITHUB_PATH"
+          dpkg-query -W clang-18 libclang-18-dev libssl-dev pkg-config > "$ENGINE_EVIDENCE_DIR/web-system-packages.txt"
+      - name: Build isolated dual-WASM audio candidate and unchanged core JS tests
+        timeout-minutes: 60
+        run: |
+          set -euo pipefail
+          bash experiments/audio-lifecycle/engine-build/build_web_candidate.sh "$RUFFLE_SOURCE_DIR" "$GITHUB_WORKSPACE/audio-lifecycle-candidate"
+      - name: Real WebAudio baseline versus candidate ownership gate
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver || { test -n "${CHROMEWEBDRIVER:-}" && test -x "$CHROMEWEBDRIVER/chromedriver" && printf "%s" "$CHROMEWEBDRIVER/chromedriver"; })
+          "$chrome" --version > "$ENGINE_EVIDENCE_DIR/chrome.txt"
+          "$driver" --version > "$ENGINE_EVIDENCE_DIR/chromedriver.txt"
+          baseline_manifest="$GITHUB_WORKSPACE/audio-lifecycle-baseline/runtime.browser-manifest.json"
+          candidate_manifest="$GITHUB_WORKSPACE/audio-lifecycle-candidate/runtime.browser-manifest.json"
+          node experiments/audio-lifecycle/browser-tests/run.mjs \
+            --baseline "$GITHUB_WORKSPACE/audio-lifecycle-baseline/runtime" \
+            --candidate "$GITHUB_WORKSPACE/audio-lifecycle-candidate/runtime" \
+            --baseline-manifest "$baseline_manifest" --candidate-manifest "$candidate_manifest" \
+            --baseline-manifest-sha256 "$(sha256sum "$baseline_manifest" | cut -d' ' -f1)" \
+            --candidate-manifest-sha256 "$(sha256sum "$candidate_manifest" | cut -d' ' -f1)" \
+            --webdriverio "$RUFFLE_SOURCE_DIR/web/node_modules/webdriverio" \
+            --chrome "$chrome" --driver "$driver" \
+            --fixtures "$GITHUB_WORKSPACE/experiments/audio-lifecycle/fixtures" \
+            --output "$ENGINE_EVIDENCE_DIR/browser"
+      - name: Preserve complete source and partial failures
+        if: always()
+        run: |
+          mkdir -p "$ENGINE_EVIDENCE_DIR/experiment"
+          cp -R experiments/audio-lifecycle "$ENGINE_EVIDENCE_DIR/experiment/"
+          cp .github/workflows/experiment-audio-lifecycle.yml "$ENGINE_EVIDENCE_DIR/experiment/"
+          printf '%s\n' "repository=$GITHUB_REPOSITORY" "experimentCommit=$GITHUB_SHA" "runID=$GITHUB_RUN_ID" "runAttempt=$GITHUB_RUN_ATTEMPT" "imageOS=${ImageOS:-unknown}" "imageVersion=${ImageVersion:-unknown}" > "$ENGINE_EVIDENCE_DIR/run.txt"
+          git -C "$RUFFLE_SOURCE_DIR" status --short > "$ENGINE_EVIDENCE_DIR/upstream-status.txt" || true
+      - name: Retain unpromoted candidate and ownership evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-experimental-audio-lifecycle
+          retention-days: 7
+          path: |
+            audio-lifecycle-evidence
+            audio-lifecycle-baseline
+            audio-lifecycle-candidate
+          if-no-files-found: warn

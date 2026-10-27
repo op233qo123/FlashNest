@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Original AVM2 vector/heartbeat only; no sound tags, network, storage, game assets or compiler",
+  "swfVersion": 37,
+  "runtimeExecuted": false,
+  "adobeReferenceExecuted": false,
+  "abcHelperSha256": "d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701",
+  "files": {
+    "silent.swf": {
+      "bytes": 799,
+      "sha256": "e25f5dba4162a25b9a07832be4e6f8f62242734f6f39e92983c53467a28e7fd2"
+    }
+  }
+}
