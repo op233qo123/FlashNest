@@ -139,6 +139,16 @@
      }
      if (isExplicit(config.scale)) {
          builder.setScale(config.scale.toLowerCase());
+--- a/web/packages/core/src/public/config/default.ts
++++ b/web/packages/core/src/public/config/default.ts
+@@ -39,6 +39,7 @@
+     fullScreenAspectRatio: "",
+     forceAlign: false,
+     quality: null,
++    renderScale: null,
+     scale: "showAll",
+     forceScale: false,
+     frameRate: null,
 --- a/web/packages/core/src/public/config/load-options.ts
 +++ b/web/packages/core/src/public/config/load-options.ts
 @@ -596,6 +596,13 @@
@@ -149,7 +159,7 @@
 +     * Does not change Stage geometry, DPR, input, offscreen buffers or game FPS.
 +     * Unsupported backends retain original resolution. Default: 1.
 +     */
-+    renderScale?: 1 | 0.75 | 0.5 | 0.25;
++    renderScale?: 1 | 0.75 | 0.5 | 0.25 | null;
 +
 +    /**
       * This is equivalent to Stage.scaleMode.
@@ -157,9 +167,10 @@
       * @default "showAll"
 --- /dev/null
 +++ b/web/packages/core/test/render-scale.ts
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,43 @@
 +import { strict as assert } from "assert";
 +import { configureBuilder } from "../src/internal/builder";
++import { DEFAULT_CONFIG } from "../src/public/config/default";
 +import type { BaseLoadOptions } from "../src/public/config/index";
 +
 +function apply(options: Record<string, unknown>) {
@@ -177,7 +188,10 @@
 +
 +describe("FlashNest onscreen rendering density", function () {
 +    it("does not call the new setter when the option is omitted", function () {
++        assert.equal(DEFAULT_CONFIG.renderScale, null);
 +        assert.deepEqual(apply({}), [["quality", "high"]]);
++        assert.deepEqual(apply({ renderScale: DEFAULT_CONFIG.renderScale }),
++            [["quality", "high"]]);
 +    });
 +    it("passes exactly the four supported numeric tiers", function () {
 +        for (const value of [1, 0.75, 0.5, 0.25]) {

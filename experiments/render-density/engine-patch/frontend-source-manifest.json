@@ -31,18 +31,25 @@
       "bytes": 6615
     },
     {
+      "path": "web/packages/core/src/public/config/default.ts",
+      "originalGitBlob": "5b970172bf34a24e58f4e380064fb0d8be6189e6",
+      "originalSHA256": "0b014efbb08ed430610f5b748504a6df1088d253043f87ace3cbc206608c9544",
+      "modifiedSHA256": "12d9c925f5e19c1d4601f992604e1352c3720999a0f8a9eb1828265e006f5237",
+      "bytes": 1726
+    },
+    {
       "path": "web/packages/core/src/public/config/load-options.ts",
       "originalGitBlob": "617d53c17a158c229a2f11c5ea009373ace8f9aa",
       "originalSHA256": "52f05646eb43caa3340d382cf11610e2127923cd1651b03b4c9ed707e0d34de3",
-      "modifiedSHA256": "0e7c8f60193368263eb8830c42fd2fdff117dbe802f5c4cffba259988eeeb38f",
-      "bytes": 23048
+      "modifiedSHA256": "ec5df0e3a3666d9c23402ab827fec93a02c81faacbe941e3bac1f3546b8757e2",
+      "bytes": 23055
     },
     {
       "path": "web/packages/core/test/render-scale.ts",
       "originalGitBlob": null,
       "originalSHA256": null,
-      "modifiedSHA256": "bc8cc93c4fb7c5ad0b5b00853cfed2a2f1df20e311c49f9467c74dfe51d0ad81",
-      "bytes": 1833
+      "modifiedSHA256": "5d27bb6111d81098cdb0923adf0430046efe9904972713fb4d13d815bc177ae6",
+      "bytes": 2065
     },
     {
       "path": "web/src/builder.rs",

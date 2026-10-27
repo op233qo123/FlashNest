@@ -64,9 +64,14 @@ def check(original, modified):
         assert fragment in old[web] and fragment in new[web]
     tests = new['web/packages/core/test/render-scale.ts']
     assert tests.count('    it(') == 4
+    defaults = 'web/packages/core/src/public/config/default.ts'
+    assert old[defaults] == new[defaults].replace('    renderScale: null,\n', '')
+    assert 'renderScale?: 1 | 0.75 | 0.5 | 0.25 | null;' in new['web/packages/core/src/public/config/load-options.ts']
+    assert 'assert.equal(DEFAULT_CONFIG.renderScale, null)' in tests
+    assert 'apply({ renderScale: DEFAULT_CONFIG.renderScale })' in tests
     assert 'core/src/display_object/stage.rs' not in new
     assert 'core/src/display_object/movie_clip.rs' not in new
-    print('PASS: seven pinned Git blobs, exact eight-file patch, unchanged default/input paths, four config tests')
+    print('PASS: eight pinned Git blobs, exact nine-file patch, unchanged default/input paths, four config tests')
 
 
 if __name__ == '__main__':

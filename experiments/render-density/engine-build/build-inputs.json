@@ -11,7 +11,7 @@
     },
     {
       "path": "experiments/render-density/engine-patch/frontend-webgl-density.patch",
-      "sha256": "ecf06b18cb83dbd0a415a1c0e04f0472004643b6f1350aa66f65c7006a9146e6"
+      "sha256": "02c714909dad620d3ee27350786b53ca82acc01b669a93222596099cbf5394aa"
     },
     {
       "path": "experiments/render-density/engine-patch/wgpu-density.patch",
