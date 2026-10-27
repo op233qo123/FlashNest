@@ -1,6 +1,16 @@
 name: Experiment render-density geometry (locked candidate)
 on:
   workflow_dispatch:
+    inputs:
+      backend:
+        description: 'Backend gate to run; both is the complete default'
+        type: choice
+        required: true
+        default: both
+        options:
+          - both
+          - webgl
+          - wgpu-webgl
 permissions:
   contents: read
   actions: read
@@ -13,6 +23,7 @@ jobs:
     timeout-minutes: 150
     env:
       PYTHONDONTWRITEBYTECODE: '1'
+      SELECTED_BACKEND: ${{ inputs.backend }}
       REUSE: ${{ github.workspace }}/density-reused-build
       EVIDENCE: ${{ github.workspace }}/density-geometry-evidence
     steps:
@@ -27,6 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REPOSITORY" = op233qo123/FlashNest
+          case "$SELECTED_BACKEND" in both|webgl|wgpu-webgl) ;; *) exit 1 ;; esac
           mkdir -p "$EVIDENCE/build-api"
           gh api /repos/op233qo123/FlashNest/actions/runs/40514553456 > "$EVIDENCE/build-api/run.json"
           gh api '/repos/op233qo123/FlashNest/actions/runs/40514553456/jobs?filter=latest&per_page=100' > "$EVIDENCE/build-api/jobs.json"
@@ -63,6 +75,7 @@ jobs:
           "$chrome" --version | tee "$EVIDENCE/chrome-version.txt"
           "$driver" --version | tee "$EVIDENCE/chromedriver-version.txt"
       - name: Full corrected geometry - WebGL
+        if: ${{ !cancelled() && steps.ready.outcome == 'success' && (inputs.backend == 'both' || inputs.backend == 'webgl') }}
         timeout-minutes: 65
         run: |
           set -euo pipefail
@@ -76,7 +89,7 @@ jobs:
             --webdriverio "$GITHUB_WORKSPACE/.geometry-dependencies/web/node_modules/webdriverio" \
             --chrome "$chrome" --driver "$driver" --backend webgl --output "$EVIDENCE/browser-webgl"
       - name: Full corrected geometry - WGPU WebGL
-        if: ${{ !cancelled() && steps.ready.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.ready.outcome == 'success' && (inputs.backend == 'both' || inputs.backend == 'wgpu-webgl') }}
         timeout-minutes: 65
         run: |
           set -euo pipefail
@@ -95,7 +108,7 @@ jobs:
           mkdir -p "$EVIDENCE/current-experiment"
           cp -R experiments/render-density "$EVIDENCE/current-experiment/render-density"
           cp .github/workflows/experiment-render-density-geometry.yml "$EVIDENCE/current-experiment/"
-          printf '%s\n' "repository=$GITHUB_REPOSITORY" "harnessCommit=$GITHUB_SHA" "geometryRun=$GITHUB_RUN_ID" "runtimeBuildCommit=a744b8b75ae9eacec28332b0ccf87822ddaae265" "runtimeBuildRun=40514553456" "runtimeArtifact=12738984800" > "$EVIDENCE/run.txt"
+          printf '%s\n' "repository=$GITHUB_REPOSITORY" "harnessCommit=$GITHUB_SHA" "geometryRun=$GITHUB_RUN_ID" "selectedBackend=$SELECTED_BACKEND" "runtimeBuildCommit=a744b8b75ae9eacec28332b0ccf87822ddaae265" "runtimeBuildRun=40514553456" "runtimeArtifact=12738984800" > "$EVIDENCE/run.txt"
       - name: Retain corrected geometry evidence and unchanged source correspondence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

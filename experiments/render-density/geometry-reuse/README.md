@@ -53,8 +53,35 @@ transforms, DPR 1/2/3 crops, transparent-pixel rejection, and bounds. These are
 harness checks, not an executed renderer pass. Completed-case counts now include
 all applicable visual assertions, not only input observations.
 
-The engine patches, candidate bytes, fixture bytes and required matrix counts
-are unchanged. A new real browser run is still required.
+## Verified WebGL result and isolated WGPU warning repair
+
+Run [40526061814](https://github.com/op233qo123/FlashNest/actions/runs/40526061814),
+harness commit `d28433d12169b9dabdcc1b27b2887dd4e830db86`, completed all
+**1,080 WebGL geometry cases, 10 nested-frame-order cases and two fallback cases**.
+The candidate scale-1 representative images were pixel-identical to the unchanged
+control; lower tiers passed the bounded vector-silhouette and logical/input gates.
+Its retained artifact `12745437329` is 22,430,992 bytes, SHA256
+`a340471e13b72e0ea77fa7a84333d0b1903bc740c78f03c9da30e9fc2096f5cb`.
+
+WGPU-WebGL completed **zero cases**: the first unchanged control's trusted click
+hit the pinned runtime's visible hardware-acceleration warning rather than the
+canvas. The screenshot, shadow hit stack and trusted pointer path agree. This is
+not evidence that a candidate tier passed or that engine input failed.
+
+The narrow repair recognizes only that exact warning ID, full text and FAQ link.
+It retains the warning text and full/cropped screenshots before one trusted click
+on the verified topmost close control, waits for dismissal, then runs the same
+backend, real drawing-buffer and visible-pixel checks. Unknown warnings are not
+dismissed; clicks are never retried and overlays are not hidden by script or CSS.
+Actual bounded GL vendor/renderer strings and optional debug-renderer metadata are
+recorded without treating the warning alone as hardware-state proof.
+
+The manual workflow now accepts `both` (default), `webgl` or `wgpu-webgl` and records
+the selection. A WGPU-only retry does not rerun or replace the earlier WebGL result;
+each selected backend retains its full 1,080/10/2 requirements. The engine patches,
+candidate bytes and original fixture bytes are unchanged. WGPU success remains
+unestablished until the corrected real browser gate completes, and a software-GPU
+Ubuntu result would not establish native iOS GPU compatibility.
 
 ## Evidence that is reused, not rerun
 

@@ -19,3 +19,4 @@ assert.throws(()=>decodePNG(png().subarray(0,40)));assert.throws(()=>decodePNG(p
 assert.throws(()=>comparePixels({...p,pixels:Buffer.alloc(p.pixels.length)},p));
 console.log('PASS PNG decoding, exact self-comparison, truncated/invalid/blank rejection');
 await import('./test_screenshot.mjs');
+await import('./test_hardware_warning.mjs');

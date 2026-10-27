@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {comparePixels} from './png.mjs';
 import {nodeEntry,captureHost,encodePNG,fixturePixels,visibleDragTarget} from './screenshot.mjs';
+import {dismissHardwareWarning} from './hardware-warning.mjs';
 const here=path.dirname(fileURLToPath(import.meta.url)),root=path.dirname(here);
 const args={};for(let i=2;i<process.argv.length;i+=2){assert(process.argv[i].startsWith('--')&&process.argv[i+1],'--key value required');args[process.argv[i].slice(2)]=process.argv[i+1]}
 for(const k of ['baseline','candidate','baseline-manifest','candidate-manifest','webdriverio','backend','output'])assert(args[k],`Missing --${k}`);
@@ -57,15 +58,27 @@ const server=http.createServer((req,res)=>{
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
 let browser,shotCount=0;
 async function screenshot(label){if(shotCount>=40)return;const name=`${String(shotCount++).padStart(2,'0')}-${label.replace(/[^a-zA-Z0-9-]/g,'_').slice(0,100)}.png`;const shot=await captureHost(browser);retainShot(name,shot)}
+let retainedPNGBytes=0;
 function retainShot(name,shot){
  const full=name.replace(/\.png$/,'-full.png'),meta=name.replace(/\.png$/,'.json');
- fs.writeFileSync(path.join(output,full),shot.full);fs.writeFileSync(path.join(output,name),encodePNG(shot.pixels));
+ const cropped=encodePNG(shot.pixels);retainedPNGBytes+=shot.full.length+cropped.length;assert(retainedPNGBytes<=256*1024*1024,'Retained PNG evidence exceeds256MiB');
+ fs.writeFileSync(path.join(output,full),shot.full);fs.writeFileSync(path.join(output,name),cropped);
  fs.writeFileSync(path.join(output,meta),JSON.stringify({...shot.metadata,fullSHA256:sha(shot.full),cropSHA256:sha(shot.pixels.pixels)},null,2)+'\n');
  result.screenshots.push(full,name,meta);
 }
 async function visualReady(){
  let last;await waitFor(async()=>{last=await captureHost(browser);return fixturePixels(last.pixels).ready},'Actual original vector/background screenshot before input');
  return {counts:fixturePixels(last.pixels),...last.metadata,fullSHA256:sha(last.full),cropSHA256:sha(last.pixels.pixels)};
+}
+let warningCount=0;
+async function closeKnownHardwareWarning(){
+ return dismissHardwareWarning({
+  inspect:()=>browser.execute(()=>window.hardwareWarningState()),
+  capture:async()=>{assert(warningCount<1200,'Warning screenshot evidence limit');const name=`hardware-warning-${String(warningCount++).padStart(4,'0')}.png`;const shot=await captureHost(browser);retainShot(name,shot);return {name,fullSHA256:sha(shot.full),...shot.metadata,graphics:(await browser.execute(()=>window.measure()))?.graphics??{available:false}}},
+  click:(x,y)=>move(x,y,true,true),
+  waitGone:()=>waitFor(async()=>!(await browser.execute(()=>window.hardwareWarningState())).visible,'Verified hardware warning did not close after its one trusted click',5000),
+  record:async evidence=>{(result.hardwareWarnings??=[]).push({...result.activeCase,...evidence});record('hardware-warning',{...result.activeCase,...evidence})}
+ });
 }
 async function exactInputCounts(down,up,label){
  await waitFor(async()=>{const e=await traces();assert(!e.overflow&&!e.errors.length,'Input trace error');const d=parse(e.traces,'DOWN').length,u=parse(e.traces,'UP').length;assert(d<=down&&u<=up,'Unexpected extra pointer acknowledgement');return d===down&&u===up},label,5000);
@@ -92,6 +105,7 @@ async function geometry(arm,scale,fixture,w,h,dpr){
  await waitFor(async()=>{const e=await traces();if(e.errors.length||e.overflow)throw Error(JSON.stringify(e));return e.loaded&&e.observerInstalled},'real loadeddata');await play();
  await waitFor(async()=>(await traces()).traces.some(s=>s.startsWith('DENSITY|READY|')),'real SWF READY');
  await waitFor(async()=>{const m=await browser.execute(()=>window.measure());return m&&m.width===Math.max(1,Math.round(Math.floor(w*dpr)*scale))&&m.height===Math.max(1,Math.round(Math.floor(h*dpr)*scale))},'backing resize');
+ await closeKnownHardwareWarning();
  const canvas=await browser.execute(()=>window.measure());checkCanvas(canvas,arm,scale,w,h,dpr);
  const readiness=await visualReady();
  const points=[[.05,.05],[.95,.05],[.05,.95],[.95,.95],[.5,.5]].map(([x,y])=>[Math.round(w*x),Math.round(h*y)]);

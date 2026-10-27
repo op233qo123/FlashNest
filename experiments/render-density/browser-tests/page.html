@@ -52,19 +52,43 @@ window.screenshotGeometry=function(){
  const r=document.getElementById('host').getBoundingClientRect();
  return {rect:[r.x,r.y,r.width,r.height],viewport:[innerWidth,innerHeight],dpr:devicePixelRatio};
 };
+window.hardwareWarningState=function(){
+ const shadow=window.player?.shadowRoot,modal=shadow?.querySelector('#hardware-acceleration-modal');
+ if(!modal)return {visible:false};
+ const style=getComputedStyle(modal),r=modal.getBoundingClientRect();
+ const visible=style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0&&r.width>0&&r.height>0;
+ if(!visible)return {visible:false};
+ const controls=modal.querySelectorAll('.modal-area > .close-modal'),close=controls[0],c=close?.getBoundingClientRect();
+ const point=c?[Math.round(c.x+c.width/2),Math.round(c.y+c.height/2)]:null;
+ const hit=point?shadow.elementFromPoint(...point):null;
+ const link=modal.querySelector('a.modal-button');
+ const normalize=value=>String(value||'').replace(/\s+/g,' ').trim();
+ return {visible,id:modal.id,text:normalize(modal.querySelector('#acceleration-text')?.textContent),
+  linkText:normalize(link?.textContent),link:link?.href||null,closeCount:controls.length,
+  closeHit:!!close&&(hit===close||close.contains(hit)),point,rect:[r.x,r.y,r.width,r.height]};
+};
 window.pointerContext=function(){
  const r=document.getElementById('host').getBoundingClientRect();
  const describe=e=>{const s=getComputedStyle(e);return {tag:e.tagName,id:String(e.id||'').slice(0,80),display:s.display,visibility:s.visibility,pointerEvents:s.pointerEvents,opacity:s.opacity}};
  const points=[[.05,.05],[.95,.05],[.05,.95],[.95,.95],[.5,.5]];
  return {events:window.pointerEvents.slice(-32),focused:document.hasFocus(),visibility:document.visibilityState,active:document.activeElement?describe(document.activeElement):null,
   targets:points.map(([x,y])=>({point:[r.x+x*r.width,r.y+y*r.height],stack:document.elementsFromPoint(r.x+x*r.width,r.y+y*r.height).slice(0,6).map(describe),shadowStack:window.player?.shadowRoot?.elementsFromPoint?.(r.x+x*r.width,r.y+y*r.height).slice(0,8).map(describe)||[]})),
-  shadow:window.player?.shadowRoot?[...window.player.shadowRoot.querySelectorAll('canvas,button,[role="button"],#play-button,#splash-screen,#unmute-overlay,#message-overlay,#panic,.play-overlay,.unmute-overlay')].slice(0,12).map(describe):[]};
+  shadow:window.player?.shadowRoot?[...window.player.shadowRoot.querySelectorAll('canvas,button,[role="button"],#play-button,#splash-screen,#unmute-overlay,#message-overlay,#panic,#hardware-acceleration-modal,.play-overlay,.unmute-overlay')].slice(0,12).map(describe):[]};
 };
 window.measure=function(){
  const c=window.player?.shadowRoot?.querySelector('canvas');if(!c)return null;
  const r=c.getBoundingClientRect(),entry=window.contexts.get(c);
  const gl=entry&&/^webgl/.test(entry.type)?[entry.context.drawingBufferWidth,entry.context.drawingBufferHeight]:null;
+ let graphics={available:false};
+ if(gl){try{
+  const context=entry.context,extension=context.getExtension('WEBGL_debug_renderer_info');
+  const bounded=value=>value==null?null:String(value).slice(0,240);
+  graphics={available:true,vendor:bounded(context.getParameter(context.VENDOR)),renderer:bounded(context.getParameter(context.RENDERER)),
+   debugExtensionAvailable:!!extension,unmaskedVendor:extension?bounded(context.getParameter(extension.UNMASKED_VENDOR_WEBGL)):null,
+   unmaskedRenderer:extension?bounded(context.getParameter(extension.UNMASKED_RENDERER_WEBGL)):null};
+ }catch{graphics={available:false,reason:'query-unavailable'}}}
+
  return {width:c.width,height:c.height,css:[r.x,r.y,r.width,r.height],client:[c.clientWidth,c.clientHeight],dpr:devicePixelRatio,
-  backend:entry?.type||null,actualRenderer:window.evidence.actualRenderer||null,gl,attributes:Object.fromEntries([...c.attributes].filter(a=>a.name.startsWith('data-flashnest-')).map(a=>[a.name,a.value]))};
+  backend:entry?.type||null,actualRenderer:window.evidence.actualRenderer||null,gl,graphics,attributes:Object.fromEntries([...c.attributes].filter(a=>a.name.startsWith('data-flashnest-')).map(a=>[a.name,a.value]))};
 };
 </script>
