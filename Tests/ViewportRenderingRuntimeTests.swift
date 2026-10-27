@@ -7,6 +7,7 @@ import WebKit
 /// coordinates. Synthetic DOM pointers here complement, not replace, the
 /// trusted UIKit touches in ViewportRenderingUITests on iOS 18.2.
 @MainActor final class ViewportRenderingRuntimeTests: XCTestCase {
+    private var lastMetrics: [String: Any] = [:]
     private let targets: [(String, CGPoint)] = [
         ("TL", CGPoint(x: 32, y: 32)), ("TR", CGPoint(x: 288, y: 32)),
         ("BL", CGPoint(x: 32, y: 208)), ("BR", CGPoint(x: 288, y: 208)),
@@ -32,7 +33,19 @@ import WebKit
         for half in [false, true] {
             RenderSettings(usesHalfResolution: half).save(for: package.id)
             let session = PlayerSession()
-            defer { session.stop() }
+            var phase = "loading"
+            func markPhase(_ value: String) {
+                phase = value
+                print("VIEWPORT_TEST mode=\(half ? "half" : "normal") phase=\(value)")
+            }
+            markPhase("loading")
+            defer {
+                let detail = XCTAttachment(string: "mode=\(half ? "half" : "normal") phase=\(phase)\nlastMetrics=\(lastMetrics)\n\(session.diagnostics.joined(separator: "\n"))")
+                detail.name = "Viewport phase and runtime diagnostics"; detail.lifetime = .keepAlways; add(detail)
+                print("VIEWPORT_TEST final mode=\(half ? "half" : "normal") phase=\(phase) metrics=\(lastMetrics)")
+                print("VIEWPORT_TEST recent diagnostics: \(session.diagnostics.suffix(12).joined(separator: " | "))")
+                session.stop()
+            }
             await session.start(package: package, contentRoot: root.appendingPathComponent(package.id.uuidString).appendingPathComponent("content"))
             let web = try XCTUnwrap(session.webView, session.failure ?? "Missing viewport WebView")
             web.frame = CGRect(x: 0, y: 0, width: 440, height: 860)
@@ -47,7 +60,19 @@ import WebKit
             // The setting is a next-opening preference, not a live reload.
             RenderSettings(usesHalfResolution: !half).save(for: package.id)
             XCTAssertEqual(session.activeRenderSettings?.usesHalfResolution, half)
+            markPhase("root viewport before child load")
+            guard let rootMetrics = try await waitForMetrics(web, size: CGSize(width: 440, height: 860), factor: half ? 0.5 : 1) else {
+                XCTFail("Root canvas did not settle before child load: \(lastMetrics); \(session.diagnostics)")
+                return
+            }
+            XCTAssertEqual(try number("visualWidth", rootMetrics), 440, accuracy: 1)
+            XCTAssertEqual(try number("visualHeight", rootMetrics), 860, accuracy: 1)
+            let rootEvidence = XCTAttachment(string: "mode=\(half ? "half" : "normal") root before child \(rootMetrics)")
+            rootEvidence.name = "Root canvas before child load"; rootEvidence.lifetime = .keepAlways; add(rootEvidence)
+            print("VIEWPORT_TEST root metrics: \(rootMetrics)")
+            markPhase("root corner input")
             try await checkTargets(web, session: session)
+            markPhase("child transition")
             session.key("Enter", down: true); session.key("Enter", down: false)
             try await requireTrace("VIEWPORT_CHILD_READY", session: session)
 
@@ -56,9 +81,11 @@ import WebKit
             for size in [CGSize(width: 440, height: 860), CGSize(width: 860, height: 440)] {
                 web.frame.size = size
                 let factor = half ? 0.5 : 1.0
-                let settled = try await waitForMetrics(web, size: size, factor: factor)
-                XCTAssertTrue(settled, "Canvas must settle to the selected layout before hit testing")
-                let values = try await metrics(web)
+                markPhase("child viewport \(size)")
+                guard let values = try await waitForMetrics(web, size: size, factor: factor) else {
+                    XCTFail("Canvas did not settle for \(phase): \(lastMetrics); \(session.diagnostics)")
+                    return
+                }
                 let dpr = try number("dpr", values)
                 if let originalDPR { XCTAssertEqual(dpr, originalDPR, accuracy: 0.001, "No DPR monkeypatch") }
                 else { originalDPR = dpr }
@@ -77,19 +104,21 @@ import WebKit
                 }
                 let attachment = XCTAttachment(string: "mode=\(half ? "half" : "normal") viewport=\(size) \(values)")
                 attachment.name = "Actual viewport and backing pixels"; attachment.lifetime = .keepAlways; add(attachment)
+                print("VIEWPORT_TEST child metrics: \(values)")
                 try await checkTargets(web, session: session)
                 _ = try await web.evaluateJavaScript("""
                 (() => { let probe = document.getElementById('viewport-blur-probe');
                   if (!probe) { probe = document.createElement('button'); probe.id = 'viewport-blur-probe'; document.body.append(probe); }
                   probe.focus(); return document.activeElement === probe; })();
                 """)
-                let previousKeys = count("VIEWPORT_KEY:65", session)
+                let previousKeys = count("VIEWPORT_CHILD_KEY:65", session)
                 session.key("KeyA", down: true); session.key("KeyA", down: false)
-                try await requireTrace("VIEWPORT_KEY:65", session: session, after: previousKeys)
+                try await requireTrace("VIEWPORT_CHILD_KEY:65", session: session, after: previousKeys)
             }
             // Explicit compatibility limit, not a false claim that noScale is
             // preserved: ActionScript sees the reduced layout dimensions.
             session.key("KeyN", down: true); session.key("KeyN", down: false)
+            markPhase("noScale compatibility control")
             try await requireTrace(half ? "VIEWPORT_STAGE:430:220" : "VIEWPORT_STAGE:860:440", session: session)
             try await session.closeWithoutSaving()
             web.removeFromSuperview()
@@ -130,8 +159,17 @@ import WebKit
 
     private func metrics(_ web: WKWebView) async throws -> [String: Any] {
         let result = try await web.evaluateJavaScript("""
-        (() => { const p = document.querySelector('ruffle-player'), c = p.shadowRoot.querySelector('canvas');
-          const r = c.getBoundingClientRect(); return {dpr:devicePixelRatio, cssWidth:c.clientWidth,
+        (() => { const p = document.querySelector('ruffle-player'), c = p?.shadowRoot?.querySelector('canvas');
+          const panic = p?.shadowRoot?.querySelector('#panic');
+          const play = p?.shadowRoot?.querySelector('#play-button');
+          const raw = p?.shadowRoot?.querySelector('#panic-details-modal textarea')?.value || '';
+          const panicDetails = raw.split(new URL('../', location.href).href).join(location.origin + '/').slice(0, 4096);
+          if (!c) return {available:false, hostPresent:!!p, shadowPresent:!!p?.shadowRoot,
+            readyState:p?.ruffle()?.readyState ?? null, pageHidden:document.hidden,
+            isPlaying:p?.ruffle()?.isPlaying ?? null,
+            playOverlayVisible:!!play?.getClientRects().length,
+            panicPresent:!!panic, panicDetails};
+          const r = c.getBoundingClientRect(); return {available:true, dpr:devicePixelRatio, cssWidth:c.clientWidth,
             cssHeight:c.clientHeight, pixelsWidth:c.width, pixelsHeight:c.height,
             visualWidth:r.width, visualHeight:r.height, left:r.left, top:r.top,
             transform:getComputedStyle(p.parentElement).transform}; })();
@@ -143,17 +181,19 @@ import WebKit
         try XCTUnwrap((values[key] as? NSNumber)?.doubleValue, "Missing metric \(key): \(values)")
     }
 
-    private func waitForMetrics(_ web: WKWebView, size: CGSize, factor: Double) async throws -> Bool {
+    private func waitForMetrics(_ web: WKWebView, size: CGSize, factor: Double) async throws -> [String: Any]? {
         let deadline = Date().addingTimeInterval(5)
         while Date() < deadline {
             let values = try await metrics(web)
-            if abs(try number("cssWidth", values) - Double(size.width) * factor) <= 1,
+            lastMetrics = values
+            if values["available"] as? Bool == true,
+               abs(try number("cssWidth", values) - Double(size.width) * factor) <= 1,
                abs(try number("cssHeight", values) - Double(size.height) * factor) <= 1,
                abs(try number("pixelsWidth", values) - number("cssWidth", values) * number("dpr", values)) <= 1,
-               abs(try number("pixelsHeight", values) - number("cssHeight", values) * number("dpr", values)) <= 1 { return true }
+               abs(try number("pixelsHeight", values) - number("cssHeight", values) * number("dpr", values)) <= 1 { return values }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
-        return false
+        return nil
     }
 
     private func count(_ marker: String, _ session: PlayerSession) -> Int {

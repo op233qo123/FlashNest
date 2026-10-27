@@ -48,7 +48,8 @@ jobs:
         timeout-minutes: 10
         run: |
           set -o pipefail
-          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath SaveInputTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/InputFocusRuntimeTests -only-testing:FlashNestTests/ViewportRenderingRuntimeTests -only-testing:FlashNestTests/RenderSettingsTests -only-testing:FlashNestTests/SharedObjectPersistenceTests -only-testing:FlashNestTests/LastSessionDiagnosticsTests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee save-input-test.log
+          touch "$RUNNER_TEMP/flashnest-wk-tests-start"
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath SaveInputTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/InputFocusRuntimeTests -only-testing:FlashNestTests/ViewportRenderingRuntimeTests -only-testing:FlashNestTests/RenderSettingsTests -only-testing:FlashNestTests/SaveManagementEntryPolicyTests -only-testing:FlashNestTests/SharedObjectPersistenceTests -only-testing:FlashNestTests/LastSessionDiagnosticsTests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee save-input-test.log
       - name: Tap the real Files Open and Cancel controls
         timeout-minutes: 20
         run: |
@@ -58,8 +59,10 @@ jobs:
         if: always()
         run: |
           mkdir -p picker-evidence
+          python3 scripts/collect_test_webkit_crashes.py "$RUNNER_TEMP/flashnest-wk-tests-start" picker-evidence/webkit-crashes
           xcrun xcresulttool help export attachments > picker-evidence/export-help.txt 2>&1 || true
           if [ -d SaveInputTests.xcresult ]; then
+            xcrun xcresulttool export attachments --path SaveInputTests.xcresult --output-path picker-evidence/save-input-attachments
             xcrun xcresulttool get test-results summary --path SaveInputTests.xcresult > picker-evidence/save-input-summary.json
           fi
           if [ -d PickerTests.xcresult ]; then

@@ -7,8 +7,8 @@ const language = process.argv[2] || 'en';
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
 async function exercise(timing) {
-  const controls = [], elements = {}, messages = [], keyEvents = [], listeners = new Map(), windowListeners = new Map(), documentListeners = new Map(), stored = new Map();
-  let finishLoad, config, suspended = 0, resumed = 0, removed = 0, appended, fetchResponse = {ok:true}, fetchError, fetchCalls = 0, canvasFocusCalls = 0, clockTime = 0, traceCloseStart;
+  const controls = [], elements = {}, messages = [], keyEvents = [], consoleCalls = [], listeners = new Map(), windowListeners = new Map(), documentListeners = new Map(), stored = new Map();
+  let finishLoad, config, suspended = 0, resumed = 0, removed = 0, appended, fetchResponse = {ok:true}, fetchError, fetchCalls = 0, canvasFocusCalls = 0, clockTime = 0, traceCloseStart, runtimePlaying = false, overlayVisible = true, probeThrows = false;
   const canvasListeners = new Map();
   const canvas = {
     getBoundingClientRect:() => ({width:390,height:844}),
@@ -17,9 +17,10 @@ async function exercise(timing) {
     dispatchEvent:event => player.dispatchEvent(event),
     addEventListener:(name, callback) => canvasListeners.set(name, callback)
   };
+  const playOverlay = {getClientRects:() => overlayVisible ? [{}] : []};
   const player = {
     ruffle: () => api, focus() { context.document.activeElement = player; }, remove() { removed++; },
-    shadowRoot:{querySelector:selector => selector === 'canvas' ? canvas : null},
+    shadowRoot:{querySelector:selector => selector === 'canvas' ? canvas : selector === '#play-button' ? playOverlay : null},
     addEventListener(type, callback, options) {
       const entries = listeners.get(type) || [];
       entries.push({callback, once:options?.once}); listeners.set(type, entries);
@@ -42,7 +43,9 @@ async function exercise(timing) {
       if (timing === 'closewhileloading') await new Promise(resolve => { finishLoad = resolve; });
       // Like Ruffle 0.7.1, resolving this promise is not SWF completion.
     },
-    suspend: () => suspended++, resume: () => resumed++
+    get isPlaying() { if (probeThrows) throw new Error('unavailable instance'); return runtimePlaying; },
+    suspend: () => { suspended++; runtimePlaying = false; overlayVisible = true; },
+    resume: () => { resumed++; runtimePlaying = true; overlayVisible = false; }
   };
   for (const id of ['status','start','stage']) elements[id] = {textContent:'', disabled:id === 'start', hidden:false, append:p => appended = p};
   const context = {
@@ -64,10 +67,16 @@ async function exercise(timing) {
     webkit:{messageHandlers:{flashnest:{postMessage:message => messages.push(message)}}},
     localStorage:{get length() { return stored.size; }, key:index => [...stored.keys()][index], getItem:key => stored.get(key) ?? null, setItem:(key,value) => stored.set(key,value), removeItem:key => stored.delete(key)},
     fetch:async () => { fetchCalls++; if (fetchError) throw fetchError; return fetchResponse; },
-    devicePixelRatio:3, performance:{now:() => clockTime},
+    devicePixelRatio:3, performance:{now:() => clockTime}, getComputedStyle:() => ({visibility:'visible'}),
     addEventListener:(type, callback) => windowListeners.set(type, callback),
     setTimeout:() => 1, clearTimeout() {}
   };
+  const consoleResult = {}, originalConsoleError = new Error('original console failure');
+  context.console = context.window.console = Object.fromEntries(['log','warn','error'].map(method => [method, function (...args) {
+    consoleCalls.push({method, args, receiver:this});
+    if (args[0] === '__throw_original__') throw originalConsoleError;
+    return consoleResult;
+  }]));
   if (['storageonly','livewins','replace'].includes(timing)) {
     const bytes = Buffer.alloc(24); bytes[1] = 191; bytes.write('TCSO', 6); bytes[11] = 4;
     context.window.__FlashNestRestore = {version:1,entries:[{scope:'origin',key:'Saved',value:bytes.toString('base64')}]};
@@ -102,12 +111,14 @@ async function exercise(timing) {
     assert.equal(config, undefined); assert.equal(appended, undefined);
     assert(!messages.some(message => message.type === 'saveReady'));
     assert.equal(messages.at(-1).type, 'error');
+    await assert.rejects(context.window.FlashNest.captureWrittenSaves(), /not ready/);
     await assert.rejects(context.window.FlashNest.shutdownAndCapture(), /not ready/);
     return;
   }
   if (timing === 'closewhileloading') {
     const close = context.window.FlashNest.shutdownAndCapture();
     await settle(); assert.equal(removed, 0, 'Do not snapshot while WASM can still create an instance');
+    await assert.rejects(context.window.FlashNest.captureWrittenSaves(), /not ready/);
     finishLoad(); await close;
     assert.equal(removed, 1); assert(!messages.some(message => message.type === 'loaded'));
     return;
@@ -160,6 +171,37 @@ async function exercise(timing) {
   elements.start.onclick(); assert.equal(resumed, 2); assert.equal(elements.start.hidden, true);
   context.window.FlashNest.pause(); assert.equal(suspended, 1);
   context.window.FlashNest.resume(); assert.equal(resumed, 3);
+  const playingLabel = language === 'zh-Hans' ? '运行时播放=' : 'runtimePlaying=';
+  const overlayLabel = language === 'zh-Hans' ? '播放遮罩可见=' : 'playOverlayVisible=';
+  assert(messages.at(-1).message.includes(playingLabel + 'true'));
+  assert(messages.at(-1).message.includes(overlayLabel + 'false'));
+  // Deliberately disagree with shell flags: diagnostics must expose actual state,
+  // never call resume/suspend to make the observation match expected state.
+  runtimePlaying = false; overlayVisible = true;
+  windowListeners.get('resize')();
+  assert(messages.at(-1).message.includes(playingLabel + 'false'));
+  assert(messages.at(-1).message.includes(overlayLabel + 'true'));
+  assert(messages.at(-1).message.includes(language === 'zh-Hans' ? '外壳暂停=false' : 'shellPaused=false'));
+  assert.equal(resumed, 3); assert.equal(suspended, 1);
+  probeThrows = true; windowListeners.get('resize')(); probeThrows = false;
+  assert(messages.at(-1).message.includes(playingLabel + (language === 'zh-Hans' ? '不可用' : 'unavailable')));
+
+  const beforeCheckpoint = {removed, resumed, suspended, messages:messages.length};
+  const checkpoint = await context.window.FlashNest.captureWrittenSaves();
+  assert.equal(checkpoint.version, 1); assert.equal(checkpoint.entries.length, 0);
+  assert.deepEqual({removed, resumed, suspended, messages:messages.length}, beforeCheckpoint, 'A live checkpoint must not alter playback, remove the player or announce loaded/failed');
+  if (timing === 'delayed') {
+    const bytes = Buffer.alloc(24); bytes[1] = 191; bytes.write('TCSO', 6); bytes[11] = 4;
+    const rawKey = '127.0.0.1//Written';
+    stored.set(rawKey, bytes.toString('base64'));
+    const written = await context.window.FlashNest.captureWrittenSaves();
+    assert.equal(written.entries[0].value, bytes.toString('base64'));
+    assert.equal(written.entries[0].key, 'Written');
+    stored.set('foreign-invalid-scope', bytes.toString('base64'));
+    await assert.rejects(context.window.FlashNest.captureWrittenSaves(), /scope/);
+    assert.deepEqual({removed, resumed, suspended, messages:messages.length}, beforeCheckpoint, 'Invalid live storage fails validation without changing the running player');
+    stored.clear();
+  }
 
   const input = context.window.FlashNest;
   context.document.activeElement = {outside:true};
@@ -181,6 +223,43 @@ async function exercise(timing) {
   assert.equal(keyEvents.at(-1).type, 'keyup');
 
   if (timing === 'delayed') {
+    const consoleStart = messages.length, statusBeforeConsole = elements.status.textContent;
+    const output = context.window.console;
+    const sensitive = {get message() { throw new Error('Object properties must not be inspected'); }, toString() { throw new Error('Objects must not be formatted'); }};
+    sensitive.cycle = sensitive;
+    const styled = (level, text) => [`%c${level}%c core/src/avm2.rs:682%c ${text}`, `color: ${level === 'WARN' ? 'orange' : 'red'}; background: #444`, 'color: gray; font-style: italic', 'color: inherit'];
+    output.log('ordinary trace'); output.log(...styled('INFO', 'do not capture'));
+    output.log('%cERROR%c malformed without CSS signature');
+    output.log(...styled('error', 'wrong-case')); output.warn(sensitive);
+    assert.equal(messages.length, consoleStart, 'Ignore non-warning logs, incorrect tracing signatures and object-only calls');
+    assert.equal(output.warn('warning ' + config.url, sensitive), consoleResult);
+    assert.equal(consoleCalls.at(-1).args[1], sensitive, 'Original arguments must pass through unchanged');
+    assert.equal(consoleCalls.at(-1).receiver, output);
+    for (let i = 0; i < 9999; i++) output.log(...styled('WARN', 'warning storm'));
+    assert.equal(messages.length - consoleStart, 11, 'Warning storm has 10 payloads and one suppression notice');
+    const beforeError = messages.length;
+    assert.equal(output.log(...styled('ERROR', 'Error dispatching event: TypeError #1009 ' + config.url)), consoleResult);
+    assert.equal(messages.length, beforeError + 1, 'Warning storms must not exhaust the independent ERROR budget');
+    assert(messages.at(-1).message.includes('TypeError #1009'));
+    assert(!messages.at(-1).message.includes('%c'), 'Remove only the pinned logger formatting markers');
+    assert.equal(output.error('runtime error ' + config.url, sensitive), consoleResult);
+    const handler = context.window.webkit.messageHandlers.flashnest, post = handler.postMessage;
+    handler.postMessage = message => { messages.push(message); output.error('recursive bridge log'); };
+    const beforeRecursive = messages.length;
+    output.error('outer runtime error');
+    assert.equal(messages.length, beforeRecursive + 1, 'Forwarding must not recurse through a logging bridge');
+    handler.postMessage = () => { throw new Error('bridge unavailable'); };
+    assert.equal(output.error('bridge failure does not affect console'), consoleResult);
+    handler.postMessage = post;
+    assert.throws(() => output.error('__throw_original__'), error => error === originalConsoleError, 'Preserve original console exceptions');
+    for (let i = 0; i < 9999; i++) output.log(...styled('ERROR', 'error storm'));
+    const afterBudget = messages.length;
+    output.error('private-after-budget ' + config.url, sensitive);
+    assert.equal(messages.length, afterBudget);
+    assert(messages.length - consoleStart <= 32, 'Console forwarding has a finite document budget, independent of trace rate');
+    assert(messages.slice(consoleStart).every(m => m.type === 'diagnostic' && !m.message.includes('/cap/') && !m.message.includes('private-after-budget')));
+    assert.equal(elements.status.textContent, statusBeforeConsole, 'Console diagnostics must not change status/failure state');
+    assert.equal(consoleCalls.length, 20011, 'Every console call, including suppressed ones, reaches the original exactly once');
     const sanitizedURL = config.url.replace('/cap/', '/');
     fetchResponse = {ok:false, status:404, url:config.url, headers:{get:() => '44'},
       clone() { throw new Error('Must not clone a game response'); },
@@ -250,13 +329,14 @@ async function exercise(timing) {
     assert.equal(finalCounts.length, 1, 'Idempotent shutdown emits at most one final suppression count');
     assert(finalCounts[0].message.includes('7'));
   }
+  await assert.rejects(input.captureWrittenSaves(), /not ready/);
   assert.equal(keyEvents.at(-1).type, 'keyup', 'Close releases held native keys');
   const afterClose = keyEvents.length; input.key('KeyA', true); assert.equal(keyEvents.length, afterClose);
 }
 
 (async () => {
   for (const timing of ['delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake','half','invalidrender']) await exercise(timing);
-  console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, opt-in render mode, bounded scene/trace diagnostics, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
+  console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, opt-in render mode, bounded scene/trace/runtime-console diagnostics, live written-save checkpoints, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
 require("./test_save_bridge.js");

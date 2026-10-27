@@ -17,6 +17,8 @@ struct PlayerView: View {
     @State private var resumeAfterInactive = false
     @State private var closing = false
     @State private var acceptedSaveRecovery = false
+    @State private var checkpointing = false
+    @State private var checkpointMessage: String?
 
     init(package: GamePackage, contentRoot: URL) {
         self.package = package; self.contentRoot = contentRoot
@@ -85,6 +87,8 @@ struct PlayerView: View {
             switch panel {
             case .menu: menuPanel
             case .diagnostics: diagnosticsPanel
+            case .saveOptions: saveOptionsPanel
+            case .saveEntryConfirmation: saveEntryConfirmationPanel
             case .saves: SaveAreaView(packages: [package], package: package)
             case .saveFailure: saveFailurePanel
             }
@@ -116,7 +120,7 @@ struct PlayerView: View {
                 Section {
                     Button { sheet = nil } label: { Label(L10n.text("Resume game"), systemImage: "play.fill") }
                         .accessibilityIdentifier("player-resume")
-                    Button { Task { await openSaves() } } label: { Label(L10n.text("Save management"), systemImage: "externaldrive") }
+                    Button { handleSaveManagementEntry(.request) } label: { Label(L10n.text("Save management"), systemImage: "externaldrive") }
                         .disabled(closing).accessibilityIdentifier("player-saves")
                 }
                 renderingSection
@@ -141,7 +145,7 @@ struct PlayerView: View {
                 }
                 Section {
                     Button { sheet = .diagnostics } label: { Label(L10n.text("Diagnostics"), systemImage: "info.circle") }
-                    if let failure = session.saveFailure { Text(failure).font(.footnote).foregroundStyle(.orange) }
+                    if let failure = session.restartFailure ?? session.saveFailure { Text(failure).font(.footnote).foregroundStyle(.orange) }
                     Button(role: .destructive) { Task { await closeGame() } } label: {
                         Label(L10n.text("Close game"), systemImage: "xmark.circle")
                     }.disabled(closing).accessibilityIdentifier("player-close")
@@ -162,15 +166,68 @@ struct PlayerView: View {
         }
     }
 
+    private var saveOptionsPanel: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Button(L10n.text("Direct save (keep current scene)")) { handleSaveManagementEntry(.directSave) }
+                        .disabled(closing || checkpointing).accessibilityIdentifier("save-entry-direct")
+                    Text(L10n.text("Only copies save data the game has already written. Use the game's own save function first. This does not capture unsaved scene state or restart the game."))
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                Section {
+                    Button(L10n.text("Save and restart")) { handleSaveManagementEntry(.saveAndRestart) }
+                        .disabled(closing || checkpointing).accessibilityIdentifier("save-entry-restart")
+                    Text(L10n.text("Ends this scene, saves, closes the old player and clears temporary web caches before reopening the same game. Game files and saves are kept. Only game-saved progress is restored, not the exact scene."))
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                Section {
+                    Button(L10n.text("Manage backups")) { handleSaveManagementEntry(.requestManagement) }
+                        .disabled(closing || checkpointing).accessibilityIdentifier("save-entry-manage")
+                }
+                if checkpointing { Section { ProgressView(L10n.text("Copying game-written saves…")) } }
+                if let checkpointMessage {
+                    Section { Text(checkpointMessage).accessibilityIdentifier("save-entry-result") }
+                }
+                Section {
+                    Button(L10n.text("Cancel"), role: .cancel) { handleSaveManagementEntry(.cancel) }
+                        .disabled(closing || checkpointing).accessibilityIdentifier("save-entry-cancel")
+                }
+            }
+            .navigationTitle(L10n.text("Save options"))
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .interactiveDismissDisabled(closing || checkpointing)
+    }
+
+    private var saveEntryConfirmationPanel: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(L10n.text("Opening save management ends the current running scene. Saves written by the game are kept, but this is not an instant scene snapshot. Returning reloads the game; progress the game has not saved may be lost."))
+                        .accessibilityIdentifier("save-entry-warning")
+                }
+                Section {
+                    Button(L10n.text("Continue to save management")) { handleSaveManagementEntry(.confirmManagement) }
+                        .disabled(closing).accessibilityIdentifier("save-entry-confirm")
+                    Button(L10n.text("Cancel"), role: .cancel) { sheet = .saveOptions }
+                        .disabled(closing).accessibilityIdentifier("save-management-cancel")
+                }
+            }
+            .navigationTitle(L10n.text("Open save management?"))
+            .navigationBarTitleDisplayMode(.inline)
+        }.interactiveDismissDisabled(closing)
+    }
+
     private var saveFailurePanel: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 20) {
-                Label(L10n.text("Save could not be completed"), systemImage: "exclamationmark.triangle")
+                Label(recoveryFailureTitle, systemImage: "exclamationmark.triangle")
                     .font(.title2.bold())
                 if session.restartRequired {
                     Text(L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again."))
                 } else {
-                    if let message = session.saveFailure { Text(message) }
+                    if let message = session.restartFailure ?? session.saveFailure { Text(message) }
                     Text(L10n.text("The last saved copy is kept. Returning may discard unsaved progress."))
                     Button(L10n.text("Return to last saved game")) { acceptedSaveRecovery = true; sheet = nil }
                         .buttonStyle(.borderedProminent)
@@ -183,7 +240,7 @@ struct PlayerView: View {
                     }
                 }.disabled(closing)
             }.padding(24).frame(maxWidth: 560, maxHeight: .infinity, alignment: .topLeading)
-                .navigationTitle(L10n.text("Save could not be completed")).navigationBarTitleDisplayMode(.inline)
+                .navigationTitle(recoveryFailureTitle).navigationBarTitleDisplayMode(.inline)
         }.interactiveDismissDisabled()
     }
 
@@ -234,6 +291,12 @@ struct PlayerView: View {
                                         editingControls: editingControls, closing: closing)
     }
 
+    private var hasRecoveryFailure: Bool { session.saveFailure != nil || session.restartFailure != nil }
+
+    private var recoveryFailureTitle: String {
+        session.restartFailure == nil ? L10n.text("Save could not be completed") : L10n.text("Restart could not be completed")
+    }
+
     private func resumeFromPanel() {
         guard mayResumePlayer else { return }
         let allowingSaveFailure = acceptedSaveRecovery
@@ -242,7 +305,7 @@ struct PlayerView: View {
             guard mayResumePlayer else { return }
             await session.resumeAfterSuspension(allowingSaveFailure: allowingSaveFailure)
             guard mayResumePlayer else { return }
-            if session.saveFailure != nil { sheet = .saveFailure; return }
+            if hasRecoveryFailure { sheet = .saveFailure; return }
             session.setPaused(!resumeWhenUncovered)
         }
     }
@@ -255,6 +318,37 @@ struct PlayerView: View {
         closing = false
     }
 
+    private func handleSaveManagementEntry(_ action: SaveManagementEntryPolicy.Action) {
+        guard !closing && !checkpointing else { return }
+        switch SaveManagementEntryPolicy.destination(for: action) {
+        case .options: checkpointMessage = nil; sheet = .saveOptions
+        case .menu: sheet = .menu
+        case .copyWrittenSaves:
+            checkpointing = true; checkpointMessage = nil
+            Task {
+                let copied = await session.checkpointWrittenSaves()
+                if copied {
+                    checkpointMessage = session.checkpointDidChange == false
+                        ? L10n.text("No newly written save data. Existing backup unchanged.")
+                        : L10n.text("Game-written save data was copied. The current scene was not restarted.")
+                } else {
+                    checkpointMessage = session.checkpointFailure ?? L10n.text("Game-written saves could not be copied. Existing backups were kept.")
+                }
+                checkpointing = false
+            }
+        case .restartGame:
+            closing = true; releaseKeys()
+            Task {
+                let restarted = await session.saveAndRestart()
+                closing = false
+                if restarted { resumeWhenUncovered = true; sheet = nil }
+                else { sheet = .saveFailure }
+            }
+        case .managementConfirmation: sheet = .saveEntryConfirmation
+        case .closeAndManage: Task { await openSaves() }
+        }
+    }
+
     private func closeGame() async {
         guard !closing else { return }
         closing = true; releaseKeys()
@@ -264,21 +358,29 @@ struct PlayerView: View {
 
     private func handleScenePhase(old: ScenePhase, new: ScenePhase) {
         if new != .active {
-            if old == .active { resumeAfterInactive = !session.paused }
+            resumeAfterInactive = PlayerResumePolicy.playbackIntent(previous: resumeAfterInactive,
+                leavingActive: old == .active, wasPaused: session.paused)
             releaseKeys(); session.setPaused(true)
-            if new == .background { Task { await session.suspendAndSave() } }
+            if new == .background {
+                Task {
+                    // A quick return may occur before this queued task runs.
+                    guard scenePhase == .background else { return }
+                    // Retains the live page; only copies game-written saves.
+                    await session.suspendAndSave()
+                }
+            }
         } else {
             // Never restart under SaveArea (or any panel). File import may be
             // in progress and must retain exclusive ownership of saved data.
             guard mayResumePlayer else { session.setPaused(true); return }
             Task {
                 guard mayResumePlayer else { return }
-                if session.saveFailure != nil {
+                if hasRecoveryFailure {
                     sheet = .saveFailure
                     return
                 }
                 await session.resumeAfterSuspension()
-                if mayResumePlayer && session.saveFailure != nil { sheet = .saveFailure; return }
+                if mayResumePlayer && hasRecoveryFailure { sheet = .saveFailure; return }
                 if mayResumePlayer { session.setPaused(!resumeAfterInactive) }
                 else { session.setPaused(true) }
             }
@@ -287,7 +389,7 @@ struct PlayerView: View {
 }
 
 private enum PlayerSheet: String, Identifiable {
-    case menu, diagnostics, saves, saveFailure
+    case menu, diagnostics, saveOptions, saveEntryConfirmation, saves, saveFailure
     var id: String { rawValue }
 }
 

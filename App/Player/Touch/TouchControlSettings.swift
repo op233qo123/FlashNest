@@ -108,6 +108,12 @@ struct TouchKeyLedger {
 /// importing/restoring data requires the package to remain inactive until the
 /// sheet is dismissed. Used both before and after asynchronous resume work.
 enum PlayerResumePolicy {
+    /// Snapshot only when leaving active. The pause we apply during inactive
+    /// must not overwrite that intent on the subsequent background transition.
+    static func playbackIntent(previous: Bool, leavingActive: Bool, wasPaused: Bool) -> Bool {
+        leavingActive ? !wasPaused : previous
+    }
+
     static func allowsResume(sceneIsActive: Bool, panelOpen: Bool, editingControls: Bool, closing: Bool) -> Bool {
         sceneIsActive && !panelOpen && !editingControls && !closing
     }

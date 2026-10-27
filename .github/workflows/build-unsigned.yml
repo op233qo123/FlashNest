@@ -48,6 +48,7 @@ jobs:
         timeout-minutes: 15
         run: |
           set -o pipefail
+          touch webkit-test-start.marker
           xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 90 -derivedDataPath build-simulator -resultBundlePath TestResults.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 120 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee test.log
       - name: Build unsigned iPhoneOS app
         run: |
@@ -67,6 +68,7 @@ jobs:
         if: failure()
         run: |
           mkdir -p test-evidence
+          python3 scripts/collect_test_webkit_crashes.py webkit-test-start.marker test-evidence/webkit-crashes || true
           if [ -d TestResults.xcresult ]; then
             xcrun xcresulttool get test-results summary --path TestResults.xcresult > test-evidence/summary.json || true
             xcrun xcresulttool export attachments --path TestResults.xcresult --output-path test-evidence/attachments || true

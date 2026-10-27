@@ -98,6 +98,18 @@ final class TouchControlSettingsTests: XCTestCase {
         XCTAssertFalse(PlayerResumePolicy.allowsResume(sceneIsActive: false, panelOpen: false, editingControls: false, closing: false))
     }
 
+    func testInactiveAndBackgroundPreservePlayingOrManualPauseIntent() {
+        let wasPlaying = PlayerResumePolicy.playbackIntent(previous: false, leavingActive: true, wasPaused: false)
+        XCTAssertTrue(wasPlaying)
+        XCTAssertTrue(PlayerResumePolicy.playbackIntent(previous: wasPlaying, leavingActive: false, wasPaused: true),
+                      "The automatic inactive pause must not replace the original playback intent")
+        let wasManuallyPaused = PlayerResumePolicy.playbackIntent(previous: true, leavingActive: true, wasPaused: true)
+        XCTAssertFalse(wasManuallyPaused)
+        XCTAssertFalse(PlayerResumePolicy.playbackIntent(previous: wasManuallyPaused, leavingActive: false, wasPaused: true))
+        XCTAssertFalse(PlayerResumePolicy.allowsResume(sceneIsActive: true, panelOpen: true, editingControls: false, closing: false),
+                       "Returning from Control Center or Home cannot resume behind an open menu")
+    }
+
     func testChangingHeldOwnerMappingReleasesOldKeyBeforeNewKey() {
         var ledger = TouchKeyLedger()
         _ = ledger.press(owner: "button", code: "Enter")

@@ -74,6 +74,45 @@ final class ViewportRenderingUITests: XCTestCase {
         let enter = app.buttons["touch-key-default-5"].firstMatch
         XCTAssertTrue(enter.waitForExistence(timeout: 10)); XCTAssertTrue(enter.isHittable); enter.tap()
         trace("VIEWPORT_CHILD_READY", in: app)
+        XCUIDevice.shared.press(.home)
+        XCTAssertTrue(wait { app.state != .runningForeground })
+        app.activate()
+        XCTAssertTrue(menu.waitForExistence(timeout: 15))
+        trace("VIEWPORT_CHILD_READY", in: app)
+        XCTAssertFalse(app.webViews.buttons["Play / enable audio"].firstMatch.exists,
+                       "Ordinary app switching must retain the running child, not reload its title scene")
+        let space = app.buttons["touch-key-default-4"].firstMatch
+        XCTAssertTrue(space.isHittable); space.tap()
+        trace("VIEWPORT_CHILD_KEY:32:1", in: app)
+        capture("Background return retains the running child scene")
+        menu.tap()
+        XCUIDevice.shared.press(.home)
+        XCTAssertTrue(wait { app.state != .runningForeground })
+        app.activate()
+        XCTAssertTrue(app.buttons["player-resume"].firstMatch.waitForExistence(timeout: 15),
+                      "An open pause menu must remain open after app switching")
+        app.buttons["player-saves"].firstMatch.tap()
+        let directSave = app.buttons["save-entry-direct"].firstMatch
+        XCTAssertTrue(directSave.waitForExistence(timeout: 10)); directSave.tap()
+        let copied = app.staticTexts["save-entry-result"].firstMatch
+        XCTAssertTrue(copied.waitForExistence(timeout: 20))
+        reveal(copied, in: app)
+        // The earlier best-effort background checkpoint may already contain
+        // these exact game-written bytes. Both validated success outcomes are
+        // truthful; empty/unready/read/write failures are not accepted.
+        let successMessages = ["Game-written save data was copied. The current scene was not restarted.",
+                               "No newly written save data. Existing backup unchanged."]
+        XCTAssertTrue(wait { successMessages.contains(copied.label) })
+        capture("Direct save copies written data without ending child scene")
+        let cancelSaveEntry = app.buttons["save-entry-cancel"].firstMatch
+        reveal(cancelSaveEntry, in: app); cancelSaveEntry.tap()
+        XCTAssertTrue(app.buttons["player-resume"].firstMatch.waitForExistence(timeout: 10))
+        done(app)
+        XCTAssertTrue(space.isHittable); space.tap()
+        trace("VIEWPORT_CHILD_KEY:32:2", in: app)
+        XCTAssertFalse(app.webViews.buttons["Play / enable audio"].firstMatch.exists,
+                       "Cancelling save management must not replace the running child with a fresh player")
+        capture("Cancelled save entry retains the running child scene")
         menu.tap(); setSwitch("controls-visible", enabled: false, in: app); done(app)
         tapTargets(app)
         XCTAssertTrue(menu.isHittable, "Menu stays full-size and recoverable outside the scaled render layer")
@@ -83,6 +122,16 @@ final class ViewportRenderingUITests: XCTestCase {
         reveal(halfMode, in: app); XCTAssertTrue(halfMode.exists)
         capture("Half resolution active renderer diagnostics")
         done(app)
+        menu.tap(); app.buttons["player-saves"].firstMatch.tap()
+        let restart = app.buttons["save-entry-restart"].firstMatch
+        reveal(restart, in: app); restart.tap()
+        startMovie(app)
+        trace("VIEWPORT_ROOT_READY", in: app)
+        XCTAssertFalse(app.buttons["import-folder"].firstMatch.exists,
+                       "Save and restart must reopen the same game, not exit to Library")
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "touch-key-")).count, 0,
+                       "Explicit restart retains this game's control settings")
+        capture("Save and restart returns to the same game")
     }
 
     private func tapTargets(_ app: XCUIApplication) {

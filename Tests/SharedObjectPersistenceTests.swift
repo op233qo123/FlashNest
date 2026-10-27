@@ -7,6 +7,56 @@ import CryptoKit
 /// Original SWFs execute actual SharedObject.getLocal/data/flush operations in
 /// bundled Ruffle. These are save-data tests, not emulator savestate tests.
 @MainActor final class SharedObjectPersistenceTests: XCTestCase {
+    func testLiveCheckpointCopiesExplicitlyFlushedSaveWithoutRestartingScene() async throws {
+        executionTimeAllowance = 120
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = SaveStore(root: root.appendingPathComponent("save"))
+        let packages = root.appendingPathComponent("packages")
+        var package = try fixturePackage(in: packages)
+        let content = packages.appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        let deadline = Date().addingTimeInterval(105)
+        package.selectedMovie = "explicit-flush.swf"
+        try await runMovie(package, content: content, store: store, before: "undefined", deadline: deadline,
+                           checkpointExpectedWritten: true)
+        package.selectedMovie = "read-only.swf"
+        try await runMovie(package, content: content, store: store, before: "42", deadline: deadline)
+    }
+
+    func testLiveCheckpointDoesNotPretendToFlushRAMOnlySave() async throws {
+        executionTimeAllowance = 120
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = SaveStore(root: root.appendingPathComponent("save"))
+        let packages = root.appendingPathComponent("packages")
+        var package = try fixturePackage(in: packages)
+        let content = packages.appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        let deadline = Date().addingTimeInterval(105)
+        package.selectedMovie = "close-flush.swf"
+        try await runMovie(package, content: content, store: store, before: "undefined", deadline: deadline,
+                           checkpointExpectedWritten: false, testBackgroundRetention: true)
+        XCTAssertFalse(try XCTUnwrap(store.latest(packageID: package.id)).entries.isEmpty,
+                       "Final destroy, unlike live checkpoint, must flush the fixture's RAM-only save")
+        package.selectedMovie = "read-only.swf"
+        try await runMovie(package, content: content, store: store, before: "42", deadline: deadline)
+    }
+
+    func testExplicitSaveAndRestartUsesNewPageAndPreservesSaveAndGameFiles() async throws {
+        executionTimeAllowance = 120
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = SaveStore(root: root.appendingPathComponent("save"))
+        let packages = root.appendingPathComponent("packages")
+        var package = try fixturePackage(in: packages)
+        package.selectedMovie = "explicit-flush.swf"
+        let content = packages.appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        let movie = content.appendingPathComponent(package.selectedMovie)
+        let original = try Data(contentsOf: movie)
+        try await runMovie(package, content: content, store: store, before: "undefined",
+                           deadline: Date().addingTimeInterval(105), testExplicitRestart: true)
+        XCTAssertEqual(try Data(contentsOf: movie), original, "Restart must never delete or rewrite game content")
+    }
+
     func testDestroyFlushPersistsAndRestartReadsActualSharedObject() async throws {
         executionTimeAllowance = 120
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -162,6 +212,10 @@ import CryptoKit
         session.recordHostMemoryWarning()
         session.webViewWebContentProcessDidTerminate(view)
         XCTAssertTrue(session.previousSessionDiagnostic?.contains("hostMemoryWarnings=2") == true)
+        await session.suspendAndSave()
+        await session.resumeAfterSuspension()
+        XCTAssertTrue(session.webView === view, "Foreground must not silently create a new page after confirmed process loss")
+        XCTAssertNotNil(session.failure)
         XCTAssertFalse(session.saveReady)
         XCTAssertNotNil(session.saveFailure)
         XCTAssertTrue(session.diagnostics.contains { $0.contains("cause=unknown") })
@@ -182,6 +236,44 @@ import CryptoKit
         try await reopened.closeWithoutSaving()
     }
 
+    func testCloseWaitsForCheckpointThenStillClosesPlayer() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = SaveStore(root: root.appendingPathComponent("save"))
+        let package = try fixturePackage(in: root.appendingPathComponent("packages"))
+        let content = root.appendingPathComponent("packages").appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        let session = PlayerSession(saveStore: store)
+        defer { session.stop() }
+        await session.start(package: package, contentRoot: content, storageOnly: true)
+        let deadline = Date().addingTimeInterval(15)
+        while !session.saveReady, session.failure == nil, Date() < deadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertTrue(session.saveReady)
+        let view = try XCTUnwrap(session.webView)
+        _ = try await view.evaluateJavaScript("""
+        window.FlashNest.captureWrittenSaves = () => new Promise(resolve => { window.__resolveCheckpoint = resolve; }); true;
+        """)
+        let checkpoint = Task { @MainActor in await session.checkpointWrittenSaves() }
+        var waiting = false
+        while !waiting, Date() < deadline {
+            waiting = (try await view.evaluateJavaScript("typeof window.__resolveCheckpoint === 'function'") as? Bool) == true
+            if !waiting { try await Task.sleep(nanoseconds: 20_000_000) }
+        }
+        XCTAssertTrue(waiting)
+        let closing = Task { @MainActor in await session.closeAndSave() }
+        await Task.yield()
+        let duplicate = await session.checkpointWrittenSaves()
+        XCTAssertFalse(duplicate, "No checkpoint may start while close owns the lifecycle")
+        _ = try await view.evaluateJavaScript("window.__resolveCheckpoint({version:1,entries:[]}); true")
+        let copied = await checkpoint.value
+        let closed = await closing.value
+        XCTAssertFalse(copied, "Empty read is not a save")
+        XCTAssertTrue(closed, "Close must not merely return checkpoint's false result")
+        XCTAssertNil(session.webView)
+        XCTAssertNotNil(try store.currentSnapshot(packageID: package.id), "Final close still captures the completed shutdown")
+    }
+
     private func fixturePackage(in root: URL) throws -> GamePackage {
         let fixtureRoot = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "fixtures", withExtension: nil))
         return try PackageImporter(root: root).stageAndCommit(fixtureRoot.appendingPathComponent("shared-object"))
@@ -190,7 +282,10 @@ import CryptoKit
     private func runMovie(_ package: GamePackage, content: URL, store: SaveStore,
                           before: String, deadline: Date, persist: Bool = true,
                           expectedDiscardedCapture: [SaveEntry]? = nil,
-                          expectedBootstrapCapture: [SaveEntry]? = nil) async throws {
+                          expectedBootstrapCapture: [SaveEntry]? = nil,
+                          checkpointExpectedWritten: Bool? = nil,
+                          testBackgroundRetention: Bool = false,
+                          testExplicitRestart: Bool = false) async throws {
         let native = try store.currentSnapshot(packageID: package.id)
         print("FLASHNEST_SAVE_STAGE movie=\(package.selectedMovie) expected=\(before) nativeCapture=\(persist) nativeCount=\(native?.entries.count ?? -1) restoreRequired=\(native?.restoreRequired == true)")
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
@@ -229,6 +324,102 @@ import CryptoKit
                 XCTAssertTrue(observed.contains(where: { $0.contains("FLASHNEST_SAVE_BEFORE:" + before) }),
                               "Movie=\(package.selectedMovie), expected=\(before), observed=\(observed), nativeCapture=\(persist), bootstrap=\(session.diagnostics.filter { $0.contains("SAVE_BOOTSTRAP") })")
                 XCTAssertTrue(session.saveReady)
+                if testExplicitRestart {
+                    let diagnosticStart = session.diagnostics.count
+                    let restarted = await session.saveAndRestart()
+                    XCTAssertTrue(restarted, "Final save, server drain and cache cleanup must precede restart")
+                    let replacement = try XCTUnwrap(session.webView)
+                    XCTAssertFalse(replacement === view)
+                    replacement.frame = controller.view.bounds
+                    controller.view.addSubview(replacement)
+                    var clicked = false
+                    var observedRestoredValue = false
+                    while Date() < deadline, session.failure == nil {
+                        if session.isLoaded && !clicked {
+                            _ = try await replacement.evaluateJavaScript("document.getElementById('start').click(); true")
+                            clicked = true
+                        }
+                        let recent = Array(session.diagnostics.dropFirst(min(diagnosticStart, session.diagnostics.count)))
+                        if recent.contains(where: { $0.contains("FLASHNEST_SAVE_BEFORE:42") }) {
+                            observedRestoredValue = true
+                            break
+                        }
+                        try await Task.sleep(nanoseconds: 100_000_000)
+                    }
+                    XCTAssertTrue(observedRestoredValue, "The same actual SWF must read its saved42 on the replacement page")
+                    let archive = store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")
+                    let savedBytes = try Data(contentsOf: archive)
+                    _ = try await replacement.evaluateJavaScript("""
+                    window.FlashNest.shutdownAndCapture = () => Promise.reject(new Error('fixture final-save failure')); true;
+                    """)
+                    let failedRestart = await session.saveAndRestart()
+                    XCTAssertFalse(failedRestart)
+                    XCTAssertNotNil(session.restartFailure)
+                    XCTAssertNil(session.webView, "Failed final save must never launch a new page")
+                    XCTAssertEqual(try Data(contentsOf: archive), savedBytes)
+                    await session.resumeAfterSuspension()
+                    XCTAssertNil(session.webView, "A dismissed error panel must not implicitly retry restart")
+                    return
+                }
+                if testBackgroundRetention {
+                    let archiveBefore = try store.currentSnapshot(packageID: package.id)
+                    _ = try await view.evaluateJavaScript("window.__backgroundSceneMarker = 'live-RAM-scene'; true")
+                    await session.suspendAndSave()
+                    XCTAssertTrue(session.webView === view, "Ordinary background must not destroy the current scene")
+                    XCTAssertTrue(session.isLoaded)
+                    XCTAssertTrue(session.paused)
+                    XCTAssertNil(session.saveFailure)
+                    XCTAssertEqual(try store.currentSnapshot(packageID: package.id)?.id, archiveBefore?.id,
+                                   "The unflushed fixture must not be converted into an empty archive on background")
+                    await session.resumeAfterSuspension()
+                    XCTAssertTrue(session.webView === view)
+                    let marker = try await view.evaluateJavaScript("window.__backgroundSceneMarker") as? String
+                    XCTAssertEqual(marker, "live-RAM-scene")
+                    session.setPaused(false) // same foreground intent applied by PlayerView
+                    XCTAssertFalse(session.paused)
+                }
+                if let expectedWritten = checkpointExpectedWritten {
+                    let beforeArchive = try store.currentSnapshot(packageID: package.id)
+                    let wasPaused = session.paused
+                    _ = try await view.evaluateJavaScript("window.__checkpointSceneMarker = 'same-page'; true")
+                    let copied = await session.checkpointWrittenSaves()
+                    XCTAssertEqual(copied, expectedWritten)
+                    XCTAssertTrue(session.webView === view)
+                    XCTAssertTrue(session.isLoaded)
+                    XCTAssertEqual(session.paused, wasPaused)
+                    let marker = try await view.evaluateJavaScript("window.__checkpointSceneMarker") as? String
+                    XCTAssertEqual(marker, "same-page")
+                    if expectedWritten {
+                        XCTAssertFalse(try XCTUnwrap(store.latest(packageID: package.id)).entries.isEmpty)
+                        let savedBytes = try Data(contentsOf: store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json"))
+                        let copiedAgain = await session.checkpointWrittenSaves()
+                        XCTAssertTrue(copiedAgain)
+                        XCTAssertEqual(session.checkpointDidChange, false)
+                        XCTAssertEqual(try Data(contentsOf: store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")), savedBytes,
+                                       "Unchanged written saves must retain the same archive and timestamp")
+                        // Rejecting a read must preserve archive and live player,
+                        // not enter the uncertain-shutdown quarantine.
+                        _ = try await view.evaluateJavaScript("""
+                        window.__originalCheckpoint = window.FlashNest.captureWrittenSaves;
+                        window.FlashNest.captureWrittenSaves = () => Promise.reject(new Error('fixture read failure')); true;
+                        """)
+                        let failed = await session.checkpointWrittenSaves()
+                        XCTAssertFalse(failed)
+                        XCTAssertFalse(session.restartRequired)
+                        XCTAssertNil(session.saveFailure)
+                        XCTAssertTrue(session.webView === view)
+                        XCTAssertEqual(try Data(contentsOf: store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")), savedBytes)
+                        _ = try await view.evaluateJavaScript("window.FlashNest.captureWrittenSaves = () => Promise.resolve({version:1,entries:[]}); true")
+                        let empty = await session.checkpointWrittenSaves()
+                        XCTAssertFalse(empty)
+                        XCTAssertEqual(try Data(contentsOf: store.root.appendingPathComponent(package.id.uuidString).appendingPathComponent("current.json")), savedBytes,
+                                       "An empty checkpoint must not erase a previous nonempty archive")
+                        _ = try await view.evaluateJavaScript("window.FlashNest.captureWrittenSaves = window.__originalCheckpoint; true")
+                    } else {
+                        XCTAssertNotNil(session.checkpointFailure)
+                        XCTAssertEqual(try store.currentSnapshot(packageID: package.id)?.id, beforeArchive?.id)
+                    }
+                }
                 if persist {
                     let saved = await session.closeAndSave()
                     XCTAssertTrue(saved, "Awaited destroy/capture/native persistence must succeed")

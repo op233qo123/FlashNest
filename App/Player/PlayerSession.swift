@@ -18,12 +18,17 @@ import SwiftUI
     private var ready = false
     private var processTerminated = false
     @Published private(set) var saveFailure: String?
+    @Published private(set) var checkpointFailure: String?
+    @Published private(set) var checkpointDidChange: Bool?
+    @Published private(set) var restartFailure: String?
     @Published private(set) var saveReady = false
     @Published private(set) var restartRequired = false
     private let saveStore: SaveStore
     private var currentPackage: GamePackage?
     private var currentContentRoot: URL?
     private var saveTask: Task<Bool, Never>?
+    private var checkpointTask: Task<Bool, Never>?
+    private var restartTask: Task<Bool, Never>?
     private static var activePackageIDs = Set<UUID>()
     // An unconfirmed old page may still flush later. Keep the affected profile
     // closed for this process; app restart terminates the uncertain old page.
@@ -59,6 +64,11 @@ import SwiftUI
     }
 
     func start(package: GamePackage, contentRoot: URL, storageOnly: Bool = false) async {
+        guard restartTask == nil else { return }
+        await startConfigured(package: package, contentRoot: contentRoot, storageOnly: storageOnly)
+    }
+
+    private func startConfigured(package: GamePackage, contentRoot: URL, storageOnly: Bool = false) async {
         guard server == nil else { return }
         currentPackage = package; currentContentRoot = contentRoot
         previousSessionDiagnostic = incidentStore.latest(for: package.id)?.summary
@@ -75,6 +85,7 @@ import SwiftUI
         }
         Self.activePackageIDs.insert(package.id)
         ownsPackageLease = true
+        restartFailure = nil
         currentPackage = package; currentContentRoot = contentRoot
         // Snapshot once per opened game, not on foreground/save-panel restart.
         // A preference edit never changes the live movie's coordinate system.
@@ -83,7 +94,7 @@ import SwiftUI
             renderSettingsPackageID = package.id
         }
         pendingRestoreID = nil
-        saveReady = false; saveFailure = nil; processTerminated = false
+        saveReady = false; saveFailure = nil; checkpointFailure = nil; checkpointDidChange = nil; processTerminated = false
         memoryWarningCount = 0; lastMemoryWarning = nil
         let attempt = UUID()
         generation = attempt
@@ -193,6 +204,7 @@ import SwiftUI
     /// Explicit discard/emergency cleanup only; normal exits use closeAndSave.
     func closeWithoutSaving() async throws {
         if let task = saveTask { _ = await task.value }
+        if let task = checkpointTask { _ = await task.value }
         let closingServer = server
         stop()
         try await closingServer?.stopAndWait()
@@ -203,6 +215,9 @@ import SwiftUI
     func closeAndSave() async -> Bool {
         if let task = saveTask { return await task.value }
         let task = Task { @MainActor [self] in
+            // A checkpoint is not a close. Wait for its atomic write, then
+            // still destroy/flush and take a final authoritative capture.
+            if let checkpoint = checkpointTask { _ = await checkpoint.value }
             let result = await captureAndPersistIfReady()
             let closingServer = server
             stop()
@@ -216,6 +231,90 @@ import SwiftUI
         saveTask = task
         let result = await task.value
         saveTask = nil
+        return result
+    }
+
+    /// An explicit save-and-restart, never a library dismissal. Public WebKit
+    /// APIs release our old page and clear cache types, but cannot promise all
+    /// OS-managed WebContent/GPU allocations have been physically reclaimed.
+    func saveAndRestart() async -> Bool {
+        if let task = restartTask { return await task.value }
+        guard let package = currentPackage, let root = currentContentRoot else { return false }
+        restartFailure = nil
+        let task = Task { @MainActor [self] in
+            guard await closeAndSave() else {
+                restartFailure = saveFailure ?? L10n.text("Save failed. The game was not restarted.")
+                return false
+            }
+            do {
+                // closeAndSave has dropped the old WKWebView and drained its
+                // listener before this API checks that the package is inactive.
+                try await Self.clearPackageCaches(packageID: package.id)
+            } catch {
+                restartFailure = L10n.text("The game was saved, but temporary cache cleanup failed. It was not restarted.")
+                return false
+            }
+            activeRenderSettings = nil
+            renderSettingsPackageID = nil
+            await startConfigured(package: package, contentRoot: root)
+            guard failure == nil, webView != nil else {
+                restartFailure = failure ?? L10n.text("The game was saved, but could not be restarted.")
+                return false
+            }
+            return true
+        }
+        restartTask = task
+        let result = await task.value
+        restartTask = nil
+        return result
+    }
+
+    /// Copies only already-written SOLs. Does not flush live Flash RAM, stop,
+    /// pause, resume, or reload the movie, and is not an emulator savestate.
+    func checkpointWrittenSaves() async -> Bool {
+        checkpointDidChange = nil
+        guard saveTask == nil, checkpointTask == nil, restartTask == nil else {
+            checkpointFailure = L10n.text("Another save operation is in progress.")
+            return false
+        }
+        guard saveReady, !processTerminated, let view = webView, let package = currentPackage else {
+            checkpointFailure = L10n.text("The player is not ready to copy game-written saves.")
+            return false
+        }
+        checkpointFailure = nil
+        let attempt = generation
+        let task = Task { @MainActor [self] in
+            do {
+                let object = try await SaveWebKitBridge.captureWrittenSaves(from: view)
+                guard generation == attempt, !processTerminated, webView === view else {
+                    throw SaveStoreError.invalid("player changed during checkpoint")
+                }
+                let data = try JSONSerialization.data(withJSONObject: object)
+                guard data.count <= SaveStore.maximumArchiveBytes else { throw SaveStoreError.limit("archive size") }
+                let capture = try JSONDecoder().decode(SaveCapture.self, from: data)
+                guard !capture.entries.isEmpty else {
+                    checkpointFailure = L10n.text("No game-written save is available yet. Existing backups were kept.")
+                    return false
+                }
+                let store = saveStore
+                let changed = try await Task.detached(priority: .userInitiated) {
+                    let previousID = try store.currentSnapshot(packageID: package.id)?.id
+                    let saved = try store.persistLatest(capture, package: package)
+                    return saved.id != previousID
+                }.value
+                checkpointDidChange = changed
+                checkpointFailure = nil
+                return true
+            } catch {
+                // No shutdown was attempted: a failed read must not quarantine
+                // the profile or replace its previous archive with empty data.
+                checkpointFailure = L10n.text("Game-written saves could not be copied. Existing backups were kept.")
+                return false
+            }
+        }
+        checkpointTask = task
+        let result = await task.value
+        checkpointTask = nil
         return result
     }
 
@@ -273,15 +372,36 @@ import SwiftUI
         try await SaveWebKitBridge.capture(from: view)
     }
 
+    /// Ordinary app switching retains the live scene. Only explicit save/end
+    /// destroys Ruffle. This best-effort checkpoint cannot flush pending Flash
+    /// RAM and cannot preserve a scene if iOS later kills its web process.
     func suspendAndSave() async {
-        let background = UIApplication.shared.beginBackgroundTask(withName: "FlashNest save", expirationHandler: nil)
-        defer { if background != .invalid { UIApplication.shared.endBackgroundTask(background) } }
-        _ = await closeAndSave()
+        guard webView != nil, !processTerminated else { return }
+        releaseAllKeys()
+        setPaused(true)
+        guard saveTask == nil, checkpointTask == nil, saveReady else { return }
+        var background: UIBackgroundTaskIdentifier = .invalid
+        background = UIApplication.shared.beginBackgroundTask(withName: "FlashNest written-save checkpoint") {
+            Task { @MainActor in
+                if background != .invalid {
+                    UIApplication.shared.endBackgroundTask(background)
+                    background = .invalid
+                }
+            }
+        }
+        defer {
+            if background != .invalid {
+                UIApplication.shared.endBackgroundTask(background)
+                background = .invalid
+            }
+        }
+        _ = await checkpointWrittenSaves()
     }
 
     func resumeAfterSuspension(allowingSaveFailure: Bool = false) async {
+        guard restartTask == nil else { return }
         if let task = saveTask { _ = await task.value }
-        guard allowingSaveFailure || saveFailure == nil else { return }
+        guard allowingSaveFailure || (saveFailure == nil && restartFailure == nil) else { return }
         guard server == nil, let package = currentPackage, let root = currentContentRoot else { return }
         await start(package: package, contentRoot: root)
     }
@@ -445,15 +565,25 @@ import SwiftUI
 /// Avoids the refined callAsyncJavaScript Swift overlay, which is missing from
 /// affected iOS 18.5 simulator runtimes (WebKit bug 293831, target <= iOS 18.3).
 /// The longstanding plain evaluateJavaScript API starts the same Promise and
-/// polls its result; capture still resolves only after Ruffle destroy/flush.
+/// polls its result. Final capture awaits Ruffle destroy/flush; the separate
+/// written-only operation only reads existing browser storage.
 @MainActor enum SaveWebKitBridge {
     static func capture(from view: WKWebView, timeout: TimeInterval = 15) async throws -> Any {
+        try await capture(from: view, timeout: timeout, writtenOnly: false)
+    }
+
+    static func captureWrittenSaves(from view: WKWebView, timeout: TimeInterval = 15) async throws -> Any {
+        try await capture(from: view, timeout: timeout, writtenOnly: true)
+    }
+
+    private static func capture(from view: WKWebView, timeout: TimeInterval, writtenOnly: Bool) async throws -> Any {
+        let operation = writtenOnly ? "captureWrittenSaves" : "shutdownAndCapture"
         let key = "__FlashNestNativeCapture_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
         defer { view.evaluateJavaScript("delete window.\(key); true") }
         let deadline = Date().addingTimeInterval(timeout)
         _ = try await evaluate("""
         window.\(key) = {state:'pending'};
-        Promise.resolve().then(() => window.FlashNest.shutdownAndCapture()).then(value => {
+        Promise.resolve().then(() => window.FlashNest.\(operation)()).then(value => {
           if (window.\(key)) window.\(key) = {state:'complete', value};
         }, () => {
           if (window.\(key)) window.\(key) = {state:'error'};
