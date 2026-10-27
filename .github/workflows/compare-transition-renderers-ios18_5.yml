@@ -1,0 +1,94 @@
+# CI-only renderer preference isolation after native simulator GPU failures.
+# No App default change and no inference about phone crash causality.
+name: Isolate transition renderer on iOS 18.5 (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-transition-renderers-ios18-5
+  cancel-in-progress: false
+jobs:
+  transitions:
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      TRANSITION_EXPECTED_OS: '18.5'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify sources and generate pinned project
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python3 scripts/fetch_runtime.py
+          python3 scripts/test_static.py
+          python3 -m venv "$RUNNER_TEMP/transition-python"
+          export PATH="$RUNNER_TEMP/transition-python/bin:$PATH"
+          echo "$RUNNER_TEMP/transition-python/bin" >> "$GITHUB_PATH"
+          python3 -m pip install PyYAML==6.0.2
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/transition-stress -p 'test_*.py'
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/transition-renderers -p 'test_*.py'
+          node --test experiments/transition-renderers/test_renderer_observer.mjs
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/frame-order/candidate-native -p 'test_verify_native_result.py'
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/transition-stress/fixture -p 'test_*.py'
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+      - name: Prepare fixed Session and renderer-only delta on iOS 18.5
+        id: prepare
+        run: |
+          set -euo pipefail
+          python3 experiments/transition-renderers/harness.py prepare "$GITHUB_WORKSPACE" "$RUNNER_TEMP/renderer-trees" "$GITHUB_WORKSPACE/renderer-evidence"
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.5)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+      - name: Default renderer preference (require actual wgpu-webgl)
+        id: default
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          TRANSITION_ARM: default
+          TRANSITION_DEVICE: ${{ steps.prepare.outputs.device_id }}
+        run: bash experiments/transition-renderers/run_arm.sh
+      - name: Explicit WebGL preference independent arm (require actual webgl)
+        id: webgl
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          TRANSITION_ARM: webgl
+          TRANSITION_DEVICE: ${{ steps.prepare.outputs.device_id }}
+        run: bash experiments/transition-renderers/run_arm.sh
+      - name: Preserve all failures (never turn independent-arm execution into a pass)
+        if: ${{ !cancelled() }}
+        env:
+          DEFAULT: ${{ steps.default.outcome }}
+          WEBGL: ${{ steps.webgl.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p renderer-evidence
+          printf 'default=%s\nwebgl=%s\n' "$DEFAULT" "$WEBGL" > renderer-evidence/outcomes.txt
+          test "$DEFAULT" = success
+          test "$WEBGL" = success
+      - name: Record runner identity
+        if: always()
+        run: |
+          mkdir -p renderer-evidence
+          # Final catch-all also retains reports when a test step times out
+          # before its per-arm collector. These are deliberately unattributed.
+          if [ -f renderer-evidence/default/start.marker ]; then
+            python3 scripts/collect_test_webkit_crashes.py renderer-evidence/default/start.marker renderer-evidence/unattributed-late-crashes || true
+          fi
+          xcodebuild -version > renderer-evidence/xcode.txt
+          printf '%s\n' "expectedSimulatorOS=$TRANSITION_EXPECTED_OS" > renderer-evidence/diagnostic-lane.txt
+          printf '%s\n' "driver=$GITHUB_SHA" "run=$GITHUB_RUN_ID" "image=${ImageVersion:-unknown}" > renderer-evidence/run.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-renderer-transition-ios18_5-AB
+          retention-days: 7
+          path: renderer-evidence
+          include-hidden-files: true
