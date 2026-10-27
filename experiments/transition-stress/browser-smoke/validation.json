@@ -8,7 +8,10 @@
     "contracts": 11,
     "runnerGuards": 6,
     "consoleObserver": 8,
-    "allMjsSyntax": "PASS"
+    "allMjsSyntax": "PASS",
+    "actualPageLoadOptions": 3
   },
-  "sourceScope": "Existing guarded runtime only; Chrome webgl; not iOS or engine repair proof"
+  "sourceScope": "Existing guarded runtime only; Chrome webgl; not iOS or engine repair proof",
+  "currentHarnessRevisionExecuted": false,
+  "historicalHarnessFailureRun": 40540425773
 }

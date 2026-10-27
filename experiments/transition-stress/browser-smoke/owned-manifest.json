@@ -7,8 +7,8 @@
   ],
   "files": {
     "README.md": {
-      "bytes": 5724,
-      "sha256": "9933e4c6e457b83c0f88236742d84f29703624fc48d103494ccf0d1688f46ce1"
+      "bytes": 6946,
+      "sha256": "eeb3a9ebced4e3c9bcf8c931bfe808ef9d8116fd132d6507fa0cf3a0e7313079"
     },
     "console-observer.mjs": {
       "bytes": 3103,
@@ -23,8 +23,8 @@
       "sha256": "faf7dbeea30e020499928eda8805297948c228eee64d2a9fc5747332aba142f3"
     },
     "page.mjs": {
-      "bytes": 3393,
-      "sha256": "ecc80193b9ce0c34c59b261c37888a802ffe0f076b5fdba1b27ddd862fef09b7"
+      "bytes": 3439,
+      "sha256": "d25c67142ee7def183da37f5710f6cab116087719e469d483546125c001d2902"
     },
     "run.mjs": {
       "bytes": 9462,
@@ -42,13 +42,17 @@
       "bytes": 7668,
       "sha256": "d271aea8c169f5f29e0f142895917a2613fa98fa993dba8638afde2d2a8c037f"
     },
+    "test_page.mjs": {
+      "bytes": 3013,
+      "sha256": "45f54365c7dfe57251ac229c18bb6abb63c2f4c9cb1643f87dda2e4b7b84bf89"
+    },
     "test_runner_guards.mjs": {
       "bytes": 2664,
       "sha256": "34551f0b219929d1598cc7402b73cc0e1363aed5810ebde93d02fb5c87c1ae0c"
     },
     "validation.json": {
-      "bytes": 361,
-      "sha256": "5b67f2a80bb23504e49cbc9bc7009878df8831b42c49619992bbc0694dad26cd"
+      "bytes": 482,
+      "sha256": "80a5444de1687bbb774a1b033db9192b5f242d29fc06aaab20db242421eca62d"
     },
     "webdriver-node-entry.mjs": {
       "bytes": 497,

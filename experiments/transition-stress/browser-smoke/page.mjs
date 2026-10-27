@@ -11,7 +11,7 @@ window.start=async()=>{
  if(player||disposed)throw Error('Only one original player allowed');
  player=window.RufflePlayer.newest().createPlayer();api=player.ruffle();document.getElementById('host').append(player);
  try{
-  await api.load({url:'/fixtures/main.swf',autoplay:'off',unmuteOverlay:'hidden',preferredRenderer:'webgl',quality:'low',backgroundExecutionMode:'none',allowScriptAccess:false});
+  await api.load({url:'/fixtures/main.swf',base:new URL('/fixtures/',location.href).href,autoplay:'off',unmuteOverlay:'hidden',preferredRenderer:'webgl',quality:'low',backgroundExecutionMode:'none',allowScriptAccess:false});
   api.traceObserver=message=>append(e.traces,String(message),512);e.observerInstalled=true;
   const canvas=player.shadowRoot?.querySelector('canvas');if(!canvas)throw Error('Missing renderer canvas');
   const gl2=canvas.getContext('webgl2'),gl=gl2||canvas.getContext('webgl');if(!gl)throw Error('Missing actual WebGL context');

@@ -46,9 +46,16 @@ The runner uses a five-minute overall bound and per-command/readiness bounds. It
 node test_contracts.mjs
 node test_runner_guards.mjs
 node test_console_observer.mjs
+node test_page.mjs
 for file in *.mjs; do node --check "$file"; done
 ```
 
 The console helper captures the exact pinned styled tracing-wasm ERROR/WARN signature, not INFO/ordinary logs, while preserving original logger receiver/arguments/return and avoiding object coercion. These unit checks do not execute a real SWF, browser, WASM or audio device.
 
 `owned-manifest.json` inventories only the browser files owned by this diagnostic implementation. The separately owned `prepare_runtime.py` and `test_prepare_runtime.py` are intentionally excluded and are covered by workflow/source review separately.
+
+## Harness base-URL correction after the second failed run
+
+[Chrome run 40540425773](https://github.com/op233qo123/FlashNest/actions/runs/40540425773) reached the corrected fixture's BOOT, LOAD_BEGIN, LOAD_RETURN and OPEN markers, then failed with an explicit IO error. The child was requested at `/sub/child.swf` and received HTTP404; the allowlisted server correctly serves it only at `/fixtures/sub/child.swf`. This is a missing base option in the diagnostic harness, not an engine, fixture, or iOS conclusion.
+
+The page now supplies `base: new URL('/fixtures/', location.href).href` alongside `url: '/fixtures/main.swf'`, matching the production shell's explicit movie-directory base pattern. The HTTP allowlist, fixture/runtime bytes and output predicates remain unchanged; no root-path alias masks the error. `test_page.mjs` executes the actual page source against a mocked DOM/player API, captures the exact load options and verifies main/base/relative-child URL resolution and same-origin routing for three host locations. This is mock coverage only: the corrected harness still needs a fresh actual Chrome run before any native comparison proceeds. Historical failure artifacts are preserved.

@@ -43,6 +43,7 @@ jobs:
           node experiments/transition-stress/browser-smoke/test_contracts.mjs
           node experiments/transition-stress/browser-smoke/test_runner_guards.mjs
           node experiments/transition-stress/browser-smoke/test_console_observer.mjs
+          node experiments/transition-stress/browser-smoke/test_page.mjs
           node --check experiments/transition-stress/browser-smoke/run.mjs
       - name: Observe READY and three actual load-unload transitions
         timeout-minutes: 7
