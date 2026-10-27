@@ -449,6 +449,11 @@ import SwiftUI
         }
         let profile = PackageWebKitProfiles.shared.store(for: packageID, retaining: activePackageIDs)
         let started = Date()
+        let deadline = started.addingTimeInterval(15)
+        let lease = CacheCleanupWarmLease(profile: profile)
+        defer { lease.close() }
+        try await lease.prepare(before: deadline)
+        try Task.checkCancellation()
         NSLog("CACHE-CLEANUP-BEGIN supportedMask=%d", supported)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             var completed = false
@@ -462,7 +467,7 @@ import SwiftUI
                 }
             }
             Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 15_000_000_000)
+                try? await Task.sleep(nanoseconds: UInt64(max(0, deadline.timeIntervalSinceNow) * 1_000_000_000))
                 guard !completed else { return }
                 completed = true
                 let elapsed = max(0, min(3_600_000, Int(Date().timeIntervalSince(started) * 1000)))
@@ -471,6 +476,9 @@ import SwiftUI
                 continuation.resume(throwing: error)
             }
         }
+        // removeData itself has no public cancellation API. Keep its callback
+        // bounded by the same deadline, then reject cancelled removal callers.
+        try Task.checkCancellation()
     }
 
     static func preparePackageRemoval(package: GamePackage) async throws {

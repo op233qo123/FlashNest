@@ -21,7 +21,9 @@ LIFECYCLE_CASES = {
 }
 
 
-def verify(summary: dict, log: str, variant: str, scope: str = "original") -> None:
+def verify(summary: dict, log: str, variant: str, scope: str = "original", expected_os: str = "18.2") -> None:
+    if expected_os not in ("18.2", "18.5"):
+        raise ValueError("Unsupported expected simulator OS")
     if variant not in ("both", "control", "nested"):
         raise ValueError("Unsupported candidate fixture selection")
     if scope == "original":
@@ -44,8 +46,8 @@ def verify(summary: dict, log: str, variant: str, scope: str = "original") -> No
         raise ValueError("Expected exactly one simulator configuration")
     configuration = configurations[0]
     device = configuration.get("device", {})
-    if device.get("osVersion") != "18.2" or device.get("platform") != "iOS Simulator":
-        raise ValueError("The required iOS 18.2 simulator was not measured")
+    if device.get("osVersion") != expected_os or device.get("platform") != "iOS Simulator":
+        raise ValueError(f"The required iOS {expected_os} simulator was not measured")
     for key, expected in {"passedTests": count, "failedTests": 0,
                           "skippedTests": 0, "expectedFailures": 0}.items():
         if type(configuration.get(key)) is not int or configuration.get(key) != expected:
@@ -67,9 +69,10 @@ def main():
     parser.add_argument("--log", type=Path, required=True)
     parser.add_argument("--variant", choices=("both", "control", "nested"), required=True)
     parser.add_argument("--scope", choices=("original", "save-lifecycle", "ui-lifecycle"), default="original")
+    parser.add_argument("--os", choices=("18.2", "18.5"), default="18.2", dest="expected_os")
     args = parser.parse_args()
-    verify(json.loads(args.summary.read_text()), args.log.read_text(), args.variant, args.scope)
-    print(f"Verified selected candidate tests passed without skips on iOS 18.2: {args.scope}/{args.variant}")
+    verify(json.loads(args.summary.read_text()), args.log.read_text(), args.variant, args.scope, args.expected_os)
+    print(f"Verified selected candidate tests passed without skips on iOS {args.expected_os}: {args.scope}/{args.variant}")
 
 
 if __name__ == "__main__":

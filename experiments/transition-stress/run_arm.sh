@@ -2,6 +2,8 @@
 set -euo pipefail
 case "${TRANSITION_ARM:-}" in baseline|guarded) ;; *) exit 2;; esac
 : "${TRANSITION_DEVICE:?}"
+expected_os="${TRANSITION_EXPECTED_OS:-18.2}"
+case "$expected_os" in 18.2|18.5) ;; *) echo 'Unsupported expected simulator OS' >&2; exit 2;; esac
 tree="$RUNNER_TEMP/transition-trees/$TRANSITION_ARM"
 evidence="$GITHUB_WORKSPACE/transition-evidence/$TRANSITION_ARM"
 mkdir -p "$evidence"
@@ -26,5 +28,5 @@ printf '%s\n' "$status" > "$evidence/xcodebuild-exit-status.txt"
 python3 scripts/collect_test_webkit_crashes.py "$evidence/start.marker" "$evidence/webkit-crashes"
 xcrun xcresulttool get test-results summary --path "$evidence/Results.xcresult" > "$evidence/summary.json"
 xcrun xcresulttool export attachments --path "$evidence/Results.xcresult" --output-path "$evidence/attachments"
-python3 "$GITHUB_WORKSPACE/experiments/transition-stress/harness.py" verify "$evidence/summary.json" "$evidence/test.log" "$GITHUB_WORKSPACE" > "$evidence/verified.json"
+python3 "$GITHUB_WORKSPACE/experiments/transition-stress/harness.py" verify "$evidence/summary.json" "$evidence/test.log" "$GITHUB_WORKSPACE" --os "$expected_os" > "$evidence/verified.json"
 test "$status" -eq 0

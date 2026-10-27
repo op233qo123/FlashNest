@@ -16,6 +16,7 @@ SESSION = 'App/Player/PlayerSession.swift'
 HASHES = {'baseline': '59a449965ace4e277d97b86e0c35540e449d0d3adefb9e9944a287a648168994',
           'guarded': '5bfbf722141f7764f75ce039ca07926ef0310ac339774b1cadabe916f58252f2'}
 METHOD = 'FlashNestUITests.TransitionStressUITests testThreeSceneLoadsWithRotationAndBackgroundPreserveLiveState'
+CORRECTED_FIXTURE_LOCK_SHA256 = '867d0acef40ddfb70fecb16e0950379932b9127865d09f8130acf11b4736691d'
 
 def sha(data): return hashlib.sha256(data).hexdigest()
 def git(root, *args): return subprocess.check_output(['git', '-C', str(root), *args])
@@ -29,16 +30,31 @@ def inventory(root):
         result[name] = sha((root / name).read_bytes())
     return result
 
-def prepare(driver, output, evidence):
+def checked_os(expected_os):
+    if expected_os not in ('18.2', '18.5'): raise ValueError('Unsupported expected simulator OS')
+    return expected_os
+
+def fixture_contract(fixture, lock_path, expected_os='18.2'):
+    checked_os(expected_os)
+    if not fixture.is_dir() or not (fixture / 'main.swf').is_file(): raise ValueError('Original frozen transition fixture is missing')
+    lock = json.loads(lock_path.read_text())
+    actual = {str(p.relative_to(fixture)): sha(p.read_bytes()) for p in sorted(fixture.rglob('*')) if p.is_file()}
+    if actual != lock['files'] or lock['variant'] != 'unload': raise ValueError('Fixture lock/variant mismatch')
+    # The alternate-OS diagnostic must use exactly the corrected original tree,
+    # not silently revive the historically invalid root or introduce new assets.
+    # The existing 18.2 lane's generic frozen-fixture contract is unchanged.
+    if expected_os == '18.5' and (len(actual) != 13 or sha(lock_path.read_bytes()) != CORRECTED_FIXTURE_LOCK_SHA256):
+        raise ValueError('iOS 18.5 requires the reviewed corrected 13-file fixture lock')
+    return lock
+
+def prepare(driver, output, evidence, expected_os='18.2'):
+    checked_os(expected_os)
     driver, output, evidence = map(lambda p: Path(p).resolve(), (driver, output, evidence))
     evidence.mkdir(parents=True, exist_ok=True)
     commit = git(driver, 'rev-parse', 'HEAD').decode().strip()
     fixture = driver / 'experiments/transition-stress/fixture'
-    if not fixture.is_dir() or not (fixture / 'main.swf').is_file(): raise ValueError('Original frozen transition fixture is missing')
     # Lock must inventory every payload byte. No arbitrary source path accepted.
-    lock = json.loads((driver / 'experiments/transition-stress/fixture.lock.json').read_text())
-    actual = {str(p.relative_to(fixture)): sha(p.read_bytes()) for p in sorted(fixture.rglob('*')) if p.is_file()}
-    if actual != lock['files'] or lock['variant'] != 'unload': raise ValueError('Fixture lock/variant mismatch')
+    lock = fixture_contract(fixture, driver / 'experiments/transition-stress/fixture.lock.json', expected_os)
     manifests = {}
     for variant, revision in [('baseline', BASE), ('guarded', GUARD)]:
         tree = output / variant
@@ -68,13 +84,14 @@ def prepare(driver, output, evidence):
     if delta != [SESSION]: raise ValueError('Unexpected A/B source differences: ' + repr(delta))
     (evidence / 'comparison.json').write_text(json.dumps({'driverCommit': commit, 'baselineSessionCommit': BASE,
         'guardedSessionCommit': GUARD, 'onlyChangedFile': SESSION, 'fixture': lock, 'configuration': 'Debug',
-        'cyclesPerArm': 3, 'order': ['baseline', 'guarded'], 'resetSameSimulatorBetweenArms': True}, indent=2) + '\n')
+        'expectedSimulatorOS': expected_os, 'cyclesPerArm': 3, 'order': ['baseline', 'guarded'], 'resetSameSimulatorBetweenArms': True}, indent=2) + '\n')
 
-def verify(summary, log, root):
+def verify(summary, log, root, expected_os='18.2'):
+    checked_os(expected_os)
     spec = importlib.util.spec_from_file_location('native_gate', Path(root) / 'experiments/frame-order/candidate-native/verify_native_result.py')
     gate = importlib.util.module_from_spec(spec); spec.loader.exec_module(gate)
     gate.LIFECYCLE_CASES['transition'] = [METHOD]
-    gate.verify(summary, log.replace("Test Case '-[", "\nTest Case '-["), 'both', 'transition')
+    gate.verify(summary, log.replace("Test Case '-[", "\nTest Case '-["), 'both', 'transition', expected_os=expected_os)
     marker_log = log.replace('FLASHNEST_TRANSITION_', '\nFLASHNEST_TRANSITION_')
     completions = re.findall(r'^FLASHNEST_TRANSITION_COMPLETE (.*)$', marker_log, re.M)
     if completions != ['cycles=3 keys=14 pointers=3 unloadCalls=3 unloadEvents=3 errors=0']:
@@ -113,7 +130,9 @@ def verify(summary, log, root):
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); sub = p.add_subparsers(dest='action', required=True)
     s = sub.add_parser('prepare'); s.add_argument('driver'); s.add_argument('output'); s.add_argument('evidence')
+    s.add_argument('--os', choices=('18.2', '18.5'), default='18.2', dest='expected_os')
     v = sub.add_parser('verify'); v.add_argument('summary'); v.add_argument('log'); v.add_argument('root')
+    v.add_argument('--os', choices=('18.2', '18.5'), default='18.2', dest='expected_os')
     args = p.parse_args()
-    if args.action == 'prepare': prepare(args.driver, args.output, args.evidence)
-    else: print(json.dumps(verify(json.loads(Path(args.summary).read_text()), Path(args.log).read_text(), args.root)))
+    if args.action == 'prepare': prepare(args.driver, args.output, args.evidence, args.expected_os)
+    else: print(json.dumps(verify(json.loads(Path(args.summary).read_text()), Path(args.log).read_text(), args.root, args.expected_os)))

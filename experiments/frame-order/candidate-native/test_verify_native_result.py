@@ -39,6 +39,18 @@ class VerifyNativeResultTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 verify(wrong, log, "both")
 
+    def test_explicit_alternate_os_checks_raw_summary_without_changing_default(self):
+        summary, log = evidence("both")
+        with self.assertRaises(ValueError): verify(summary, log, "both", expected_os="18.5")
+        summary["devicesAndConfigurations"][0]["device"]["osVersion"] = "18.5"
+        original = copy.deepcopy(summary)
+        verify(summary, log, "both", expected_os="18.5")
+        self.assertEqual(summary, original, "Verification must not rewrite observed OS evidence")
+        with self.assertRaises(ValueError): verify(summary, log, "both")
+        for unsupported in ("18", "18.5.0", "26.0", "", None):
+            with self.subTest(expected_os=unsupported), self.assertRaises(ValueError):
+                verify(summary, log, "both", expected_os=unsupported)
+
     def test_missing_duplicated_wrong_or_failed_named_cases(self):
         summary, log = evidence("both")
         wrong_logs = ("", log + "\n" + log, log.replace("Contract", "OtherContract"),

@@ -21,6 +21,28 @@ class TransitionGateTests(unittest.TestCase):
         return summary, log
     def test_exact_pass(self):
         self.assertEqual(verify(*self.fixture(), ROOT)['cycles'], 3)
+    def test_explicit_18_5_pass_requires_actual_18_5_and_preserves_summary(self):
+        summary, log = self.fixture()
+        with self.assertRaises(ValueError): verify(summary, log, ROOT, expected_os='18.5')
+        summary['devicesAndConfigurations'][0]['device']['osVersion'] = '18.5'
+        before = copy.deepcopy(summary)
+        result = verify(summary, log, ROOT, expected_os='18.5')
+        self.assertEqual(result, dict(result='Passed', cycles=3, states=14, bootCount=1, actualHomeTransitions=4))
+        self.assertEqual(summary, before)
+        with self.assertRaises(ValueError): verify(summary, log, ROOT)
+        for expected_os in ('18', '18.5.0', '26.0', '', None):
+            with self.assertRaises(ValueError): verify(summary, log, ROOT, expected_os=expected_os)
+    def test_alternate_os_does_not_relax_state_home_or_result_gate(self):
+        summary, log = self.fixture()
+        summary['devicesAndConfigurations'][0]['device']['osVersion'] = '18.5'
+        for bad in [log.replace('visibleHomeIcon=true', 'visibleHomeIcon=false'),
+                    log.replace('childHeartbeat=3', 'childHeartbeat=2'),
+                    log.replace('keys=14', 'keys=13'),
+                    log.replace('unloadEvents=3', 'unloadEvents=2'),
+                    log.replace('boot=original generation=3', 'boot=restarted generation=3')]:
+            with self.assertRaises(ValueError): verify(summary, bad, ROOT, expected_os='18.5')
+        summary['skippedTests'] = 1
+        with self.assertRaises(ValueError): verify(summary, log, ROOT, expected_os='18.5')
     def test_zero_skips_failures_and_wrong_os_reject(self):
         for key, value in [('totalTestCount', 0), ('skippedTests', 1), ('failedTests', 1), ('passedTests', True)]:
             summary, log = self.fixture(); summary[key] = value
@@ -49,6 +71,54 @@ class TransitionGateTests(unittest.TestCase):
             with self.assertRaises(ValueError): verify(summary, bad, ROOT)
 
 class StagingContractTests(unittest.TestCase):
+    def test_alternate_os_requires_corrected_exact_thirteen_file_lock(self):
+        import json
+        import tempfile
+        from harness import fixture_contract, sha, CORRECTED_FIXTURE_LOCK_SHA256
+        fixture = ROOT/'experiments/transition-stress/fixture'
+        lock_path = ROOT/'experiments/transition-stress/fixture.lock.json'
+        lock = fixture_contract(fixture, lock_path, '18.5')
+        self.assertEqual(len(lock['files']), 13)
+        self.assertEqual(sha(lock_path.read_bytes()), CORRECTED_FIXTURE_LOCK_SHA256)
+        self.assertEqual(lock['files']['main.swf'], '9e6f0768d08018c2ae324dbc61d33eb1d62378f8c7de7b30bc054e1a74a63878')
+        with tempfile.TemporaryDirectory() as temporary:
+            changed_lock = Path(temporary)/'lock.json'
+            changed_lock.write_text(json.dumps(lock, separators=(',', ':')))
+            # Existing18.2 generic lock contract remains unchanged; alternate
+            # lane additionally requires the exact reviewed corrected lock bytes.
+            fixture_contract(fixture, changed_lock)
+            with self.assertRaises(ValueError): fixture_contract(fixture, changed_lock, '18.5')
+
+    def test_alternate_workflow_is_separate_and_retains_timeout_and_outcome_gates(self):
+        import yaml
+        from harness import sha
+        old_path = ROOT/'.github/workflows/compare-transition-stress.yml'
+        self.assertEqual(sha(old_path.read_bytes()), '723fe6ebb1ef4e14f1370d53182f8a81cc223151b93fa3ac74fbbb27be7d417e')
+        old = yaml.safe_load(old_path.read_text())['jobs']['transitions']
+        new = yaml.safe_load((ROOT/'.github/workflows/compare-transition-stress-ios18_5.yml').read_text())['jobs']['transitions']
+        self.assertEqual(new['runs-on'], 'macos-15')
+        self.assertEqual(new['env']['DEVELOPER_DIR'], '/Applications/Xcode_16.4.app/Contents/Developer')
+        self.assertEqual(new['env']['TRANSITION_EXPECTED_OS'], '18.5')
+        self.assertEqual(new['timeout-minutes'], old['timeout-minutes'])
+        self.assertEqual(new['timeout-minutes'], 40)
+        old_steps = {step['id']: step for step in old['steps'] if 'id' in step}
+        new_steps = {step['id']: step for step in new['steps'] if 'id' in step}
+        for arm in ('baseline', 'guarded'):
+            self.assertEqual(new_steps[arm]['timeout-minutes'], old_steps[arm]['timeout-minutes'])
+            self.assertEqual(new_steps[arm]['timeout-minutes'], 15)
+            self.assertTrue(new_steps[arm]['continue-on-error'])
+        self.assertIn('--os 18.5', new_steps['prepare']['run'])
+        self.assertIn('select_simulator.py 18.5', new_steps['prepare']['run'])
+        gate = next(step for step in new['steps'] if step.get('env', {}).get('BASELINE'))
+        self.assertIn('steps.baseline.outcome', gate['env']['BASELINE'])
+        self.assertIn('steps.guarded.outcome', gate['env']['GUARDED'])
+        self.assertIn('test "$BASELINE" = success', gate['run'])
+        self.assertIn('test "$GUARDED" = success', gate['run'])
+        runner = (ROOT/'experiments/transition-stress/run_arm.sh').read_text()
+        self.assertIn('${TRANSITION_EXPECTED_OS:-18.2}', runner)
+        self.assertIn('--os "$expected_os"', runner)
+        self.assertIn('-maximum-test-execution-time-allowance 480', runner)
+
     def test_actual_local_worktrees_have_only_pinned_session_delta(self):
         import tempfile
         import subprocess

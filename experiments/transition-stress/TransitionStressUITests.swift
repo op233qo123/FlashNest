@@ -166,8 +166,72 @@ final class TransitionStressUITests: XCTestCase {
             result = record
             return true
         }
-        if !matched { captureAccessibility("Missing \(kind), generation \(generation), key \(keys ?? -1)", in: app) }
+        if !matched {
+            let context = "Missing \(kind), generation \(generation), key \(keys ?? -1)"
+            captureAccessibility(context, in: app)
+            captureFailureDiagnostics(context, in: app)
+        }
         return try XCTUnwrap(result, "Missing fresh real SWF record: \(kind), generation=\(generation), pointers=\(pointers), keys=\(keys ?? -1)")
+    }
+
+    /// Best-effort evidence AFTER the unchanged record deadline has expired.
+    /// Never resumes, restarts, retries the action, or substitutes for its error.
+    /// XCUI actions report XCTest failures rather than Swift throws, so allow
+    /// secondary capture failures locally and always return to the original
+    /// XCTUnwrap failure. The normal journey retains continueAfterFailure=false.
+    private func captureFailureDiagnostics(_ context: String, in app: XCUIApplication) {
+        let previousPolicy = continueAfterFailure
+        continueAfterFailure = true
+        defer { continueAfterFailure = previousPolicy }
+        let deadline = Date().addingTimeInterval(20)
+        var notes = ["Original failure: " + context, "Evidence only; no recovery or retry"]
+        var labels = Set<String>()
+        defer {
+            let text = (notes + labels.sorted()).joined(separator: "\n")
+            let evidence = XCTAttachment(string: String(text.prefix(40_000)))
+            evidence.name = context + " retained native diagnostics"
+            evidence.lifetime = .keepAlways; add(evidence)
+            print("FLASHNEST_TRANSITION_FAILURE_DIAGNOSTICS\n" + String(text.prefix(40_000)))
+        }
+        let menu = app.buttons["player-menu"].firstMatch
+        guard Date() < deadline, menu.exists, menu.isEnabled, menu.isHittable else {
+            notes.append("Capture unavailable: native menu not interactive")
+            return
+        }
+        menu.tap()
+        let resume = app.buttons["player-resume"].firstMatch
+        guard Date() < deadline, resume.exists, resume.isHittable else {
+            // Never send an evidence-scroll to the live game if the native
+            // menu failed to present. No game action is retried here.
+            notes.append("Capture unavailable: native menu did not present")
+            return
+        }
+        let diagnostics = app.buttons["Diagnostics"].firstMatch
+        for _ in 0..<4 {
+            guard Date() < deadline else { break }
+            if diagnostics.exists && diagnostics.isEnabled && diagnostics.isHittable { break }
+            app.swipeUp()
+        }
+        guard Date() < deadline, diagnostics.exists, diagnostics.isEnabled, diagnostics.isHittable else {
+            notes.append("Capture unavailable: Diagnostics action not reachable within evidence budget")
+            return
+        }
+        diagnostics.tap()
+        guard Date() < deadline, app.navigationBars["Diagnostics"].exists else {
+            notes.append("Capture unavailable: Diagnostics page did not open")
+            return
+        }
+        let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "No external network access.")).firstMatch
+        for _ in 0..<10 {
+            guard Date() < deadline else { break }
+            app.staticTexts.allElementsBoundByIndex.forEach { labels.insert($0.label) }
+            if footer.exists && footer.isHittable {
+                notes.append("Reached retained diagnostics footer")
+                return
+            }
+            app.swipeUp()
+        }
+        notes.append("Capture incomplete: retained list footer not reached within evidence budget")
     }
 
     private func requireLiveSurface(in app: XCUIApplication) {

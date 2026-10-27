@@ -1,0 +1,92 @@
+# Separate alternate-OS diagnostic, not a replacement for failed iOS 18.2 history.
+# Corrected original fixture passed actual Chrome run40542253253; this lane is native preparation only.
+name: Diagnose corrected transition stress on iOS 18.5 (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-transition-stress-ios18-5
+  cancel-in-progress: false
+jobs:
+  transitions:
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      TRANSITION_EXPECTED_OS: '18.5'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify sources and generate pinned project
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python3 scripts/fetch_runtime.py
+          python3 scripts/test_static.py
+          python3 -m venv "$RUNNER_TEMP/transition-python"
+          export PATH="$RUNNER_TEMP/transition-python/bin:$PATH"
+          echo "$RUNNER_TEMP/transition-python/bin" >> "$GITHUB_PATH"
+          python3 -m pip install PyYAML==6.0.2
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/transition-stress -p 'test_*.py'
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/frame-order/candidate-native -p 'test_verify_native_result.py'
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s experiments/transition-stress/fixture -p 'test_*.py'
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+      - name: Prepare corrected 13-file fixture and require iOS 18.5
+        id: prepare
+        run: |
+          set -euo pipefail
+          python3 experiments/transition-stress/harness.py prepare "$GITHUB_WORKSPACE" "$RUNNER_TEMP/transition-trees" "$GITHUB_WORKSPACE/transition-evidence" --os 18.5
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.5)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+      - name: Baseline exact pre-guard Session
+        id: baseline
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          TRANSITION_ARM: baseline
+          TRANSITION_DEVICE: ${{ steps.prepare.outputs.device_id }}
+        run: bash experiments/transition-stress/run_arm.sh
+      - name: Guarded Session independent arm
+        id: guarded
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          TRANSITION_ARM: guarded
+          TRANSITION_DEVICE: ${{ steps.prepare.outputs.device_id }}
+        run: bash experiments/transition-stress/run_arm.sh
+      - name: Preserve all failures (never turn independent-arm execution into a pass)
+        if: ${{ !cancelled() }}
+        env:
+          BASELINE: ${{ steps.baseline.outcome }}
+          GUARDED: ${{ steps.guarded.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p transition-evidence
+          printf 'baseline=%s\nguarded=%s\n' "$BASELINE" "$GUARDED" > transition-evidence/outcomes.txt
+          test "$BASELINE" = success
+          test "$GUARDED" = success
+      - name: Record runner identity
+        if: always()
+        run: |
+          mkdir -p transition-evidence
+          # Final catch-all also retains reports when a test step times out
+          # before its per-arm collector. These are deliberately unattributed.
+          if [ -f transition-evidence/baseline/start.marker ]; then
+            python3 scripts/collect_test_webkit_crashes.py transition-evidence/baseline/start.marker transition-evidence/unattributed-late-crashes || true
+          fi
+          xcodebuild -version > transition-evidence/xcode.txt
+          printf '%s\n' "expectedSimulatorOS=$TRANSITION_EXPECTED_OS" > transition-evidence/diagnostic-lane.txt
+          printf '%s\n' "driver=$GITHUB_SHA" "run=$GITHUB_RUN_ID" "image=${ImageVersion:-unknown}" > transition-evidence/run.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-corrected-transition-stress-ios18_5-AB
+          retention-days: 7
+          path: transition-evidence
+          include-hidden-files: true
