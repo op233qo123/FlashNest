@@ -1,0 +1,82 @@
+name: Diagnose original Loader fixture in Chrome (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-transition-browser
+  cancel-in-progress: false
+jobs:
+  original-fixture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      EVIDENCE: ${{ github.workspace }}/transition-browser-evidence
+      BASELINE: ${{ github.workspace }}/transition-browser-runtime
+    steps:
+      - name: Checkout original fixture and diagnostic
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Checkout only pinned dependency source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ruffle-rs/ruffle
+          ref: 89a7049965f3090e706265670df309a5128233ac
+          path: .transition-browser-dependencies
+          persist-credentials: false
+      - name: Install pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Verify immutable vendor runtime and original fixture
+        timeout-minutes: 4
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE"
+          test "$(git -C .transition-browser-dependencies rev-parse HEAD)" = 89a7049965f3090e706265670df309a5128233ac
+          python3 experiments/transition-stress/browser-smoke/test_prepare_runtime.py
+          python3 experiments/transition-stress/browser-smoke/prepare_runtime.py vendor/ruffle-frame-order-40491098384.zip "$BASELINE" > "$EVIDENCE/runtime-identity.json"
+          python3 -m unittest discover -s experiments/transition-stress/fixture -p 'test_fixture_validation.py'
+          (cd .transition-browser-dependencies/web && npm ci --ignore-scripts)
+          node experiments/transition-stress/browser-smoke/test_contracts.mjs
+          node experiments/transition-stress/browser-smoke/test_runner_guards.mjs
+          node experiments/transition-stress/browser-smoke/test_console_observer.mjs
+          node --check experiments/transition-stress/browser-smoke/run.mjs
+      - name: Observe READY and three actual load-unload transitions
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver || { test -n "${CHROMEWEBDRIVER:-}" && test -x "$CHROMEWEBDRIVER/chromedriver" && printf "%s" "$CHROMEWEBDRIVER/chromedriver"; })
+          "$chrome" --version > "$EVIDENCE/chrome.txt"
+          "$driver" --version > "$EVIDENCE/chromedriver.txt"
+          node experiments/transition-stress/browser-smoke/run.mjs \
+            --runtime "$BASELINE/runtime" \
+            --runtime-manifest "$BASELINE/runtime.browser-manifest.json" \
+            --runtime-manifest-sha256 7b5dc0993bbd35c8e336b3a021e381ca99618bd4e6538c9e21c7acdc56ce5c7c \
+            --webdriverio "$GITHUB_WORKSPACE/.transition-browser-dependencies/web/node_modules/webdriverio" \
+            --chrome "$chrome" --driver "$driver" \
+            --fixtures "$GITHUB_WORKSPACE/experiments/transition-stress/fixture" \
+            --output "$EVIDENCE/browser"
+      - name: Preserve source identity and partial failures
+        if: always()
+        run: |
+          mkdir -p "$EVIDENCE/experiment"
+          cp -R experiments/transition-stress/browser-smoke "$EVIDENCE/experiment/"
+          cp -R experiments/transition-stress/fixture "$EVIDENCE/experiment/"
+          cp .github/workflows/diagnose-transition-browser.yml "$EVIDENCE/experiment/"
+          printf '%s\n' "repository=$GITHUB_REPOSITORY" "experimentCommit=$GITHUB_SHA" "runID=$GITHUB_RUN_ID" "runtimeArchiveSHA256=57d7eaed19edd006e2a33a9bfa816f22da8b1003becf3719dfca0c97cb38c4af" "imageOS=${ImageOS:-unknown}" "imageVersion=${ImageVersion:-unknown}" > "$EVIDENCE/run.txt"
+      - name: Retain actual original-fixture evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-original-transition-browser
+          retention-days: 7
+          path: |
+            transition-browser-evidence
+            transition-browser-runtime/identity.json
+            transition-browser-runtime/provenance.json
+            transition-browser-runtime/runtime.browser-manifest.json
+          if-no-files-found: warn

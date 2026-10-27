@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "status": "MOCK_AND_SYNTAX_PASS_ONLY",
+  "runtimeExecuted": false,
+  "nativeExecuted": false,
+  "fixtureModified": false,
+  "checks": {
+    "contracts": 11,
+    "runnerGuards": 6,
+    "consoleObserver": 8,
+    "allMjsSyntax": "PASS"
+  },
+  "sourceScope": "Existing guarded runtime only; Chrome webgl; not iOS or engine repair proof"
+}
