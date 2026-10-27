@@ -12,6 +12,7 @@ on:
           - home-import
           - home
           - fullscreen
+          - external-import
         default: all
 permissions:
   contents: read
@@ -64,7 +65,9 @@ jobs:
         run: |
           set -o pipefail
           touch "$RUNNER_TEMP/flashnest-wk-tests-start"
-          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath SaveInputTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/InputFocusRuntimeTests -only-testing:FlashNestTests/SaveManagementEntryPolicyTests -only-testing:FlashNestTests/SharedObjectPersistenceTests -only-testing:FlashNestTests/LastSessionDiagnosticsTests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee save-input-test.log
+          native_selection=(-only-testing:FlashNestTests/InputFocusRuntimeTests -only-testing:FlashNestTests/SaveManagementEntryPolicyTests -only-testing:FlashNestTests/SharedObjectPersistenceTests -only-testing:FlashNestTests/LastSessionDiagnosticsTests)
+          if [ "$TEST_SCOPE" = "external-import" ]; then native_selection=(-only-testing:FlashNestTests/ExternalImportInboxTests -only-testing:FlashNestTests/ExternalImportCopyTests -only-testing:FlashNestTests/ImportFlowTests -only-testing:FlashNestTests/PackageImporterTests); fi
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath SaveInputTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 "${native_selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee save-input-test.log
       - name: Tap the real Files Open and Cancel controls
         # Collect independent UI evidence even if a native diagnostic test fails.
         # The failed native step still makes the overall workflow fail.
@@ -78,6 +81,7 @@ jobs:
           if [ "$TEST_SCOPE" = "home-import" ]; then selection=(-only-testing:FlashNestUITests/FolderPickerUITests -only-testing:FlashNestUITests/LibraryHomeUITests); fi
           if [ "$TEST_SCOPE" = "home" ]; then selection=(-only-testing:FlashNestUITests/LibraryHomeUITests); fi
           if [ "$TEST_SCOPE" = "fullscreen" ]; then selection=(-only-testing:FlashNestUITests/FullscreenPlayerUITests); fi
+          if [ "$TEST_SCOPE" = "external-import" ]; then selection=(-only-testing:FlashNestUITests/ExternalDocumentImportUITests); fi
           echo "UI validation scope: $TEST_SCOPE"
           xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath PickerTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 480 "${selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee picker-test.log
       - name: Export compact UI evidence

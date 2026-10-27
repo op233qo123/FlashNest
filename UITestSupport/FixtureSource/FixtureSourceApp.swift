@@ -1,11 +1,14 @@
 import SwiftUI
 import Foundation
+import UIKit
 
 /// Installed only by the diagnostic UI workflow. Its separate app sandbox is
-/// the source of Files selections; it never calls FlashNest or its importer.
+/// the source of Files selections and real system Open-In handoffs. It never
+/// calls FlashNest's importer or writes its application container.
 @main struct FixtureSourceApp: App {
     @State private var state = "Preparing cross-app fixture…"
     @State private var ready = false
+    @State private var shareZIP = false
 
     var body: some Scene {
         WindowGroup {
@@ -13,6 +16,9 @@ import Foundation
                 Text("FlashNest Source").font(.title)
                 Text(state).accessibilityIdentifier(ready ? "source-ready" : "source-status")
                 Text("Documents / FlashNest Cross-App Fixture")
+                Button("Open ZIP in another app") { shareZIP = true }
+                    .disabled(!ready).accessibilityIdentifier("source-open-zip")
+                    .sheet(isPresented: $shareZIP) { SourceDocumentHandoff() }
             }
             .padding()
             .task {
@@ -32,6 +38,9 @@ import Foundation
 private enum CrossAppFixtureSeed {
     static func prepare() throws {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        guard let zip = Bundle.main.url(forResource: "multi-swf", withExtension: "zip") else { throw CocoaError(.fileNoSuchFile) }
+        let sharedZIP = documents.appendingPathComponent("FlashNest External Fixture.zip")
+        if !FileManager.default.fileExists(atPath: sharedZIP.path) { try FileManager.default.copyItem(at: zip, to: sharedZIP) }
         let root = documents.appendingPathComponent("FlashNest Cross-App Fixture", isDirectory: true)
         let child = root.appendingPathComponent("sub/level2/level3/child.swf")
         try FileManager.default.createDirectory(at: child.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -60,5 +69,30 @@ private enum CrossAppFixtureSeed {
         if FileManager.default.fileExists(atPath: lifecycleFixture.path) { try FileManager.default.removeItem(at: lifecycleFixture) }
         try FileManager.default.copyItem(at: lifecycle, to: lifecycleFixture)
         print("FLASHNEST_CROSS_APP_SOURCE ready: 44 MiB + three-level nested child + separate playable fixture")
+    }
+}
+
+/// The system document interaction menu, not a test URL scheme or callback.
+private struct SourceDocumentHandoff: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController { HandoffController() }
+    func updateUIViewController(_ controller: UIViewController, context: Context) {}
+
+    final class HandoffController: UIViewController, UIDocumentInteractionControllerDelegate {
+        private var document: UIDocumentInteractionController?
+        private var presented = false
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            guard !presented else { return }
+            presented = true
+            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("FlashNest External Fixture.zip")
+            let controller = UIDocumentInteractionController(url: url)
+            controller.delegate = self
+            document = controller
+            if !controller.presentOpenInMenu(from: view.bounds, in: view, animated: true) {
+                let label = UILabel(); label.text = "No app accepts this ZIP"; label.accessibilityIdentifier = "source-no-handler"
+                label.frame = view.bounds; label.textAlignment = .center; view.addSubview(label)
+            }
+        }
     }
 }

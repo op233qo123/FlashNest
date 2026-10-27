@@ -291,3 +291,23 @@
 "Not favorited" = "Not favorited";
 
 "1 game" = "1 game";
+"Only local files and folders can be imported." = "Only local files and folders can be imported.";
+"The external import queue is full. Import or dismiss an item, then share again." = "The external import queue is full. Import or dismiss an item, then share again.";
+"External import" = "External import";
+"Import a private copy. The original stays unchanged." = "Import a private copy. The original stays unchanged.";
+"Dismiss" = "Dismiss";
+"Current resolution" = "Current resolution";
+"Not started" = "Not started";
+"Next opening" = "Next opening";
+"Selected for next opening" = "Selected for next opening";
+"Change pending. The current scene is unchanged." = "Change pending. The current scene is unchanged.";
+"Percentages apply to width and height, not total memory use." = "Percentages apply to width and height, not total memory use.";
+"Lower resolution looks softer and may reduce rendering-buffer use. It does not guarantee lower total memory use or prevent crashes." = "Lower resolution looks softer and may reduce rendering-buffer use. It does not guarantee lower total memory use or prevent crashes.";
+"Some games may lay out differently. If the picture or controls are incorrect, choose Original." = "Some games may lay out differently. If the picture or controls are incorrect, choose Original.";
+"Saved separately for each game. Applies on the next opening or Save and restart; the current scene is unchanged." = "Saved separately for each game. Applies on the next opening or Save and restart; the current scene is unchanged.";
+"Rendering resolution" = "Rendering resolution";
+"Original (100%)" = "Original (100%)";
+"Slight reduction (75%)" = "Slight reduction (75%)";
+"Reduced (50%)" = "Reduced (50%)";
+"Lowest resolution (25%)" = "Lowest resolution (25%)";
+"The resolution preference could not be saved. The current game was not changed." = "The resolution preference could not be saved. The current game was not changed.";

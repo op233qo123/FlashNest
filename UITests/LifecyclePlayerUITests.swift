@@ -160,43 +160,14 @@ final class LifecyclePlayerUITests: XCTestCase {
         let importButton = LibraryNavigation.revealFolderImport(in: app)
         XCTAssertTrue(importButton.waitForExistence(timeout: 15)); XCTAssertTrue(wait { importButton.isHittable }); importButton.tap()
         XCTAssertTrue(app.navigationBars["FullDocumentManagerViewControllerNavigationBar"].waitForExistence(timeout: 15))
-        let title = app.navigationBars.buttons[fixtureTitle + ", Actions Menu"].firstMatch
-        for _ in 0..<12 {
-            if title.exists { break }
-            var navigated = false
-            for label in [fixtureTitle, "FlashNest Source", "On My iPhone"] {
-                let cell = fileCell(named: label, in: app)
-                if cell.exists && cell.isHittable { cell.tap(); navigated = true; break }
-            }
-            if navigated { continue }
-            let back = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"].buttons.allElementsBoundByIndex.first {
-                ["FlashNest Source", "On My iPhone", "Browse"].contains($0.label) && $0.isHittable
-            }
-            if let back { back.tap(); continue }
-            let browse = app.tabBars.buttons["Browse"].firstMatch
-            if browse.exists && browse.isHittable && !browse.isSelected { browse.tap(); continue }
-            // Do not repeatedly tap an already-selected Browse tab. Preserve
-            // the real picker hierarchy when no recognized route is present.
-            break
-        }
-        XCTAssertTrue(title.waitForExistence(timeout: 10))
-        XCTAssertTrue(fileCell(named: "main.swf", in: app).waitForExistence(timeout: 5))
-        XCTAssertTrue(fileCell(named: "sub", in: app).exists)
+        LibraryNavigation.navigateToSourceFolder(named: fixtureTitle, in: app)
+        let open = app.buttons["Open"].firstMatch
+        XCTAssertTrue(open.isEnabled && open.isHittable)
         app.buttons["Open"].firstMatch.tap()
         LibraryNavigation.requireEntry("main.swf", in: app)
         LibraryNavigation.requireEntry("sub/scene.swf", in: app)
         LibraryNavigation.requireEntry("main.swf", in: app, towardTop: true).tap()
         return app
-    }
-
-    private func fileCell(named name: String, in app: XCUIApplication) -> XCUIElement {
-        // iOS18.2 evidence shows the actual remote cell identifiers are
-        // "FlashNest Source, Container" / "<name>, Folder". The prior nested
-        // containing(staticText:) query missed this visible cell and looped on
-        // Browse. Match the cell itself, never a screen-absolute coordinate.
-        app.cells.matching(NSPredicate(format:
-            "identifier == %@ OR identifier BEGINSWITH %@ OR label == %@ OR label BEGINSWITH %@",
-            name, name + ",", name, name + ",")).firstMatch
     }
 
     private func wait(_ condition: () -> Bool) -> Bool {

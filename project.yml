@@ -56,6 +56,24 @@ targets:
         UIApplicationSupportsIndirectInputEvents: true
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Flash game packages
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - com.pkware.zip-archive
+              - com.adobe.flash
+              - public.folder
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.adobe.flash
+            UTTypeDescription: Flash movie
+            UTTypeConformsTo:
+              - public.data
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - swf
+              public.mime-type:
+                - application/x-shockwave-flash
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.flashnest.app
@@ -104,6 +122,8 @@ targets:
           - Info.plist
       - path: fixtures/multi-swf
         type: folder
+        buildPhase: resources
+      - path: fixtures/multi-swf.zip
         buildPhase: resources
       - path: fixtures/lifecycle
         type: folder

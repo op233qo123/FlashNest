@@ -7,6 +7,7 @@ struct PackageImporter: Sendable {
     var control: ImportControl? = nil
 
     func importPackage(from source: URL) throws -> GamePackage {
+        guard source.isFileURL else { throw PackageError.unsupported("Only local files and folders can be imported.") }
         try control?.checkpoint(phase: "import.waiting", file: source.lastPathComponent)
         print("FLASHNEST_PICKER worker starting security scope")
         let scoped = source.startAccessingSecurityScopedResource()

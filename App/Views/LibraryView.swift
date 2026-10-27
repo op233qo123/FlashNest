@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct LibraryView: View {
     @ObservedObject var library: LibraryStore
     @ObservedObject var nativeImporter: NativeImportController
+    @ObservedObject var externalImports: ExternalImportInbox
     @AppStorage(L10n.preferenceKey) private var language = "system"
     @State private var preferences = LibraryPreferences.load()
     @State private var search = ""
@@ -65,6 +66,27 @@ struct LibraryView: View {
 
     private var homeList: some View {
         List {
+            if let notice = externalImports.notice {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(notice)
+                    Button(L10n.text("OK")) { externalImports.notice = nil }
+                }.homeCardRow()
+            }
+            ForEach(externalImports.pending) { request in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L10n.text("External import")).font(.headline)
+                    Text(request.name).lineLimit(3)
+                    Text(L10n.text("Import a private copy. The original stays unchanged.")).font(.footnote)
+                    HStack {
+                        Button(L10n.text("Import")) { beginExternalImport(request.id) }
+                            .disabled(!canPresent || externalImports.active != nil)
+                            .accessibilityIdentifier("external-import-" + request.id.uuidString)
+                        Spacer()
+                        Button(L10n.text("Dismiss")) { externalImports.dismiss(request.id) }
+                            .accessibilityIdentifier("external-dismiss-" + request.id.uuidString)
+                    }.buttonStyle(.borderless)
+                }.homeCardRow()
+            }
             if library.busy || library.importMessage != nil {
                 LibraryImportStatusView(busy: library.busy, cancelling: library.cancelling,
                     progress: library.importProgress, message: library.importMessage,
@@ -216,8 +238,18 @@ struct LibraryView: View {
         catch { library.error = L10n.error(error) }
     }
 
+    private func beginExternalImport(_ id: UUID) {
+        guard let request = externalImports.begin(id, allowed: canPresent) else { return }
+        beginImport(request.selection, externalID: request.id)
+    }
+
     private func beginImport(_ selection: NativeImportSelection) {
+        beginImport(selection, externalID: nil)
+    }
+
+    private func beginImport(_ selection: NativeImportSelection, externalID: UUID?) {
         Task {
+            defer { if let externalID { externalImports.finish(externalID) } }
             pickerEvent = "picker.importing"
             print("FLASHNEST_PICKER import task started")
             let imported = await library.importURLs(selection.urls)

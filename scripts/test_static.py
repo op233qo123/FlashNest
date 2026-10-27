@@ -15,6 +15,16 @@ class StaticTests(unittest.TestCase):
    pattern=re.escape('forInfoDictionaryKey: "'+key+'") as? String, "')+'([^"\n]+)'
    self.assertEqual(re.search(pattern,native).group(1),value)
 
+ def test_external_document_routing_and_strict_types(self):
+  import plistlib
+  info=plistlib.loads((ROOT/'App/Info-Debug.plist').read_bytes())
+  kinds=info['CFBundleDocumentTypes'][0]['LSItemContentTypes']
+  self.assertEqual(set(kinds),{'com.pkware.zip-archive','com.adobe.flash','public.folder'})
+  project=(ROOT/'project.yml').read_text()
+  for kind in kinds: self.assertIn('- '+kind,project)
+  self.assertIn('.onOpenURL { externalImports.receive($0) }',(ROOT/'App/FlashNestApp.swift').read_text())
+  self.assertIn('LibraryNavigation.navigateToSourceFolder(named: fixtureTitle, in: app)',(ROOT/'UITests/LifecyclePlayerUITests.swift').read_text())
+
  def test_loopback_listener_port_is_specified_once(self):
   s=(ROOT/'App/Server/LoopbackServer.swift').read_text()
   self.assertIn('requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: endpointPort)',s)

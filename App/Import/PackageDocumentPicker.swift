@@ -8,7 +8,7 @@ enum PackagePickerMode: String, Identifiable {
     var contentTypes: [UTType] {
         switch self {
         case .folder: return [.folder]
-        case .files: return [.zip, UTType(filenameExtension: "swf") ?? .data]
+        case .files: return [.zip, UTType(importedAs: "com.adobe.flash", conformingTo: .data)]
         }
     }
 }
