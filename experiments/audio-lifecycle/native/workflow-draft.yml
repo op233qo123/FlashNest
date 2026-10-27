@@ -78,29 +78,31 @@ jobs:
           echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
           xcrun simctl shutdown "$device_id" 2>/dev/null || true
           xcrun simctl erase "$device_id"
+      - name: Build isolated native app and UI test products
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          xcodebuild build-for-testing -project audio-native-stage/NativeAudioLifecycle.xcodeproj -scheme NativeAudioLifecycle -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 90 -derivedDataPath audio-native-build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee audio-native-build.log
       - name: Actual trusted UI WebAudio matrix with Canvas isolation
         timeout-minutes: 12
         run: |
           set -euo pipefail
           mkdir -p audio-native-evidence
           touch audio-native-start.marker
-          xcodebuild test -project audio-native-stage/NativeAudioLifecycle.xcodeproj -scheme NativeAudioLifecycle -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 90 -derivedDataPath audio-native-build -resultBundlePath AudioNativeResults.xcresult -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 660 -maximum-test-execution-time-allowance 660 -only-testing:NativeAudioLifecycleUITests/NativeAudioLifecycleUITests/testImmutableBaselineAndCandidateAudioLifecycleMatrix CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee audio-native-test.log
+          xcodebuild test-without-building -project audio-native-stage/NativeAudioLifecycle.xcodeproj -scheme NativeAudioLifecycle -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 90 -derivedDataPath audio-native-build -resultBundlePath AudioNativeResults.xcresult -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 660 -maximum-test-execution-time-allowance 660 -only-testing:NativeAudioLifecycleUITests/NativeAudioLifecycleUITests/testImmutableBaselineAndCandidateAudioLifecycleMatrix CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee audio-native-test.log
           xcrun xcresulttool get test-results summary --path AudioNativeResults.xcresult > audio-native-evidence/xctest-summary.json
           python3 experiments/audio-lifecycle/native/verify_xctest.py --summary audio-native-evidence/xctest-summary.json --log audio-native-test.log
       - name: Preserve actual mode evidence and crash reports even on failure
         if: always()
         run: |
           mkdir -p audio-native-evidence
-          if [ -n '${{ steps.simulator.outputs.device_id }}' ]; then
-            container=$(xcrun simctl get_app_container '${{ steps.simulator.outputs.device_id }}' com.flashnest.audio-lifecycle.diagnostic data 2>/dev/null) || container=''
-            if [ -n "$container" ] && [ -d "$container/Documents/audio-native-evidence" ]; then cp -R "$container/Documents/audio-native-evidence" audio-native-evidence/raw; fi
-          fi
           if [ -d AudioNativeResults.xcresult ]; then
             xcrun xcresulttool get test-results summary --path AudioNativeResults.xcresult > audio-native-evidence/xctest-summary.json || true
             xcrun xcresulttool export attachments --path AudioNativeResults.xcresult --output-path audio-native-evidence/attachments || true
           fi
           python3 scripts/collect_test_webkit_crashes.py audio-native-start.marker audio-native-evidence/crashes || true
           git diff -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json > audio-native-evidence/production-source.diff
+          python3 experiments/audio-lifecycle/native/collect_native_evidence.py --summary audio-native-evidence/xctest-summary.json --selected-device '${{ steps.simulator.outputs.device_id }}' --output audio-native-evidence
       - name: Independently replay complete raw22 and require no collected process crash
         run: |
           set -euo pipefail
@@ -114,6 +116,7 @@ jobs:
           crashes=json.loads(Path('audio-native-evidence/crashes/collection.json').read_text())
           assert crashes['reports']==[] and crashes['skipped']==0
           assert Path('audio-native-evidence/production-source.diff').read_text()==''
+          assert json.loads(Path('audio-native-evidence/raw-collection.json').read_text())['verified'] is True
           print(roots[0], verification['manifestSHA256'])
           PY
           )
@@ -127,6 +130,7 @@ jobs:
           path: |
             audio-native-evidence
             audio-native-test.log
+            audio-native-build.log
             AudioNativeResults.xcresult
             audio-native-stage/verification.json
             audio-native-stage/project.yml

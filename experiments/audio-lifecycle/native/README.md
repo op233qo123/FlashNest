@@ -149,3 +149,39 @@ The draft uses standard `macos-15`, Xcode16.4 and exact iOS18.5, no paid lane or
 fallback SDK. It builds only this diagnostic app/UI-test target, never an IPA.
 Successful fixture-focused native evidence still does not authorize runtime
 promotion or replace the separate normal-app lifecycle gate.
+
+## Native partial failure and independent evidence retention
+
+Corrected-project run [40557858860](https://github.com/op233qo123/FlashNest/actions/runs/40557858860),
+source `147f02cee999337d2b860c934c8ffe4ee986105a`, compiled the host/UI targets
+and ran the real test. It failed after the third baseline-normal Remove action,
+before the next cycle's Resume, with a generic page-contract failure. The
+candidate arm was never reached. The one XCTest failed after83.182 seconds;
+this was **not** a workflow or matrix timeout. No test-window WebKit/GPU/Metal-host
+crash report was collected. Artifact `12760335362`, 99,711,484 bytes, SHA-256
+`7be1a7a75668b1b8c78ae447e87094f74703e05439c39c7344deea11b04de999`,
+is retained as a failure, not a native audio pass.
+
+That artifact lacked all raw Documents evidence. Its selected simulator UUID
+and actual xcresult UUID agreed, so a cloned-device mismatch is not established.
+The former collector discarded `simctl` stderr and accepted an absent directory;
+the exact page assertion could not be recovered. Action progress alone cannot
+establish how many full contracts passed.
+
+The evidence-only repair preserves all runtime bytes,22-case expectations,
+600-second matrix and660-second XCTest limits. It resolves the single actual
+18.5 Simulator ID from xcresult, records lookup exit/stderr, validates and copies
+only this diagnostic app's bounded JSON files, and fails if evidence is absent.
+The host also exposes the terminal JSON (at most128KiB) as a diagnostic
+accessibility value for an independent XCTest attachment before termination.
+Only its exact ephemeral loopback-capability URL prefix is redacted; filenames,
+assertion reason, values and stack locations remain. Oversized/unserializable
+terminal bodies produce an explicit unavailable marker, never truncated JSON.
+This attachment is diagnostic only and cannot substitute for the complete raw22
+inventory/replay gate. The host's visible failure includes the bounded actual
+page error instead of only a generic phrase.
+
+Compilation now has a separate10-minute `build-for-testing` step; the existing
+12-minute `test-without-building` step uses the same scheme, destination and
+DerivedData. Job30-minute and native per-test deadlines are unchanged. This
+separation does not reinterpret the historical assertion failure as a timeout.

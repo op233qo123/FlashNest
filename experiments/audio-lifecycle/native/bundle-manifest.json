@@ -1,16 +1,16 @@
 {
   "files": {
     "Host/NativeAudioHost.swift": {
-      "bytes": 17809,
-      "sha256": "01bb92d531502031c238f34bf9e5c1aa4d392f1ca40162d3a0f0b058b3749917"
+      "bytes": 18936,
+      "sha256": "20632b45e7b3aede37c80dcaa6ca988531d88889fbf15b44d32c28f868ed1257"
     },
     "README.md": {
-      "bytes": 9620,
-      "sha256": "53baf504755ef8b2b3bf5d9714aa0647b856825c8e01bfd0452dcd7ce5c38b03"
+      "bytes": 11952,
+      "sha256": "df0dba32d3e61b5b8c7158eff3d2b45d5dd2ecb7ac817db504413f5fb0f4e5b4"
     },
     "UITests/NativeAudioLifecycleUITests.swift": {
-      "bytes": 6408,
-      "sha256": "adbef7e417ae1714c6c2de88d75f2e5cca0a24c8c8df0feba41cbaa80adbcbea"
+      "bytes": 7016,
+      "sha256": "9b2eeed56bb5cc2fc1181ff5d5835349dadcddb2c77538e061a49b57a8089c29"
     },
     "Web/assert.mjs": {
       "bytes": 846,
@@ -36,6 +36,10 @@
       "bytes": 6242,
       "sha256": "941c5e35aa188be1a10eddb00eb3d95ad0d1735a35409c3d98db220b2eedede0"
     },
+    "collect_native_evidence.py": {
+      "bytes": 4740,
+      "sha256": "83668446c1a3dea107b26223fccc8e019f0d64907bc3d3cd4c89acf8ccc56620"
+    },
     "prepare_browser_archive.py": {
       "bytes": 1425,
       "sha256": "23f35af3bdf0aef0502af96b9572189aadf784b3f704303eb97523c524553f41"
@@ -47,6 +51,10 @@
     "stage_native.py": {
       "bytes": 24401,
       "sha256": "adac13e395ca332929d80d17becccf6365aa7410ca9adc03591cd295c170be09"
+    },
+    "test_collect_native.py": {
+      "bytes": 4783,
+      "sha256": "f3715ca4a2f0066e405180b317aeba2bb4c87c774ead7719bc064be7930d4f01"
     },
     "test_native.py": {
       "bytes": 11141,
@@ -69,10 +77,10 @@
       "sha256": "c594c202389c276d8e4994233daba0b99fafed649866bd498d7edaeed6416f7f"
     },
     "workflow-draft.yml": {
-      "bytes": 9562,
-      "sha256": "c601e5615bcd93d6962bf576aaff81a1647a788de133702e344a43eb65c5e936"
+      "bytes": 10038,
+      "sha256": "34e1a3aa76d94c2acd89b12da2b7de7580ba0954e9017a52c8c65eb3692e6f59"
     }
   },
   "schemaVersion": 1,
-  "scope": "Prepared isolated native Canvas WebAudio gate; no Swift compile/native execution/publication/dispatch"
+  "scope": "Isolated native Canvas gate evidence-retention repair; previous native run partial failure, repaired harness not yet executed"
 }

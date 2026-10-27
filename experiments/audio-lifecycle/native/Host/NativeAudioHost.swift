@@ -170,7 +170,17 @@ import WebKit
             case "complete":
                 let result = try required(body["result"] as? [String: Any], "Missing terminal result")
                 let passed = result["passed"] as? Bool == true && completedCases == (mode == "normal" ? 8 : 1)
-                Task { await finish(passed: passed, reason: passed ? "Exact mode contract completed" : "Page contract failed/partial", payload: body) }
+                // Original-fixture evidence only. Retain the exact terminal body in
+                // XCTest as well as Documents; container lookup can fail after exit.
+                if let bytes = try? JSONSerialization.data(withJSONObject: body, options: [.sortedKeys, .withoutEscapingSlashes]),
+                   bytes.count <= 131_072 {
+                    status.accessibilityValue = redactDiagnosticURL(String(decoding: bytes, as: UTF8.self))
+                } else {
+                    status.accessibilityValue = "{\"terminalExportUnavailable\":true,\"maximumBytes\":131072}"
+                }
+                let detail = String(redactDiagnosticURL(result["error"] as? String ?? "missing/partial terminal result").prefix(2048))
+                let reason = passed ? "Exact mode contract completed" : "Page contract failed/partial: " + detail
+                Task { await finish(passed: passed, reason: reason, payload: body) }
             case "page-error": throw DiagnosticError.invalid("Page error: \(body["message"] ?? "unknown")")
             default: throw DiagnosticError.invalid("Unknown script message")
             }
@@ -244,6 +254,12 @@ import WebKit
                 continuation.resume(throwing: DiagnosticError.javascriptDeadline)
             }
         }
+    }
+
+    private func redactDiagnosticURL(_ value: String) -> String {
+        guard let server else { return value }
+        let prefix = server.shellURL.deletingLastPathComponent().deletingLastPathComponent().absoluteString
+        return value.replacingOccurrences(of: prefix, with: server.origin.absoluteString + "/<capability>/")
     }
 
     private func retain(_ name: String, _ body: [String: Any]) throws {

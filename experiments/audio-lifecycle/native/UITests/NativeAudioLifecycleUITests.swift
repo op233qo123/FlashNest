@@ -110,6 +110,14 @@ final class NativeAudioLifecycleUITests: XCTestCase {
         note.name = "audio-native-forced-termination.txt"; note.lifetime = .keepAlways; add(note)
     }
     private func attachScreenshot(_ name: String, app: XCUIApplication) {
+        // A second, independent retention path for the bounded exact page failure.
+        // It is diagnostic evidence only; the complete raw22 disk gate is unchanged.
+        let status = app.staticTexts["audio-native-status"]
+        if status.exists, let value = status.value as? String, value.utf8.count <= 131_072,
+           let data = value.data(using: .utf8), (try? JSONSerialization.jsonObject(with: data)) != nil {
+            let raw = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+            raw.name = name + "-terminal.json"; raw.lifetime = .keepAlways; add(raw)
+        }
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
