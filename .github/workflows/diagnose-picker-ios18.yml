@@ -1,6 +1,14 @@
 name: Diagnose real folder picker on iOS 18.2 (manual only)
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: Test scope
+        type: choice
+        options:
+          - all
+          - lifecycle
+        default: all
 permissions:
   contents: read
 concurrency:
@@ -12,6 +20,7 @@ jobs:
     timeout-minutes: 30
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      TEST_SCOPE: ${{ inputs.scope || 'all' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Prepare pinned resources and project
@@ -46,6 +55,7 @@ jobs:
           xcodebuild -project FlashNest.xcodeproj -scheme FlashNestFixtureSource -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,id=$device_id" -derivedDataPath build-source -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
           xcrun simctl install "$device_id" build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app
       - name: Verify input recovery and save safety on iOS 18.2
+        if: ${{ inputs.scope != 'lifecycle' }}
         timeout-minutes: 10
         run: |
           set -o pipefail
@@ -58,7 +68,10 @@ jobs:
         timeout-minutes: 20
         run: |
           set -o pipefail
-          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath PickerTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 480 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee picker-test.log
+          selection=()
+          if [ "$TEST_SCOPE" = "lifecycle" ]; then selection=(-only-testing:FlashNestUITests/LifecyclePlayerUITests); fi
+          echo "UI validation scope: $TEST_SCOPE"
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath PickerTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 480 "${selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee picker-test.log
       - name: Export compact UI evidence
         if: always()
         run: |

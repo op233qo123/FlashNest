@@ -121,7 +121,13 @@ final class LifecyclePlayerUITests: XCTestCase {
         let expected = enabled ? "1" : "0"
         if (toggle.value as? String) != expected {
             // SwiftUI exposes the whole Form row as a switch in iOS 18.2.
-            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            // In the portrait evidence 95% landed at x355.35, just beyond
+            // the actual control's x304...355 bounds. Use its trailing center,
+            // not a row-width percentage; compact switch AX frames use center.
+            let frame = toggle.frame
+            let x = frame.width > 100 ? frame.width - 44 : frame.width / 2
+            toggle.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: x, dy: frame.height / 2)).tap()
         }
         XCTAssertTrue(wait { (toggle.value as? String) == expected })
     }
