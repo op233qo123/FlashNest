@@ -484,11 +484,19 @@ import SwiftUI
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard !processTerminated, message.frameInfo.isMainFrame,
-              let current = message.frameInfo.request.url, let shell = server?.shellURL,
+        receiveScriptMessage(from: message.webView, isMainFrame: message.frameInfo.isMainFrame,
+                             requestURL: message.frameInfo.request.url, body: message.body)
+    }
+
+    /// A stable loopback origin/path is not page identity. A queued callback from
+    /// a released page must not acknowledge restoration or mutate its successor.
+    /// Structured input keeps this boundary testable without private WebKit APIs.
+    func receiveScriptMessage(from source: WKWebView?, isMainFrame: Bool, requestURL: URL?, body payload: Any) {
+        guard let active = webView, source === active, !processTerminated, isMainFrame,
+              let current = requestURL, let shell = server?.shellURL,
               current.scheme == shell.scheme, current.host == shell.host, current.port == shell.port,
               current.path == shell.path,
-              let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
+              let body = payload as? [String: Any], let type = body["type"] as? String else { return }
         let text = String((body["message"] as? String ?? "").prefix(500))
         switch type {
         case "saveReady":
@@ -524,6 +532,7 @@ import SwiftUI
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        guard self.webView === webView, !processTerminated else { decisionHandler(.cancel); return }
         guard let url = navigationAction.request.url, let shell = server?.shellURL,
               url.scheme == shell.scheme, url.host == shell.host, url.port == shell.port,
               url.path == shell.path, navigationAction.targetFrame?.isMainFrame == true else {
@@ -532,8 +541,14 @@ import SwiftUI
         }
         decisionHandler(.allow)
     }
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { record(error.localizedDescription); failure = L10n.error(error) }
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { record(error.localizedDescription); failure = L10n.error(error) }
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        guard self.webView === webView, !processTerminated else { return }
+        record(error.localizedDescription); failure = L10n.error(error)
+    }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        guard self.webView === webView, !processTerminated else { return }
+        record(error.localizedDescription); failure = L10n.error(error)
+    }
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         guard self.webView === webView, !processTerminated else { return }
         // Public WebKit callback supplies no termination reason. Record only
@@ -610,3 +625,4 @@ import SwiftUI
     }
 
 }
+

@@ -1,0 +1,68 @@
+name: Verify WK page callback identity (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-player-callback-identity
+  cancel-in-progress: false
+jobs:
+  callbacks:
+    runs-on: macos-14
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Verify sources and generate pinned project
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python3 scripts/fetch_runtime.py
+          python3 scripts/test_static.py
+          python3 -m unittest discover -s experiments/webcontent-stability -p 'test_*.py'
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Select required simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.2)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+      - name: Verify actual and structured WK callback identity
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          touch callback-start.marker
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath callback-build -resultBundlePath CallbackResults.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/PlayerCallbackIdentityTests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee callback-test.log
+          xcrun xcresulttool get test-results summary --path CallbackResults.xcresult > callback-summary.json
+          python3 experiments/webcontent-stability/verify_callbacks.py callback-summary.json callback-test.log
+      - name: Retain crash and exact source evidence even on failure
+        if: always()
+        run: |
+          mkdir -p callback-evidence
+          python3 scripts/collect_test_webkit_crashes.py callback-start.marker callback-evidence/webkit-crashes || true
+          if [ -d CallbackResults.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path CallbackResults.xcresult > callback-evidence/summary.json || true
+          fi
+          xcodebuild -version > callback-evidence/xcode.txt
+          printf '%s\n' "commit=$GITHUB_SHA" "run=$GITHUB_RUN_ID" "image=${ImageVersion:-unknown}" > callback-evidence/run.txt
+          shasum -a 256 App/Player/PlayerSession.swift Tests/PlayerCallbackIdentityTests.swift runtime.lock.json > callback-evidence/source-sha256.txt
+          git diff --exit-code -- App Tests fixtures project.yml runtime.lock.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-WK-callback-identity-evidence
+          retention-days: 7
+          path: |
+            CallbackResults.xcresult
+            callback-test.log
+            callback-summary.json
+            callback-evidence
