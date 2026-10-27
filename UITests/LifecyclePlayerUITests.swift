@@ -75,8 +75,14 @@ final class LifecyclePlayerUITests: XCTestCase {
         reveal(restart, in: app); restart.tap()
         startMovie(app)
         trace("LIFECYCLE_ROOT_READY:420", in: app)
-        XCTAssertFalse(app.buttons["import-folder"].firstMatch.exists,
-                       "Save and restart must stay in the same game, not exit to Library")
+        let stage = app.webViews.firstMatch
+        XCTAssertTrue(wait { stage.isHittable && menu.isHittable },
+                      "Save and restart must leave the game and its menu visibly interactive")
+        // fullScreenCover retains the underlying Library in the AX tree. Its
+        // mere existence is not an exit; it must not be an interactive surface.
+        let libraryImport = app.buttons["import-folder"].firstMatch
+        XCTAssertFalse(libraryImport.exists && libraryImport.isHittable,
+                       "Save and restart must stay in the game, not expose interactive Library controls")
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "touch-key-")).count, 0,
                        "Restart retains this game's touch-control settings")
         XCTAssertTrue(menu.isHittable)
