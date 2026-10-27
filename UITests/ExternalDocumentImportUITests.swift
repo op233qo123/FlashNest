@@ -44,13 +44,17 @@ final class ExternalDocumentImportUITests: XCTestCase {
         source.terminate(); source.launch()
         XCTAssertTrue(source.staticTexts["source-ready"].waitForExistence(timeout: 30))
         source.buttons["source-open-zip"].tap()
-        let target = source.buttons.matching(NSPredicate(format: "label == %@ OR label == %@", "FlashNest", "Copy to FlashNest")).firstMatch
+        // Actual iOS 18.2 UIDocumentInteractionController evidence exposes
+        // application destinations as cells, not buttons (run 40504678869).
+        let destinations = source.cells.matching(NSPredicate(format: "label == %@", "FlashNest"))
+        let target = destinations.firstMatch
         let found = target.waitForExistence(timeout: 15)
         XCTContext.runActivity(named: "Actual OS ZIP Open-In menu") { activity in
             let ax = XCTAttachment(string: source.debugDescription); ax.lifetime = .keepAlways; activity.add(ax)
             let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot()); shot.lifetime = .keepAlways; activity.add(shot)
         }
         XCTAssertTrue(found, "The real system menu must advertise the declared ZIP handler")
+        XCTAssertEqual(destinations.count, 1, "Exactly one real FlashNest destination must be shown")
         XCTAssertTrue(target.isEnabled && target.isHittable); target.tap()
     }
 }

@@ -61,7 +61,7 @@ targets:
             CFBundleTypeRole: Viewer
             LSHandlerRank: Alternate
             LSItemContentTypes:
-              - com.pkware.zip-archive
+              - public.zip-archive
               - com.adobe.flash
               - public.folder
         UTImportedTypeDeclarations:

@@ -19,7 +19,7 @@ class StaticTests(unittest.TestCase):
   import plistlib
   info=plistlib.loads((ROOT/'App/Info-Debug.plist').read_bytes())
   kinds=info['CFBundleDocumentTypes'][0]['LSItemContentTypes']
-  self.assertEqual(set(kinds),{'com.pkware.zip-archive','com.adobe.flash','public.folder'})
+  self.assertEqual(set(kinds),{'public.zip-archive','com.adobe.flash','public.folder'})
   project=(ROOT/'project.yml').read_text()
   for kind in kinds: self.assertIn('- '+kind,project)
   self.assertIn('.onOpenURL { externalImports.receive($0) }',(ROOT/'App/FlashNestApp.swift').read_text())
@@ -146,3 +146,4 @@ class StaticTests(unittest.TestCase):
   self.assertEqual({p.name for p in (WEB/'runtime').iterdir()},set(manifest))
   for name,digest in manifest.items(): self.assertEqual(hashlib.sha256((WEB/'runtime'/name).read_bytes()).hexdigest(),digest,name)
 if __name__=='__main__': unittest.main()
+

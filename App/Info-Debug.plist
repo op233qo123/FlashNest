@@ -63,7 +63,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>com.pkware.zip-archive</string>
+				<string>public.zip-archive</string>
 				<string>com.adobe.flash</string>
 				<string>public.folder</string>
 			</array>
