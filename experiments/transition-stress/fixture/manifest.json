@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Original generated AVM2 diagnostic; no user assets or proprietary compiler",
+  "formatSourcePin": "89a7049965f3090e706265670df309a5128233ac",
+  "swfVersion": 37,
+  "rootFrames": 1,
+  "frameRate": 24,
+  "generations": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "selectedArm": "main.swf: unload",
+  "unselectedPrototypeSupport": "root_abc(unloadAndStop) retained for in-memory checks only; no alternate SWF emitted",
+  "runtimeExecuted": false,
+  "adobeReferenceExecuted": false,
+  "abcHelperSha256": "d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701",
+  "traceFields": [
+    "LT",
+    "kind",
+    "bootToken",
+    "generation",
+    "rootHeartbeat",
+    "pointerCount",
+    "keyCount",
+    "ready",
+    "activeChildGeneration",
+    "childHeartbeat",
+    "errors",
+    "unloadCalls",
+    "unloadEvents"
+  ],
+  "files": {
+    "main.swf": {
+      "bytes": 2743,
+      "sha256": "7671411b8be327cb9cc105a782d14c9e999e828dbd2125268f2c913d5ddae151"
+    },
+    "sub/child.swf": {
+      "bytes": 965,
+      "sha256": "7f5015789f368ac2221d47930d255b204828f9d33384c14f36e6ed947edf58c8"
+    }
+  }
+}

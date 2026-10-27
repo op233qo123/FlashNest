@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "status": "frozen-original-normal-unload-structural-only",
+  "fileCount": 12,
+  "files": {
+    "README.md": {
+      "bytes": 7804,
+      "sha256": "5b8fe75016e73ccb280c66b380062fe52e1ad941696e4e07ca8686d4eab59e02"
+    },
+    "ReferenceChild.as": {
+      "bytes": 1049,
+      "sha256": "eb5842b2135704a91580a7d551830d5b80a5900aa3d94f64fc8371689a2f3094"
+    },
+    "ReferenceRoot.as": {
+      "bytes": 5161,
+      "sha256": "859cedfc60d965c40bd68619491314fef76360648c91a824ef8a3245113c6d28"
+    },
+    "abc_subset.py": {
+      "bytes": 10254,
+      "sha256": "d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701"
+    },
+    "main.swf": {
+      "bytes": 2743,
+      "sha256": "7671411b8be327cb9cc105a782d14c9e999e828dbd2125268f2c913d5ddae151"
+    },
+    "make_fixtures.py": {
+      "bytes": 9818,
+      "sha256": "dfa9b42fb4ab60b443992eb849bd4fb4c0880026b5a1b9002f1ed74b1b84936e"
+    },
+    "manifest.json": {
+      "bytes": 1135,
+      "sha256": "fdcd95be4ab55c0101544a3e6c7d4ecaec2b9dd31a578642abb52bcc25926c98"
+    },
+    "structural-validation.json": {
+      "bytes": 139080,
+      "sha256": "a2648a433c63fd6d53c963185649d9284073c35cd93ebccbaed6a8cf6e6fa6d2"
+    },
+    "sub/child.swf": {
+      "bytes": 965,
+      "sha256": "7f5015789f368ac2221d47930d255b204828f9d33384c14f36e6ed947edf58c8"
+    },
+    "test_fixture_validation.py": {
+      "bytes": 3159,
+      "sha256": "1eada9ddbf4c11c1bd459e92184da0c41a77ed716d1aea192b91cb05f3e0914a"
+    },
+    "validate_fixtures.py": {
+      "bytes": 12724,
+      "sha256": "c6dcd72839222bbe3cc339f1c2f27933ce52b2f2c246bd393afccb8072329aec"
+    },
+    "validation.json": {
+      "bytes": 881,
+      "sha256": "37c8019e49d5b227c010a2bc4249108952b5f5686cf2861c5e5ca85dfa1fcd25"
+    }
+  }
+}
