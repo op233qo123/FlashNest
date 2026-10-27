@@ -77,8 +77,8 @@ import UniformTypeIdentifiers
 @MainActor private struct PackageSaveAreaView: View {
     let package: GamePackage
     private let store = SaveStore()
-    @State private var current: SaveSnapshot?
-    @State private var snapshots: [SaveSnapshot] = []
+    @State private var current: SaveSnapshotSummary?
+    @State private var snapshots: [SaveSnapshotSummary] = []
     @Binding var busy: Bool
     @State private var naming = false
     @State private var backupName = ""
@@ -116,7 +116,7 @@ import UniformTypeIdentifiers
                 statistics(current)
                 Text(current.createdAt, format: .dateTime.year().month().day().hour().minute())
                     .font(.caption).foregroundStyle(.secondary)
-                if current.entries.isEmpty {
+                if current.objectCount == 0 {
                     Text(L10n.text("No saved objects in this capture."))
                         .font(.footnote).foregroundStyle(.secondary)
                 }
@@ -138,7 +138,7 @@ import UniformTypeIdentifiers
         }
     }
 
-    private func backupRow(_ snapshot: SaveSnapshot) -> some View {
+    private func backupRow(_ snapshot: SaveSnapshotSummary) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Text(snapshot.name).font(.headline)
             Text(snapshot.createdAt, format: .dateTime.year().month().day().hour().minute())
@@ -209,8 +209,8 @@ import UniformTypeIdentifiers
         if case .failure(let error) = result { showError(error) }
     }
 
-    private func statistics(_ snapshot: SaveSnapshot) -> some View {
-        Text(L10n.text("Objects") + ": \(snapshot.entries.count) · " +
+    private func statistics(_ snapshot: SaveSnapshotSummary) -> some View {
+        Text(L10n.text("Objects") + ": \(snapshot.objectCount) · " +
              ByteCountFormatter.string(fromByteCount: Int64(snapshot.decodedBytes), countStyle: .file))
             .font(.caption).foregroundStyle(.secondary)
     }
@@ -231,13 +231,13 @@ import UniformTypeIdentifiers
     private func loadState() async throws {
         let store = store, id = package.id
         let state = await Task.detached(priority: .userInitiated) {
-            (Result { try store.currentSnapshot(packageID: id) }, Result { try store.recoverableList(packageID: id) })
+            (Result { try store.currentSummary(packageID: id) }, Result { try store.recoverableSummaryList(packageID: id) })
         }.value
         var firstError: Error?
         do { current = try state.0.get() } catch { current = nil; firstError = error }
         do {
             let listing = try state.1.get()
-            snapshots = listing.snapshots
+            snapshots = listing.summaries
             if listing.invalidFileCount > 0, firstError == nil { firstError = SaveStoreError.invalid("some backup files could not be verified") }
         } catch { if firstError == nil { firstError = error } }
         if let firstError { throw firstError }
@@ -258,13 +258,14 @@ import UniformTypeIdentifiers
         } catch { showError(error) }
     }
 
-    private func export(_ snapshot: SaveSnapshot) async {
+    private func export(_ snapshot: SaveSnapshotSummary) async {
         guard !busy else { return }
         busy = true
         defer { busy = false }
         do {
             let store = store
-            let data = try await Task.detached(priority: .userInitiated) { try store.export(snapshot) }.value
+            let packageID = package.id
+            let data = try await Task.detached(priority: .userInitiated) { try store.export(snapshot, packageID: packageID) }.value
             exportDocument = SaveJSONDocument(data: data)
             exportName = "FlashNest-save-\(snapshot.id.uuidString).json"
             exporting = true
@@ -308,8 +309,8 @@ import UniformTypeIdentifiers
 @MainActor private struct ArchivedSaveAreaView: View {
     let summary: SavedPackageSummary
     @Binding var busy: Bool
-    @State private var current: SaveSnapshot?
-    @State private var snapshots: [SaveSnapshot] = []
+    @State private var current: SaveSnapshotSummary?
+    @State private var snapshots: [SaveSnapshotSummary] = []
     @State private var error: String?
     @State private var exporting = false
     @State private var document = SaveJSONDocument(data: Data())
@@ -339,12 +340,12 @@ import UniformTypeIdentifiers
             let id = summary.id
             let state = await Task.detached(priority: .userInitiated) {
                 let store = SaveStore()
-                return (Result { try store.currentSnapshot(packageID: id) }, Result { try store.recoverableList(packageID: id) })
+                return (Result { try store.currentSummary(packageID: id) }, Result { try store.recoverableSummaryList(packageID: id) })
             }.value
             do { current = try state.0.get() } catch { current = nil; self.error = L10n.error(error) }
             do {
                 let listing = try state.1.get()
-                snapshots = listing.snapshots
+                snapshots = listing.summaries
                 if listing.invalidFileCount > 0 || summary.warning != nil {
                     self.error = L10n.text("The save could not be verified. Existing saves were kept.")
                 }
@@ -358,24 +359,25 @@ import UniformTypeIdentifiers
         } message: { Text(error ?? "") }
     }
 
-    private func exportRow(_ snapshot: SaveSnapshot) -> some View {
+    private func exportRow(_ snapshot: SaveSnapshotSummary) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Text(snapshot.name).font(.headline)
             Text(snapshot.createdAt, format: .dateTime.year().month().day().hour().minute())
                 .font(.caption).foregroundStyle(.secondary)
-            Text(L10n.text("Objects") + ": \(snapshot.entries.count) · " +
+            Text(L10n.text("Objects") + ": \(snapshot.objectCount) · " +
                  ByteCountFormatter.string(fromByteCount: Int64(snapshot.decodedBytes), countStyle: .file))
                 .font(.caption).foregroundStyle(.secondary)
             Button(L10n.text("Export")) { Task { await export(snapshot) } }
         }.padding(.vertical, 4)
     }
 
-    private func export(_ snapshot: SaveSnapshot) async {
+    private func export(_ snapshot: SaveSnapshotSummary) async {
         guard !busy else { return }
         busy = true
         defer { busy = false }
         do {
-            let bytes = try await Task.detached(priority: .userInitiated) { try SaveStore().export(snapshot) }.value
+            let packageID = summary.id
+            let bytes = try await Task.detached(priority: .userInitiated) { try SaveStore().export(snapshot, packageID: packageID) }.value
             document = SaveJSONDocument(data: bytes)
             filename = "FlashNest-save-\(snapshot.id.uuidString).json"
             exporting = true

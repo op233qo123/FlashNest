@@ -49,6 +49,26 @@ struct RecoverableSaveListing: Sendable {
     let invalidFileCount: Int
 }
 
+/// Display-only metadata. Never retains SOL values, decoded bytes or an archive.
+/// The digest binds a later export to the exact file validated for this row.
+struct SaveSnapshotSummary: Identifiable, Sendable, Equatable {
+    enum Source: Sendable, Equatable { case current, backup }
+    let id: UUID
+    let packageID: UUID
+    let name: String
+    let createdAt: Date
+    let objectCount: Int
+    let decodedBytes: Int
+    let source: Source
+    let archiveFilename: String
+    let archiveSHA256: String
+}
+
+struct RecoverableSaveSummaryListing: Sendable {
+    let summaries: [SaveSnapshotSummary]
+    let invalidFileCount: Int
+}
+
 enum SaveStoreError: LocalizedError {
     case invalid(String), limit(String)
     var errorDescription: String? {
@@ -278,6 +298,86 @@ struct SaveStore: Sendable {
             } catch { invalid += 1 }
         }
         return RecoverableSaveListing(snapshots: snapshots.sorted { $0.createdAt > $1.createdAt }, invalidFileCount: invalid)
+    }
+
+    /// Full validation remains mandatory, but each file's values are released
+    /// before reading the next archive. UI rows retain bounded metadata only.
+    func recoverableSummaryList(packageID: UUID) throws -> RecoverableSaveSummaryListing {
+        Self.transactionLock.lock()
+        defer { Self.transactionLock.unlock() }
+        guard let directory = try packageDirectory(packageID, create: false) else {
+            return RecoverableSaveSummaryListing(summaries: [], invalidFileCount: 0)
+        }
+        var summaries: [SaveSnapshotSummary] = []
+        var invalid = 0
+        var readBytes = 0
+        for file in try boundedContents(directory) {
+            guard file.pathExtension == "json", file.lastPathComponent != "current.json",
+                  let fileID = UUID(uuidString: file.deletingPathExtension().lastPathComponent) else { continue }
+            do {
+                let row = try autoreleasepool {
+                    let bytes = try readBounded(file, remainingBudget: Self.maximumListingBytes - readBytes)
+                    readBytes += bytes.count
+                    let snapshot = try decodeImport(bytes)
+                    guard snapshot.id == fileID, snapshot.packageID == packageID else {
+                        throw SaveStoreError.invalid("backup identity mismatch")
+                    }
+                    return summary(snapshot, source: .backup, filename: file.lastPathComponent, archiveBytes: bytes)
+                }
+                summaries.append(row)
+            } catch { invalid += 1 }
+        }
+        return RecoverableSaveSummaryListing(summaries: summaries.sorted { $0.createdAt > $1.createdAt }, invalidFileCount: invalid)
+    }
+
+    func currentSummary(packageID: UUID) throws -> SaveSnapshotSummary? {
+        Self.transactionLock.lock()
+        defer { Self.transactionLock.unlock() }
+        guard let directory = try packageDirectory(packageID, create: false) else { return nil }
+        let file = directory.appendingPathComponent("current.json")
+        guard try existsWithoutLink(file) else { return nil }
+        return try autoreleasepool {
+            let bytes = try readBounded(file)
+            let snapshot = try decodeImport(bytes)
+            guard snapshot.packageID == packageID else { throw SaveStoreError.invalid("current save belongs to a different game") }
+            return summary(snapshot, source: .current, filename: "current.json", archiveBytes: bytes)
+        }
+    }
+
+    /// A summary is not authority to export a changed file. Read once, then
+    /// revalidate those exact bytes and compare their digest/identity. Never
+    /// derive a path from display names or reopen the file after validation.
+    func export(_ selected: SaveSnapshotSummary, packageID: UUID) throws -> Data {
+        Self.transactionLock.lock()
+        defer { Self.transactionLock.unlock() }
+        guard selected.packageID == packageID,
+              let directory = try packageDirectory(packageID, create: false) else {
+            throw SaveStoreError.invalid("save selection belongs to a different or missing game")
+        }
+        let expected = selected.source == .current ? "current.json" : selected.id.uuidString.lowercased() + ".json"
+        // Preserve the validated leaf's lettercase on case-sensitive volumes,
+        // but accept no path separators, display names, or arbitrary filenames.
+        guard selected.archiveFilename.lowercased() == expected else {
+            throw SaveStoreError.invalid("invalid save selection filename")
+        }
+        let bytes = try readBounded(directory.appendingPathComponent(selected.archiveFilename))
+        let snapshot = try decodeImport(bytes)
+        guard snapshot.packageID == packageID, snapshot.id == selected.id,
+              digest(bytes) == selected.archiveSHA256 else {
+            throw SaveStoreError.invalid("save changed since listing; refresh before exporting")
+        }
+        return try export(snapshot)
+    }
+
+    private func summary(_ snapshot: SaveSnapshot, source: SaveSnapshotSummary.Source, filename: String, archiveBytes: Data) -> SaveSnapshotSummary {
+        // The archive's historical 80-Character limit permits arbitrarily many
+        // combining scalars per Character. Bound display metadata independently;
+        // exporting still returns the complete, unchanged validated name.
+        let name = snapshot.name.utf8.count <= 1024 ? snapshot.name : String(String.UnicodeScalarView(snapshot.name.unicodeScalars.prefix(256))) + "…"
+        return SaveSnapshotSummary(id: snapshot.id, packageID: snapshot.packageID, name: name,
+                            createdAt: snapshot.createdAt, objectCount: snapshot.entries.count,
+                            decodedBytes: snapshot.decodedBytes, source: source,
+                            archiveFilename: filename, archiveSHA256: digest(archiveBytes))
     }
 
     func export(_ snapshot: SaveSnapshot) throws -> Data {

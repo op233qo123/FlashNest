@@ -1,0 +1,72 @@
+name: Measure native save listing memory A/B (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-native-save-listing-memory
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: macos-14
+    timeout-minutes: 40
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate harness and stage isolated source and original fixtures
+        id: stage
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s experiments/save-listing-memory -p 'test_*.py'
+          mkdir -p save-listing-evidence
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          xcodebuild -version | tee save-listing-evidence/xcode.txt
+          sw_vers > save-listing-evidence/host.txt
+          printf '%s\n' "repository=$GITHUB_REPOSITORY" "harnessCommit=$GITHUB_SHA" "runID=$GITHUB_RUN_ID" "runAttempt=$GITHUB_RUN_ATTEMPT" "imageOS=${ImageOS:-unknown}" "imageVersion=${ImageVersion:-unknown}" >> save-listing-evidence/host.txt
+          git worktree add --detach "$RUNNER_TEMP/save-listing-baseline" 967a0a3f37ab842b8ebddffc0daa0d7237d8ad13
+          git worktree add --detach "$RUNNER_TEMP/save-listing-patched" 967a0a3f37ab842b8ebddffc0daa0d7237d8ad13
+          python3 experiments/save-listing-memory/listing_harness.py stage "$GITHUB_WORKSPACE" "$RUNNER_TEMP/save-listing-baseline" "$RUNNER_TEMP/save-listing-patched" save-listing-evidence/provenance.json
+          git -C "$RUNNER_TEMP/save-listing-patched" diff -- App > save-listing-evidence/production-change.diff
+          cp Tests/SaveListingMemoryTests.swift Tests/SaveStoreSummaryTests.swift save-listing-evidence/
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          xcrun simctl list devices available --json > save-listing-evidence/simulators.json
+          device_id=$(python3 scripts/select_simulator.py 18.2 < save-listing-evidence/simulators.json)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$device_id" > save-listing-evidence/selected-device.txt
+      - name: Measure full-payload baseline listing
+        if: steps.stage.outcome == 'success'
+        timeout-minutes: 15
+        env:
+          LISTING_VARIANT: baseline
+          LISTING_DEVICE_ID: ${{ steps.stage.outputs.device_id }}
+        run: bash experiments/save-listing-memory/run_variant.sh
+      - name: Verify nine safety tests then measure metadata listing in a fresh process
+        if: ${{ !cancelled() && steps.stage.outcome == 'success' }}
+        timeout-minutes: 15
+        env:
+          LISTING_VARIANT: patched
+          LISTING_DEVICE_ID: ${{ steps.stage.outputs.device_id }}
+        run: bash experiments/save-listing-memory/run_variant.sh
+      - name: Verify A/B and safety evidence and compare raw medians
+        if: ${{ !cancelled() && steps.stage.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          python3 experiments/save-listing-memory/listing_harness.py compare save-listing-evidence/baseline/memory/metrics.json save-listing-evidence/patched/memory/metrics.json save-listing-evidence/patched/safety/metrics.json save-listing-evidence/comparison.json
+          cat save-listing-evidence/comparison.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain raw native listing evidence, never an IPA
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-native-save-listing-memory-AB
+          path: |
+            save-listing-evidence
+            experiments/save-listing-memory
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: true
