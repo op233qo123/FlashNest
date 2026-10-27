@@ -115,9 +115,16 @@ struct LibraryView: View {
                     .accessibilityIdentifier("import-files")
                 Button { present(.inbox) } label: { Label(L10n.text("Import from app folder"), systemImage: "tray.and.arrow.down") }
                     .accessibilityIdentifier("import-inbox")
-            } label: { Image(systemName: "plus").frame(minWidth: 44, minHeight: 44) }
-                .accessibilityLabel(L10n.text("Import game")).accessibilityIdentifier("import-menu")
-                .accessibilityValue(pickerEvent).disabled(!canPresent)
+            } label: {
+                // Annotate the visible label, not Menu's container. On iOS 18.2
+                // container annotations produced a second, non-hittable AX button.
+                Label(L10n.text("Import game"), systemImage: "plus")
+                    .labelStyle(.iconOnly)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .accessibilityIdentifier("import-menu")
+                    .accessibilityValue(pickerEvent)
+            }
+            .disabled(!canPresent)
             Button { present(.saves) } label: { Image(systemName: "externaldrive").frame(minWidth: 44, minHeight: 44) }
                 .accessibilityLabel(L10n.text("Save area")).accessibilityIdentifier("save-area").disabled(!canPresent)
             Button { present(.settings) } label: { Image(systemName: "gearshape").frame(minWidth: 44, minHeight: 44) }
