@@ -1,0 +1,39 @@
+{
+  "sourceCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "purpose": "Unmodified upstream adjacent golden tests plus explicit known-failure preservation gates",
+  "tests": [
+    "avm2/movieclip_gotoandstop_queueing",
+    "avm2/movieclip_goto_during_frame_script",
+    "avm2/goto_nested_framescript",
+    "avm2/goto_framescript_queued/swf9",
+    "avm2/goto_framescript_queued/swf10",
+    "avm2/goto_framescript_queued_same_frame",
+    "avm2/movieclip_queued_noop_goto_swf9",
+    "avm2/movieclip_queued_noop_goto_swf10",
+    "avm2/movieclip_gotoandstop_framescripts1",
+    "avm2/movieclip_gotoandstop_framescripts2",
+    "avm2/movieclip_gotoandstop_framescripts_self",
+    "avm2/goto_button_nested_framescript",
+    "avm2/goto_nested_construct_sibling",
+    "avm2/goto_on_orphan",
+    "avm2/movieclip_goto_overwrite",
+    "avm2/swf_9_queued_goto_scripts",
+    "timeline/frame_script_cleanup",
+    "timeline/frame_script_cleanup2",
+    "timeline/frame_script_cleanup3",
+    "timeline/frame_script_cleanup_goto",
+    "timeline/frame_script_cleanup_goto2",
+    "timeline/swf_9_frame_script_cleanup_goto",
+    "timeline/swf_9_frame_script_cleanup_goto2",
+    "timeline/missing_frame_scripts",
+    "timeline/frame_script_construct",
+    "avm2/swf_9_queued_goto_scripts_construct",
+    "avm2/swf_10_queued_goto_scripts_construct",
+    "avm2/goto_queued_invalid/swf10",
+    "avm2/goto_queued_invalid/swf11"
+  ],
+  "knownFailureTests": [
+    "avm2/goto_framescript_queued/swf13",
+    "avm2/goto_queued_invalid/swf9"
+  ]
+}

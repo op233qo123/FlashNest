@@ -1,0 +1,27 @@
+{
+  "upstreamRepository": "https://github.com/ruffle-rs/ruffle",
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "upstreamVersion": "0.7.1",
+  "upstreamSourcePath": "core/src/display_object/movie_clip.rs",
+  "upstreamSourceSHA256": "fc229d96ab6fced20391cf810d9d89a2118803cb7f5ce48ddf6967e52e35700a",
+  "patchedSourceSHA256": "af780dae48b842e0756b8cd23f50a539737d0bcbbbdca970feb90f27725e96b0",
+  "patchSHA256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
+  "expectations": {
+    "nested-baseline.txt": {
+      "kind": "Observed pinned Ruffle simulator trace, not Adobe output",
+      "runID": 40473436551,
+      "sha256": "1ef37bcc059380e33b2140536dea771d9b647b8a20bdf01c015a5493269d04ef"
+    },
+    "control.txt": {
+      "kind": "Observed pinned Ruffle simulator trace; unchanged control target, not Adobe output",
+      "runID": 40474781959,
+      "sha256": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0"
+    },
+    "nested-repair-target.txt": {
+      "kind": "Experimental repair target derived from control plus preserved child reset; NOT observed Adobe output or an already-passed result",
+      "sha256": "57648847e013eb2aaa9e45a91eb0a55c66c97862defd8e3c1cd5b74ef4e3c2ae"
+    }
+  },
+  "sourceLicense": "MIT OR Apache-2.0; preserve upstream copyright and license texts",
+  "productionRuntimeModified": false
+}
