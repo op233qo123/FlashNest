@@ -70,4 +70,34 @@ assert.throws(() => bridge.restore(capture([entry('origin','RootSave',changed)])
 assert.deepEqual([...storage.map].sort(), [...before].sort(), 'Failed quota write restores all old SOL and unrelated storage');
 bridge.restore(capture([]));
 assert.deepEqual([...storage.map], [['preference','keep']], 'Explicit empty restore removes SOL only');
+// Lazily supply synthetic values and count reads: an invalid inventory must
+// stop before materializing/retaining later large strings. This measures a
+// bridge iteration bound, not browser Storage/RSS or WebContent memory.
+class CountingStorage {
+  constructor(count, valueAt) { this.length = count; this.valueAt = valueAt; this.reads = 0; this.writes = 0; }
+  key(index) { return `127.0.0.1//Object${index}`; }
+  getItem(key) { this.reads++; return this.valueAt(Number(key.slice(key.lastIndexOf('Object') + 6))); }
+  setItem() { this.writes++; throw new Error('Unexpected write'); }
+  removeItem() { this.writes++; throw new Error('Unexpected write'); }
+}
+const fullObject = sol(1048576);
+const tooManyBytes = new CountingStorage(200, () => fullObject);
+assert.throws(() => create(tooManyBytes).capture(), /total size/);
+assert.equal(tooManyBytes.reads, 9, 'Stop on the first object beyond 8 MiB, not after all 200 reads');
+assert.equal(tooManyBytes.writes, 0);
+const oversizedValue = new CountingStorage(200, () => sol(1048577));
+assert.throws(() => create(oversizedValue).capture(), /object size/);
+assert.equal(oversizedValue.reads, 1, 'Reject oversized SOL before requesting another value');
+const malformedValue = new CountingStorage(200, () => valid + '\n');
+assert.throws(() => create(malformedValue).capture(), /SOL encoding/);
+assert.equal(malformedValue.reads, 1, 'Canonical base64 still fails before additional reads');
+const tooManyObjects = new CountingStorage(300, () => valid);
+assert.throws(() => create(tooManyObjects).capture(), /object count/);
+assert.equal(tooManyObjects.reads, 257);
+const failedRestoreInventory = new CountingStorage(200, () => fullObject);
+assert.throws(() => create(failedRestoreInventory).restore(capture([entry('origin','Replacement')])), /total size/);
+assert.equal(failedRestoreInventory.reads, 9);
+assert.equal(failedRestoreInventory.writes, 0, 'Invalid existing inventory never starts restore or rollback writes');
+const exactLimit = new CountingStorage(8, () => fullObject);
+assert.equal(create(exactLimit).capture().entries.length, 8, 'Exactly 8 MiB remains valid');
 console.log('PASS save bridge logical scopes, cross-install mapping, validation, limits, unrelated data and rollback (unit tests)');

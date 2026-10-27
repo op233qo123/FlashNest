@@ -79,6 +79,7 @@
     }
     function inventory() {
       const entries = [];
+      let total = 0;
       // Snapshot names before any writes; never enumerate a mutating Storage.
       const names = Array.from({length:storage.length}, (_, index) => storage.key(index));
       for (const identity of names) {
@@ -86,8 +87,12 @@
         const value = storage.getItem(identity);
         if (!hasSOLHeader(value)) continue; // Ruffle preferences and unrelated app data.
         const entry = logical(identity); // Unknown SOL fails closed, rather than silently losing it.
+        if (entries.length >= limits.entries) fail('object count');
+        // Reject before retaining this value or reading later values. Storage
+        // already owns its strings; this bounds only our captured inventory.
+        total += validateValue(value);
+        if (total > limits.totalBytes) fail('total size');
         entries.push({...entry, value});
-        if (entries.length > limits.entries) fail('object count');
       }
       const capture = {version:1, entries};
       return {capture, validated:validate(capture)};

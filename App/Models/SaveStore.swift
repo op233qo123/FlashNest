@@ -298,8 +298,8 @@ struct SaveStore: Sendable {
         let title = trimmed.isEmpty ? "Backup" : trimmed
         guard title.count <= 80 else { throw SaveStoreError.limit("backup name (80 characters)") }
         let validated = try validateEntries(capture.entries)
-        let objects = zip(capture.entries, validated.data).map { entry, bytes in
-            SavedObject(scope: entry.scope, key: entry.key, value: entry.value, sha256: digest(bytes))
+        let objects = zip(capture.entries, validated.digests).map { entry, checksum in
+            SavedObject(scope: entry.scope, key: entry.key, value: entry.value, sha256: checksum)
         }
         return SaveSnapshot(id: UUID(), schemaVersion: 1, runtimeVersion: "0.7.1", packageID: package.id,
                             packageTitle: package.title, movie: package.selectedMovie, name: title,
@@ -417,15 +417,19 @@ struct SaveStore: Sendable {
         let entries = snapshot.entries.map { SaveEntry(scope: $0.scope, key: $0.key, value: $0.value) }
         let validated = try validateEntries(entries)
         guard snapshot.decodedBytes == validated.total else { throw SaveStoreError.invalid("total byte count") }
-        for (entry, bytes) in zip(snapshot.entries, validated.data) {
-            guard entry.sha256 == digest(bytes) else { throw SaveStoreError.invalid("object checksum") }
+        for (entry, checksum) in zip(snapshot.entries, validated.digests) {
+            guard entry.sha256 == checksum else { throw SaveStoreError.invalid("object checksum") }
         }
     }
 
-    private func validateEntries(_ entries: [SaveEntry]) throws -> (data: [Data], total: Int) {
+    private func validateEntries(_ entries: [SaveEntry]) throws -> (digests: [String], total: Int) {
         guard entries.count <= Self.maximumEntries else { throw SaveStoreError.limit("256 objects") }
         var identities = Set<String>()
-        var decoded: [Data] = []
+        // Keep only checksums between entries, not up to 8 MiB of decoded SOLs.
+        // Only one decoded object is needed at a time (the base64 length guard
+        // permits at most two padding bytes beyond maximumObjectBytes before
+        // rejection). This is not a claim about process RSS/WebKit.
+        var digests: [String] = []
         var total = 0
         for entry in entries {
             guard !entry.key.isEmpty, !entry.key.contains(":"), !entry.key.contains("\\"),
@@ -450,9 +454,9 @@ struct SaveStore: Sendable {
                   Array(bytes[6..<10]) == Array("TCSO".utf8),
                   Array(bytes[10..<16]) == [0, 4, 0, 0, 0, 0] else { throw SaveStoreError.invalid("SOL header") }
             total += bytes.count
-            decoded.append(bytes)
+            digests.append(digest(bytes))
         }
-        return (decoded, total)
+        return (digests, total)
     }
 
     private func validObjectName(_ name: String) -> Bool {
