@@ -121,13 +121,20 @@ final class FullscreenPlayerUITests: XCTestCase {
         let expectedBefore = enabled ? "0" : "1"
         let expectedAfter = enabled ? "1" : "0"
         XCTAssertEqual(toggle.value as? String, expectedBefore, "Visibility must start in the state this transition is testing")
-        // iOS18.2 exposes the entire Form row as a Switch. Its synthesized
-        // .tap() hit the empty row center (x426), while the actual UISwitch
-        // thumb was near x735; the recorded video stayed green. Target the
-        // trailing switch region of this identified element, not a screen-
-        // absolute coordinate, then prove the value changed before dismissal.
-        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
-        let changed = wait { (toggle.value as? String) == expectedAfter }
+        // The captured iOS18.2 tree exposes a row-sized Switch containing
+        // one actual UISwitch. Target that native control, not a normalized
+        // coordinate in its accessibility wrapper.
+        let switches = toggle.descendants(matching: .switch)
+        LibraryNavigation.captureControlState("controls-visible", in: app, context: "Native visibility switch before ordinary tap")
+        XCTAssertEqual(switches.count, 1, "The identified row must contain exactly one native switch")
+        let nativeSwitch = switches.firstMatch
+        print("FLASHNEST_NATIVE_SWITCH row=\(toggle.frame) native=\(nativeSwitch.frame) value=\(String(describing: nativeSwitch.value)) enabled=\(nativeSwitch.isEnabled) hittable=\(nativeSwitch.isHittable)")
+        XCTAssertTrue(nativeSwitch.isEnabled && nativeSwitch.isHittable)
+        XCTAssertEqual(nativeSwitch.value as? String, expectedBefore)
+        nativeSwitch.tap()
+        let changed = wait {
+            (toggle.value as? String) == expectedAfter && (nativeSwitch.value as? String) == expectedAfter
+        }
         if !changed { capture(app, "Visibility switch did not change", includeHierarchy: true) }
         XCTAssertTrue(changed, "The real visibility toggle must change before checking the game overlay")
     }
