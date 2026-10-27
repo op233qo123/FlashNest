@@ -158,7 +158,10 @@ import CryptoKit
         // A stale callback from some other page must not affect this session.
         session.webViewWebContentProcessDidTerminate(WKWebView())
         XCTAssertNil(session.failure)
+        session.recordHostMemoryWarning()
+        session.recordHostMemoryWarning()
         session.webViewWebContentProcessDidTerminate(view)
+        XCTAssertTrue(session.previousSessionDiagnostic?.contains("hostMemoryWarnings=2") == true)
         XCTAssertFalse(session.saveReady)
         XCTAssertNotNil(session.saveFailure)
         XCTAssertTrue(session.diagnostics.contains { $0.contains("cause=unknown") })

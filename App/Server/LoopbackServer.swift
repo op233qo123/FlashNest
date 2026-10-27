@@ -212,6 +212,12 @@ final class LoopbackServer {
                 return
             }
             let handle = try FileHandle(forReadingFrom: file)
+            if !isWeb, file.pathExtension.lowercased() == "swf",
+               let prefix = try? handle.read(upToCount: 8) {
+                onDiagnostic?(Self.swfHeaderDiagnostic(prefix, fileBytes: size))
+            }
+            // The diagnostic peek never changes Range/body bytes or trusts the
+            // declared decoded size for an allocation or decompression.
             try handle.seek(toOffset: range.lowerBound)
             connection.send(content: header, completion: .contentProcessed { [weak self] error in
                 guard error == nil, let self = self else { try? handle.close(); connection.cancel(); return }
@@ -226,6 +232,20 @@ final class LoopbackServer {
             }
             failure(connection, status: status, head: request?.method == "HEAD")
         }
+    }
+
+    static func swfHeaderDiagnostic(_ prefix: Data, fileBytes: UInt64) -> String {
+        let bytes = Array(prefix.prefix(8))
+        guard bytes.count == 8 else { return "SWF header: truncated, fileBytes=\(fileBytes)" }
+        let signature: String
+        switch Array(bytes.prefix(3)) {
+        case [70, 87, 83]: signature = "FWS"
+        case [67, 87, 83]: signature = "CWS"
+        case [90, 87, 83]: signature = "ZWS"
+        default: return "SWF header: unknown signature, fileBytes=\(fileBytes)"
+        }
+        let declared = UInt32(bytes[4]) | (UInt32(bytes[5]) << 8) | (UInt32(bytes[6]) << 16) | (UInt32(bytes[7]) << 24)
+        return "SWF header: signature=\(signature), version=\(bytes[3]), declaredUncompressedBytes=\(declared), fileBytes=\(fileBytes), declarationUntrusted=true"
     }
 
     private func stream(_ handle: FileHandle, remaining: UInt64, to connection: NWConnection) {

@@ -4,6 +4,24 @@ import XCTest
 final class HTTPServerTests: XCTestCase {
     private let host = "127.0.0.1:48123"
 
+    func testSWFHeaderEvidenceIsBoundedAndDoesNotTrustDeclaredLength() {
+        for (byte, signature) in [(UInt8(70), "FWS"), (UInt8(67), "CWS"), (UInt8(90), "ZWS")] {
+            let header = Data([byte, 87, 83, 37, 0x78, 0x56, 0x34, 0x12])
+            let message = LoopbackServer.swfHeaderDiagnostic(header, fileBytes: 99)
+            XCTAssertTrue(message.contains("signature=\(signature)"))
+            XCTAssertTrue(message.contains("declaredUncompressedBytes=305419896"))
+            XCTAssertTrue(message.contains("fileBytes=99"))
+            XCTAssertTrue(message.contains("declarationUntrusted=true"))
+        }
+        XCTAssertTrue(LoopbackServer.swfHeaderDiagnostic(Data([67, 87, 83]), fileBytes: 3).contains("truncated"))
+        XCTAssertTrue(LoopbackServer.swfHeaderDiagnostic(Data(repeating: 255, count: 8), fileBytes: 8).contains("unknown signature"))
+        let hugeDeclaration = Data([67, 87, 83, 37, 255, 255, 255, 255])
+        XCTAssertTrue(LoopbackServer.swfHeaderDiagnostic(hugeDeclaration, fileBytes: 8).contains("4294967295"))
+        let withBody = hugeDeclaration + Data("private body must not appear".utf8)
+        XCTAssertEqual(LoopbackServer.swfHeaderDiagnostic(withBody, fileBytes: 8),
+                       LoopbackServer.swfHeaderDiagnostic(hugeDeclaration, fileBytes: 8))
+    }
+
     func testStrictHostAndMethod() throws {
         let valid = Data("GET /abc/web/index.html HTTP/1.1\r\nHost: \(host)\r\n\r\n".utf8)
         XCTAssertEqual(try LocalHTTPRequest.parse(valid, expectedHost: host).method, "GET")

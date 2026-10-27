@@ -18,8 +18,8 @@ import XCTest
     }
 
     func testAppVersionIsExplicitAndIconIsConfigured() {
-        XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String, "1.5.1")
-        XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String, "8")
+        XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String, "1.5.2")
+        XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String, "9")
         let icons = Bundle.main.object(forInfoDictionaryKey: "CFBundleIcons") as? [String: Any]
         let primary = icons?["CFBundlePrimaryIcon"] as? [String: Any]
         XCTAssertEqual(primary?["CFBundleIconName"] as? String, "AppIcon")

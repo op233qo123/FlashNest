@@ -8,6 +8,23 @@ import XCTest
                               saving: false, retainedProfiles: 2)
     }
 
+    func testOlderIncidentDecodesWithoutMemoryWarningFields() throws {
+        let bytes = try JSONEncoder().encode(incident())
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        object.removeValue(forKey: "memoryWarningCount")
+        object.removeValue(forKey: "lastMemoryWarning")
+        let old = try JSONDecoder().decode(LastSessionDiagnostic.self, from: JSONSerialization.data(withJSONObject: object))
+        XCTAssertNil(old.memoryWarningCount)
+        XCTAssertNil(old.lastMemoryWarning)
+        XCTAssertTrue(old.summary.contains("hostMemoryWarnings=unrecorded"))
+        var observed = old
+        observed.memoryWarningCount = 2
+        observed.lastMemoryWarning = Date(timeIntervalSince1970: 100)
+        let roundtrip = try JSONDecoder().decode(LastSessionDiagnostic.self, from: JSONEncoder().encode(observed))
+        XCTAssertEqual(roundtrip, observed)
+        XCTAssertTrue(roundtrip.summary.contains("hostMemoryWarnings=2"))
+    }
+
     func testRestartIsolationAndExplicitClear() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

@@ -12,10 +12,14 @@ struct LastSessionDiagnostic: Codable, Equatable {
     let saveReady: Bool
     let saving: Bool
     let retainedProfiles: Int
+    var memoryWarningCount: Int? = nil
+    var lastMemoryWarning: Date? = nil
 
     var summary: String {
         let timestamp = ISO8601DateFormatter().string(from: date)
-        return "\(timestamp) event=\(event.rawValue), cause=unknown, loaded=\(loaded), ready=\(ready), paused=\(paused), saveReady=\(saveReady), saving=\(saving), profiles=\(retainedProfiles)"
+        let warningDate = lastMemoryWarning.map { ISO8601DateFormatter().string(from: $0) } ?? "none"
+        let warningCount = memoryWarningCount.map(String.init) ?? "unrecorded"
+        return "\(timestamp) event=\(event.rawValue), cause=unknown, loaded=\(loaded), ready=\(ready), paused=\(paused), saveReady=\(saveReady), saving=\(saving), profiles=\(retainedProfiles), hostMemoryWarnings=\(warningCount), lastHostMemoryWarning=\(warningDate)"
     }
 }
 
@@ -61,7 +65,12 @@ struct LastSessionDiagnostic: Codable, Equatable {
         guard let data = try? handle.read(upToCount: Self.maximumBytes + 1), data.count <= Self.maximumBytes,
               let records = try? JSONDecoder().decode([String: LastSessionDiagnostic].self, from: data),
               records.count <= Self.maximumGames,
-              records.allSatisfy({ UUID(uuidString: $0.key) != nil && (0...1024).contains($0.value.retainedProfiles) && $0.value.date.timeIntervalSince1970.isFinite }) else { return [:] }
+              records.allSatisfy({ record in
+                  UUID(uuidString: record.key) != nil && (0...1024).contains(record.value.retainedProfiles)
+                    && record.value.date.timeIntervalSince1970.isFinite
+                    && (record.value.memoryWarningCount.map { (0...999).contains($0) } ?? true)
+                    && (record.value.lastMemoryWarning?.timeIntervalSince1970.isFinite ?? true)
+              }) else { return [:] }
         return records
     }
 

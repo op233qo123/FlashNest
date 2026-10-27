@@ -13,6 +13,8 @@ import SwiftUI
     @Published var webView: WKWebView?
     private var server: LoopbackServer?
     private var generation = UUID()
+    private(set) var activeRenderSettings: RenderSettings?
+    private var renderSettingsPackageID: UUID?
     private var ready = false
     private var processTerminated = false
     @Published private(set) var saveFailure: String?
@@ -29,11 +31,31 @@ import SwiftUI
     private var ownsPackageLease = false
     private var pendingRestoreID: UUID?
     private var preserveNativeOnEmptyCapture = false
+    private var memoryWarningObserver: NSObjectProtocol?
+    private var memoryWarningCount = 0
+    private var lastMemoryWarning: Date?
 
     init(saveStore: SaveStore = SaveStore(), incidentStore: LastSessionDiagnostics? = nil) {
         self.saveStore = saveStore
         self.incidentStore = incidentStore ?? LastSessionDiagnostics()
         super.init()
+        memoryWarningObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor [weak self] in self?.recordHostMemoryWarning() }
+            }
+    }
+
+    deinit {
+        if let memoryWarningObserver { NotificationCenter.default.removeObserver(memoryWarningObserver) }
+    }
+
+    // Host-app evidence only. WebContent is a separate process and warnings are
+    // best effort: zero warnings does NOT establish that memory was sufficient.
+    func recordHostMemoryWarning() {
+        guard webView != nil, !processTerminated else { return }
+        memoryWarningCount = min(memoryWarningCount + 1, 999)
+        lastMemoryWarning = Date()
+        if memoryWarningCount <= 10 { record("Host app memory warning: count=\(memoryWarningCount); WebContent cause remains unknown") }
     }
 
     func start(package: GamePackage, contentRoot: URL, storageOnly: Bool = false) async {
@@ -54,8 +76,15 @@ import SwiftUI
         Self.activePackageIDs.insert(package.id)
         ownsPackageLease = true
         currentPackage = package; currentContentRoot = contentRoot
+        // Snapshot once per opened game, not on foreground/save-panel restart.
+        // A preference edit never changes the live movie's coordinate system.
+        if !storageOnly, activeRenderSettings == nil || renderSettingsPackageID != package.id {
+            activeRenderSettings = RenderSettings.load(for: package.id)
+            renderSettingsPackageID = package.id
+        }
         pendingRestoreID = nil
         saveReady = false; saveFailure = nil; processTerminated = false
+        memoryWarningCount = 0; lastMemoryWarning = nil
         let attempt = UUID()
         generation = attempt
         ready = false; isLoaded = false; paused = false; failure = nil; status = L10n.text("Starting local player…")
@@ -131,6 +160,9 @@ import SwiftUI
             components.queryItems = [URLQueryItem(name: "entry", value: package.selectedMovie), URLQueryItem(name: "package", value: package.id.uuidString), URLQueryItem(name: "language", value: L10n.languageCode)]
             components.queryItems?.append(URLQueryItem(name: "nativeSaveHandshake", value: "1"))
             if storageOnly { components.queryItems?.append(URLQueryItem(name: "storageOnly", value: "1")) }
+            else if activeRenderSettings?.usesHalfResolution == true {
+                components.queryItems?.append(URLQueryItem(name: "renderMode", value: "half"))
+            }
             guard let url = components.url else { throw PackageError.invalidPath(package.selectedMovie) }
             view.load(URLRequest(url: url))
         } catch {
@@ -332,7 +364,8 @@ import SwiftUI
         guard let id = currentPackage?.id else { return }
         let incident = LastSessionDiagnostic(event: event, date: Date(), loaded: isLoaded,
             ready: ready, paused: paused, saveReady: saveReady, saving: saveTask != nil,
-            retainedProfiles: min(PackageWebKitProfiles.shared.retainedCount, 1024))
+            retainedProfiles: min(PackageWebKitProfiles.shared.retainedCount, 1024),
+            memoryWarningCount: memoryWarningCount, lastMemoryWarning: lastMemoryWarning)
         previousSessionDiagnostic = incident.summary
         do { try incidentStore.record(incident, for: id) }
         catch { record("Diagnostic metadata could not be retained") }

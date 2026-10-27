@@ -223,3 +223,6 @@
 "Previous session diagnostics" = "Previous session diagnostics";
 
 "Clear previous diagnostics" = "Clear previous diagnostics";
+"Rendering" = "Rendering";
+"Low-resolution compatibility mode" = "Low-resolution compatibility mode";
+"Applies after closing and reopening this game. Off keeps the sharper original rendering. On reduces canvas resolution, not game asset memory; it may blur text or change layouts in noScale games. This is experimental and does not guarantee fewer crashes." = "Applies after closing and reopening this game. Off keeps the sharper original rendering. On reduces canvas resolution, not game asset memory; it may blur text or change layouts in noScale games. This is experimental and does not guarantee fewer crashes.";

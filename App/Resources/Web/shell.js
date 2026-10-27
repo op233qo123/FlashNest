@@ -2,16 +2,18 @@
 (() => {
   'use strict';
   const status = document.getElementById('status');
-  const requestedLanguage = new URLSearchParams(location.search).get('language');
+  const pageQuery = new URLSearchParams(location.search);
+  const requestedLanguage = pageQuery.get('language');
+  const renderMode = pageQuery.get('renderMode') === 'half' ? 'half' : 'normal';
   const language = (requestedLanguage || window.navigator?.language || 'en').toLowerCase().startsWith('zh') ? 'zh-Hans' : 'en';
   const strings = {
     en: {
       title:'FlashNest Player', preparing:'Preparing offline runtime…', play:'Play / enable audio', pause:'Pause', resume:'Resume', action:'Action', enter:'Enter', stage:'Flash player', controls:'Game controls',
-      offline:'Offline policy blocked {0}. Remote servers are unavailable; include local assets in the package.', jsError:'JavaScript/resource error: {0}', unknown:'unknown', runtimeError:'Runtime error: {0}', wasmStart:'Runtime WASM fetch started: {0}', wasmResponse:'Runtime WASM response: {0}; bytes={1}', assetFailed:'Asset request failed ({0}): {1}', assetBlocked:'Asset request blocked or unavailable: {0}', invalid:'Invalid package or entry SWF.', unsafe:'Unsafe entry path.', missing:'Bundled runtime missing or blocked.', ready:'Offline runtime ready.', initializing:'Initializing bundled WASM and renderer…', pending:'Runtime initialization still pending after 20 seconds; download progress={0}; visible={1}', unavailable:'unavailable', initialized:'Bundled WASM and renderer initialized; main SWF request started.', loaded:'Movie loaded. Tap Play to start audio.', saveReady:'Local save storage ready.', saveTimeout:'Native save preparation timed out.', swfRequest:'SWF request #{0}: {1}', swfResponse:'SWF response headers #{0}: status={1}; bytes={2}; {3}', swfFailure:'SWF fetch failed #{0}: {1}', swfLimit:'Further SWF request diagnostics omitted (limit reached).', traceSuppressed:'SWF trace limit: {0} message(s) suppressed in this interval.', graphicsEvent:'Renderer event: {0}', playerState:'Player state ({0}): started={1}; paused={2}; hidden={3}; focused={4}; canvasCSS={5}; canvasPixels={6}; DPR={7}', loadError:'Unable to load movie: {0}'
+      offline:'Offline policy blocked {0}. Remote servers are unavailable; include local assets in the package.', jsError:'JavaScript/resource error: {0}', unknown:'unknown', runtimeError:'Runtime error: {0}', wasmStart:'Runtime WASM fetch started: {0}', wasmResponse:'Runtime WASM response: {0}; bytes={1}', assetFailed:'Asset request failed ({0}): {1}', assetBlocked:'Asset request blocked or unavailable: {0}', invalid:'Invalid package or entry SWF.', unsafe:'Unsafe entry path.', missing:'Bundled runtime missing or blocked.', ready:'Offline runtime ready.', initializing:'Initializing bundled WASM and renderer…', pending:'Runtime initialization still pending after 20 seconds; download progress={0}; visible={1}', unavailable:'unavailable', initialized:'Bundled WASM and renderer initialized; main SWF request started.', loaded:'Movie loaded. Tap Play to start audio.', saveReady:'Local save storage ready.', saveTimeout:'Native save preparation timed out.', swfRequest:'SWF request #{0}: {1}', swfResponse:'SWF response headers #{0}: status={1}; bytes={2}; {3}', swfFailure:'SWF fetch failed #{0}: {1}', swfLimit:'Further SWF request diagnostics omitted (limit reached).', traceSuppressed:'SWF trace limit: {0} message(s) suppressed in this interval.', graphicsEvent:'Renderer event: {0}', playerState:'Player state ({0}): started={1}; paused={2}; hidden={3}; focused={4}; canvasCSS={5}; canvasPixels={6}; DPR={7}; renderMode={8}; canvasVisual={9}', loadError:'Unable to load movie: {0}'
     },
     'zh-Hans': {
       title:'FlashNest 播放器', preparing:'正在准备离线运行环境…', play:'播放 / 开启声音', pause:'暂停', resume:'继续', action:'动作', enter:'确认', stage:'Flash 播放区域', controls:'游戏按键',
-      offline:'离线策略已拦截 {0}。无法连接远程服务器，请将资源一并导入。', jsError:'脚本或资源错误：{0}', unknown:'未知', runtimeError:'运行错误：{0}', wasmStart:'正在加载 WASM：{0}', wasmResponse:'WASM 响应：{0}；字节数={1}', assetFailed:'资源请求失败（{0}）：{1}', assetBlocked:'资源被拦截或不可用：{0}', invalid:'游戏包或入口 SWF 无效。', unsafe:'入口路径不安全。', missing:'内置运行环境缺失或被拦截。', ready:'离线运行环境已就绪。', initializing:'正在初始化 WASM 和渲染器…', pending:'初始化已超过 20 秒；下载进度={0}；页面可见={1}', unavailable:'不可用', initialized:'WASM 和渲染器已初始化，正在加载主 SWF。', loaded:'文件已加载。点击“播放”开启声音。', saveReady:'本地存档已准备就绪。', saveTimeout:'原生存档准备超时。', swfRequest:'SWF 请求 #{0}：{1}', swfResponse:'SWF 响应头 #{0}：状态={1}；字节数={2}；{3}', swfFailure:'SWF 请求失败 #{0}：{1}', swfLimit:'后续 SWF 请求诊断已省略（达到数量上限）。', traceSuppressed:'SWF 跟踪限流：本时段已省略 {0} 条消息。', graphicsEvent:'渲染器事件：{0}', playerState:'播放器状态（{0}）：已开始={1}；暂停={2}；隐藏={3}；焦点={4}；画布CSS={5}；画布像素={6}；DPR={7}', loadError:'无法加载文件：{0}'
+      offline:'离线策略已拦截 {0}。无法连接远程服务器，请将资源一并导入。', jsError:'脚本或资源错误：{0}', unknown:'未知', runtimeError:'运行错误：{0}', wasmStart:'正在加载 WASM：{0}', wasmResponse:'WASM 响应：{0}；字节数={1}', assetFailed:'资源请求失败（{0}）：{1}', assetBlocked:'资源被拦截或不可用：{0}', invalid:'游戏包或入口 SWF 无效。', unsafe:'入口路径不安全。', missing:'内置运行环境缺失或被拦截。', ready:'离线运行环境已就绪。', initializing:'正在初始化 WASM 和渲染器…', pending:'初始化已超过 20 秒；下载进度={0}；页面可见={1}', unavailable:'不可用', initialized:'WASM 和渲染器已初始化，正在加载主 SWF。', loaded:'文件已加载。点击“播放”开启声音。', saveReady:'本地存档已准备就绪。', saveTimeout:'原生存档准备超时。', swfRequest:'SWF 请求 #{0}：{1}', swfResponse:'SWF 响应头 #{0}：状态={1}；字节数={2}；{3}', swfFailure:'SWF 请求失败 #{0}：{1}', swfLimit:'后续 SWF 请求诊断已省略（达到数量上限）。', traceSuppressed:'SWF 跟踪限流：本时段已省略 {0} 条消息。', graphicsEvent:'渲染器事件：{0}', playerState:'播放器状态（{0}）：已开始={1}；暂停={2}；隐藏={3}；焦点={4}；画布CSS={5}；画布像素={6}；DPR={7}；渲染模式={8}；画布显示={9}', loadError:'无法加载文件：{0}'
     }
   };
   const t = (key, ...values) => strings[language][key].replace(/\{(\d+)\}/g, (_, i) => String(values[Number(i)] ?? ''));
@@ -68,9 +70,11 @@
     if (!player || stateReports >= 24) return;
     stateReports++;
     const canvas = player.shadowRoot?.querySelector('canvas');
+    const visual = canvas?.getBoundingClientRect?.();
     report('diagnostic', t('playerState', reason, started, paused, !!document.hidden,
       document.activeElement === player, canvas ? `${canvas.clientWidth}x${canvas.clientHeight}` : t('unavailable'),
-      canvas ? `${canvas.width}x${canvas.height}` : t('unavailable'), window.devicePixelRatio || 1), false);
+      canvas ? `${canvas.width}x${canvas.height}` : t('unavailable'), window.devicePixelRatio || 1, renderMode,
+      visual ? `${Math.round(visual.width * 100) / 100}x${Math.round(visual.height * 100) / 100}` : t('unavailable')), false);
   }
   function watchRenderer() {
     const canvas = player?.shadowRoot?.querySelector('canvas');
@@ -137,6 +141,8 @@
   window.FlashNest = Object.freeze({start:() => start(false), pause, resume, key, releaseKeys, shutdownAndCapture, confirmSaveReady});
   document.getElementById('start').onclick = () => start(true);
   window.addEventListener('blur', releaseKeys);
+  window.addEventListener('resize', () => { releaseKeys(); reportState('resize'); });
+  window.addEventListener('orientationchange', () => { releaseKeys(); reportState('orientation'); });
   document.addEventListener('visibilitychange', () => { backgrounded = document.hidden; releaseKeys(); reconcile(); reportState('visibility'); });
   document.addEventListener('pointercancel', releaseKeys);
   document.addEventListener('lostpointercapture', releaseKeys, true);
@@ -215,7 +221,18 @@
       document.getElementById('start').disabled = false;
       reconcile(); report('loaded', t('loaded'));
     }, {once:true});
-    document.getElementById('stage').append(player);
+    const stage = document.getElementById('stage');
+    if (renderMode === 'half') {
+      // Opt-in only. Ruffle keeps its real DPR and normal pointer conversion;
+      // this lowers layout/backing dimensions, then visually fills the stage.
+      // NoScale movies may observe smaller logical stage dimensions.
+      const viewport = document.createElement('div');
+      viewport.id = 'half-render-viewport';
+      viewport.append(player);
+      stage.append(viewport);
+    } else {
+      stage.append(player);
+    }
     report('ready', t('ready'));
     report('diagnostic', t('initializing'));
     const loadWatchdog = window.setTimeout?.(() => {

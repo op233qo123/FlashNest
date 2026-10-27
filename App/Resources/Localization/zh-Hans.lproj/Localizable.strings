@@ -223,3 +223,6 @@
 "Previous session diagnostics" = "上次会话诊断";
 
 "Clear previous diagnostics" = "清除上次诊断记录";
+"Rendering" = "画面渲染";
+"Low-resolution compatibility mode" = "低分辨率兼容模式";
+"Applies after closing and reopening this game. Off keeps the sharper original rendering. On reduces canvas resolution, not game asset memory; it may blur text or change layouts in noScale games. This is experimental and does not guarantee fewer crashes." = "关闭并重新打开本游戏后生效。关闭此选项可保留原有清晰画面；开启可降低画布分辨率，但不会减少游戏资源占用，文字可能变模糊，noScale 游戏的布局也可能改变。此功能为实验选项，不保证减少崩溃。";
