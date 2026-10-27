@@ -3,6 +3,13 @@
 name: Isolate transition renderer on iOS 18.5 (manual)
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: Renderer arms to execute (webgl retains the historical failed default control)
+        type: choice
+        required: true
+        default: both
+        options: [both, webgl]
 permissions:
   contents: read
 concurrency:
@@ -47,6 +54,7 @@ jobs:
           echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
       - name: Default renderer preference (require actual wgpu-webgl)
         id: default
+        if: ${{ inputs.scope == 'both' }}
         continue-on-error: true
         timeout-minutes: 15
         env:
@@ -65,22 +73,24 @@ jobs:
       - name: Preserve all failures (never turn independent-arm execution into a pass)
         if: ${{ !cancelled() }}
         env:
+          SCOPE: ${{ inputs.scope }}
           DEFAULT: ${{ steps.default.outcome }}
           WEBGL: ${{ steps.webgl.outcome }}
         run: |
           set -euo pipefail
           mkdir -p renderer-evidence
-          printf 'default=%s\nwebgl=%s\n' "$DEFAULT" "$WEBGL" > renderer-evidence/outcomes.txt
-          test "$DEFAULT" = success
-          test "$WEBGL" = success
+          printf 'scope=%s\ndefault=%s\nwebgl=%s\n' "$SCOPE" "$DEFAULT" "$WEBGL" > renderer-evidence/outcomes.txt
+          python3 experiments/transition-renderers/verify_outcomes.py "$SCOPE" "$DEFAULT" "$WEBGL"
       - name: Record runner identity
         if: always()
         run: |
           mkdir -p renderer-evidence
           # Final catch-all also retains reports when a test step times out
           # before its per-arm collector. These are deliberately unattributed.
-          if [ -f renderer-evidence/default/start.marker ]; then
-            python3 scripts/collect_test_webkit_crashes.py renderer-evidence/default/start.marker renderer-evidence/unattributed-late-crashes || true
+          marker=renderer-evidence/default/start.marker
+          if [ ! -f "$marker" ]; then marker=renderer-evidence/webgl/start.marker; fi
+          if [ -f "$marker" ]; then
+            python3 scripts/collect_test_webkit_crashes.py "$marker" renderer-evidence/unattributed-late-crashes || true
           fi
           xcodebuild -version > renderer-evidence/xcode.txt
           printf '%s\n' "expectedSimulatorOS=$TRANSITION_EXPECTED_OS" > renderer-evidence/diagnostic-lane.txt
@@ -88,7 +98,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: FlashNest-renderer-transition-ios18_5-AB
+          name: FlashNest-renderer-transition-ios18_5-${{ inputs.scope }}
           retention-days: 7
           path: renderer-evidence
           include-hidden-files: true

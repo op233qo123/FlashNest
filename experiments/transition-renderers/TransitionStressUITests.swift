@@ -314,14 +314,20 @@ final class TransitionStressUITests: XCTestCase {
         XCTAssertTrue(diagnostics.isHittable); diagnostics.tap()
         XCTAssertTrue(app.navigationBars["Diagnostics"].waitForExistence(timeout: 10))
         let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "No external network access.")).firstMatch
-        var labels = Set<String>()
+        var snapshots: [String] = []
         for _ in 0..<24 {
-            app.staticTexts.allElementsBoundByIndex.forEach { labels.insert($0.label) }
+            // The diagnostics list can update during collection. Resolve one
+            // immutable hierarchy, not live indexed elements that can vanish
+            // between queries. Oversize evidence fails rather than hiding any
+            // forbidden token through truncation.
+            let snapshot = app.debugDescription
+            XCTAssertLessThanOrEqual(snapshot.utf8.count, 100_000, "Diagnostics snapshot must fit the evidence bound without truncation")
+            snapshots.append(snapshot)
             if footer.exists && footer.isHittable { break }
             app.swipeUp()
         }
         XCTAssertTrue(footer.exists && footer.isHittable, "Read the entire bounded diagnostics list, not just its initial visible rows")
-        let text = labels.sorted().joined(separator: "\n")
+        let text = snapshots.joined(separator: "\n--- next retained diagnostics page ---\n")
         let evidence = XCTAttachment(string: text); evidence.name = "Transition complete native diagnostics"
         evidence.lifetime = .keepAlways; add(evidence)
         print("FLASHNEST_TRANSITION_DIAGNOSTICS\n" + text)

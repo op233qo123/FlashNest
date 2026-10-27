@@ -109,7 +109,9 @@ class StagingTests(unittest.TestCase):
             self.assertEqual(steps[arm]['timeout-minutes'],15);self.assertTrue(steps[arm]['continue-on-error'])
         gate=next(x for x in job['steps'] if 'DEFAULT' in x.get('env',{}))
         self.assertIn('steps.default.outcome',gate['env']['DEFAULT']);self.assertIn('steps.webgl.outcome',gate['env']['WEBGL'])
-        self.assertIn('test "$DEFAULT" = success',gate['run']);self.assertIn('test "$WEBGL" = success',gate['run'])
+        self.assertIn('verify_outcomes.py "$SCOPE" "$DEFAULT" "$WEBGL"',gate['run'])
+        self.assertIn("inputs.scope == 'both'",steps['default']['if'])
+        self.assertIn('steps.prepare.outcome',steps['webgl']['if'])
         self.assertIn('-maximum-test-execution-time-allowance 480',(ROOT/'experiments/transition-renderers/run_arm.sh').read_text())
 
 if __name__=='__main__':unittest.main()
