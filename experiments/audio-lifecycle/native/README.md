@@ -1,9 +1,28 @@
 # Isolated native Canvas / WebAudio lifecycle gate — preparation
 
-**No native build or execution has been performed for this harness.** The workflow
-is a draft in this directory only; publication and dispatch require separate
-review/authorization. Do not run it concurrently with the existing Loader18.5
-investigation. There are no App, default-test, production-runtime or release edits.
+**No native execution has succeeded for this harness.** The first build attempt
+failed before execution as detailed below. The isolated manual workflow and its
+matching source copy in this directory require reviewed changes before retries.
+There are no App, default-test, production-runtime or release edits.
+
+### First build attempt and path-only correction
+
+Run [40552081930](https://github.com/op233qo123/FlashNest/actions/runs/40552081930),
+source `4d54135a5c6d1597bca1fd48c455d245dce6c42f`, passed prerequisite and exact
+bundle staging but failed before native execution: relocating the generated
+project made its relative Info.plist/Web paths resolve outside the checkout.
+No runtime cases executed; the failure is not an audio/engine result.
+
+Staging now generates a JSON-compatible XcodeGen spec **inside the staged project
+directory**, using verified absolute paths for the four checkout Swift sources
+and simple local paths for identity, Web resources and Info.plist. XcodeGen runs
+from that same directory with no project relocation. Before compilation, actual
+`-showBuildSettings -json` output must resolve PROJECT_DIR/SRCROOT and Info.plist
+to the expected staged directory. Local tests reject the original escaping path,
+wrong project root and missing resources. Generated project.pbxproj, resolved
+spec, build settings and path-verification evidence are retained on failure.
+Runtime bytes, Swift/audio behavior, trusted-action predicates and deadlines are
+unchanged. Native compilation/execution remain unverified after this correction.
 
 ## What is pinned, and what already passed
 

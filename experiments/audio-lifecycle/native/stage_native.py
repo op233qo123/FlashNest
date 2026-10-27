@@ -326,6 +326,7 @@ def stage_native(args):
                                         runtime_files, helper_hashes,
                                         'e25f5dba4162a25b9a07832be4e6f8f62242734f6f39e92983c53467a28e7fd2')
     try:
+        project = stage_project(stage, repo)
         evidence = stage / 'prerequisite-evidence'
         evidence.mkdir()
         shutil.copyfile(args.browser_approval, evidence / 'browser-approval.json')
@@ -340,12 +341,64 @@ def stage_native(args):
             shutil.copyfile(folder / 'runtime.browser-manifest.json', evidence / (arm + '-browser-manifest.json'))
         result = {'verified': True, 'nativeExecutionPerformed': False, 'runtimeRebuilt': False,
                   'manifestSHA256': manifest_hash, 'stagedFiles': len(manifest['files']),
+                  'project': project,
                   'browserPrerequisite': checked, 'scope': 'Offline staging only; native compilation and execution not performed'}
         (stage / 'verification.json').write_bytes(json_bytes(result))
         return result
     except BaseException:
         shutil.rmtree(stage)
         raise
+
+
+def stage_project(stage, repo):
+    """Resolve a JSON-compatible XcodeGen spec in the fresh staging directory.
+
+    Source files use verified absolute paths inside this checkout. Generated
+    identity, Web resources, plist and project remain together inside stage.
+    There is no --project relocation and no dependency on the caller's cwd.
+    """
+    stage, repo = Path(stage).resolve(), Path(repo).resolve()
+    require(stage.is_relative_to(repo), 'Native project stage must remain inside checkout')
+    template = strict_json(HERE / 'project.yml')
+    require(template['name'] == 'NativeAudioLifecycle', 'Unexpected project template')
+    targets = template['targets']
+    require(set(targets) == {'NativeAudioLifecycle', 'NativeAudioLifecycleUITests'}, 'Unexpected native targets')
+    app, ui = targets['NativeAudioLifecycle'], targets['NativeAudioLifecycleUITests']
+    require(app['sources'] == [
+        {'path': 'Host', 'excludes': ['Info.plist']},
+        '../../../App/Server/LoopbackServer.swift', '../../../App/Server/HTTPProtocol.swift',
+        '../../../audio-native-stage/NativeAudioIdentity.swift',
+        {'path': '../../../audio-native-stage/Web', 'type': 'folder', 'buildPhase': 'resources'},
+    ], 'Unexpected source template')
+    require(ui['sources'] == ['UITests'] and app['info']['path'] == '../../../audio-native-stage/Info.plist',
+            'Unexpected UI/plist template')
+    source_names = [
+        'experiments/audio-lifecycle/native/Host/NativeAudioHost.swift',
+        'experiments/audio-lifecycle/native/UITests/NativeAudioLifecycleUITests.swift',
+        'App/Server/LoopbackServer.swift', 'App/Server/HTTPProtocol.swift',
+    ]
+    source_files = {}
+    for relative in source_names:
+        path = repo / relative
+        require(path.resolve().is_relative_to(repo) and not path.is_symlink(), 'Source escaped checkout')
+        data = file_bytes(path)
+        source_files[relative] = {'bytes': len(data), 'sha256': digest(data)}
+    require(set((repo / 'experiments/audio-lifecycle/native/Host').iterdir()) ==
+            {repo / source_names[0]}, 'Unlisted host source')
+    require(set((repo / 'experiments/audio-lifecycle/native/UITests').iterdir()) ==
+            {repo / source_names[1]}, 'Unlisted UI source')
+    require((stage / 'NativeAudioIdentity.swift').is_file() and (stage / 'Web').is_dir(), 'Missing verified staged resources')
+    app['sources'] = [str(repo / source_names[0]), str(repo / source_names[2]), str(repo / source_names[3]),
+                      'NativeAudioIdentity.swift', {'path': 'Web', 'type': 'folder', 'buildPhase': 'resources'}]
+    ui['sources'] = [str(repo / source_names[1])]
+    app['info']['path'] = 'Info.plist'
+    payload = json_bytes(template)
+    destination = stage / 'project.yml'
+    require(not destination.exists(), 'Refusing generated project spec overwrite')
+    destination.write_bytes(payload)
+    return {'specSHA256': digest(payload), 'sourceFiles': source_files,
+            'sourceRoot': 'verified-checkout-absolute', 'generatedRoot': 'native-stage',
+            'relocatedProject': False}
 
 
 def main():

@@ -66,7 +66,9 @@ jobs:
           curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
           echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
           unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
-          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate --spec experiments/audio-lifecycle/native/project.yml --project audio-native-stage
+          (cd audio-native-stage && "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate --spec project.yml)
+          xcodebuild -showBuildSettings -json -project audio-native-stage/NativeAudioLifecycle.xcodeproj -scheme NativeAudioLifecycle -sdk iphonesimulator > audio-native-stage/build-settings.json
+          python3 experiments/audio-lifecycle/native/verify_project_paths.py --stage audio-native-stage --repo . --settings audio-native-stage/build-settings.json > audio-native-stage/project-path-verification.json
           git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
       - name: Select and reset one exact iOS 18.5 simulator
         id: simulator
@@ -127,6 +129,11 @@ jobs:
             audio-native-test.log
             AudioNativeResults.xcresult
             audio-native-stage/verification.json
+            audio-native-stage/project.yml
+            audio-native-stage/Info.plist
+            audio-native-stage/build-settings.json
+            audio-native-stage/project-path-verification.json
+            audio-native-stage/NativeAudioLifecycle.xcodeproj/project.pbxproj
             audio-native-stage/Web/native-manifest.json
             audio-native-stage/NativeAudioIdentity.swift
             audio-native-stage/prerequisite-evidence

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import shutil
 import tempfile
 import zipfile
 import unittest
@@ -22,6 +23,38 @@ stage = module('native_stage_contracts', HERE / 'stage_native.py')
 xctest = module('native_result_contracts', HERE / 'verify_xctest.py')
 
 class NativeSourceTests(unittest.TestCase):
+    def test_generated_project_paths_are_self_contained_and_checked(self):
+        paths = module('project_path_checks', HERE / 'verify_project_paths.py')
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary) / 'repo'; output = repo / 'audio-native-stage'
+            output.mkdir(parents=True); (output / 'Web').mkdir()
+            for name in ['NativeAudioIdentity.swift', 'Info.plist', 'Web/native-manifest.json']:
+                (output / name).write_text('synthetic')
+            for name in ['Host/NativeAudioHost.swift', 'UITests/NativeAudioLifecycleUITests.swift']:
+                target = repo / 'experiments/audio-lifecycle/native' / name
+                target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(HERE / name, target)
+            for name in ['LoopbackServer.swift', 'HTTPProtocol.swift']:
+                target = repo / 'App/Server' / name
+                target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(ROOT / 'App/Server' / name, target)
+            record = stage.stage_project(output, repo)
+            self.assertFalse(record['relocatedProject'])
+            config = [{'target': 'NativeAudioLifecycle', 'buildSettings': {
+                'PROJECT_DIR': str(output), 'SRCROOT': str(output), 'INFOPLIST_FILE': 'Info.plist'}}]
+            self.assertTrue(paths.verify(output, repo, config)['verified'])
+            legacy = copy.deepcopy(config); legacy[0]['buildSettings']['INFOPLIST_FILE'] = '../../../audio-native-stage/Info.plist'
+            with self.assertRaises(ValueError): paths.verify(output, repo, legacy)
+            foreign = copy.deepcopy(config); foreign[0]['buildSettings']['PROJECT_DIR'] = str(repo.parent)
+            with self.assertRaises(ValueError): paths.verify(output, repo, foreign)
+            (output / 'Web/native-manifest.json').unlink()
+            with self.assertRaises(ValueError): paths.verify(output, repo, config)
+            with self.assertRaises(ValueError): stage.stage_project(output, repo)
+        workflow = (HERE / 'workflow-draft.yml').read_text()
+        self.assertIn('(cd audio-native-stage && ', workflow)
+        self.assertIn('generate --spec project.yml)', workflow)
+        self.assertNotIn('--project audio-native-stage', workflow)
+        self.assertIn('verify_project_paths.py', workflow)
+        self.assertIn('NativeAudioLifecycle.xcodeproj/project.pbxproj', workflow)
+
     def test_native_policy_trusted_events_and_bounded_teardown(self):
         host = (HERE / 'Host/NativeAudioHost.swift').read_text()
         ui = (HERE / 'UITests/NativeAudioLifecycleUITests.swift').read_text()

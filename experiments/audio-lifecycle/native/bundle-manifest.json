@@ -5,8 +5,8 @@
       "sha256": "01bb92d531502031c238f34bf9e5c1aa4d392f1ca40162d3a0f0b058b3749917"
     },
     "README.md": {
-      "bytes": 8390,
-      "sha256": "092dfda9124bca108a068c05507970a58818e40244f676c868546016eb8da2a0"
+      "bytes": 9620,
+      "sha256": "53baf504755ef8b2b3bf5d9714aa0647b856825c8e01bfd0452dcd7ce5c38b03"
     },
     "UITests/NativeAudioLifecycleUITests.swift": {
       "bytes": 6408,
@@ -41,16 +41,16 @@
       "sha256": "23f35af3bdf0aef0502af96b9572189aadf784b3f704303eb97523c524553f41"
     },
     "project.yml": {
-      "bytes": 1889,
-      "sha256": "d85c355db6a8b7c390d8ea69d1747b3128d842bbfd913e32cf4252f84655feea"
+      "bytes": 2626,
+      "sha256": "f257e69d9914d327a8fec3473a606d9ba50e0089419f1992225271e5644329bf"
     },
     "stage_native.py": {
-      "bytes": 21221,
-      "sha256": "c2b4653f0f074de37cd8ba3c0bd8fcba4be598e576a6de030a0ca27461b8028a"
+      "bytes": 24401,
+      "sha256": "adac13e395ca332929d80d17becccf6365aa7410ca9adc03591cd295c170be09"
     },
     "test_native.py": {
-      "bytes": 8701,
-      "sha256": "ab7bb553853a9d6ecc6a0202c90d33beb6572611ea25b4cb8c9489c8916667e7"
+      "bytes": 11141,
+      "sha256": "5e1a0c67dca7d10000e9396d1513be730e701b14f210d5b18f05139a80578ad6"
     },
     "test_raw_replay.mjs": {
       "bytes": 5619,
@@ -60,13 +60,17 @@
       "bytes": 17430,
       "sha256": "879f02a87382f32e9018844c5c0132612874d034d813127956d96a75643c3710"
     },
+    "verify_project_paths.py": {
+      "bytes": 2688,
+      "sha256": "a770b2fc83cf09c476b98e1b0dcca9ee626a8a47f753547836cbdf2e15a6f05e"
+    },
     "verify_xctest.py": {
       "bytes": 2300,
       "sha256": "c594c202389c276d8e4994233daba0b99fafed649866bd498d7edaeed6416f7f"
     },
     "workflow-draft.yml": {
-      "bytes": 8912,
-      "sha256": "cc5bc7bca1267bf6090cc324d861f43bee12a5ebda59148ddfc795b0c78e2c74"
+      "bytes": 9562,
+      "sha256": "c601e5615bcd93d6962bf576aaff81a1647a788de133702e344a43eb65c5e936"
     }
   },
   "schemaVersion": 1,
