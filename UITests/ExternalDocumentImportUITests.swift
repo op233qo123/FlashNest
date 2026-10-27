@@ -121,7 +121,19 @@ final class ExternalDocumentImportUITests: XCTestCase {
         XCTAssertTrue(remove.waitForExistence(timeout: 10)); XCTAssertTrue(remove.isHittable); remove.tap()
         let keepSaves = app.buttons["Remove game, keep saves"]
         XCTAssertTrue(keepSaves.waitForExistence(timeout: 10)); XCTAssertTrue(keepSaves.isHittable); keepSaves.tap()
-        XCTAssertTrue(LibraryNavigation.wait { !app.buttons["play-" + packageID].exists })
+        // Production cache cleanup itself has a 15s timeout after asynchronous
+        // validation starts. Observe its terminal UI, not a competing 15s timer.
+        let progress = app.descendants(matching: .any)["removal-progress"].firstMatch
+        let result = app.descendants(matching: .any)["removal-result"].firstMatch
+        let error = app.alerts["FlashNest"]
+        let settled = LibraryNavigation.wait({
+            error.exists || (!progress.exists && result.exists)
+        }, timeout: 30)
+        captureSaveSurface("Synthetic game removal terminal state", in: app)
+        XCTAssertTrue(settled, "Removal must reach a terminal success/error state within the bounded diagnostic window")
+        XCTAssertFalse(error.exists, "Removal failed: " + error.staticTexts.allElementsBoundByIndex.map(\.label).joined(separator: " | "))
+        XCTAssertFalse(progress.exists)
+        XCTAssertFalse(app.buttons["play-" + packageID].exists, "Archive testing requires actual successful removal of this exact synthetic package")
         let saveArea = app.buttons["save-area"].firstMatch
         XCTAssertTrue(LibraryNavigation.wait { saveArea.isEnabled && saveArea.isHittable }); saveArea.tap()
         let archive = app.buttons["archive-" + packageID]

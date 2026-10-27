@@ -13,6 +13,7 @@ on:
           - home
           - fullscreen
           - external-import
+          - external-save-ui
         default: all
 permissions:
   contents: read
@@ -60,7 +61,7 @@ jobs:
           xcodebuild -project FlashNest.xcodeproj -scheme FlashNestFixtureSource -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,id=$device_id" -derivedDataPath build-source -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
           xcrun simctl install "$device_id" build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app
       - name: Verify input recovery and save safety on iOS 18.2
-        if: ${{ inputs.scope != 'lifecycle' && inputs.scope != 'toolbar-diagnostics' && inputs.scope != 'home-import' && inputs.scope != 'home' && inputs.scope != 'fullscreen' }}
+        if: ${{ inputs.scope != 'lifecycle' && inputs.scope != 'toolbar-diagnostics' && inputs.scope != 'home-import' && inputs.scope != 'home' && inputs.scope != 'fullscreen' && inputs.scope != 'external-save-ui' }}
         timeout-minutes: 10
         run: |
           set -o pipefail
@@ -81,7 +82,7 @@ jobs:
           if [ "$TEST_SCOPE" = "home-import" ]; then selection=(-only-testing:FlashNestUITests/FolderPickerUITests -only-testing:FlashNestUITests/LibraryHomeUITests); fi
           if [ "$TEST_SCOPE" = "home" ]; then selection=(-only-testing:FlashNestUITests/LibraryHomeUITests); fi
           if [ "$TEST_SCOPE" = "fullscreen" ]; then selection=(-only-testing:FlashNestUITests/FullscreenPlayerUITests); fi
-          if [ "$TEST_SCOPE" = "external-import" ]; then selection=(-only-testing:FlashNestUITests/ExternalDocumentImportUITests); fi
+          if [ "$TEST_SCOPE" = "external-import" ] || [ "$TEST_SCOPE" = "external-save-ui" ]; then selection=(-only-testing:FlashNestUITests/ExternalDocumentImportUITests); fi
           echo "UI validation scope: $TEST_SCOPE"
           xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath PickerTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 480 "${selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee picker-test.log
       - name: Export compact UI evidence
