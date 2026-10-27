@@ -103,7 +103,7 @@ final class FullscreenPlayerUITests: XCTestCase {
         app.launchArguments = ["--flashnest-cross-container-ui-test", "-FlashNest.language", "en",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        let importButton = app.buttons["import-folder"].firstMatch
+        let importButton = LibraryNavigation.revealFolderImport(in: app)
         XCTAssertTrue(importButton.waitForExistence(timeout: 15))
         XCTAssertTrue(wait { importButton.isHittable })
         importButton.tap()
@@ -129,10 +129,9 @@ final class FullscreenPlayerUITests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 10))
         XCTAssertTrue(app.collectionViews["File View"].cells.containing(.staticText, identifier: "main.swf").firstMatch.exists)
         app.buttons["Open"].firstMatch.tap()
-        let entry = app.buttons["entry-main.swf"].firstMatch
-        XCTAssertTrue(entry.waitForExistence(timeout: 45))
-        XCTAssertTrue(app.buttons["entry-sub/child.swf"].exists)
-        entry.tap()
+        LibraryNavigation.requireEntry("main.swf", in: app)
+        LibraryNavigation.requireEntry("sub/child.swf", in: app)
+        LibraryNavigation.requireEntry("main.swf", in: app, towardTop: true).tap()
         return app
     }
 

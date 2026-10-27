@@ -21,7 +21,7 @@ final class FolderPickerUITests: XCTestCase {
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15))
-        XCTAssertTrue(app.buttons["import-folder"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["import-menu"].waitForExistence(timeout: 15))
         XCTAssertTrue(waitForImportControl(app), "Import control must be interactive after cold launch")
         return app
     }
@@ -31,7 +31,7 @@ final class FolderPickerUITests: XCTestCase {
         // spanning app and remote Files accessibility trees during dismissal.
         let deadline = Date().addingTimeInterval(10)
         repeat {
-            let button = app.buttons["import-folder"]
+            let button = app.buttons["import-menu"]
             if button.exists && button.isHittable && button.isEnabled { return true }
             Thread.sleep(forTimeInterval: 0.25)
         } while Date() < deadline
@@ -48,11 +48,11 @@ final class FolderPickerUITests: XCTestCase {
     }
 
     private func openFixtureFolder(_ app: XCUIApplication) {
-        let importButton = app.buttons["import-folder"]
-        let state = app.staticTexts["picker-state"]
+        let importButton = LibraryNavigation.revealFolderImport(in: app)
+        let state = app.buttons["import-menu"].firstMatch
         let originalState = state.value as? String
         let systemNavigation = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"]
-        XCTAssertTrue(waitForImportControl(app))
+        XCTAssertTrue(importButton.isEnabled && importButton.isHittable)
         importButton.tap()
         if !systemNavigation.waitForExistence(timeout: 15) {
             // On the first cold simulator launch, the run-3 screenshot showed
@@ -108,8 +108,8 @@ final class FolderPickerUITests: XCTestCase {
         open.tap()
         // These buttons exist only in the app-owned entry selector AFTER a
         // genuine picker callback, dismissal, background copy and discovery.
-        XCTAssertTrue(app.buttons["entry-main.swf"].waitForExistence(timeout: 45), "Open must return to FlashNest and finish the import")
-        XCTAssertTrue(app.buttons["entry-sub/level2/level3/child.swf"].exists, "Nested source directories must be discovered automatically")
+        LibraryNavigation.requireEntry("main.swf", in: app)
+        LibraryNavigation.requireEntry("sub/level2/level3/child.swf", in: app)
         XCTAssertFalse(open.exists, "System Files picker must be dismissed")
     }
 
@@ -133,6 +133,6 @@ final class FolderPickerUITests: XCTestCase {
         XCTAssertTrue(waitForImportControl(app), "Actual Cancel must return to the interactive app")
         openFixtureFolder(app)
         app.buttons["Open"].firstMatch.tap()
-        XCTAssertTrue(app.buttons["entry-sub/level2/level3/child.swf"].waitForExistence(timeout: 45))
+        LibraryNavigation.requireEntry("sub/level2/level3/child.swf", in: app)
     }
 }

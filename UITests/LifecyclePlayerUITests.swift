@@ -80,7 +80,7 @@ final class LifecyclePlayerUITests: XCTestCase {
                       "Save and restart must leave the game and its menu visibly interactive")
         // fullScreenCover retains the underlying Library in the AX tree. Its
         // mere existence is not an exit; it must not be an interactive surface.
-        let libraryImport = app.buttons["import-folder"].firstMatch
+        let libraryImport = app.buttons["import-menu"].firstMatch
         XCTAssertFalse(libraryImport.exists && libraryImport.isHittable,
                        "Save and restart must stay in the game, not expose interactive Library controls")
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "touch-key-")).count, 0,
@@ -157,7 +157,7 @@ final class LifecyclePlayerUITests: XCTestCase {
         }
         app.launchArguments = ["--flashnest-cross-container-ui-test", "-FlashNest.language", "en", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        let importButton = app.buttons["import-folder"].firstMatch
+        let importButton = LibraryNavigation.revealFolderImport(in: app)
         XCTAssertTrue(importButton.waitForExistence(timeout: 15)); XCTAssertTrue(wait { importButton.isHittable }); importButton.tap()
         XCTAssertTrue(app.navigationBars["FullDocumentManagerViewControllerNavigationBar"].waitForExistence(timeout: 15))
         let title = app.navigationBars.buttons[fixtureTitle + ", Actions Menu"].firstMatch
@@ -183,10 +183,9 @@ final class LifecyclePlayerUITests: XCTestCase {
         XCTAssertTrue(fileCell(named: "main.swf", in: app).waitForExistence(timeout: 5))
         XCTAssertTrue(fileCell(named: "sub", in: app).exists)
         app.buttons["Open"].firstMatch.tap()
-        let entry = app.buttons["entry-main.swf"].firstMatch
-        XCTAssertTrue(entry.waitForExistence(timeout: 45))
-        XCTAssertTrue(app.buttons["entry-sub/scene.swf"].exists)
-        entry.tap()
+        LibraryNavigation.requireEntry("main.swf", in: app)
+        LibraryNavigation.requireEntry("sub/scene.swf", in: app)
+        LibraryNavigation.requireEntry("main.swf", in: app, towardTop: true).tap()
         return app
     }
 

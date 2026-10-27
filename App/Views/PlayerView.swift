@@ -97,7 +97,10 @@ struct PlayerView: View {
             PlayerWebView(webView: webView)
                 .accessibilityIdentifier("player-stage")
         } else if session.failure == nil {
-            ProgressView(session.status).tint(.white).foregroundStyle(.white)
+            ProgressView {
+                Text(stageProgressMessage).fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.center)
+            }.tint(.white).foregroundStyle(.white).padding(24)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         if let failure = session.failure {
@@ -115,20 +118,32 @@ struct PlayerView: View {
         NavigationStack {
             Form {
                 Section {
-                    Button { sheet = nil } label: { Label(L10n.text("Resume game"), systemImage: "play.fill") }
+                    Button { sheet = nil } label: {
+                        Label(L10n.text("Resume game"), systemImage: "play.fill")
+                            .fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
+                    }
+                        .disabled(closing || checkpointing)
                         .accessibilityIdentifier("player-resume")
-                    Button { handleSaveManagementEntry(.request) } label: { Label(L10n.text("Save management"), systemImage: "externaldrive") }
-                        .disabled(closing).accessibilityIdentifier("player-saves")
+                    Button { handleSaveManagementEntry(.request) } label: {
+                        Label(L10n.text("Saves and restart"), systemImage: "externaldrive")
+                            .fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
+                    }
+                        .disabled(closing || checkpointing).accessibilityIdentifier("player-saves")
                 }
                 Section(L10n.text("Touch controls")) {
                     Toggle(L10n.text("Show touch controls"), isOn: $settings.isVisible)
                         .accessibilityIdentifier("controls-visible")
-                    HStack {
-                        Text(L10n.text("Control opacity"))
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(L10n.text("Control opacity"))
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 12)
+                            Text("\(Int((settings.opacity * 100).rounded()))%").monospacedDigit()
+                                .accessibilityIdentifier("control-opacity-value")
+                        }
                         Slider(value: $settings.opacity, in: 0.1...1, step: 0.05)
+                            .frame(minHeight: 44)
                             .accessibilityLabel(L10n.text("Control opacity")).accessibilityIdentifier("control-opacity")
-                        Text("\(Int((settings.opacity * 100).rounded()))%").monospacedDigit()
-                            .accessibilityIdentifier("control-opacity-value")
                     }
                     Button(L10n.text("Edit controls")) {
                         releaseKeys(); editingControls = true
@@ -138,45 +153,68 @@ struct PlayerView: View {
                         .accessibilityIdentifier("controls-reset")
                     Text(L10n.text("Touch controls are saved separately for each game."))
                         .font(.footnote).foregroundStyle(.secondary)
-                }
+                }.disabled(closing || checkpointing)
                 Section {
                     Button { sheet = .diagnostics } label: { Label(L10n.text("Diagnostics"), systemImage: "info.circle") }
+                        .disabled(closing || checkpointing)
                     if let failure = session.restartFailure ?? session.saveFailure { Text(failure).font(.footnote).foregroundStyle(.orange) }
                     Button(role: .destructive) { Task { await closeGame() } } label: {
                         Label(L10n.text("Close game"), systemImage: "xmark.circle")
-                    }.disabled(closing).accessibilityIdentifier("player-close")
+                            .fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
+                    }.disabled(closing || checkpointing).accessibilityIdentifier("player-close")
+                    if closing {
+                        operationProgress(L10n.text("Saving and closing…"), identifier: "player-close-progress")
+                    }
                 }
             }
             .navigationTitle(package.title).navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("Done")) { sheet = nil } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) {
+                Button(L10n.text("Done")) { sheet = nil }
+                    .frame(minWidth: 44, minHeight: 44).disabled(closing || checkpointing)
+            } }
         }
+        .interactiveDismissDisabled(closing || checkpointing)
     }
 
     private var saveOptionsPanel: some View {
         NavigationStack {
             Form {
                 Section {
-                    Button(L10n.text("Direct save (keep current scene)")) { handleSaveManagementEntry(.directSave) }
+                    Button { handleSaveManagementEntry(.directSave) } label: {
+                        saveActionLabel(L10n.text("Direct save (keep current scene)"))
+                    }
                         .disabled(closing || checkpointing).accessibilityIdentifier("save-entry-direct")
+                    if checkpointing {
+                        operationProgress(L10n.text("Copying game-written saves…"), identifier: "save-entry-progress")
+                    } else if let checkpointMessage {
+                        Text(checkpointMessage).font(.callout)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("save-entry-result")
+                    }
                     Text(L10n.text("Only copies save data the game has already written. Use the game's own save function first. This does not capture unsaved scene state or restart the game."))
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section {
-                    Button(L10n.text("Save and restart")) { handleSaveManagementEntry(.saveAndRestart) }
+                    Button { handleSaveManagementEntry(.saveAndRestart) } label: {
+                        saveActionLabel(L10n.text("Save and restart"))
+                    }
                         .disabled(closing || checkpointing).accessibilityIdentifier("save-entry-restart")
+                    if closing {
+                        operationProgress(L10n.text("Saving and restarting…"), identifier: "save-restart-progress")
+                    }
                     Text(L10n.text("Ends this scene, saves, closes the old player and clears temporary web caches before reopening the same game. Game files and saves are kept. Only game-saved progress is restored, not the exact scene."))
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section {
-                    Button(L10n.text("Manage backups")) { handleSaveManagementEntry(.requestManagement) }
+                    Button { handleSaveManagementEntry(.requestManagement) } label: {
+                        saveActionLabel(L10n.text("Manage backups"))
+                    }
                         .disabled(closing || checkpointing).accessibilityIdentifier("save-entry-manage")
                 }
-                if checkpointing { Section { ProgressView(L10n.text("Copying game-written saves…")) } }
-                if let checkpointMessage {
-                    Section { Text(checkpointMessage).accessibilityIdentifier("save-entry-result") }
-                }
                 Section {
-                    Button(L10n.text("Cancel"), role: .cancel) { handleSaveManagementEntry(.cancel) }
+                    Button(role: .cancel) { handleSaveManagementEntry(.cancel) } label: {
+                        saveActionLabel(L10n.text("Cancel"))
+                    }
                         .disabled(closing || checkpointing).accessibilityIdentifier("save-entry-cancel")
                 }
             }
@@ -194,9 +232,16 @@ struct PlayerView: View {
                         .accessibilityIdentifier("save-entry-warning")
                 }
                 Section {
-                    Button(L10n.text("Continue to save management")) { handleSaveManagementEntry(.confirmManagement) }
+                    Button { handleSaveManagementEntry(.confirmManagement) } label: {
+                        saveActionLabel(L10n.text("Continue to save management"))
+                    }
                         .disabled(closing).accessibilityIdentifier("save-entry-confirm")
-                    Button(L10n.text("Cancel"), role: .cancel) { sheet = .saveOptions }
+                    if closing {
+                        operationProgress(L10n.text("Saving and opening backups…"), identifier: "save-management-progress")
+                    }
+                    Button(role: .cancel) { sheet = .saveOptions } label: {
+                        saveActionLabel(L10n.text("Cancel"))
+                    }
                         .disabled(closing).accessibilityIdentifier("save-management-cancel")
                 }
             }
@@ -207,27 +252,62 @@ struct PlayerView: View {
 
     private var saveFailurePanel: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
-                Label(recoveryFailureTitle, systemImage: "exclamationmark.triangle")
-                    .font(.title2.bold())
-                if session.restartRequired {
-                    Text(L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again."))
-                } else {
-                    if let message = session.restartFailure ?? session.saveFailure { Text(message) }
-                    Text(L10n.text("The last saved copy is kept. Returning may discard unsaved progress."))
-                    Button(L10n.text("Return to last saved game")) { acceptedSaveRecovery = true; sheet = nil }
-                        .buttonStyle(.borderedProminent)
-                }
-                Button(L10n.text("Close without saving"), role: .destructive) {
-                    Task {
-                        closing = true; releaseKeys()
-                        do { try await session.closeWithoutSaving(); dismiss() }
-                        catch { closing = false }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Label(recoveryFailureTitle, systemImage: "exclamationmark.triangle")
+                        .font(.title2.bold())
+                    if session.restartRequired {
+                        Text(L10n.text("Saving did not finish safely. Close and reopen FlashNest before opening this game again."))
+                    } else {
+                        if let message = session.restartFailure ?? session.saveFailure { Text(message) }
+                        Text(L10n.text("The last saved copy is kept. Returning may discard unsaved progress."))
+                        Button { acceptedSaveRecovery = true; sheet = nil } label: {
+                            saveActionLabel(L10n.text("Return to last saved game"))
+                        }.buttonStyle(.borderedProminent).disabled(closing)
                     }
-                }.disabled(closing)
-            }.padding(24).frame(maxWidth: 560, maxHeight: .infinity, alignment: .topLeading)
-                .navigationTitle(recoveryFailureTitle).navigationBarTitleDisplayMode(.inline)
+                    Button(role: .destructive) {
+                        Task {
+                            closing = true; releaseKeys()
+                            do { try await session.closeWithoutSaving(); dismiss() }
+                            catch { closing = false }
+                        }
+                    } label: {
+                        saveActionLabel(L10n.text("Close without saving"))
+                    }.disabled(closing)
+                    if closing {
+                        operationProgress(L10n.text("Closing game…"), identifier: "save-recovery-progress")
+                    }
+                }.fixedSize(horizontal: false, vertical: true)
+                    .padding(24).frame(maxWidth: 560, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }.navigationTitle(recoveryFailureTitle).navigationBarTitleDisplayMode(.inline)
         }.interactiveDismissDisabled()
+    }
+
+    private func saveActionLabel(_ title: String) -> some View {
+        Text(title).fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+    }
+
+    private func operationProgress(_ title: String, identifier: String) -> some View {
+        ProgressView {
+            Text(title).font(.callout).fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .accessibilityIdentifier(identifier)
+    }
+
+    private var stageProgressMessage: String {
+        // Session.status can still say Playing while the old page is closing.
+        // Describe the whole operation; the view does not invent save phases.
+        guard closing else { return session.status }
+        switch sheet {
+        case .saveOptions: return L10n.text("Saving and restarting…")
+        case .saveEntryConfirmation: return L10n.text("Saving and opening backups…")
+        case .saveFailure: return L10n.text("Closing game…")
+        default: return L10n.text("Saving and closing…")
+        }
     }
 
     private var diagnosticsPanel: some View {
