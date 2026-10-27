@@ -38,6 +38,7 @@ jobs:
           echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
           echo "Selected existing iOS 18.2 device $device_id"
       - name: Install separate source application for cross-container selection
+        id: source_app
         run: |
           set -euo pipefail
           device_id='${{ steps.simulator.outputs.device_id }}'
@@ -51,6 +52,9 @@ jobs:
           touch "$RUNNER_TEMP/flashnest-wk-tests-start"
           xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 120 -derivedDataPath build-picker -resultBundlePath SaveInputTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/InputFocusRuntimeTests -only-testing:FlashNestTests/SaveManagementEntryPolicyTests -only-testing:FlashNestTests/SharedObjectPersistenceTests -only-testing:FlashNestTests/LastSessionDiagnosticsTests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee save-input-test.log
       - name: Tap the real Files Open and Cancel controls
+        # Collect independent UI evidence even if a native diagnostic test fails.
+        # The failed native step still makes the overall workflow fail.
+        if: ${{ !cancelled() && steps.source_app.outcome == 'success' }}
         timeout-minutes: 20
         run: |
           set -o pipefail

@@ -237,30 +237,49 @@ import CryptoKit
     }
 
     func testCloseWaitsForCheckpointThenStillClosesPlayer() async throws {
+        executionTimeAllowance = 90
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let store = SaveStore(root: root.appendingPathComponent("save"))
         let package = try fixturePackage(in: root.appendingPathComponent("packages"))
         let content = root.appendingPathComponent("packages").appendingPathComponent(package.id.uuidString).appendingPathComponent("content")
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previous = scene.windows.first(where: { $0.isKeyWindow })
+        let window = UIWindow(windowScene: scene)
+        let controller = UIViewController()
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
         let session = PlayerSession(saveStore: store)
-        defer { session.stop() }
+        defer { session.stop(); window.isHidden = true; previous?.makeKey() }
+        print("FLASHNEST_CHECKPOINT_ORDER phase=bootstrap-begin")
         await session.start(package: package, contentRoot: content, storageOnly: true)
-        let deadline = Date().addingTimeInterval(15)
+        let view = try XCTUnwrap(session.webView)
+        view.frame = controller.view.bounds
+        controller.view.addSubview(view)
+        // iOS18.2 CI recorded15.569s merely launching WebContent. Give cold
+        // test-process startup its own bound; production capture stays15s.
+        let deadline = Date().addingTimeInterval(30)
         while !session.saveReady, session.failure == nil, Date() < deadline {
             try await Task.sleep(nanoseconds: 50_000_000)
         }
-        XCTAssertTrue(session.saveReady)
-        let view = try XCTUnwrap(session.webView)
+        print("FLASHNEST_CHECKPOINT_ORDER phase=bootstrap-end ready=\(session.saveReady) failed=\(session.failure != nil) loading=\(view.isLoading) attached=\(view.window != nil) diagnostics=\(session.diagnostics.count)")
+        XCTAssertTrue(session.saveReady, "Visible storage-only page must finish bootstrap before fault injection")
+        guard session.saveReady else {
+            try? await session.closeWithoutSaving()
+            throw SaveStoreError.invalid("fixture storage bootstrap did not become ready")
+        }
         try await replaceBridgeMethod("captureWrittenSaves",
             implementation: "() => new Promise(resolve => { window.__resolveCheckpoint = resolve; })", in: view)
         let checkpoint = Task { @MainActor in await session.checkpointWrittenSaves() }
         var closing: Task<Bool, Never>?
         do {
+        let resolverDeadline = Date().addingTimeInterval(5)
         var waiting = false
-        while !waiting, Date() < deadline {
+        while !waiting, Date() < resolverDeadline {
             waiting = (try await view.evaluateJavaScript("typeof window.__resolveCheckpoint === 'function'") as? Bool) == true
             if !waiting { try await Task.sleep(nanoseconds: 20_000_000) }
         }
+        print("FLASHNEST_CHECKPOINT_ORDER phase=resolver waiting=\(waiting) ready=\(session.saveReady) failed=\(session.failure != nil)")
         XCTAssertTrue(waiting)
         guard waiting else { throw SaveStoreError.invalid("fixture checkpoint never entered injected wait") }
         let close = Task { @MainActor in await session.closeAndSave() }
@@ -271,6 +290,7 @@ import CryptoKit
         _ = try await view.evaluateJavaScript("window.__resolveCheckpoint({version:1,entries:[]}); true")
         let copied = await checkpoint.value
         let closed = await close.value
+        print("FLASHNEST_CHECKPOINT_ORDER phase=complete checkpoint=\(copied) close=\(closed) pageReleased=\(session.webView == nil)")
         XCTAssertFalse(copied, "Empty read is not a save")
         XCTAssertTrue(closed, "Close must not merely return checkpoint's false result")
         XCTAssertNil(session.webView)
