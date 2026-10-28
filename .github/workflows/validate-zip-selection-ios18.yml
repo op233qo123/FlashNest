@@ -1,0 +1,113 @@
+name: Validate ZIP selection on exact iOS 18.2 (manual synthetic only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-zip-selection-ios18
+  cancel-in-progress: false
+jobs:
+  picker:
+    # Standard GitHub-hosted runner, no larger or self-hosted runners.
+    runs-on: macos-14
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        arm: [baseline, candidate]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 7f51087c662688bda6757df08d94c0aca7ae2e0e
+          path: candidate
+          persist-credentials: false
+      - name: Require existing Xcode 16.2 and exact iOS 18.2 before build
+        id: simulator
+        run: |
+          set -euo pipefail
+          exec > >(tee environment.log) 2>&1
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          xcodebuild -version
+          xcodebuild -version | grep -Fx 'Xcode 16.2'
+          xcrun simctl list runtimes
+          device_id=$(xcrun simctl list devices available --json | python3 candidate/scripts/select_simulator.py 18.2)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+          # Disposable hosted simulator, never a connected user's device.
+          xcrun simctl shutdown "$device_id" || true
+          xcrun simctl erase "$device_id"
+          python3 -c 'import subprocess,sys; subprocess.run(["xcrun","simctl","bootstatus",sys.argv[1],"-b"],check=True,timeout=120)' "$device_id"
+          xcrun simctl list devices available --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any(x["udid"] == sys.argv[1] for x in d["devices"].get("com.apple.CoreSimulator.SimRuntime.iOS-18-2", [])), "Exact iOS 18.2 required"' "$device_id"
+      - name: Stage exact 155 source and isolated picker-only differential
+        run: |
+          set -euo pipefail
+          exec > >(tee stage.log) 2>&1
+          python3 recipe/experiments/test-ipa-155/stage.py candidate
+          python3 recipe/experiments/zip-selection/stage.py candidate '${{ matrix.arm }}'
+      - name: Retrieve exact previously built original engine (no engine build)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          exec > >(tee candidate/runtime-fetch.log) 2>&1
+          gh api repos/op233qo123/FlashNest/actions/artifacts/12783974867/zip > candidate/vendor/ruffle-audio-recovery-40614335019.zip
+          echo '3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a  candidate/vendor/ruffle-audio-recovery-40614335019.zip' | shasum -a 256 --check
+          python3 candidate/scripts/fetch_runtime.py
+      - name: Generate pinned project and resolve locked package
+        working-directory: candidate
+        run: |
+          set -euo pipefail
+          exec > >(tee project-build.log) 2>&1
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNestUI -disableAutomaticPackageResolution
+      - name: Native importer and flow safety tests
+        timeout-minutes: 10
+        working-directory: candidate
+        run: |
+          set -euo pipefail
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -derivedDataPath build -resultBundlePath NativeTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/PackageImporterTests -only-testing:FlashNestTests/ImportFlowTests -only-testing:FlashNestTests/ImportAliasTests -only-testing:FlashNestTests/LocalImportInboxTests -only-testing:FlashNestTests/ExternalImportInboxTests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee native-test.log
+      - name: Install synthetic-only source app and clear target test data
+        working-directory: candidate
+        run: |
+          set -euo pipefail
+          exec > >(tee source-build.log) 2>&1
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNestFixtureSource -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -derivedDataPath build-source -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+          xcrun simctl install '${{ steps.simulator.outputs.device_id }}' build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app
+          xcrun simctl uninstall '${{ steps.simulator.outputs.device_id }}' com.flashnest.app
+      - name: Real system picker cancel select repeat ZIP SWF folder
+        timeout-minutes: 12
+        working-directory: candidate
+        run: |
+          set -euo pipefail
+          xcodebuild test -project FlashNest.xcodeproj -scheme FlashNestUI -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -derivedDataPath build -resultBundlePath PickerTests.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 480 -maximum-test-execution-time-allowance 480 -only-testing:FlashNestUITests/ZIPSelectionUITests CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee picker-test.log
+      - name: Verify unchanged originals and exact private copies read-only
+        run: |
+          set -euo pipefail
+          python3 recipe/experiments/zip-selection/verify_containers.py '${{ steps.simulator.outputs.device_id }}' candidate/copy-verification.json 2>&1 | tee candidate/copy-verification.log
+      - name: Export bounded synthetic test evidence, including build failures
+        if: always()
+        run: python3 recipe/experiments/zip-selection/collect_evidence.py candidate
+      - name: Require exact test counts, no skips and private-copy proof
+        if: always()
+        run: |
+          set -euo pipefail
+          python3 recipe/experiments/zip-selection/verify_results.py candidate/evidence 2>&1 | tee candidate/evidence/result-verification.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ZIP-selection-iOS18.2-${{ matrix.arm }}
+          path: candidate/evidence
+          if-no-files-found: warn
+          retention-days: 1
