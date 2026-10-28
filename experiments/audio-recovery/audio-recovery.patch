@@ -66,7 +66,7 @@
          });
  
 +        // Bind before the autoplay/visibility wait or any frontend resume.
-+        const context = this.instance.audio_context();
++        const context = this.instance?.audio_context();
 +        if (context) {
 +            this.releaseAudioContext = bindAudioContext(context, (detail) => {
 +                this.element.dispatchEvent(new CustomEvent("ruffle-audio-status", { detail }));

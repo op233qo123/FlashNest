@@ -1,6 +1,6 @@
 # Experimental source-bound audio-device recovery
 
-**Unbuilt and unpromoted.** This isolated experiment does not replace the shipped
+**Experimental and unpromoted.** This isolated experiment does not replace the shipped
 runtime or alter the application, games, saves, renderer selection or media policy.
 It contains original diagnostics only. A successful build is not proof that a
 particular phone's audio hardware interruption or other crashes are repaired.
@@ -93,7 +93,11 @@ The verified previous build recipe is reused: Rust1.99.1, Node24.22.1,
 wasm-bindgen0.2.127, checksum-pinned Binaryen129 and Temurin21.0.13+9,
 upstream Cargo.lock/package-lock.json, dual WASM and original59 core JS tests.
 Early standalone TypeScript compilation and23 source-helper groups run before
-expensive WASM compilation. Gates also retain ownership-model2, original
+expensive WASM compilation. Full core TypeScript needs generated declarations: the
+build first generates genuine extensions bindings and typechecks all core sources
+before the MVP compile, then retains the complete ordinary dual-WASM build, its
+fresh-declaration typecheck and unchanged59 JS gate. No fabricated or borrowed ABI
+declarations are used. Gates also retain ownership-model2, original
 frame-order2, adjacent31 (including their two preexisting known-failure goldens),
 and the real Chrome22 ownership cases on baseline versus candidate. Original
 browser observers and golden expectations are not modified.
@@ -116,3 +120,20 @@ Partial failure artifacts are retained and cannot be promoted by this workflow.
 This change does not fix WebContent process termination, JSC/WASM faults, GPU
 context loss, missing rendering features, input problems or memory pressure by
 assertion. Those failure tracks require separate evidence and tests.
+
+## Initial build evidence and nullable lookup repair
+
+Run [40611265560](https://github.com/op233qo123/FlashNest/actions/runs/40611265560)
+at experiment commit `8bcb79f65f165c23b57bb324008ec76431744781` passed the23
+source-helper groups, ownership-model2 and original2/adjacent31 core gates. Both
+WASM flavors compiled, but full core TypeScript then rejected the newly added
+nullable instance lookup (TS2531). CoreJS59 and Chrome22 were not accepted;
+artifact12783219780 is failure evidence, not a validated candidate.
+
+The repair uses optional context lookup after the builder returns. A null
+instance or absent audio context cannot be bound; the existing downstream
+instance/error handling is unchanged. No non-null assertion, fake context,
+recovery classification or retry predicate is added. The binding remains before
+autoplay. The separately tested source helper and Weak ownership layer are
+byte-identical. The full-core gate above now catches integration errors after
+genuine extensions declarations exist and before the second expensive flavor.

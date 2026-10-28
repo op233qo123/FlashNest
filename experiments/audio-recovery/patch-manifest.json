@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
   "prerequisiteWeakPatchSHA256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9",
-  "patchSHA256": "c1f377fb941ccbfccdfbeb1685acd577061d41a5462bb428c5f2d7baebc45a6e",
+  "patchSHA256": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60",
   "files": [
     {
       "path": "web/src/audio.rs",
@@ -22,8 +22,8 @@
       "path": "web/packages/core/src/internal/player/inner.tsx",
       "originalSHA256": "3161d60d8470c23cb93b99efcb4027ec53854ef6c7a304f2d7127ecaca1d8120",
       "beforeRecoverySHA256": "3161d60d8470c23cb93b99efcb4027ec53854ef6c7a304f2d7127ecaca1d8120",
-      "modifiedSHA256": "5c16e1675992f12fcf5be7980435f8ef09a0efdbfb39e4f61e6d1b65b2f2ad72",
-      "bytes": 92822
+      "modifiedSHA256": "657d499e59031824cc1e976fa21f3b74d72f9d855ff7a0e3f016676932b3df77",
+      "bytes": 92823
     },
     {
       "path": "web/packages/core/src/internal/audio-operation.ts",

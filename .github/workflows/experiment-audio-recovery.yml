@@ -41,6 +41,7 @@ jobs:
           python3 experiments/audio-lifecycle/fixtures/validate_fixture.py
           python3 experiments/audio-lifecycle/engine-build/test_helpers.py
           python3 experiments/audio-recovery/engine-build/test_helpers.py
+          python3 experiments/audio-recovery/engine-build/test_compile_gate.py
           node experiments/audio-lifecycle/browser-tests/test_observer.mjs
           node experiments/audio-lifecycle/browser-tests/test_console_observer.mjs
           node experiments/audio-lifecycle/browser-tests/test_contracts.mjs

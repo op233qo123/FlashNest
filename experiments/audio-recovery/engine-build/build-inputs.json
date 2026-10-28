@@ -15,7 +15,7 @@
     },
     {
       "path": "experiments/audio-recovery/audio-recovery.patch",
-      "sha256": "c1f377fb941ccbfccdfbeb1685acd577061d41a5462bb428c5f2d7baebc45a6e"
+      "sha256": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60"
     }
   ],
   "expectedOriginalCoreJSTests": 59,
