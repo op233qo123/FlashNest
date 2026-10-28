@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "reviewedAtUTC": "2026-10-28T18:00:00Z",
+  "scope": "Final production source and bounded local tests; eligible for experimental engine build only",
+  "productionAccepted": true,
+  "strongMigrationRootsPresent": false,
+  "testOnlyReleaseHooksEnabled": false,
+  "modifiedSourceSetSHA256": "0434fe9a2a3d2e4637938f6b0f67fe7eff17dd777ea940f02b29febc8b6d70aa",
+  "modifiedSourceFileCount": 58,
+  "runtimeAggregateSHA256": "44feaebb0359cc305f60b6514a7898b5717237a45e3e1c2c68c94fa7802e6540",
+  "nativeAcceptance": false,
+  "browserAcceptance": false,
+  "ipaAcceptance": false,
+  "physicalDeviceAcceptance": false,
+  "runtimeValidated": false,
+  "sourceVerification": {
+    "independentThreeWayMergedFiles": 38,
+    "independentRuntimeAggregateFiles": 54,
+    "unchangedTestedSourceFiles": 26040,
+    "testedSourceManifestSHA256": "ec15971796836a6d5d6e9caabbb6a14eb48080bdd1db73de991f13fdd69c2c9c",
+    "finalEvidenceIndexSHA256": "297dc2acadcdd90dea450fe2133b52635566cb9698499979dc74025f4593cf4b",
+    "verifiedEvidenceRecords": 259
+  },
+  "localResults": {
+    "audioCorePassed": 144,
+    "nullCorePassed": 126,
+    "graphControlsPassed": 5,
+    "compatibilityGoldenPassed": 35,
+    "parentInvariantCasesPassed": 5,
+    "parentGoldenPassed": false,
+    "parentRawGoldenExit": 101,
+    "hostWebCheckPassed": true,
+    "hostWebLogSHA256": "176c11f4a764b8447c1773d31e9cff652cd82cfef9ebf2094188921917f7468d",
+    "largeRepeatedFixture": {
+      "singleFinalRun": true,
+      "transitions": 6,
+      "legitimateCompletions": 6,
+      "cancelledCompletions": 0,
+      "wallSeconds": 25.236251816997537,
+      "timeoutSeconds": 120,
+      "rssBoundBytes": 1073741824,
+      "kernelPeakRSSBytes": 541073408,
+      "previousKernelPeakRSSBytes": 540491776,
+      "lateObservedRSSBytes": [
+        494276608,
+        334876672
+      ],
+      "peakReductionEstablished": false,
+      "plateauEstablished": false,
+      "gpuEvidence": false,
+      "iosEvidence": false,
+      "checkpointTimingSynchronous": false
+    }
+  },
+  "remainingGates": [
+    "Actual release-equivalent extensions/MVP WASM build with exact provenance and complete notices",
+    "Final runtime browser geometry/input/fallback validation",
+    "Exact iOS 18.2 simulator native picker, density/status, save and audio recovery validation",
+    "Final test IPA byte correspondence and user delivery"
+  ],
+  "limitations": [
+    "Known weak-library and owning-audio retention risks repaired; this does not identify or certify the phone WebContent termination cause.",
+    "Large-fixture peak remains approximately 516 MiB; late in-process RSS fall is observed but is not a stable plateau or guaranteed memory-pressure safety.",
+    "Normal-frame GC debt targets are object credits, not a wall-clock or maximum-frame-latency guarantee.",
+    "Native sound output, real device GPU behavior and total active audio graph count are not certified by these host tests.",
+    "MVP shipping loader path execution remains unestablished unless a supported natural route is observed."
+  ]
+}

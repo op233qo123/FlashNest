@@ -1,0 +1,80 @@
+name: FlashNest final composite engine (manual, source-gated)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-final-composite-engine
+  cancel-in-progress: false
+jobs:
+  engine:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+      CARGO_BUILD_JOBS: 1
+      CARGO_INCREMENTAL: 0
+      CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+      PREP: experiments/final-composite
+      APP_SOURCE: ${{ github.workspace }}/experiments/final-composite/app
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Refuse incomplete production source before installing or building
+        run: python3 "$PREP/scripts/check_contract.py" --mode engine
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ruffle-rs/ruffle
+          ref: 89a7049965f3090e706265670df309a5128233ac
+          path: .final-composite-source
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Reconstruct and verify exact final reviewed source
+        run: python3 "$PREP/scripts/stage_engine.py" .final-composite-source --engine-gate
+      - name: Install original pinned build toolchain
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.1 --profile minimal --component rust-src --target wasm32-unknown-unknown
+          sudo apt-get update
+          sudo apt-get install -y clang-18 libclang-18-dev libssl-dev pkg-config
+          cargo install --locked wasm-bindgen-cli --version 0.2.127
+          curl --fail --location --retry 2 --max-time 180 https://github.com/WebAssembly/binaryen/releases/download/version_129/binaryen-version_129-x86_64-linux.tar.gz -o "$RUNNER_TEMP/binaryen.tar.gz"
+          echo "50b9fa62b9abea752da92ec57e0c555fee578760cd237c40107957715d2976ba  $RUNNER_TEMP/binaryen.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/binaryen"
+          tar -xzf "$RUNNER_TEMP/binaryen.tar.gz" -C "$RUNNER_TEMP/binaryen" --strip-components=1
+          echo "$RUNNER_TEMP/binaryen/bin" >> "$GITHUB_PATH"
+          curl --fail --location --retry 2 --max-time 180 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.13_9.tar.gz' -o "$RUNNER_TEMP/jre.tar.gz"
+          echo "a535a1df9c6284d9618872984e026ae0352d1f7e9e0605425c0e6114f47351dd  $RUNNER_TEMP/jre.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/jre"
+          tar -xzf "$RUNNER_TEMP/jre.tar.gz" -C "$RUNNER_TEMP/jre" --strip-components=1
+          echo "$RUNNER_TEMP/jre/bin" >> "$GITHUB_PATH"
+          mkdir -p toolchain-evidence
+          dpkg-query -W clang-18 libclang-18-dev libssl-dev pkg-config > toolchain-evidence/system-packages.txt
+          printf '%s\n' "image=${ImageOS:-unknown}/${ImageVersion:-unknown}" > toolchain-evidence/image.txt
+      - name: Locked frontend dependencies and complete license preflight
+        run: |
+          set -euo pipefail
+          cd .final-composite-source/web
+          npm ci
+          cd "$GITHUB_WORKSPACE"
+          python3 "$APP_SOURCE/scripts/test_licenses.py"
+      - name: Build actual extensions and MVP with JPEG-XR and wasm-opt
+        timeout-minutes: 65
+        run: bash "$PREP/scripts/build_engine.sh" .final-composite-source final-composite-engine
+      - name: Bound partial or complete engine evidence
+        id: engine-budget
+        if: always()
+        run: python3 "$PREP/scripts/evidence_budget.py" final-composite-engine --max-bytes 268435456
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.engine-budget.outputs.allowed == 'true'
+        with:
+          name: FlashNest-final-composite-engine-not-IPA
+          path: |
+            final-composite-engine
+            toolchain-evidence
+          if-no-files-found: warn
+          retention-days: 1

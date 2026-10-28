@@ -1,0 +1,3540 @@
+--- a/core/src/avm1/activation.rs
++++ b/core/src/avm1/activation.rs
+@@ -2976,7 +2976,7 @@
+             level
+         } else {
+             let level: DisplayObject<'_> =
+-                MovieClip::new(self.base_clip().movie(), self.gc()).into();
++                MovieClip::new_with_library(self.base_clip().movie(), self.context).into();
+ 
+             level.set_depth(level_id);
+             level.set_default_root_name(self.context);
+--- a/core/src/avm1/globals/bitmap_data.rs
++++ b/core/src/avm1/globals/bitmap_data.rs
+@@ -78,6 +78,7 @@
+     bitmap_data: BitmapData<'gc>,
+     activation: &mut Activation<'_, 'gc>,
+ ) -> Object<'gc> {
++    activation.context.library.request_native_gc();
+     let gc_context = activation.gc();
+ 
+     let object = Object::new_without_proto(gc_context);
+@@ -117,6 +118,7 @@
+         return Ok(Value::Undefined);
+     }
+ 
++    activation.context.library.request_native_gc();
+     let bitmap_data = BitmapData::new(
+         activation.context.gc_context,
+         width,
+@@ -431,6 +433,7 @@
+     };
+ 
+     bitmap_data.dispose(activation.gc());
++    activation.context.library.request_native_gc();
+     Ok(Value::Undefined)
+ }
+ 
+@@ -1325,7 +1328,7 @@
+     );
+ 
+     let character = library
+-        .library_for_movie(movie)
++        .library_for_movie(movie, activation.context.gc_context)
+         .and_then(|l| l.character_by_export_name(&name));
+ 
+     let Some((_id, Character::Bitmap(bitmap))) = character else {
+--- a/core/src/avm1/globals/movie_clip.rs
++++ b/core/src/avm1/globals/movie_clip.rs
+@@ -790,11 +790,12 @@
+         return Ok(Value::Undefined);
+     }
+ 
+-    if let Some(new_clip) = activation
++    let library_item = activation
+         .context
+         .library
+-        .library_for_movie(movie_clip.movie())
+-        .and_then(|l| l.instantiate_by_export_name(&export_name, activation.gc()))
++        .library_for_movie(movie_clip.movie(), activation.context.gc_context)
++        .and_then(|l| l.instantiate_by_export_name(&export_name, activation.gc()));
++    if let Some(new_clip) = library_item
+     {
+         new_clip.set_placed_by_avm1_script(true);
+         // Set name and attach to parent.
+@@ -837,7 +838,7 @@
+ 
+     // Create empty movie clip.
+     let swf_movie = movie_clip.movie();
+-    let new_clip = MovieClip::new(swf_movie, activation.gc());
++    let new_clip = MovieClip::new_with_library(swf_movie, activation.context);
+     new_clip.set_placed_by_avm1_script(true);
+ 
+     // Set name and attach to parent.
+@@ -977,13 +978,13 @@
+     #[allow(clippy::question_mark)]
+     let cloned_sprite = if sprite.id() != 0 {
+         // Clip from SWF; instantiate a new copy.
+-        let library = context.library.library_for_movie(movie).unwrap();
++        let library = context.library.library_for_movie(movie, context.gc_context).unwrap();
+         library
+             .instantiate_by_id(sprite.id(), context.gc())
+             .unwrap()
+     } else if sprite.as_movie_clip().is_some() {
+         // Dynamically created MovieClip; create a new empty movie clip.
+-        MovieClip::new(movie, context.gc()).as_displayobject()
++        MovieClip::new_with_library(movie, context).as_displayobject()
+     } else if let Some(et) = sprite.as_edit_text() {
+         // Dynamically created TextField; create a new text field.
+         EditText::new(
+--- a/core/src/avm1/globals/sound.rs
++++ b/core/src/avm1/globals/sound.rs
+@@ -1,6 +1,6 @@
+ //! AVM1 Sound object
+ 
+-use std::cell::Cell;
++use std::cell::{Cell, RefCell};
+ use std::fmt;
+ use std::io::Cursor;
+ 
+@@ -115,7 +115,8 @@
+ #[collect(no_drop)]
+ struct SoundData<'gc> {
+     /// The sound that is attached to this object.
+-    sound: Cell<Option<SoundHandle>>,
++    #[collect(require_static)]
++    sound: RefCell<Option<SoundHandle>>,
+ 
+     /// The instance of the last played sound on this object.
+     sound_instance: Cell<Option<SoundInstanceHandle>>,
+@@ -143,7 +144,7 @@
+     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+         f.debug_struct("Sound")
+             .field("ptr", &Gc::as_ptr(self.0))
+-            .field("sound", &self.0.sound.get())
++            .field("sound", &self.0.sound.borrow().clone())
+             .field("sound_instance", &self.0.sound_instance.get())
+             .field("target", &self.0.target)
+             .finish()
+@@ -155,7 +156,7 @@
+         Sound(Gc::new(
+             mc,
+             SoundData {
+-                sound: Cell::new(None),
++                sound: RefCell::new(None),
+                 sound_instance: Cell::new(None),
+                 target,
+                 position: Cell::new(0),
+@@ -174,7 +175,7 @@
+     }
+ 
+     pub fn sound(self) -> Option<SoundHandle> {
+-        self.0.sound.get()
++        self.0.sound.borrow().clone()
+     }
+ 
+     pub fn set_sound(
+@@ -183,7 +184,7 @@
+         sound_object: Object<'gc>,
+         sound: Option<SoundHandle>,
+     ) {
+-        self.0.sound.set(sound);
++        *self.0.sound.borrow_mut() = sound;
+ 
+         // `position` and `duration` are only defined when a sound is loaded.
+         if !sound_object.has_property(activation, istr!("position"))
+@@ -458,18 +459,19 @@
+             return Ok(Value::Undefined);
+         };
+ 
+-        if let Some((_, Character::Sound(sound_handle))) = activation
++        let library_item = activation
+             .context
+             .library
+-            .library_for_movie_mut(movie)
+-            .character_by_export_name(&name)
++            .library_for_movie_mut(movie, activation.context.gc_context)
++            .character_by_export_name(&name);
++        if let Some((_, Character::Sound(sound_handle))) = library_item
+         {
+-            sound.set_sound(activation, this, Some(sound_handle));
++            sound.set_sound(activation, this, Some((*sound_handle).clone()));
+             sound.set_duration(
+                 activation
+                     .context
+                     .audio
+-                    .get_sound_duration(sound_handle)
++                    .get_sound_duration(&sound_handle)
+                     .map(|d| d.as_millis().round() as u32),
+             );
+             sound.set_position(0);
+@@ -880,16 +882,17 @@
+                 return Ok(Value::Undefined);
+             };
+ 
+-            if let Some((_, Character::Sound(sound))) = activation
++            let library_item = activation
+                 .context
+                 .library
+-                .library_for_movie_mut(movie)
+-                .character_by_export_name(&name)
++                .library_for_movie_mut(movie, activation.context.gc_context)
++                .character_by_export_name(&name);
++            if let Some((_, Character::Sound(sound))) = library_item
+             {
+                 // FIXME: This isn't entirely correct. We should only
+                 // stop sounds with this name on this particular sound object;
+                 // right now we're stopping *all* sound objects playing this sound.
+-                activation.context.stop_sounds_with_handle(sound);
++                activation.context.stop_sounds_with_handle((*sound).clone());
+             } else {
+                 avm_warn!(activation, "Sound.stop: Sound '{}' not found", name);
+             }
+--- a/core/src/avm2.rs
++++ b/core/src/avm2.rs
+@@ -470,8 +470,9 @@
+ 
+         let class = class_object.inner_class_definition();
+ 
+-        let library = activation.context.library.library_for_movie_mut(movie);
++        let library = activation.context.library.library_for_movie_mut(movie, activation.context.gc_context);
+         let character = library.character_by_id(id);
++        drop(library);
+ 
+         if let Some(character) = character {
+             if matches!(
+@@ -535,7 +536,10 @@
+         }
+ 
+         let num_scripts = abc.scripts.len();
+-        let tunit = TranslationUnit::from_abc(abc, domain, name, movie, activation.gc());
++        let owner = activation.context.library.existing_movie_library_handle(&movie, activation.context.gc_context)
++            .or_else(|| movie.is_movie().then(|| activation.context.library
++                .movie_library_handle(movie.clone(), activation.context.gc_context)));
++        let tunit = TranslationUnit::from_abc(abc, domain, name, movie, owner, activation.gc());
+         tunit.load_classes(&mut activation)?;
+         for i in 0..num_scripts {
+             tunit.load_script(i as u32, &mut activation)?;
+@@ -565,7 +569,11 @@
+         // domain using `activation.domain()`
+         activation.set_outer(ScopeChain::new(domain));
+ 
+-        let tunit = TranslationUnit::from_abc(abc, domain, None, movie, activation.gc());
++        // load_playerglobal rejects every tag except DoAbc2/End, so builtin ABC
++        // has no symbol library to retain. Its native movie/ABC bytes stay owned
++        // by TranslationUnit as before; do not create an empty rooted library.
++        let owner = None;
++        let tunit = TranslationUnit::from_abc(abc, domain, None, movie, owner, activation.gc());
+ 
+         globals::init_early_classes(&mut activation, tunit).expect("Early classes should load");
+ 
+--- a/core/src/avm2/class.rs
++++ b/core/src/avm2/class.rs
+@@ -17,6 +17,8 @@
+ use crate::avm2::value::Value;
+ use crate::avm2::vtable::{VTable, VTableInitError};
+ use crate::context::UpdateContext;
++use crate::library::MovieLibraryHandle;
++use swf::CharacterId;
+ use crate::string::{AvmString, WString};
+ use bitflags::bitflags;
+ use fnv::FnvHashMap;
+@@ -105,6 +107,8 @@
+ #[derive(Collect)]
+ #[collect(no_drop)]
+ pub struct ClassData<'gc> {
++    /// SymbolClass ownership belongs to the class, never a rooted global map.
++    library_symbol: Lock<Option<(MovieLibraryHandle<'gc>, CharacterId)>>,
+     /// The name of the class.
+     name: Lock<QName<'gc>>,
+ 
+@@ -218,6 +222,7 @@
+     /// Create an unlinked & unloaded class.
+     fn empty(name: QName<'gc>) -> Self {
+         Self {
++            library_symbol: Lock::new(None),
+             name: Lock::new(name),
+             param: Lock::new(None),
+             super_class: None,
+@@ -242,6 +247,14 @@
+ }
+ 
+ impl<'gc> Class<'gc> {
++    pub(crate) fn library_symbol(self) -> Option<(MovieLibraryHandle<'gc>, CharacterId)> {
++        self.0.library_symbol.get()
++    }
++
++    pub(crate) fn set_library_symbol(self, owner: MovieLibraryHandle<'gc>, id: CharacterId, mc: &Mutation<'gc>) {
++        unlock!(Gc::write(mc, self.0), ClassData, library_symbol).set(Some((owner, id)));
++    }
++
+     pub fn as_ptr(self) -> *const () {
+         Gc::as_ptr(self.0).cast()
+     }
+--- a/core/src/avm2/globals/flash/display/bitmap.rs
++++ b/core/src/avm2/globals/flash/display/bitmap.rs
+@@ -40,17 +40,12 @@
+             );
+         }
+ 
+-        if let Some((movie, symbol)) = activation
+-            .context
+-            .library
+-            .avm2_class_registry()
++        let symbol_character = activation.context.library.avm2_class_registry()
+             .class_symbol(class)
+-            && let Some(Character::Bitmap(bitmap)) = activation
+-                .context
+-                .library
+-                .library_for_movie_mut(movie)
+-                .character_by_id(symbol)
+-        {
++            .and_then(|(movie, symbol)| activation.context.library
++                .library_for_movie_mut(movie, activation.context.gc_context)
++                .character_by_id(symbol));
++        if let Some(Character::Bitmap(bitmap)) = symbol_character {
+             let new_bitmap_data = fill_bitmap_data_from_symbol(activation, bitmap.compressed());
+             let bitmap_data_obj =
+                 BitmapDataObject::from_bitmap_data(activation.context, new_bitmap_data);
+--- a/core/src/avm2/globals/flash/display/bitmap_data.rs
++++ b/core/src/avm2/globals/flash/display/bitmap_data.rs
+@@ -108,7 +108,7 @@
+             activation
+                 .context
+                 .library
+-                .library_for_movie_mut(movie)
++                .library_for_movie_mut(movie, activation.context.gc_context)
+                 .character_by_id(chara_id)
+         });
+ 
+@@ -143,6 +143,7 @@
+         )
+     };
+ 
++    activation.context.library.request_native_gc();
+     new_bitmap_data.init_object2(activation.gc(), bitmap_data_obj);
+     bitmap_data_obj.init_bitmap_data(activation.gc(), new_bitmap_data);
+ 
+@@ -1099,6 +1100,7 @@
+         // Don't check if we've already disposed this BitmapData - 'BitmapData.dispose()' can be called
+         // multiple times
+         bitmap_data.dispose(activation.gc());
++        activation.context.library.request_native_gc();
+     }
+     Ok(Value::Undefined)
+ }
+@@ -1218,6 +1220,7 @@
+         let new_bitmap_data =
+             bitmap_data.clone_data(activation.context.gc_context, activation.context.renderer);
+ 
++        activation.context.library.request_native_gc();
+         let new_bitmap_data_object =
+             BitmapDataObject::from_bitmap_data(activation.context, new_bitmap_data);
+ 
+--- a/core/src/avm2/globals/flash/display/display_object.rs
++++ b/core/src/avm2/globals/flash/display/display_object.rs
+@@ -36,6 +36,14 @@
+     dobj: DisplayObject<'gc>,
+     class: ClassObject<'gc>,
+ ) -> StageObject<'gc> {
++    // MovieClip carries ownership in shared data so replacing its movie cannot
++    // leave a stale owner in the common base. Other dynamic objects may still
++    // need movie fonts/symbols after becoming detached.
++    if dobj.as_movie_clip().is_none() {
++        if let Some(owner) = context.library.existing_movie_library_handle(&dobj.movie(), context.gc_context) {
++            dobj.set_movie_library_owner_if_missing(owner, context.gc());
++        }
++    }
+     let obj = StageObject::for_display_object(context.gc(), dobj, class);
+     dobj.set_placed_by_avm2_script(true);
+     dobj.set_object2(context, obj);
+--- a/core/src/avm2/globals/flash/display/loader_info.rs
++++ b/core/src/avm2/globals/flash/display/loader_info.rs
+@@ -52,7 +52,7 @@
+                 let domain = activation
+                     .context
+                     .library
+-                    .library_for_movie_mut(movie.clone())
++                    .library_for_movie_mut(movie.clone(), activation.context.gc_context)
+                     .try_avm2_domain();
+ 
+                 if let Some(domain) = domain {
+@@ -67,7 +67,7 @@
+                 let domain = activation
+                     .context
+                     .library
+-                    .library_for_movie_mut(movie.clone())
++                    .library_for_movie_mut(movie.clone(), activation.context.gc_context)
+                     .avm2_domain();
+                 return Ok(DomainObject::from_domain(activation, domain).into());
+             }
+--- a/core/src/avm2/globals/flash/display/simple_button.rs
++++ b/core/src/avm2/globals/flash/display/simple_button.rs
+@@ -48,7 +48,7 @@
+             let child = activation
+                 .context
+                 .library
+-                .library_for_movie_mut(movie)
++                .library_for_movie_mut(movie, activation.context.gc_context)
+                 .instantiate_by_id(symbol, activation.context.gc_context);
+ 
+             if let Some(child) = child {
+--- a/core/src/avm2/globals/flash/display/sprite.rs
++++ b/core/src/avm2/globals/flash/display/sprite.rs
+@@ -24,7 +24,7 @@
+     while let Some(class) = class_def {
+         if class == sprite_cls {
+             let movie = activation.caller_movie_or_root();
+-            let display_object = MovieClip::new(movie, activation.gc()).into();
++            let display_object = MovieClip::new_with_library(movie, activation.context).into();
+             return Ok(
+                 initialize_for_allocator(activation.context, display_object, orig_class).into(),
+             );
+@@ -39,7 +39,7 @@
+             let child = activation
+                 .context
+                 .library
+-                .library_for_movie_mut(movie)
++                .library_for_movie_mut(movie, activation.context.gc_context)
+                 .instantiate_by_id(symbol, activation.context.gc_context);
+ 
+             if let Some(child) = child {
+--- a/core/src/avm2/globals/flash/media/sound.rs
++++ b/core/src/avm2/globals/flash/media/sound.rs
+@@ -34,13 +34,14 @@
+             .avm2_class_registry()
+             .class_symbol(class_def)
+         {
+-            if let Some(Character::Sound(sound)) = activation
++            let library_item = activation
+                 .context
+                 .library
+-                .library_for_movie_mut(movie)
+-                .character_by_id(symbol)
++                .library_for_movie_mut(movie, activation.context.gc_context)
++                .character_by_id(symbol);
++            if let Some(Character::Sound(sound)) = library_item
+             {
+-                sound_object.set_sound(activation.context, sound);
++                sound_object.set_sound(activation.context, (*sound).clone());
+             } else {
+                 tracing::warn!(
+                     "Attempted to construct subclass of Sound, {}, which is associated with non-Sound character {}",
+@@ -64,7 +65,7 @@
+ 
+     if let Some(sound) = this.as_sound_object() {
+         if let Some(sound_handle) = sound.sound_handle()
+-            && let Some(length) = activation.context.audio.get_sound_size(sound_handle)
++            && let Some(length) = activation.context.audio.get_sound_size(&sound_handle)
+         {
+             return Ok((length).into());
+         }
+@@ -127,7 +128,7 @@
+ 
+     if let Some(sound) = this.as_sound_object() {
+         if let Some(sound_handle) = sound.sound_handle()
+-            && let Some(duration) = activation.context.audio.get_sound_duration(sound_handle)
++            && let Some(duration) = activation.context.audio.get_sound_duration(&sound_handle)
+         {
+             return Ok((duration.as_millis()).into());
+         }
+--- a/core/src/avm2/globals/flash/media/video.rs
++++ b/core/src/avm2/globals/flash/media/video.rs
+@@ -30,7 +30,7 @@
+             let child = activation
+                 .context
+                 .library
+-                .library_for_movie_mut(movie)
++                .library_for_movie_mut(movie, activation.context.gc_context)
+                 .instantiate_by_id(symbol, activation.context.gc_context);
+ 
+             if let Some(child) = child {
+--- a/core/src/avm2/globals/flash/text/font.rs
++++ b/core/src/avm2/globals/flash/text/font.rs
+@@ -110,12 +110,14 @@
+ 
+     fonts.append(&mut activation.context.library.global_fonts());
+ 
+-    if let Some(library) = activation
++    let library_item = activation
+         .context
+         .library
+-        .library_for_movie(activation.caller_movie_or_root())
++        .library_for_movie(activation.caller_movie_or_root(), activation.context.gc_context)
++        .map(|library| library.embedded_fonts());
++    if let Some(library) = library_item
+     {
+-        for font in library.embedded_fonts() {
++        for font in library {
+             // TODO: EmbeddedCFF isn't supposed to show until it's been used (some kind of internal initialization method?)
+             // Device is only supposed to show when arg0 is true - but that's supposed to be "all known" device fonts, not just loaded ones
+             if font.has_layout() && font.font_type() == FontType::Embedded {
+@@ -150,15 +152,12 @@
+ ) -> Result<Value<'gc>, Error<'gc>> {
+     let object = args.get_object(activation, 0, "font")?;
+ 
+-    if let Some(class) = object.as_class_object()
+-        && let Some((movie, id)) = activation
+-            .context
+-            .library
+-            .avm2_class_registry()
+-            .class_symbol(class.inner_class_definition())
+-        && let Some(lib) = activation.context.library.library_for_movie(movie)
+-        && let Some(Character::Font(font)) = lib.character_by_id(id)
+-    {
++    let character = object.as_class_object()
++        .and_then(|class| activation.context.library.avm2_class_registry()
++            .class_symbol(class.inner_class_definition()))
++        .and_then(|(movie, id)| activation.context.library.library_for_movie(movie, activation.context.gc_context)
++            .and_then(|lib| lib.character_by_id(id)));
++    if let Some(Character::Font(font)) = character {
+         activation.context.library.register_global_font(font);
+         return Ok(Value::Undefined);
+     }
+--- a/core/src/avm2/object/bytearray_object.rs
++++ b/core/src/avm2/object/bytearray_object.rs
+@@ -24,15 +24,10 @@
+         .avm2_class_registry()
+         .class_symbol(class.inner_class_definition())
+     {
+-        if let Some(lib) = activation.context.library.library_for_movie(movie) {
+-            if let Some(Character::BinaryData(binary_data)) = lib.character_by_id(id) {
+-                Some(ByteArrayStorage::from_vec(
+-                    activation.context,
+-                    binary_data.to_vec(),
+-                ))
+-            } else {
+-                None
+-            }
++        let character = activation.context.library.library_for_movie(movie, activation.context.gc_context)
++            .and_then(|lib| lib.character_by_id(id));
++        if let Some(Character::BinaryData(binary_data)) = character {
++            Some(ByteArrayStorage::from_vec(activation.context, binary_data.to_vec()))
+         } else {
+             None
+         }
+--- a/core/src/avm2/object/font_object.rs
++++ b/core/src/avm2/object/font_object.rs
+@@ -20,7 +20,7 @@
+         .avm2_class_registry()
+         .class_symbol(class.inner_class_definition())
+     {
+-        if let Some(lib) = activation.context.library.library_for_movie(movie) {
++        if let Some(lib) = activation.context.library.library_for_movie(movie, activation.context.gc_context) {
+             if let Some(Character::Font(font)) = lib.character_by_id(id) {
+                 Some(font)
+             } else {
+--- a/core/src/avm2/object/loaderinfo_object.rs
++++ b/core/src/avm2/object/loaderinfo_object.rs
+@@ -188,6 +188,27 @@
+         self.0.complete_event_fired.set(false);
+     }
+ 
++    /// Callbacks may unload or reuse this LoaderInfo. Do not finish events for
++    /// an old stream after that happens. Comparing identities avoids confusing
++    /// a new load of the same URL with the operation that dispatched the event.
++    fn is_current_stream(self, previous: &LoaderStream<'gc>) -> bool {
++        let current = self.loader_stream();
++        if !Arc::ptr_eq(current.movie(), previous.movie()) {
++            return false;
++        }
++        match (&*current, previous) {
++            (LoaderStream::Swf(_, a), LoaderStream::Swf(_, b)) => DisplayObject::ptr_eq(*a, *b),
++            (LoaderStream::NotYetLoaded(_, a, _), LoaderStream::NotYetLoaded(_, b, _)) => {
++                match (a, b) {
++                    (Some(a), Some(b)) => DisplayObject::ptr_eq(*a, *b),
++                    (None, None) => true,
++                    _ => false,
++                }
++            }
++            _ => false,
++        }
++    }
++
+     /// Fires the 'init' and 'complete' events if they haven't been fired yet.
+     /// Returns `true` if both events have been fired (either as a result of
+     /// this call, or due to a previous call).
+@@ -197,6 +218,7 @@
+         status: u16,
+         redirected: bool,
+     ) -> bool {
++        let stream = self.loader_stream().clone();
+         self.0.expose_content.set(true);
+         if !self.0.init_event_fired.get() {
+             self.0.init_event_fired.set(true);
+@@ -205,6 +227,9 @@
+             // Right now, we fire it when downloading is fully completed.
+             let init_evt = EventObject::bare_default_event(context, "init");
+             Avm2::dispatch_event(context, init_evt, self.into());
++            if !self.is_current_stream(&stream) {
++                return false;
++            }
+         }
+ 
+         if !self.0.complete_event_fired.get() {
+@@ -227,6 +252,9 @@
+                         EventObject::http_status_event(&mut activation, status, redirected);
+ 
+                     Avm2::dispatch_event(context, http_status_evt, self.into());
++                    if !self.is_current_stream(&stream) {
++                        return false;
++                    }
+                 }
+ 
+                 self.0.complete_event_fired.set(true);
+@@ -264,6 +292,9 @@
+     }
+ 
+     pub fn unload(self, context: &mut UpdateContext<'gc>) {
++        // Cancel even before content exists. Do this before unload callbacks so
++        // a replacement load started by a listener is not cancelled here.
++        context.load_manager.cancel_avm2_loads(self);
+         let mut loader = self
+             .0
+             .loader
+@@ -273,6 +304,8 @@
+             .unwrap();
+ 
+         let content = loader.child_by_index(0);
++        // Capture before unload/remove callbacks, which may change the child.
++        let unloaded_movie = content.map(|child| child.movie());
+ 
+         if content.is_some() {
+             let unload_evt = EventObject::bare_default_event(context, "unload");
+@@ -289,7 +322,23 @@
+ 
+         // Remove the Loader's content element if it exists.
+         if let Some(child) = content {
+-            loader.remove_child(context, child);
++            // The unload listener may have removed or reparented the content,
++            // including through a nested unload. Only remove our own child.
++            if child
++                .parent()
++                .is_some_and(|parent| DisplayObject::ptr_eq(parent, loader.into()))
++            {
++                loader.remove_child(context, child);
++            }
++        }
++        if let Some(movie) = unloaded_movie {
++            // Leave the root library alone. Do not evict any movie library:
++            // ActionScript can retain instances, classes or domains after unload.
++            if !Arc::ptr_eq(&movie, &context.root_swf) {
++                if let Some(library) = context.library.library_for_movie(movie, context.gc_context) {
++                    library.release_render_caches();
++                }
++            }
+         }
+     }
+ }
+--- a/core/src/avm2/object/sound_object.rs
++++ b/core/src/avm2/object/sound_object.rs
+@@ -127,7 +127,7 @@
+         let sound_data = self.0.sound_data.borrow();
+         match &*sound_data {
+             SoundData::NotLoaded { .. } => None,
+-            SoundData::Loaded { sound } => Some(*sound),
++            SoundData::Loaded { sound } => Some(sound.clone()),
+         }
+     }
+ 
+@@ -160,7 +160,7 @@
+                 // We don't know the length yet, so return the `SoundChannel`
+                 true
+             }
+-            SoundData::Loaded { sound } => play_queued(queued, *sound, activation.context),
++            SoundData::Loaded { sound } => play_queued(queued, sound.clone(), activation.context),
+         }
+     }
+ 
+@@ -171,7 +171,7 @@
+         match &mut *sound_data {
+             SoundData::NotLoaded { queued_plays } => {
+                 for queued in std::mem::take(queued_plays) {
+-                    play_queued(queued, sound, context);
++                    play_queued(queued, sound.clone(), context);
+                 }
+                 *sound_data = SoundData::Loaded { sound };
+             }
+@@ -273,7 +273,7 @@
+     sound: SoundHandle,
+     context: &mut UpdateContext<'gc>,
+ ) -> bool {
+-    if let Some(duration) = context.audio.get_sound_duration(sound)
++    if let Some(duration) = context.audio.get_sound_duration(&sound)
+         && queued.position > duration.as_millis()
+     {
+         tracing::error!(
+--- a/core/src/avm2/script.rs
++++ b/core/src/avm2/script.rs
+@@ -16,6 +16,7 @@
+ use crate::context::UpdateContext;
+ use crate::string::{AvmAtom, AvmString};
+ use crate::tag_utils::SwfMovie;
++use crate::library::MovieLibraryHandle;
+ use gc_arena::barrier::field;
+ use gc_arena::lock::OnceLock;
+ use gc_arena::{Collect, Gc, Mutation};
+@@ -80,6 +81,9 @@
+ 
+     /// The movie that this TranslationUnit was loaded from.
+     movie: Arc<SwfMovie>,
++
++    /// Traced semantic ownership, separate from native movie byte ownership.
++    library_owner: Option<MovieLibraryHandle<'gc>>,
+ }
+ 
+ impl<'gc> TranslationUnit<'gc> {
+@@ -90,6 +94,7 @@
+         domain: Domain<'gc>,
+         name: Option<AvmString<'gc>>,
+         movie: Arc<SwfMovie>,
++        library_owner: Option<MovieLibraryHandle<'gc>>,
+         mc: &Mutation<'gc>,
+     ) -> Self {
+         use std::iter::repeat_n;
+@@ -103,6 +108,7 @@
+             namespaces: repeat_n(OnceLock::new(), abc.constant_pool.namespaces.len() + 1).collect(),
+             multinames: repeat_n(OnceLock::new(), abc.constant_pool.multinames.len() + 1).collect(),
+             movie,
++            library_owner,
+             abc: Rc::new(abc),
+         };
+ 
+--- a/core/src/backend/audio.rs
++++ b/core/src/backend/audio.rs
+@@ -1,4 +1,6 @@
+ use std::any::Any;
++use std::fmt::Debug;
++use std::sync::Arc;
+ 
+ use crate::{
+     avm1::{NativeObject, Object as Avm1Object},
+@@ -10,7 +12,7 @@
+ use gc_arena::Collect;
+ pub use ruffle_common::buffer::Substream;
+ use ruffle_common::duration::FloatDuration;
+-use slotmap::{Key, SlotMap, new_key_type};
++use slotmap::{Key, new_key_type};
+ 
+ #[cfg(feature = "audio")]
+ pub mod decoders;
+@@ -30,6 +32,9 @@
+ mod decoders {
+     #[derive(Debug, thiserror::Error)]
+     pub enum Error {
++        #[error("Sound handle belongs to a different audio backend")]
++        InvalidSoundHandle,
++
+         #[error("Too many sounds are playing")]
+         TooManySounds,
+     }
+@@ -40,9 +45,36 @@
+ use web_time::Duration;
+ 
+ new_key_type! {
+-    pub struct SoundHandle;
+     pub struct SoundInstanceHandle;
+ }
++
++/// An owning reference to a registered sound definition.
++///
++/// Libraries, script Sound objects, and active instances keep their own clones.
++/// Backends must not retain an additional owning registry entry: the definition
++/// is released when the last semantic owner disappears, independently of unload.
++#[derive(Clone, Collect)]
++#[collect(require_static)]
++pub struct SoundHandle(pub Arc<dyn SoundHandleImpl>);
++
++impl Debug for SoundHandle {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        f.debug_tuple("SoundHandle")
++            .field(&Arc::as_ptr(&self.0))
++            .finish()
++    }
++}
++
++impl PartialEq for SoundHandle {
++    fn eq(&self, other: &Self) -> bool {
++        Arc::ptr_eq(&self.0, &other.0)
++    }
++}
++
++impl Eq for SoundHandle {}
++
++/// Backend-specific registered sound data. Send + Sync permits audio-thread use.
++pub trait SoundHandleImpl: Any + Debug + Send + Sync {}
+ 
+ pub type DecodeError = decoders::Error;
+ 
+@@ -153,16 +185,16 @@
+     fn get_sound_position(&self, instance: SoundInstanceHandle) -> Option<f64>;
+ 
+     /// Get the duration of a sound.
+-    /// Returns `None` if the sound is not registered.
+-    fn get_sound_duration(&self, sound: SoundHandle) -> Option<FloatDuration>;
++    /// Returns `None` if the sound handle belongs to an incompatible backend.
++    fn get_sound_duration(&self, sound: &SoundHandle) -> Option<FloatDuration>;
+ 
+     /// Get the size of the data stored within a given sound.
+     ///
+     /// This is specifically measured in compressed bytes.
+-    fn get_sound_size(&self, sound: SoundHandle) -> Option<u32>;
++    fn get_sound_size(&self, sound: &SoundHandle) -> Option<u32>;
+ 
+     /// Get the sound format that a given sound was added with.
+-    fn get_sound_format(&self, sound: SoundHandle) -> Option<&swf::SoundFormat>;
++    fn get_sound_format<'a>(&self, sound: &'a SoundHandle) -> Option<&'a swf::SoundFormat>;
+ 
+     /// Set the volume transform for a sound instance.
+     fn set_sound_transform(&mut self, instance: SoundInstanceHandle, transform: SoundTransform);
+@@ -205,6 +237,7 @@
+ }
+ 
+ /// Information about a sound provided to `NullAudioBackend`.
++#[derive(Debug)]
+ struct NullSound {
+     /// The duration of the sound.
+     duration: FloatDuration,
+@@ -216,18 +249,16 @@
+     format: swf::SoundFormat,
+ }
+ 
++impl SoundHandleImpl for NullSound {}
++
+ /// Audio backend that ignores all audio.
+ pub struct NullAudioBackend {
+-    sounds: SlotMap<SoundHandle, NullSound>,
+     volume: f32,
+ }
+ 
+ impl NullAudioBackend {
+     pub fn new() -> NullAudioBackend {
+-        NullAudioBackend {
+-            sounds: SlotMap::with_key(),
+-            volume: 1.0,
+-        }
++        NullAudioBackend { volume: 1.0 }
+     }
+ }
+ 
+@@ -247,15 +278,15 @@
+         let sample_rate: f64 = sound.format.sample_rate.into();
+         let duration = FloatDuration::from_millis(num_sample_frames * 1000.0 / sample_rate);
+ 
+-        Ok(self.sounds.insert(NullSound {
++        Ok(SoundHandle(Arc::new(NullSound {
+             duration,
+             size: data.len() as u32,
+             format: sound.format.clone(),
+-        }))
++        })))
+     }
+ 
+     fn register_mp3(&mut self, _data: &[u8]) -> Result<SoundHandle, DecodeError> {
+-        Ok(self.sounds.insert(NullSound {
++        Ok(SoundHandle(Arc::new(NullSound {
+             size: 0,
+             duration: FloatDuration::ZERO,
+             format: swf::SoundFormat {
+@@ -264,14 +295,17 @@
+                 is_stereo: true,
+                 is_16_bit: true,
+             },
+-        }))
++        })))
+     }
+ 
+     fn start_sound(
+         &mut self,
+-        _sound: SoundHandle,
++        sound: SoundHandle,
+         _sound_info: &swf::SoundInfo,
+     ) -> Result<SoundInstanceHandle, DecodeError> {
++        if !(sound.0.as_ref() as &dyn Any).is::<NullSound>() {
++            return Err(DecodeError::InvalidSoundHandle);
++        }
+         Ok(SoundInstanceHandle::null())
+     }
+ 
+@@ -297,23 +331,25 @@
+     fn get_sound_position(&self, _instance: SoundInstanceHandle) -> Option<f64> {
+         Some(0.0)
+     }
+-    fn get_sound_duration(&self, sound: SoundHandle) -> Option<FloatDuration> {
+-        if let Some(sound) = self.sounds.get(sound) {
++    fn get_sound_duration(&self, sound: &SoundHandle) -> Option<FloatDuration> {
++        if let Some(sound) = (sound.0.as_ref() as &dyn Any).downcast_ref::<NullSound>() {
+             Some(sound.duration)
+         } else {
+             None
+         }
+     }
+-    fn get_sound_size(&self, sound: SoundHandle) -> Option<u32> {
+-        if let Some(sound) = self.sounds.get(sound) {
++    fn get_sound_size(&self, sound: &SoundHandle) -> Option<u32> {
++        if let Some(sound) = (sound.0.as_ref() as &dyn Any).downcast_ref::<NullSound>() {
+             Some(sound.size)
+         } else {
+             None
+         }
+     }
+ 
+-    fn get_sound_format(&self, sound: SoundHandle) -> Option<&swf::SoundFormat> {
+-        self.sounds.get(sound).map(|s| &s.format)
++    fn get_sound_format<'a>(&self, sound: &'a SoundHandle) -> Option<&'a swf::SoundFormat> {
++        (sound.0.as_ref() as &dyn Any)
++            .downcast_ref::<NullSound>()
++            .map(|s| &s.format)
+     }
+ 
+     fn set_sound_transform(&mut self, _instance: SoundInstanceHandle, _transform: SoundTransform) {}
+@@ -411,6 +447,7 @@
+                 // Sound ended.
+                 let duration = sound
+                     .sound
++                    .as_ref()
+                     .and_then(|sound| context.audio.get_sound_duration(sound))
+                     .unwrap_or_default();
+                 if let Some(object) = sound.avm1_object {
+@@ -464,7 +501,7 @@
+     ) -> Option<SoundInstanceHandle> {
+         if self.sounds.len() < Self::MAX_SOUNDS {
+             let handle = audio
+-                .start_sound(sound, settings)
++                .start_sound(sound.clone(), settings)
+                 .map_err(|e| tracing::warn!("Cannot start sound: {e}"))
+                 .ok()?;
+             let mut instance = SoundInstance {
+@@ -518,7 +555,7 @@
+ 
+     pub fn stop_sounds_with_handle(&mut self, audio: &mut dyn AudioBackend, sound: SoundHandle) {
+         self.sounds.retain(move |other| {
+-            if other.sound == Some(sound) {
++            if other.sound.as_ref() == Some(&sound) {
+                 audio.stop_sound(other.instance);
+                 false
+             } else {
+@@ -584,7 +621,9 @@
+     }
+ 
+     pub fn is_sound_playing_with_handle(&self, sound: SoundHandle) -> bool {
+-        self.sounds.iter().any(|other| other.sound == Some(sound))
++        self.sounds
++            .iter()
++            .any(|other| other.sound.as_ref() == Some(&sound))
+     }
+ 
+     pub fn start_stream(
+@@ -740,7 +779,7 @@
+         let mut changed = false;
+ 
+         for other in &mut self.sounds {
+-            if other.sound == Some(sound) {
++            if other.sound.as_ref() == Some(&sound) {
+                 other.transform = sound_transform;
+                 changed = true;
+             }
+@@ -800,10 +839,11 @@
+         character_id: CharacterId,
+         sound_info: &SoundInfo,
+     ) {
+-        if let Some(handle) = context
++        let library_item = context
+             .library
+-            .library_for_movie_mut(display_object.movie())
+-            .get_sound(character_id)
++            .library_for_movie_mut(display_object.movie(), context.gc_context)
++            .get_sound(character_id);
++        if let Some(handle) = library_item
+         {
+             use swf::SoundEvent;
+             // The sound event type is controlled by the "Sync" setting in the Flash IDE.
+@@ -816,7 +856,7 @@
+ 
+                 // "Start" sounds only play if an instance of the same sound is not already playing.
+                 SoundEvent::Start => {
+-                    if !context.is_sound_playing_with_handle(handle) {
++                    if !context.is_sound_playing_with_handle(handle.clone()) {
+                         let _ = context.start_sound(
+                             handle,
+                             sound_info,
+--- a/core/src/backend/audio/decoders.rs
++++ b/core/src/backend/audio/decoders.rs
+@@ -40,6 +40,9 @@
+ 
+     #[error("Unhandled compression {0:?}")]
+     UnhandledCompression(AudioCompression),
++
++    #[error("Sound handle belongs to a different audio backend")]
++    InvalidSoundHandle,
+ 
+     #[error("Too many sounds are playing")]
+     TooManySounds,
+--- a/core/src/backend/audio/mixer.rs
++++ b/core/src/backend/audio/mixer.rs
+@@ -1,12 +1,13 @@
+ use super::decoders::{
+     self, AdpcmDecoder, Decoder, G711ALawDecoder, G711MuLawDecoder, PcmDecoder, SeekableDecoder,
+ };
+-use super::{SoundHandle, SoundInstanceHandle, SoundStreamInfo, SoundTransform};
++use super::{SoundHandle, SoundHandleImpl, SoundInstanceHandle, SoundStreamInfo, SoundTransform};
+ use crate::backend::audio::{DecodeError, RegisterError};
+ use crate::tag_utils::SwfSlice;
+ use ruffle_common::buffer::Substream;
+ use ruffle_common::duration::FloatDuration;
+ use slotmap::SlotMap;
++use std::any::Any;
+ use std::io::Cursor;
+ use std::sync::{Arc, Mutex, RwLock};
+ use swf::AudioCompression;
+@@ -56,9 +57,6 @@
+ /// An `AudioBackend` can forward audio events to the `AudioMixer`, and it will track the state of
+ // all sounds and mix the audio into an output buffer audio stream.
+ pub struct AudioMixer {
+-    /// The currently registered sounds.
+-    sounds: SlotMap<SoundHandle, Sound>,
+-
+     /// The list of actively playing sound instances.
+     sound_instances: Arc<Mutex<SlotMap<SoundInstanceHandle, SoundInstance>>>,
+ 
+@@ -143,6 +141,7 @@
+ /// Contains the data and metadata for a sound in an SWF file.
+ ///
+ /// A sound is defined by the `DefineSound` SWF tags and contains the audio data for the sound.
++#[derive(Debug)]
+ struct Sound {
+     /// The format of the sound, including sample rate and compression format.
+     format: swf::SoundFormat,
+@@ -164,13 +163,15 @@
+     skip_sample_frames: u16,
+ }
+ 
++impl SoundHandleImpl for Sound {}
++
+ /// An actively playing instance of a sound.
+ /// This sound can be either an event sound (`StartSound`) or
+ /// a stream sound (`SoundStreamBlock`).
+ /// The audio thread will iterate through all `SoundInstance`s
+ /// to fill the audio buffer.
+ struct SoundInstance {
+-    /// The handle the sound definition inside `sounds`.
++    /// An owning reference to the sound definition.
+     /// `None` if this is a stream sound.
+     #[expect(dead_code)]
+     handle: Option<SoundHandle>,
+@@ -242,7 +243,6 @@
+     /// Creates a new `AudioMixer` with the given number of channels and sample rate.
+     pub fn new(num_output_channels: u8, output_sample_rate: u32) -> Self {
+         Self {
+-            sounds: SlotMap::with_key(),
+             sound_instances: Arc::new(Mutex::new(SlotMap::with_key())),
+             volume: Arc::new(RwLock::new(1.0)),
+             num_output_channels,
+@@ -528,7 +528,7 @@
+             num_sample_frames: swf_sound.num_samples,
+             skip_sample_frames,
+         };
+-        Ok(self.sounds.insert(sound))
++        Ok(SoundHandle(Arc::new(sound)))
+     }
+ 
+     /// Registers an external MP3 with the audio mixer.
+@@ -548,7 +548,7 @@
+             num_sample_frames: metadata.num_sample_frames,
+             skip_sample_frames: 0,
+         };
+-        Ok(self.sounds.insert(sound))
++        Ok(SoundHandle(Arc::new(sound)))
+     }
+ 
+     #[cfg(not(feature = "mp3"))]
+@@ -583,7 +583,9 @@
+         sound_handle: SoundHandle,
+         settings: &swf::SoundInfo,
+     ) -> Result<SoundInstanceHandle, DecodeError> {
+-        let sound = &self.sounds[sound_handle];
++        let sound = (sound_handle.0.as_ref() as &dyn Any)
++            .downcast_ref::<Sound>()
++            .ok_or(DecodeError::InvalidSoundHandle)?;
+         let data = Cursor::new(ArcAsRef(Arc::clone(&sound.data)));
+         // Create a stream that decodes and resamples the sound.
+         let stream = if sound.skip_sample_frames == 0
+@@ -670,9 +672,9 @@
+ 
+     /// Returns the duration of a registered sound.
+     ///
+-    /// Returns `None` if the sound is not registered or invalid.
+-    pub fn get_sound_duration(&self, sound: SoundHandle) -> Option<FloatDuration> {
+-        if let Some(sound) = self.sounds.get(sound) {
++    /// Returns `None` if the sound handle belongs to an incompatible backend.
++    pub fn get_sound_duration(&self, sound: &SoundHandle) -> Option<FloatDuration> {
++        if let Some(sound) = (sound.0.as_ref() as &dyn Any).downcast_ref::<Sound>() {
+             // AS duration does not subtract `skip_sample_frames`.
+             let num_sample_frames: f64 = sound.num_sample_frames.into();
+             let sample_rate: f64 = sound.format.sample_rate.into();
+@@ -683,12 +685,16 @@
+         }
+     }
+ 
+-    pub fn get_sound_size(&self, sound: SoundHandle) -> Option<u32> {
+-        self.sounds.get(sound).map(|s| s.data.len() as u32)
+-    }
+-
+-    pub fn get_sound_format(&self, sound: SoundHandle) -> Option<&swf::SoundFormat> {
+-        self.sounds.get(sound).map(|s| &s.format)
++    pub fn get_sound_size(&self, sound: &SoundHandle) -> Option<u32> {
++        (sound.0.as_ref() as &dyn Any)
++            .downcast_ref::<Sound>()
++            .map(|s| s.data.len() as u32)
++    }
++
++    pub fn get_sound_format<'a>(&self, sound: &'a SoundHandle) -> Option<&'a swf::SoundFormat> {
++        (sound.0.as_ref() as &dyn Any)
++            .downcast_ref::<Sound>()
++            .map(|s| &s.format)
+     }
+ 
+     /// Sets the sound transform for the given playing sound.
+@@ -1122,17 +1128,17 @@
+         }
+ 
+         #[inline]
+-        fn get_sound_duration(&self, sound: SoundHandle) -> Option<$crate::FloatDuration> {
++        fn get_sound_duration(&self, sound: &SoundHandle) -> Option<$crate::FloatDuration> {
+             self.$mixer.get_sound_duration(sound)
+         }
+ 
+         #[inline]
+-        fn get_sound_size(&self, sound: SoundHandle) -> Option<u32> {
++        fn get_sound_size(&self, sound: &SoundHandle) -> Option<u32> {
+             self.$mixer.get_sound_size(sound)
+         }
+ 
+         #[inline]
+-        fn get_sound_format(&self, sound: SoundHandle) -> Option<&swf::SoundFormat> {
++        fn get_sound_format<'a>(&self, sound: &'a SoundHandle) -> Option<&'a swf::SoundFormat> {
+             self.$mixer.get_sound_format(sound)
+         }
+ 
+--- a/core/src/character.rs
++++ b/core/src/character.rs
+@@ -1,4 +1,4 @@
+-use std::cell::OnceCell;
++use std::cell::RefCell;
+ 
+ use crate::backend::audio::SoundHandle;
+ use crate::binary_data::BinaryData;
+@@ -26,7 +26,7 @@
+     Font(Font<'gc>),
+     MorphShape(MorphShape<'gc>),
+     Text(Text<'gc>),
+-    Sound(#[collect(require_static)] SoundHandle),
++    Sound(Gc<'gc, SoundHandle>),
+     Video(Video<'gc>),
+     BinaryData(Gc<'gc, BinaryData>),
+ }
+@@ -38,7 +38,7 @@
+     compressed: CompressedBitmap,
+     /// A lazily constructed GPU handle, used when performing fills with this bitmap
+     #[collect(require_static)]
+-    handle: OnceCell<BitmapHandle>,
++    handle: RefCell<Option<BitmapHandle>>,
+     /// The bitmap class set by `SymbolClass` - this is used when we instantaite
+     /// a `Bitmap` displayobject.
+     avm2_class: Lock<BitmapClass<'gc>>,
+@@ -48,7 +48,7 @@
+     pub fn new(compressed: CompressedBitmap) -> Self {
+         Self {
+             compressed,
+-            handle: OnceCell::default(),
++            handle: RefCell::default(),
+             avm2_class: Lock::new(BitmapClass::NoSubclass),
+         }
+     }
+@@ -69,15 +69,19 @@
+         &self,
+         backend: &mut dyn RenderBackend,
+     ) -> Result<BitmapHandle, RenderError> {
+-        // FIXME - use `OnceCell::get_or_try_init` when stabilized.
+-        if let Some(handle) = self.handle.get() {
++        if let Some(handle) = self.handle.borrow().as_ref() {
+             return Ok(handle.clone());
+         }
+         let decoded = self.compressed.decode()?;
+         let new_handle = backend.register_bitmap(decoded)?;
+-        // FIXME - do we ever want to release this handle, to avoid taking up GPU memory?
+-        self.handle.set(new_handle.clone()).unwrap();
++        *self.handle.borrow_mut() = Some(new_handle.clone());
+         Ok(new_handle)
++    }
++
++    /// Release only this cache's ownership. Live renderer references stay valid;
++    /// the immutable compressed bitmap can recreate the handle on demand.
++    pub(crate) fn release_render_cache(&self) {
++        self.handle.borrow_mut().take();
+     }
+ }
+ 
+@@ -123,3 +127,52 @@
+         }
+     }
+ }
++
++#[cfg(test)]
++mod render_cache_tests {
++    use super::*;
++    use flate2::{Compression, write::ZlibEncoder};
++    use ruffle_render::backend::{ViewportDimensions, null::NullRenderer};
++    use std::{borrow::Cow, io::Write, sync::Arc};
++
++    #[test]
++    fn bitmap_cache_release_preserves_live_handles_and_recreates() {
++        let pixels = [255, 20, 40, 60]; // SWF lossless ARGB
++        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
++        encoder.write_all(&pixels).unwrap();
++        let bitmap = BitmapCharacter::new(CompressedBitmap::Lossless(DefineBitsLossless {
++            version: 2,
++            id: 1,
++            format: swf::BitmapFormat::Rgb32,
++            width: 1,
++            height: 1,
++            data: Cow::Owned(encoder.finish().unwrap()),
++        }));
++        let mut renderer = NullRenderer::new(ViewportDimensions {
++            width: 1,
++            height: 1,
++            scale_factor: 1.0,
++        });
++        let decoded_before = bitmap.compressed().decode().unwrap();
++        let first = bitmap.bitmap_handle(&mut renderer).unwrap();
++        let old_weak = Arc::downgrade(&first.0);
++        assert_eq!(first, bitmap.bitmap_handle(&mut renderer).unwrap());
++        bitmap.release_render_cache();
++        bitmap.release_render_cache(); // repeated unload is harmless
++        assert!(old_weak.upgrade().is_some()); // command/live owner remains valid
++        let second = bitmap.bitmap_handle(&mut renderer).unwrap();
++        assert_ne!(first, second);
++        drop(first);
++        assert!(old_weak.upgrade().is_none());
++        assert_eq!(
++            decoded_before.data(),
++            bitmap.compressed().decode().unwrap().data()
++        );
++        let new_weak = Arc::downgrade(&second.0);
++        drop(second);
++        assert!(new_weak.upgrade().is_some()); // cached until next release
++        bitmap.release_render_cache();
++        assert!(new_weak.upgrade().is_none());
++        assert_eq!(bitmap.compressed().size().width, 1);
++    }
++}
+--- a/core/src/context.rs
++++ b/core/src/context.rs
+@@ -389,7 +389,7 @@
+         activation
+             .context
+             .library
+-            .library_for_movie_mut(activation.context.root_swf.clone())
++            .library_for_movie_mut(activation.context.root_swf.clone(), activation.context.gc_context)
+             .set_avm2_domain(stage_domain);
+         activation.context.ui.set_mouse_visible(true);
+ 
+--- a/core/src/debug_ui/display_object.rs
++++ b/core/src/debug_ui/display_object.rs
+@@ -1665,7 +1665,7 @@
+                 if let Some(name) =
+                     context
+                         .library
+-                        .library_for_movie(object.movie())
++                        .library_for_movie(object.movie(), context.gc_context)
+                         .and_then(|l| {
+                             l.export_characters()
+                                 .iter()
+--- a/core/src/debug_ui/movie.rs
++++ b/core/src/debug_ui/movie.rs
+@@ -157,7 +157,7 @@
+                 ui.horizontal(|ui| {
+                     ui.selectable_value(&mut self.open_panel, Panel::Information, "Information");
+ 
+-                    if let Some(library) = context.library.library_for_movie(movie.clone())
++                    if let Some(library) = context.library.library_for_movie(movie.clone(), context.gc_context)
+                         && !library.characters().is_empty()
+                     {
+                         ui.selectable_value(&mut self.open_panel, Panel::Characters, "Characters");
+@@ -177,7 +177,7 @@
+         // Cloned up here so we can still use context afterwards
+         let (characters, export_characters) = context
+             .library
+-            .library_for_movie(movie.clone())
++            .library_for_movie(movie.clone(), context.gc_context)
+             .map(|l| (l.characters().clone(), l.export_characters().clone()))
+             .unwrap_or_default();
+ 
+--- a/core/src/display_object.rs
++++ b/core/src/display_object.rs
+@@ -1,3 +1,4 @@
++use crate::library::MovieLibraryHandle;
+ use crate::avm1::{
+     ActivationIdentifier as Avm1ActivationIdentifier, Object as Avm1Object, Value as Avm1Value,
+ };
+@@ -259,6 +260,7 @@
+ // Ensure this always has the same alignment as its subclasses (needed for `Gc` casts).
+ #[repr(align(8))]
+ pub struct DisplayObjectBase<'gc> {
++    movie_library_owner: Lock<Option<MovieLibraryHandle<'gc>>>,
+     cell: RefCell<DisplayObjectBaseMut>,
+     parent: Lock<Option<DisplayObject<'gc>>>,
+     place_frame: Cell<u16>,
+@@ -335,6 +337,7 @@
+ impl Default for DisplayObjectBase<'_> {
+     fn default() -> Self {
+         Self {
++            movie_library_owner: Lock::new(None),
+             cell: RefCell::new(DisplayObjectBaseMut {
+                 filters: Default::default(),
+                 blend_shader: None,
+@@ -1320,6 +1323,24 @@
+     fn base(self) -> Gc<'gc, DisplayObjectBase<'gc>>;
+ 
+     #[no_dynamic]
++    fn movie_library_owner(self) -> Option<MovieLibraryHandle<'gc>> {
++        self.base().movie_library_owner.get()
++    }
++
++    #[no_dynamic]
++    fn set_movie_library_owner(self, owner: Option<MovieLibraryHandle<'gc>>, mc: &Mutation<'gc>) {
++        unlock!(Gc::write(mc, self.base()), DisplayObjectBase, movie_library_owner).set(owner);
++    }
++
++    #[no_dynamic]
++    fn set_movie_library_owner_if_missing(self, owner: MovieLibraryHandle<'gc>, mc: &Mutation<'gc>) {
++        if self.base().movie_library_owner.get().is_none() {
++            unlock!(Gc::write(mc, self.base()), DisplayObjectBase, movie_library_owner).set(Some(owner));
++        }
++    }
++
++
++    #[no_dynamic]
+     fn as_ptr(self) -> *const DisplayObjectPtr {
+         Gc::as_ptr(self.base()).cast()
+     }
+@@ -2429,7 +2450,7 @@
+             {
+                 let domain = context
+                     .library
+-                    .library_for_movie(self.movie())
++                    .library_for_movie(self.movie(), context.gc_context)
+                     .unwrap()
+                     .avm2_domain();
+ 
+--- a/core/src/display_object/avm1_button.rs
++++ b/core/src/display_object/avm1_button.rs
+@@ -167,10 +167,11 @@
+ 
+                     // Instantiate new child.
+                     _ => {
+-                        if let Some(child) = context
++                        let library_item = context
+                             .library
+-                            .library_for_movie_mut(movie.clone())
+-                            .instantiate_by_id(record.id, context.gc_context)
++                            .library_for_movie_mut(movie.clone(), context.gc_context)
++                            .instantiate_by_id(record.id, context.gc_context);
++                        if let Some(child) = library_item
+                         {
+                             // New child that did not previously exist, create it.
+                             child.set_parent(context, Some(self.into()));
+@@ -300,10 +301,11 @@
+ 
+             for record in &self.0.shared.cell.borrow().records {
+                 if record.states.contains(swf::ButtonState::HIT_TEST) {
+-                    match context
++                    let library_item = context
+                         .library
+-                        .library_for_movie_mut(self.0.movie())
+-                        .instantiate_by_id(record.id, context.gc_context)
++                        .library_for_movie_mut(self.0.movie(), context.gc_context)
++                        .instantiate_by_id(record.id, context.gc_context);
++                    match library_item
+                     {
+                         Some(child) => {
+                             child.set_matrix(record.matrix.into());
+--- a/core/src/display_object/avm2_button.rs
++++ b/core/src/display_object/avm2_button.rs
+@@ -206,10 +206,11 @@
+ 
+         for record in shared.cell.borrow().records.iter() {
+             if record.states.contains(swf_state) {
+-                match context
++                let library_item = context
+                     .library
+-                    .library_for_movie_mut(movie.clone())
+-                    .instantiate_by_id(record.id, context.gc_context)
++                    .library_for_movie_mut(movie.clone(), context.gc_context)
++                    .instantiate_by_id(record.id, context.gc_context);
++                match library_item
+                 {
+                     Some(child) => {
+                         child.set_matrix(record.matrix.into());
+@@ -250,7 +251,7 @@
+ 
+             (child, false)
+         } else {
+-            let state_sprite = MovieClip::new(movie, context.gc());
++            let state_sprite = MovieClip::new_with_library(movie, context);
+             state_sprite.set_avm2_class(context.gc(), Some(sprite_class));
+             state_sprite.set_parent(context, Some(self.into()));
+             catchup_display_object_to_frame(context, state_sprite.into());
+--- a/core/src/display_object/container.rs
++++ b/core/src/display_object/container.rs
+@@ -380,6 +380,7 @@
+             ChildContainer::remove_child_from_render_list(this, child, context);
+ 
+         if removed_from_render_list {
++            context.library.request_native_gc();
+             if !self.raw_container().is_action_script_3() {
+                 child.avm1_unload(context);
+             } else if child.object2().is_some() {
+--- a/core/src/display_object/edit_text.rs
++++ b/core/src/display_object/edit_text.rs
+@@ -355,6 +355,9 @@
+                 avm1_text_field_bindings: RefLock::new(Vec::new()),
+             },
+         ));
++        if let Some(owner) = context.library.existing_movie_library_handle(&et.movie(), context.gc_context) {
++            et.set_movie_library_owner_if_missing(owner, context.gc());
++        }
+         et.relayout(context);
+         et
+     }
+--- a/core/src/display_object/graphic.rs
++++ b/core/src/display_object/graphic.rs
+@@ -53,16 +53,16 @@
+         swf_shape: swf::Shape,
+         movie: Arc<SwfMovie>,
+     ) -> Self {
+-        let library = context.library.library_for_movie(movie.clone()).unwrap();
++        let library = context.library.library_for_movie(movie.clone(), context.gc_context).unwrap();
+         let shared = GraphicShared {
+             id: swf_shape.id,
+             shape_bounds: swf_shape.shape_bounds,
+             edge_bounds: swf_shape.edge_bounds,
+-            render_handle: Some(
++            render_handle: Some(RefCell::new(Some(
+                 context
+                     .renderer
+-                    .register_shape((&swf_shape).into(), &MovieLibrarySource { library }),
+-            ),
++                    .register_shape((&swf_shape).into(), &MovieLibrarySource { library: &library }),
++            ))),
+             shape: swf_shape,
+             movie,
+             scaled_handle: RefCell::new(TessellationCache::new()),
+@@ -119,6 +119,30 @@
+         Self(Gc::new(mc, (*self.0).clone()))
+     }
+ 
++    /// Drop reconstructible GPU caches, not the shared geometry or movie.
++    pub(crate) fn release_render_cache(self) {
++        let shared = self.0.shared.get();
++        if let Some(handle) = &shared.render_handle {
++            handle.borrow_mut().take();
++        }
++        *shared.scaled_handle.borrow_mut() = TessellationCache::new();
++    }
++
++    fn base_render_handle(self, context: &mut RenderContext) -> Option<ShapeHandle> {
++        let shared = self.0.shared.get();
++        // Outer None denotes a genuinely empty Graphic, not an evicted cache.
++        let cache = shared.render_handle.as_ref()?;
++        if let Some(handle) = cache.borrow().as_ref() {
++            return Some(handle.clone());
++        }
++        let library = context.library.library_for_movie(shared.movie.clone(), context.gc_context)?;
++        let handle = context
++            .renderer
++            .register_shape((&shared.shape).into(), &MovieLibrarySource { library: &library });
++        *cache.borrow_mut() = Some(handle.clone());
++        Some(handle)
++    }
++
+     pub fn drawing_mut(&self) -> RefMut<'_, Drawing> {
+         self.0.drawing.get_or_init(Default::default).borrow_mut()
+     }
+@@ -151,11 +175,11 @@
+         }
+ 
+         // Retessellate at the new scale
+-        let library = context.library.library_for_movie(shared.movie.clone());
++        let library = context.library.library_for_movie(shared.movie.clone(), context.gc_context);
+         if let Some(library) = library {
+             let new_handle = context.renderer.register_shape_with_scale(
+                 (&shared.shape).into(),
+-                &MovieLibrarySource { library },
++                &MovieLibrarySource { library: &library },
+                 current_scale,
+             );
+ 
+@@ -231,12 +255,14 @@
+     fn replace_with(self, context: &mut UpdateContext<'gc>, id: CharacterId) {
+         // Static assets like Graphics can replace themselves via a PlaceObject tag with PlaceObjectAction::Replace.
+         // This does not create a new instance, but instead swaps out the underlying static data to point to the new art.
+-        if let Some(new_graphic) = context
++        let library_item = context
+             .library
+-            .library_for_movie_mut(self.movie())
+-            .get_graphic(id)
++            .library_for_movie_mut(self.movie(), context.gc_context)
++            .get_graphic(id);
++        if let Some(new_graphic) = library_item
+         {
+             self.set_shared(context.gc(), new_graphic.0.shared.get());
++            self.set_movie_library_owner(new_graphic.movie_library_owner(), context.gc());
+         } else {
+             tracing::warn!("PlaceObject: expected Graphic at character ID {}", id);
+         }
+@@ -255,7 +281,7 @@
+ 
+         if let Some(drawing) = self.0.drawing.get() {
+             drawing.borrow().render(context);
+-        } else if let Some(base_handle) = self.0.shared.get().render_handle.clone() {
++        } else if let Some(base_handle) = self.base_render_handle(context) {
+             let transform = context.transform_stack.transform();
+ 
+             // Calculate the current scale from the transform, to determine if
+@@ -338,7 +364,7 @@
+ struct GraphicShared {
+     id: CharacterId,
+     shape: swf::Shape,
+-    render_handle: Option<ShapeHandle>,
++    render_handle: Option<RefCell<Option<ShapeHandle>>>,
+     shape_bounds: Rectangle<Twips>,
+     edge_bounds: Rectangle<Twips>,
+     movie: Arc<SwfMovie>,
+--- a/core/src/display_object/morph_shape.rs
++++ b/core/src/display_object/morph_shape.rs
+@@ -59,6 +59,14 @@
+     pub fn instantiate(self, gc_context: &Mutation<'gc>) -> Self {
+         Self(Gc::new(gc_context, (*self.0).clone()))
+     }
++
++    /// Preserve interpolated CPU geometry: hit tests can read frames without
++    /// rendering them first. Only GPU handles are recreated by `get_shape`.
++    pub(crate) fn release_render_cache(self) {
++        for frame in self.0.shared.get().frames.borrow_mut().values_mut() {
++            frame.shape_handle.take();
++        }
++    }
+ }
+ 
+ impl<'gc> TDisplayObject<'gc> for MorphShape<'gc> {
+@@ -71,13 +79,15 @@
+     }
+ 
+     fn replace_with(self, context: &mut UpdateContext<'gc>, id: CharacterId) {
+-        if let Some(new_morph_shape) = context
++        let library_item = context
+             .library
+-            .library_for_movie_mut(self.movie())
+-            .get_morph_shape(id)
++            .library_for_movie_mut(self.movie(), context.gc_context)
++            .get_morph_shape(id);
++        if let Some(new_morph_shape) = library_item
+         {
+             unlock!(Gc::write(context.gc(), self.0), MorphShapeData, shared)
+-                .set(new_morph_shape.0.shared.get())
++                .set(new_morph_shape.0.shared.get());
++            self.set_movie_library_owner(new_morph_shape.movie_library_owner(), context.gc());
+         } else {
+             tracing::warn!("PlaceObject: expected morph shape at character ID {}", id);
+         }
+@@ -233,11 +243,11 @@
+         } else {
+             let library = context
+                 .library
+-                .library_for_movie(self.movie.clone())
++                .library_for_movie(self.movie.clone(), context.gc_context)
+                 .unwrap();
+             let handle = context
+                 .renderer
+-                .register_shape((&frame.shape).into(), &MovieLibrarySource { library });
++                .register_shape((&frame.shape).into(), &MovieLibrarySource { library: &library });
+             frame.shape_handle = Some(handle.clone());
+             handle
+         }
+--- a/core/src/display_object/movie_clip.rs
++++ b/core/src/display_object/movie_clip.rs
+@@ -1,4 +1,5 @@
+ //! `MovieClip` display object and support code.
++use crate::library::MovieLibraryHandle;
+ use crate::avm1::ActivationIdentifier as Avm1ActivationIdentifier;
+ use crate::avm1::Avm1;
+ use crate::avm1::ExecutionReason as Avm1ExecutionReason;
+@@ -278,6 +279,35 @@
+         MovieClipWeak(Gc::downgrade(self.0))
+     }
+ 
++    /// Construct an empty clip with the semantic owner needed by detached use.
++    pub fn new_with_library(movie: Arc<SwfMovie>, context: &mut UpdateContext<'gc>) -> Self {
++        let clip = Self::new(movie, context.gc());
++        clip.bind_library(context);
++        clip
++    }
++
++    pub(crate) fn bind_library_owner(self, owner: MovieLibraryHandle<'gc>, mc: &Mutation<'gc>) {
++        debug_assert!(Arc::ptr_eq(&self.movie(), &owner.movie()));
++        let shared = Gc::write(mc, self.0.shared.get());
++        unlock!(shared, MovieClipShared, library_owner).set(Some(owner));
++    }
++
++    fn bind_library(self, context: &mut UpdateContext<'gc>) {
++        if self.0.shared.get().library_owner.get().is_none() {
++            let movie = self.movie();
++            // Empty unload/Loader placeholders have no semantic symbol library.
++            // Do not create rooted empty entries merely to bind a future load.
++            let owner = if let Some(owner) = context.library.existing_movie_library_handle(&movie, context.gc_context) {
++                owner
++            } else if movie.is_movie() {
++                context.library.movie_library_handle(movie, context.gc_context)
++            } else {
++                return;
++            };
++            self.bind_library_owner(owner, context.gc());
++        }
++    }
++
+     pub fn new(movie: Arc<SwfMovie>, mc: &Mutation<'gc>) -> Self {
+         let shared = MovieClipShared::empty(movie);
+         MovieClip(Gc::new(mc, MovieClipData::new(shared, mc)))
+@@ -320,7 +350,9 @@
+ 
+         let data = MovieClipData::new(shared, context.gc());
+         data.flags.set(MovieClipFlags::PLAYING);
+-        MovieClip(Gc::new(context.gc(), data))
++        let clip = MovieClip(Gc::new(context.gc(), data));
++        clip.bind_library(context);
++        clip
+     }
+ 
+     /// Construct a movie clip that represents the root movie
+@@ -349,6 +381,7 @@
+         data.base.base.set_instantiated_by_timeline(true);
+ 
+         let mc = MovieClip(Gc::new(activation.gc(), data));
++        mc.bind_library(activation.context);
+         if let Some(loader_info) = loader_info {
+             loader_info.set_loader_stream(LoaderStream::Swf(movie, mc.into()), activation.gc());
+         }
+@@ -395,6 +428,7 @@
+         write.flags.set(MovieClipFlags::PLAYING);
+         write.current_frame.set(0);
+         write.audio_stream.take();
++        self.bind_library(context);
+     }
+ 
+     pub fn set_initialized(self) {
+@@ -481,6 +515,7 @@
+         context: &mut UpdateContext<'gc>,
+         chunk_limit: &mut ExecutionLimit,
+     ) -> bool {
++        self.bind_library(context);
+         let shared = Gc::as_ref(self.0.shared.get());
+         let (swf, progress) = (&shared.swf_data, &shared.preload_progress);
+ 
+@@ -498,10 +533,11 @@
+ 
+         let mut sub_preload_done = true;
+         if let Some(symbol) = progress.cur_preload_symbol.take() {
+-            match context
++            let library_item = context
+                 .library
+-                .library_for_movie_mut(self.movie())
+-                .character_by_id(symbol)
++                .library_for_movie_mut(self.movie(), context.gc_context)
++                .character_by_id(symbol);
++            match library_item
+             {
+                 Some(Character::MovieClip(mc)) => {
+                     sub_preload_done = mc.preload(context, chunk_limit);
+@@ -678,7 +714,7 @@
+         let data = reader.read_slice_to_end();
+         if !data.is_empty() {
+             let movie = self.movie();
+-            let domain = context.library.library_for_movie_mut(movie).avm2_domain();
++            let domain = context.library.library_for_movie_mut(movie, context.gc_context).avm2_domain();
+ 
+             // DoAbc tag seems to be equivalent to a DoAbc2 with no flags (eager)
+             match Avm2::do_abc(
+@@ -720,7 +756,7 @@
+         let do_abc = reader.read_do_abc_2()?;
+         if !do_abc.data.is_empty() {
+             let movie = self.movie();
+-            let domain = context.library.library_for_movie_mut(movie).avm2_domain();
++            let domain = context.library.library_for_movie_mut(movie, context.gc_context).avm2_domain();
+             let name = AvmString::new(context.gc(), do_abc.name.decode(reader.encoding()));
+ 
+             match Avm2::do_abc(
+@@ -771,7 +807,7 @@
+         }
+ 
+         let mc = context.gc();
+-        let library = context.library.library_for_movie_mut(self.movie());
++        let mut library = context.library.library_for_movie_mut(self.movie(), context.gc_context);
+ 
+         for asset in exported_assets {
+             let name = asset.name.decode(reader.encoding());
+@@ -782,6 +818,7 @@
+             library.register_import(name, id);
+         }
+ 
++        drop(library);
+         let request = Request::get(asset_url);
+ 
+         let fut = LoadManager::load_asset_movie(context, request, self);
+@@ -1510,8 +1547,10 @@
+         }
+ 
+         let movie = self.movie();
+-        let library = context.library.library_for_movie_mut(movie.clone());
+-        match library.instantiate_by_id(id, context.gc_context) {
++        let library = context.library.library_for_movie_mut(movie.clone(), context.gc_context);
++        let child = library.instantiate_by_id(id, context.gc_context);
++        drop(library);
++        match child {
+             Some(child) => {
+                 // Remove previous child from children list,
+                 // and add new child onto front of the list.
+@@ -2411,6 +2450,7 @@
+     /// This happens if a MovieClip has been unloaded. The state is then changed one
+     /// frame after the command to unload the MovieClip has been read.
+     fn transform_to_unloaded_state(self, context: &mut UpdateContext<'gc>) {
++        context.library.request_native_gc();
+         let movie = if let Some(DisplayObject::MovieClip(parent_mc)) = self.parent() {
+             let parent_movie = parent_mc.movie();
+             let parent_version = parent_movie.version();
+@@ -2470,7 +2510,7 @@
+                     let movie = self.movie();
+                     let domain = context
+                         .library
+-                        .library_for_movie(movie)
++                        .library_for_movie(movie, context.gc_context)
+                         .unwrap()
+                         .avm2_domain();
+ 
+@@ -3494,6 +3534,7 @@
+         reader: &mut SwfStream<'a>,
+         version: u8,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let define_bits_lossless = reader.read_define_bits_lossless(version)?;
+         let bitmap = Gc::new(
+             context.gc(),
+@@ -3507,7 +3548,7 @@
+             })),
+         );
+         self.library_mut(context)
+-            .register_character(define_bits_lossless.id, Character::Bitmap(bitmap));
++            .register_character(define_bits_lossless.id, Character::Bitmap(bitmap), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3536,11 +3577,12 @@
+         reader: &mut SwfStream<'a>,
+         version: u8,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let tag = reader.read_define_morph_shape(version)?;
+         let id = tag.id;
+         let morph_shape = MorphShape::from_swf_tag(context.gc(), tag, self.movie());
+         self.library_mut(context)
+-            .register_character(id, Character::MorphShape(morph_shape));
++            .register_character(id, Character::MorphShape(morph_shape), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3551,11 +3593,12 @@
+         reader: &mut SwfStream<'a>,
+         version: u8,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let swf_shape = reader.read_define_shape(version)?;
+         let id = swf_shape.id;
+         let graphic = Graphic::from_swf_tag(context, swf_shape, self.movie());
+         self.library_mut(context)
+-            .register_character(id, Character::Graphic(graphic));
++            .register_character(id, Character::Graphic(graphic), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3618,8 +3661,9 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let mc = context.gc();
+-        let library = self.library_mut(context);
++        let mut library = self.library_mut(context);
+         let (id, jpeg_data) = reader.read_define_bits()?;
+         let jpeg_tables = library.jpeg_tables();
+         let jpeg_data =
+@@ -3634,7 +3678,7 @@
+                 height,
+             }),
+         ));
+-        library.register_character(id, bitmap);
++        library.register_character(id, bitmap, owner_gc);
+         Ok(())
+     }
+ 
+@@ -3644,6 +3688,7 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let (id, jpeg_data) = reader.read_define_bits_jpeg_2()?;
+         let (width, height) = ruffle_render::utils::decode_define_bits_jpeg_dimensions(jpeg_data)?;
+         let bitmap = Character::Bitmap(Gc::new(
+@@ -3655,7 +3700,7 @@
+                 height,
+             }),
+         ));
+-        self.library_mut(context).register_character(id, bitmap);
++        self.library_mut(context).register_character(id, bitmap, owner_gc);
+         Ok(())
+     }
+ 
+@@ -3666,6 +3711,7 @@
+         reader: &mut SwfStream<'a>,
+         version: u8,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let jpeg = reader.read_define_bits_jpeg_3(version)?;
+         let (width, height) = ruffle_render::utils::decode_define_bits_jpeg_dimensions(jpeg.data)?;
+ 
+@@ -3679,7 +3725,7 @@
+             }),
+         ));
+         self.library_mut(context)
+-            .register_character(jpeg.id, bitmap);
++            .register_character(jpeg.id, bitmap, owner_gc);
+         Ok(())
+     }
+ 
+@@ -3711,6 +3757,7 @@
+         context: &mut UpdateContext<'gc>,
+         swf_button: swf::Button<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let button = if self.movie().is_action_script_3() {
+             Character::Avm2Button(Avm2Button::from_swf_tag(
+                 &swf_button,
+@@ -3727,7 +3774,7 @@
+             ))
+         };
+         self.library_mut(context)
+-            .register_character(swf_button.id, button);
++            .register_character(swf_button.id, button, owner_gc);
+         Ok(())
+     }
+ 
+@@ -3795,10 +3842,11 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let swf_edit_text = reader.read_define_edit_text()?;
+         let edit_text = EditText::from_swf_tag(context, self.movie(), swf_edit_text);
+         self.library_mut(context)
+-            .register_character(edit_text.id(), Character::EditText(edit_text));
++            .register_character(edit_text.id(), Character::EditText(edit_text), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3808,6 +3856,7 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let font = reader.read_define_font_1()?;
+         let glyphs = font
+             .glyphs
+@@ -3838,7 +3887,7 @@
+             FontType::Embedded,
+         );
+         self.library_mut(context)
+-            .register_character(font_id, Character::Font(font_object));
++            .register_character(font_id, Character::Font(font_object), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3848,6 +3897,7 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let font = reader.read_define_font_2(2)?;
+         let font_id = font.id;
+         let font_object = Font::from_swf_tag(
+@@ -3858,7 +3908,7 @@
+             FontType::Embedded,
+         );
+         self.library_mut(context)
+-            .register_character(font_id, Character::Font(font_object));
++            .register_character(font_id, Character::Font(font_object), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3868,6 +3918,7 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let font = reader.read_define_font_2(3)?;
+         let font_id = font.id;
+         let font_object = Font::from_swf_tag(
+@@ -3878,7 +3929,7 @@
+             FontType::Embedded,
+         );
+         self.library_mut(context)
+-            .register_character(font_id, Character::Font(font_object));
++            .register_character(font_id, Character::Font(font_object), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3888,11 +3939,12 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let font = reader.read_define_font_4()?;
+         let font_id = font.id;
+         let font_object = Font::from_font4_tag(context.gc(), font, reader.encoding())?;
+         self.library_mut(context)
+-            .register_character(font_id, Character::Font(font_object));
++            .register_character(font_id, Character::Font(font_object), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3922,10 +3974,12 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let sound = reader.read_define_sound()?;
+         if let Ok(handle) = context.audio.register_sound(&sound) {
++            let handle = Gc::new(context.gc(), handle);
+             self.library_mut(context)
+-                .register_character(sound.id, Character::Sound(handle));
++                .register_character(sound.id, Character::Sound(handle), owner_gc);
+         } else {
+             tracing::error!(
+                 "MovieClip::define_sound: Unable to register sound ID {}",
+@@ -3941,11 +3995,12 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let streamdef = reader.read_define_video_stream()?;
+         let id = streamdef.id;
+         let video = Video::from_swf_tag(self.movie(), streamdef, context.gc());
+         self.library_mut(context)
+-            .register_character(id, Character::Video(video));
++            .register_character(id, Character::Video(video), owner_gc);
+         Ok(())
+     }
+ 
+@@ -3955,6 +4010,7 @@
+         reader: &mut SwfStream<'a>,
+         chunk_limit: &mut ExecutionLimit,
+     ) -> Result<ControlFlow, Error> {
++        let owner_gc = context.gc_context;
+         let id = reader.read_character_id()?;
+         let num_frames = reader.read_u16()?;
+ 
+@@ -3966,9 +4022,10 @@
+             num_frames,
+         );
+ 
++        movie_clip.bind_library(context);
+         if self
+             .library_mut(context)
+-            .register_character(id, Character::MovieClip(movie_clip))
++            .register_character(id, Character::MovieClip(movie_clip), owner_gc)
+         {
+             self.preload_progress.cur_preload_symbol.set(Some(id));
+         } else {
+@@ -3998,10 +4055,11 @@
+         reader: &mut SwfStream<'a>,
+         version: u8,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let text = reader.read_define_text(version)?;
+         let text_object = Text::from_swf_tag(context, self.movie(), &text);
+         self.library_mut(context)
+-            .register_character(text.id, Character::Text(text_object));
++            .register_character(text.id, Character::Text(text_object), owner_gc);
+         Ok(())
+     }
+ 
+@@ -4011,19 +4069,21 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let tag_data = reader.read_define_binary_data()?;
+         let binary_data = BinaryData::from_swf_tag(self.movie(), &tag_data);
+         let binary_data = Gc::new(context.gc(), binary_data);
+         self.library_mut(context)
+-            .register_character(tag_data.id, Character::BinaryData(binary_data));
++            .register_character(tag_data.id, Character::BinaryData(binary_data), owner_gc);
+         Ok(())
+     }
+ 
+     #[inline]
+     fn import_exports_of_importer(&self, context: &mut UpdateContext<'gc>) {
++        let owner_gc = context.gc_context;
+         let Some(importer_library) = self
+             .importer_movie
+-            .and_then(|mc| context.library.library_for_movie(mc.movie()))
++            .and_then(|mc| context.library.library_for_movie(mc.movie(), context.gc_context))
+         else {
+             return;
+         };
+@@ -4037,10 +4097,11 @@
+             })
+             .collect::<HashMap<AvmString<'gc>, (CharacterId, Character<'gc>)>>();
+ 
+-        let self_library = self.library_mut(context);
++        drop(importer_library);
++        let mut self_library = self.library_mut(context);
+         for (name, (id, character)) in exported_from_importer {
+             if self_library.character_by_id(id).is_none() {
+-                self_library.register_character(id, character);
++                self_library.register_character(id, character, owner_gc);
+                 self_library.register_export(id, name);
+             }
+         }
+@@ -4063,7 +4124,7 @@
+         movie: Arc<SwfMovie>,
+     ) {
+         let mc = context.gc();
+-        let library = context.library.library_for_movie_mut(movie);
++        let mut library = context.library.library_for_movie_mut(movie, context.gc_context);
+         library.register_export(id, name);
+ 
+         // TODO: do other types of Character need to know their exported name?
+@@ -4089,6 +4150,7 @@
+         context: &mut UpdateContext<'gc>,
+         reader: &mut SwfStream<'a>,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let exports = reader.read_export_assets()?;
+         let importer_movie = self.importer_movie.map(|mc| mc.movie());
+         for export in exports {
+@@ -4103,10 +4165,11 @@
+                 tracing::debug!("register_export asset: {} (ID: {})", name, export.id);
+ 
+                 if let Some(parent) = &importer_movie {
+-                    let parent_library = context.library.library_for_movie_mut(parent.clone());
++                    let mut parent_library = context.library.library_for_movie_mut(parent.clone(), context.gc_context);
+ 
+                     if let Some(id) = parent_library.character_id_by_import_name(&name) {
+-                        parent_library.register_character(id, character);
++                        parent_library.register_character(id, character, owner_gc);
++                        drop(parent_library);
+ 
+                         Self::register_export(context, id, name, parent.clone());
+                         tracing::debug!(
+@@ -4336,6 +4399,7 @@
+         context: &mut UpdateContext<'gc>,
+         current_frame: FrameNumber,
+     ) -> Result<(), Error> {
++        let owner_gc = context.gc_context;
+         let Some(eager_tags) = self.0.shared.get().take_eager_tags(current_frame) else {
+             return Ok(());
+         };
+@@ -4362,29 +4426,34 @@
+             let library = activation
+                 .context
+                 .library
+-                .library_for_movie_mut(movie.clone());
++                .library_for_movie_mut(movie.clone(), activation.context.gc_context);
+             let domain = library.avm2_domain();
++            drop(library);
+ 
+             for (class_name, id) in eager_tags.symbolclass_names {
+                 let name = AvmString::new(activation.gc(), class_name);
+                 match Avm2::lookup_class_for_character(&mut activation, self, domain, name, id) {
+                     Ok(class_object) => {
++                        let owner = activation.context.library.movie_library_handle(movie.clone(), activation.context.gc_context);
+                         activation
+                             .context
+                             .library
+                             .avm2_class_registry_mut()
+                             .set_class_symbol(
+                                 class_object.inner_class_definition(),
+-                                movie.clone(),
++                                owner,
+                                 id,
++                                activation.context.gc_context,
+                             );
+ 
+                         let library = activation
+                             .context
+                             .library
+-                            .library_for_movie_mut(movie.clone());
+-
+-                        match library.character_by_id(id) {
++                            .library_for_movie_mut(movie.clone(), activation.context.gc_context);
++
++                        let character = library.character_by_id(id);
++                        drop(library);
++                        match character {
+                             Some(Character::EditText(edit_text)) => {
+                                 edit_text.set_avm2_class(activation.gc(), class_object)
+                             }
+@@ -4430,12 +4499,12 @@
+ 
+                                 let instantiated = self.instantiate(activation.gc());
+ 
+-                                let library = activation
++                                let mut library = activation
+                                     .context
+                                     .library
+-                                    .library_for_movie_mut(movie.clone());
+-
+-                                library.register_character(id, Character::MovieClip(instantiated));
++                                    .library_for_movie_mut(movie.clone(), activation.context.gc_context);
++
++                                library.register_character(id, Character::MovieClip(instantiated), owner_gc);
+                             }
+                             _ => {
+                                 tracing::warn!(
+@@ -4714,6 +4783,7 @@
+ #[derive(Collect)]
+ #[collect(no_drop)]
+ struct MovieClipShared<'gc> {
++    library_owner: Lock<Option<MovieLibraryHandle<'gc>>>,
+     cell: RefCell<MovieClipSharedMut>,
+     id: CharacterId,
+     movie: Arc<SwfMovie>,
+@@ -4798,6 +4868,7 @@
+         importer_movie: Option<MovieClip<'gc>>,
+     ) -> Self {
+         Self {
++            library_owner: Lock::new(None),
+             cell: Default::default(),
+             id,
+             movie,
+@@ -4815,12 +4886,20 @@
+         self.movie.clone()
+     }
+ 
+-    fn library<'a>(&self, context: &'a UpdateContext<'gc>) -> Option<&'a MovieLibrary<'gc>> {
+-        context.library.library_for_movie(self.movie())
+-    }
+-
+-    fn library_mut<'a>(&self, context: &'a mut UpdateContext<'gc>) -> &'a mut MovieLibrary<'gc> {
+-        context.library.library_for_movie_mut(self.movie())
++    fn library<'a>(&self, context: &'a UpdateContext<'gc>) -> Option<Ref<'a, MovieLibrary<'gc>>> {
++        if let Some(owner) = self.library_owner.get() {
++            Some(owner.read())
++        } else {
++            context.library.library_for_movie(self.movie(), context.gc_context)
++        }
++    }
++
++    fn library_mut<'a>(&self, context: &'a mut UpdateContext<'gc>) -> RefMut<'a, MovieLibrary<'gc>> {
++        if let Some(owner) = self.library_owner.get() {
++            owner.write(context.gc())
++        } else {
++            context.library.library_for_movie_mut(self.movie(), context.gc_context)
++        }
+     }
+ 
+     fn take_eager_tags(&self, frame: FrameNumber) -> Option<EagerTags> {
+--- a/core/src/display_object/text.rs
++++ b/core/src/display_object/text.rs
+@@ -91,7 +91,7 @@
+ 
+             let font = context
+                 .library
+-                .library_for_movie(self.movie())
++                .library_for_movie(self.movie(), context.gc_context)
+                 .unwrap()
+                 .get_font(font_id?)?;
+ 
+@@ -120,12 +120,14 @@
+     }
+ 
+     fn replace_with(self, context: &mut UpdateContext<'gc>, id: CharacterId) {
+-        if let Some(new_text) = context
++        let library_item = context
+             .library
+-            .library_for_movie_mut(self.movie())
+-            .get_text(id)
++            .library_for_movie_mut(self.movie(), context.gc_context)
++            .get_text(id);
++        if let Some(new_text) = library_item
+         {
+             self.set_shared(context, new_text.0.shared.get());
++            self.set_movie_library_owner(new_text.movie_library_owner(), context.gc());
+         } else {
+             tracing::warn!("PlaceObject: expected text at character ID {}", id);
+         }
+@@ -158,11 +160,12 @@
+             color = block.color.unwrap_or(color);
+             font_id = block.font_id.unwrap_or(font_id);
+             height = block.height.unwrap_or(height);
+-            if let Some(font) = context
++            let library_item = context
+                 .library
+-                .library_for_movie(self.movie())
++                .library_for_movie(self.movie(), context.gc_context)
+                 .unwrap()
+-                .get_font(font_id)
++                .get_font(font_id);
++            if let Some(font) = library_item
+             {
+                 let scale = (height.get() as f32) / font.scale();
+                 transform.matrix.a = scale;
+@@ -226,11 +229,12 @@
+                 font_id = block.font_id.unwrap_or(font_id);
+                 height = block.height.unwrap_or(height);
+ 
+-                if let Some(font) = context
++                let library_item = context
+                     .library
+-                    .library_for_movie(self.movie())
++                    .library_for_movie(self.movie(), context.gc_context)
+                     .unwrap()
+-                    .get_font(font_id)
++                    .get_font(font_id);
++                if let Some(font) = library_item
+                 {
+                     let scale = (height.get() as f32) / font.scale();
+                     glyph_matrix.a = scale;
+--- a/core/src/external.rs
++++ b/core/src/external.rs
+@@ -310,7 +310,7 @@
+             Callback::Avm2 { method } => {
+                 let domain = context
+                     .library
+-                    .library_for_movie(context.root_swf.clone())
++                    .library_for_movie(context.root_swf.clone(), context.gc_context)
+                     .unwrap()
+                     .avm2_domain();
+                 let mut activation = Avm2Activation::from_domain(context, domain);
+--- a/core/src/html/layout/context.rs
++++ b/core/src/html/layout/context.rs
+@@ -48,7 +48,7 @@
+         movie: Option<Arc<SwfMovie>>,
+     ) -> Option<Font<'gc>> {
+         self.library
+-            .get_embedded_font_by_name(name, font_type, is_bold, is_italic, movie)
++            .get_embedded_font_by_name(name, font_type, is_bold, is_italic, movie, self.gc_context)
+     }
+ 
+     fn default_font(
+@@ -99,7 +99,7 @@
+         movie: Option<Arc<SwfMovie>>,
+     ) -> Option<Font<'gc>> {
+         self.library
+-            .get_embedded_font_by_name(name, font_type, is_bold, is_italic, movie)
++            .get_embedded_font_by_name(name, font_type, is_bold, is_italic, movie, self.gc_context)
+     }
+ 
+     fn default_font(
+--- a/core/src/html/text_format.rs
++++ b/core/src/html/text_format.rs
+@@ -200,7 +200,7 @@
+     ) -> Self {
+         let encoding = swf_movie.encoding();
+         let swf_version = swf_movie.version();
+-        let movie_library = context.library.library_for_movie_mut(swf_movie);
++        let movie_library = context.library.library_for_movie_mut(swf_movie, context.gc_context);
+         let font = et.font_id().and_then(|fid| movie_library.get_font(fid));
+         let font_class = et
+             .font_class()
+--- a/core/src/library.rs
++++ b/core/src/library.rs
+@@ -8,8 +8,9 @@
+ use crate::prelude::*;
+ use crate::string::AvmString;
+ use crate::tag_utils::SwfMovie;
+-use gc_arena::collect::Trace;
+-use gc_arena::{Collect, Mutation};
++use gc_arena::{Collect, Gc, Mutation};
++use gc_arena::lock::RefLock;
++use std::cell::{Ref, RefMut};
+ use ruffle_render::backend::RenderBackend;
+ use ruffle_render::bitmap::BitmapHandle;
+ use ruffle_render::utils::remove_invalid_jpeg_data;
+@@ -20,99 +21,42 @@
+ use fnv::{FnvHashMap, FnvHashSet};
+ use std::collections::HashMap;
+ use std::sync::{Arc, Weak};
+-use weak_table::{PtrWeakKeyHashMap, WeakValueHashMap, traits::WeakElement};
+-
+-#[derive(Clone)]
+-struct MovieSymbol(Arc<SwfMovie>, CharacterId);
+-
+-#[derive(Clone)]
+-struct WeakMovieSymbol(Weak<SwfMovie>, CharacterId);
+-
+-impl WeakElement for WeakMovieSymbol {
+-    type Strong = MovieSymbol;
+-
+-    fn new(view: &Self::Strong) -> Self {
+-        Self(Arc::downgrade(&view.0), view.1)
+-    }
+-
+-    fn view(&self) -> Option<Self::Strong> {
+-        if let Some(strong) = self.0.upgrade() {
+-            Some(MovieSymbol(strong, self.1))
+-        } else {
+-            None
+-        }
+-    }
+-}
+-
+-/// The mappings between class objects and library characters defined by
+-/// `SymbolClass`.
+-pub struct Avm2ClassRegistry<'gc> {
+-    /// A list of AVM2 class objects and the character IDs they are expected to
+-    /// instantiate.
+-    class_map: WeakValueHashMap<Avm2Class<'gc>, WeakMovieSymbol>,
+-}
+-
+-unsafe impl<'gc> Collect<'gc> for Avm2ClassRegistry<'gc> {
+-    fn trace<C: Trace<'gc>>(&self, cc: &mut C) {
+-        for (k, _) in self.class_map.iter() {
+-            cc.trace(k);
+-        }
+-    }
+-}
++
++/// Compatibility facade for per-class SymbolClass ownership. It contains no
++/// entries and roots no classes or libraries: the semantic edge lives on Class.
++#[derive(Collect)]
++#[collect(no_drop)]
++pub struct Avm2ClassRegistry<'gc>(std::marker::PhantomData<Avm2Class<'gc>>);
+ 
+ impl Default for Avm2ClassRegistry<'_> {
+-    fn default() -> Self {
+-        Self::new()
+-    }
++    fn default() -> Self { Self::new() }
+ }
+ 
+ impl<'gc> Avm2ClassRegistry<'gc> {
+-    pub fn new() -> Self {
+-        Self {
+-            class_map: WeakValueHashMap::new(),
+-        }
+-    }
+-
+-    /// Retrieve the library symbol for a given AVM2 class object.
+-    ///
+-    /// A value of `None` indicates that this AVM2 class is not associated with
+-    /// a library symbol.
++    pub fn new() -> Self { Self(std::marker::PhantomData) }
++
+     pub fn class_symbol(&self, class_def: Avm2Class<'gc>) -> Option<(Arc<SwfMovie>, CharacterId)> {
+-        match self.class_map.get(&class_def) {
+-            Some(MovieSymbol(movie, symbol)) => Some((movie, symbol)),
+-            None => None,
+-        }
+-    }
+-
+-    /// Associate an AVM2 class definition with a given library symbol.
++        class_def.library_symbol().map(|(owner, id)| (owner.movie(), id))
++    }
++
+     pub fn set_class_symbol(
+         &mut self,
+         class_def: Avm2Class<'gc>,
+-        movie: Arc<SwfMovie>,
++        owner: MovieLibraryHandle<'gc>,
+         symbol: CharacterId,
++        mc: &Mutation<'gc>,
+     ) {
+-        if let Some(old) = self.class_map.get(&class_def) {
+-            if Arc::ptr_eq(&movie, &old.0) && symbol != old.1 {
+-                // Flash player actually allows using the same class in multiple SymbolClass
+-                // entries in the same swf, with *different* symbol ids. Whichever one
+-                // is processed first will *win*, and the second one will be ignored.
+-                // We still log a warning, since we wouldn't expect this to happen outside
+-                // of deliberately crafted SWFs.
++        if let Some((old_owner, old_symbol)) = class_def.library_symbol() {
++            if Arc::ptr_eq(&owner.movie(), &old_owner.movie()) && symbol != old_symbol {
+                 tracing::warn!(
+                     "Tried to overwrite class {:?} id={:?} with symbol id={:?} from same movie",
+-                    class_def,
+-                    old.1,
+-                    symbol,
++                    class_def, old_symbol, symbol,
+                 );
+             }
+-            // If we're trying to overwrite the class with a symbol from a *different* SwfMovie,
+-            // then just ignore it. This handles the case where a Loader has a class that shadows
+-            // a class in the main swf (possibly with a different ApplicationDomain). This will
+-            // result in the original class from the parent being used, even when the child swf
+-            // instantiates the clip on the timeline.
++            // Preserve first-binding-wins, including shadowing by another movie.
+             return;
+         }
+-        self.class_map.insert(class_def, MovieSymbol(movie, symbol));
++        class_def.set_library_symbol(owner, symbol, mc);
+     }
+ }
+ 
+@@ -120,6 +64,9 @@
+ #[derive(Collect)]
+ #[collect(no_drop)]
+ pub struct MovieLibrary<'gc> {
++    #[collect(require_static)]
++    native_gc_signal: Option<std::rc::Rc<std::cell::Cell<bool>>>,
++    self_owner: Option<gc_arena::GcWeak<'gc, RefLock<MovieLibrary<'gc>>>>,
+     swf: Arc<SwfMovie>,
+     characters: HashMap<CharacterId, Character<'gc>>,
+     export_characters: Avm1PropertyMap<'gc, CharacterId>,
+@@ -132,6 +79,8 @@
+ impl<'gc> MovieLibrary<'gc> {
+     pub fn new(swf: Arc<SwfMovie>) -> Self {
+         Self {
++            native_gc_signal: None,
++            self_owner: None,
+             swf,
+             characters: HashMap::new(),
+             imported_assets: HashMap::new(),
+@@ -144,10 +93,28 @@
+ 
+     /// Registers a character; returns `true` if successful, or `false` if a character with
+     /// the given ID already exists.
+-    pub fn register_character(&mut self, id: CharacterId, character: Character<'gc>) -> bool {
++    pub fn register_character(&mut self, id: CharacterId, character: Character<'gc>, mc: &Mutation<'gc>) -> bool {
+         use std::collections::hash_map::Entry;
++        let owner = self.self_owner.and_then(|weak| weak.upgrade(mc)).map(MovieLibraryHandle);
+         match self.characters.entry(id) {
+             Entry::Vacant(e) => {
++                if let Some(signal) = &self.native_gc_signal { signal.set(true); }
++                if let Some(owner) = owner {
++                    let display: Option<DisplayObject<'gc>> = match character {
++                        Character::Graphic(v) => Some(v.into()),
++                        Character::MorphShape(v) => Some(v.into()),
++                        Character::Text(v) => Some(v.into()),
++                        Character::EditText(v) => Some(v.into()),
++                        Character::Avm1Button(v) => Some(v.into()),
++                        Character::Avm2Button(v) => Some(v.into()),
++                        Character::Video(v) => Some(v.into()),
++                        _ => None,
++                    };
++                    if let Some(display) = display {
++                        // Imported templates keep their source owner, not the importer.
++                        display.set_movie_library_owner_if_missing(owner, mc);
++                    }
++                }
+                 if let Character::Font(font) = character {
+                     self.fonts.register(font);
+                 }
+@@ -191,6 +158,25 @@
+ 
+     pub fn characters(&self) -> &HashMap<CharacterId, Character<'gc>> {
+         &self.characters
++    }
++
++    /// Release reconstructible library GPU caches without evicting symbols.
++    /// Retained instances, exported classes and domains may outlive a Loader.
++    /// This deliberately does not claim to collect the movie or its CPU data.
++    pub(crate) fn release_render_caches(&self) {
++        // Shape handles may themselves own bitmap handles. Drop both layers.
++        for character in self.characters.values() {
++            match character {
++                Character::Graphic(graphic) => graphic.release_render_cache(),
++                Character::MorphShape(morph) => morph.release_render_cache(),
++                _ => {}
++            }
++        }
++        for character in self.characters.values() {
++            if let Character::Bitmap(bitmap) = character {
++                bitmap.release_render_cache();
++            }
++        }
+     }
+ 
+     pub fn export_characters(&self) -> &PropertyMap<'gc, CharacterId> {
+@@ -266,6 +252,9 @@
+                 let bitmap = bitmap.compressed().decode().unwrap();
+                 let bitmap = Bitmap::new(mc, id, bitmap, self.swf.clone());
+                 bitmap.set_avm2_bitmapdata_class(mc, avm2_class);
++                if let Some(owner) = self.self_owner.and_then(|weak| weak.upgrade(mc)).map(MovieLibraryHandle) {
++                    bitmap.set_movie_library_owner_if_missing(owner, mc);
++                }
+                 Some(bitmap.instantiate(mc).into())
+             }
+             Character::EditText(edit_text) => Some(edit_text.instantiate(mc).into()),
+@@ -317,7 +306,7 @@
+ 
+     pub fn get_sound(&self, id: CharacterId) -> Option<SoundHandle> {
+         if let Some(Character::Sound(sound)) = self.characters.get(&id) {
+-            Some(*sound)
++            Some((**sound).clone())
+         } else {
+             None
+         }
+@@ -400,35 +389,89 @@
+     }
+ }
+ 
+-struct MovieLibraries<'gc>(PtrWeakKeyHashMap<Weak<SwfMovie>, MovieLibrary<'gc>>);
+-
+-unsafe impl<'gc> Collect<'gc> for MovieLibraries<'gc> {
+-    #[inline]
+-    fn trace<C: Trace<'gc>>(&self, cc: &mut C) {
+-        for (_, val) in self.0.iter() {
+-            cc.trace(val);
+-        }
+-    }
+-}
++/// Shared traced identity for a movie's semantic library.
++/// Live semantic owners trace this handle; the lookup registry does not root it.
++#[derive(Clone, Copy, Collect)]
++#[collect(no_drop)]
++pub struct MovieLibraryHandle<'gc>(Gc<'gc, RefLock<MovieLibrary<'gc>>>);
++
++impl<'gc> MovieLibraryHandle<'gc> {
++    fn new(mc: &Mutation<'gc>, movie: Arc<SwfMovie>) -> Self {
++        let owner = Self(Gc::new(mc, RefLock::new(MovieLibrary::new(movie))));
++        owner.0.borrow_mut(mc).self_owner = Some(Gc::downgrade(owner.0));
++        owner
++    }
++
++    pub(crate) fn movie(self) -> Arc<SwfMovie> {
++        self.read().swf.clone()
++    }
++
++    pub fn read(self) -> Ref<'gc, MovieLibrary<'gc>> {
++        self.0.borrow()
++    }
++
++    pub fn write(self, mc: &Mutation<'gc>) -> RefMut<'gc, MovieLibrary<'gc>> {
++        self.0.borrow_mut(mc)
++    }
++}
++
++/// Registry metadata never owns native movie bytes. All weak GC handles
++/// are traced even after native keys expire, avoiding hidden stale GC pointers
++/// in expired buckets of an external weak-table implementation.
++#[derive(Collect)]
++#[collect(no_drop)]
++struct MovieLibraryRegistration<'gc> {
++    #[collect(require_static)]
++    movie: Weak<SwfMovie>,
++    library: gc_arena::GcWeak<'gc, RefLock<MovieLibrary<'gc>>>,
++}
++
++#[derive(Collect)]
++#[collect(no_drop)]
++struct MovieLibraries<'gc>(
++    HashMap<usize, MovieLibraryRegistration<'gc>>,
++    #[collect(require_static)] std::rc::Rc<std::cell::Cell<bool>>,
++);
+ 
+ impl<'gc> MovieLibraries<'gc> {
+-    fn new() -> Self {
+-        Self(PtrWeakKeyHashMap::new())
+-    }
+-
+-    fn get(&self, key: &Arc<SwfMovie>) -> Option<&MovieLibrary<'gc>> {
+-        self.0.get(key)
+-    }
+-
+-    fn get_or_insert_mut(&mut self, movie: Arc<SwfMovie>) -> &mut MovieLibrary<'gc> {
+-        self.0
+-            .entry(movie.clone())
+-            .or_insert_with(|| MovieLibrary::new(movie))
+-    }
+-
+-    fn known_movies(&self) -> impl Iterator<Item = Arc<SwfMovie>> {
+-        self.0.keys()
+-    }
++    fn new() -> Self { Self(HashMap::new(), std::rc::Rc::new(std::cell::Cell::new(false))) }
++
++    fn key(movie: &Arc<SwfMovie>) -> usize { Arc::as_ptr(movie) as usize }
++
++    fn handle(&self, movie: &Arc<SwfMovie>, mc: &Mutation<'gc>) -> Option<MovieLibraryHandle<'gc>> {
++        self.0.get(&Self::key(movie))?.library.upgrade(mc).map(MovieLibraryHandle)
++    }
++
++    fn get(&self, movie: &Arc<SwfMovie>, mc: &Mutation<'gc>) -> Option<Ref<'gc, MovieLibrary<'gc>>> {
++        self.handle(movie, mc).map(|owner| owner.read())
++    }
++
++    fn insert_handle(&mut self, movie: &Arc<SwfMovie>, owner: MovieLibraryHandle<'gc>) {
++        self.0.insert(Self::key(movie), MovieLibraryRegistration {
++            movie: Arc::downgrade(movie),
++            library: Gc::downgrade(owner.0),
++        });
++    }
++
++    fn get_or_insert_handle(&mut self, movie: Arc<SwfMovie>, mc: &Mutation<'gc>) -> MovieLibraryHandle<'gc> {
++        if let Some(owner) = self.handle(&movie, mc) { return owner; }
++        // Only remove metadata for expired native keys; this is not semantic eviction.
++        self.0.retain(|_, entry| entry.movie.upgrade().is_some());
++        let owner = MovieLibraryHandle::new(mc, movie.clone());
++        owner.write(mc).native_gc_signal = Some(self.1.clone());
++        self.1.set(true);
++        self.insert_handle(&movie, owner);
++        owner
++    }
++
++    fn get_or_insert_mut(&mut self, movie: Arc<SwfMovie>, mc: &Mutation<'gc>) -> RefMut<'gc, MovieLibrary<'gc>> {
++        self.get_or_insert_handle(movie, mc).write(mc)
++    }
++
++    fn known_movies(&self) -> impl Iterator<Item = Arc<SwfMovie>> + '_ {
++        self.0.values().filter_map(|entry| entry.movie.upgrade())
++    }
++
+ }
+ 
+ /// Symbol library for multiple movies.
+@@ -478,12 +521,29 @@
+         }
+     }
+ 
+-    pub fn library_for_movie(&self, movie: Arc<SwfMovie>) -> Option<&MovieLibrary<'gc>> {
+-        self.movie_libraries.get(&movie)
+-    }
+-
+-    pub fn library_for_movie_mut(&mut self, movie: Arc<SwfMovie>) -> &mut MovieLibrary<'gc> {
+-        self.movie_libraries.get_or_insert_mut(movie)
++    /// Coalesced native-resource lifecycle notification; never an ownership edge.
++    pub(crate) fn request_native_gc(&self) {
++        self.movie_libraries.1.set(true);
++    }
++
++    pub(crate) fn take_native_gc_request(&self) -> bool {
++        self.movie_libraries.1.replace(false)
++    }
++
++    pub fn library_for_movie(&self, movie: Arc<SwfMovie>, mc: &Mutation<'gc>) -> Option<Ref<'_, MovieLibrary<'gc>>> {
++        self.movie_libraries.get(&movie, mc)
++    }
++
++    pub fn library_for_movie_mut(&mut self, movie: Arc<SwfMovie>, mc: &Mutation<'gc>) -> RefMut<'_, MovieLibrary<'gc>> {
++        self.movie_libraries.get_or_insert_mut(movie, mc)
++    }
++
++    pub(crate) fn existing_movie_library_handle(&self, movie: &Arc<SwfMovie>, mc: &Mutation<'gc>) -> Option<MovieLibraryHandle<'gc>> {
++        self.movie_libraries.handle(movie, mc)
++    }
++
++    pub(crate) fn movie_library_handle(&mut self, movie: Arc<SwfMovie>, mc: &Mutation<'gc>) -> MovieLibraryHandle<'gc> {
++        self.movie_libraries.get_or_insert_handle(movie, mc)
+     }
+ 
+     pub fn known_movies(&self) -> impl Iterator<Item = Arc<SwfMovie>> {
+@@ -716,13 +776,14 @@
+         is_bold: bool,
+         is_italic: bool,
+         movie: Option<Arc<SwfMovie>>,
++        mc: &Mutation<'gc>,
+     ) -> Option<Font<'gc>> {
+         let query = FontQuery::new(font_type, name.to_owned(), is_bold, is_italic);
+         if let Some(font) = self.global_fonts.find(&query) {
+             return Some(font);
+         }
+         if let Some(movie) = movie
+-            && let Some(library) = self.library_for_movie(movie)
++            && let Some(library) = self.library_for_movie(movie, mc)
+         {
+             if let Some((_, font)) = library.character_by_export_name(&WString::from_utf8(name)) {
+                 // Exporting a font seems to override font lookup completely.
+--- a/core/src/loader.rs
++++ b/core/src/loader.rs
+@@ -35,6 +35,7 @@
+ use crate::player::{Player, PostFrameCallback};
+ use crate::streams::{NetStream, NetStreamHandle};
+ use crate::string::{AvmString, StringContext};
++use crate::library::MovieLibraryHandle;
+ use crate::tag_utils::SwfMovie;
+ use crate::vminterface::Instantiator;
+ use chardetng::EncodingDetector;
+@@ -247,6 +248,15 @@
+     /// This is used to remove a loader after the loading or unloading process has completed.
+     pub fn remove_loader(&mut self, handle: LoaderHandle) {
+         self.0.remove(handle);
++    }
++
++    /// Invalidate loads belonging to this AVM2 LoaderInfo only. SlotMap keys are
++    /// generational, so a queued future/callback cannot target a later reuse.
++    pub fn cancel_avm2_loads(&mut self, info: LoaderInfoObject<'gc>) {
++        self.0.retain(|_, loader| {
++            !matches!(loader.vm_data, MovieLoaderVMData::Avm2 { loader_info, .. }
++                if gc_arena::Gc::ptr_eq(loader_info.0, info.0))
++        });
+     }
+ 
+     /// Retrieve a loader by handle.
+@@ -320,6 +330,7 @@
+             vm_data,
+             loader_status: LoaderStatus::Pending,
+             movie: None,
++            library_owner: None,
+         };
+         let handle = self.add_loader(loader);
+         let loader = self.get_loader_mut(handle).unwrap();
+@@ -366,7 +377,7 @@
+                             tracing::debug!("Preloading swf to run exports {:?}", url);
+ 
+                             // Create library for exports before preloading
+-                            uc.library.library_for_movie_mut(clip.movie());
++                            uc.library.library_for_movie_mut(clip.movie(), uc.gc_context);
+                             let res = clip.preload(uc, &mut execution_limit);
+                             tracing::debug!(
+                                 "Preloaded swf to run exports result {:?} {}",
+@@ -408,6 +419,7 @@
+             vm_data,
+             loader_status: LoaderStatus::Pending,
+             movie: None,
++            library_owner: None,
+         };
+         let handle = context.load_manager.add_loader(loader);
+         MovieLoader::movie_loader_bytes(handle, context, loader_url, bytes)
+@@ -593,6 +605,9 @@
+     /// completed and we expect the Player to periodically tick preload
+     /// until loading completes.
+     movie: Option<Arc<SwfMovie>>,
++
++    /// The parsing/preload operation is a semantic owner, not merely native bytes.
++    library_owner: Option<MovieLibraryHandle<'gc>>,
+ }
+ 
+ impl<'gc> MovieLoader<'gc> {
+@@ -1430,13 +1445,13 @@
+         .map_err(|e| e.error)
+         .and_then(|(body, _, _, _)| {
+             let handle = activation.context.audio.register_mp3(&body)?;
+-            sound.set_sound(&mut activation, sound_object, Some(handle));
++            sound.set_sound(&mut activation, sound_object, Some(handle.clone()));
+             sound.set_duration(Some(0));
+             sound.load_id3(&mut activation, sound_object, &body)?;
+             let duration = activation
+                 .context
+                 .audio
+-                .get_sound_duration(handle)
++                .get_sound_duration(&handle)
+                 .map(|d| d.as_millis().round() as u32);
+             sound.set_duration(duration);
+             Ok(())
+@@ -1770,9 +1785,14 @@
+ 
+         match sniffed_type {
+             ContentType::Swf => {
+-                let library = uc.library.library_for_movie_mut(movie.clone());
++                let mut library = uc.library.library_for_movie_mut(movie.clone(), uc.gc_context);
+ 
+                 library.set_avm2_domain(domain);
++                drop(library);
++                let owner = uc.library.movie_library_handle(movie.clone(), uc.gc_context);
++                if let Some(loader) = uc.load_manager.get_loader_mut(handle) {
++                    loader.library_owner = Some(owner);
++                }
+ 
+                 if let Some(mc) = clip.as_movie_clip() {
+                     let loader_info = if let MovieLoaderVMData::Avm2 { loader_info, .. } = vm_data {
+@@ -1858,9 +1878,10 @@
+             ContentType::Gif | ContentType::Jpeg | ContentType::JpegXr | ContentType::Png => {
+                 let mut activation = Avm2Activation::from_nothing(uc);
+ 
+-                let library = activation.context.library.library_for_movie_mut(movie);
++                let mut library = activation.context.library.library_for_movie_mut(movie, activation.context.gc_context);
+ 
+                 library.set_avm2_domain(domain);
++                drop(library);
+ 
+                 // This will construct AVM2-side objects even under AVM1, but it doesn't matter,
+                 // since Bitmap and BitmapData never have AVM1-side objects.
+@@ -2044,6 +2065,9 @@
+             }
+         }
+ 
++        if uc.load_manager.get_loader(handle).is_none() {
++            return Err(Error::Cancelled);
++        }
+         Ok(())
+     }
+ 
+@@ -2089,6 +2113,9 @@
+             // we add the loaded clip as a child. The frame constructor should see
+             // 'this.parent == null' and 'this.stage == null'
+             mc.post_instantiation(uc, None, Instantiator::Movie, false);
++            if uc.load_manager.get_loader(handle).is_none() {
++                return Err(Error::Cancelled);
++            }
+ 
+             if mc.movie().is_action_script_3() {
+                 mc.enter_frame(uc);
+@@ -2112,6 +2139,10 @@
+                     );
+                 }
+             }
++        }
++
++        if uc.load_manager.get_loader(handle).is_none() {
++            return Err(Error::Cancelled);
+         }
+ 
+         if let MovieLoaderVMData::Avm2 { loader_info, .. } = vm_data {
+@@ -2169,6 +2200,10 @@
+                 mc.set_current_frame(1);
+                 mc.set_cur_preload_frame(2);
+             }
++        }
++
++        if uc.load_manager.get_loader(handle).is_none() {
++            return Err(Error::Cancelled);
+         }
+ 
+         match vm_data {
+@@ -2206,7 +2241,10 @@
+             }
+         }
+ 
+-        let loader = uc.load_manager.get_loader_mut(handle).unwrap();
++        let loader = uc
++            .load_manager
++            .get_loader_mut(handle)
++            .ok_or(Error::Cancelled)?;
+         loader.loader_status = LoaderStatus::Succeeded;
+ 
+         Ok(())
+@@ -2271,6 +2309,9 @@
+                     Avm2EventObject::http_status_event(&mut activation, status, redirected);
+ 
+                 Avm2::dispatch_event(activation.context, http_status_evt, loader_info.into());
++                if activation.context.load_manager.get_loader(handle).is_none() {
++                    return Err(Error::Cancelled);
++                }
+ 
+                 // FIXME - Match the exact error message and code generated by Flash
+                 let io_error_evt = Avm2EventObject::io_error_event(&mut activation, msg, 0);
+@@ -2279,7 +2320,10 @@
+             }
+         }
+ 
+-        let loader = uc.load_manager.get_loader_mut(handle).unwrap();
++        let loader = uc
++            .load_manager
++            .get_loader_mut(handle)
++            .ok_or(Error::Cancelled)?;
+         loader.loader_status = LoaderStatus::Failed;
+ 
+         Ok(())
+--- a/core/src/player.rs
++++ b/core/src/player.rs
+@@ -301,6 +301,9 @@
+ 
+ type GcArena = gc_arena::Arena<Rootable![GcRoot<'_>]>;
+ 
++// Prototype policy: compare duty 4 and duty 1 independently before acceptance.
++pub(crate) const NATIVE_GC_UPDATE_INTERVAL: u8 = 4;
++
+ #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+ enum RunState {
+     Playing,
+@@ -348,6 +351,10 @@
+     rng: AvmRng,
+ 
+     gc_arena: Rc<RefCell<GcArena>>,
++    native_gc_cycles: u8,
++    native_gc_update_phase: u8,
++    native_gc_frame_pending: bool,
++    native_gc_idle_elapsed: FloatDuration,
+ 
+     frame_rate: f64,
+     forced_frame_rate: bool,
+@@ -547,8 +554,18 @@
+ 
+     pub fn tick(&mut self, dt: FloatDuration) {
+         if !self.is_playing() {
++            // A paused player may still own released native resources. Admit at
++            // most one maintenance opportunity per host tick, after 1/60 s of
++            // supplied elapsed time. Do not replay a backlog after a long pause.
++            self.native_gc_idle_elapsed += dt.max(FloatDuration::ZERO);
++            if self.native_gc_idle_elapsed >= FloatDuration::from_millis(1000.0 / 60.0) {
++                self.native_gc_idle_elapsed = FloatDuration::ZERO;
++                self.native_gc_frame_pending = true;
++                self.collect_native_gc();
++            }
+             return;
+         }
++        self.native_gc_idle_elapsed = FloatDuration::ZERO;
+ 
+         self.frame_accumulator += dt;
+         let frame_duration = self.frame_duration();
+@@ -983,6 +1000,27 @@
+         self.mutate_with_update_context(|context| {
+             context.renderer.set_viewport_dimensions(dimensions);
+             context.stage.build_matrices(context);
++        })
++    }
++
++    /// Configure an independently sized onscreen target without changing the
++    /// stage's logical viewport. Unsupported backends leave state unchanged.
++    pub fn set_viewport_dimensions_with_backing(
++        &mut self,
++        dimensions: ViewportDimensions,
++        backing_width: u32,
++        backing_height: u32,
++    ) -> bool {
++        self.mutate_with_update_context(|context| {
++            if !context.renderer.set_viewport_dimensions_with_backing(
++                dimensions,
++                backing_width,
++                backing_height,
++            ) {
++                return false;
++            }
++            context.stage.build_matrices(context);
++            true
+         })
+     }
+ 
+@@ -2050,6 +2088,9 @@
+ 
+     #[instrument(level = "debug", skip_all)]
+     pub fn run_frame(&mut self) {
++        // Only an actual frame/paused host tick admits artificial work. Input,
++        // timers and additional bookkeeping updates cannot multiply this grant.
++        self.native_gc_frame_pending = true;
+         let frame_time = self.frame_time(750_000_000.0);
+         let frame_time = Duration::from_nanos(frame_time as u64);
+         let (mut execution_limit, may_execute_while_streaming) = match self.load_behavior {
+@@ -2066,6 +2107,7 @@
+         let preload_finished = self.preload(&mut execution_limit);
+ 
+         if !preload_finished && !may_execute_while_streaming {
++            self.collect_native_gc();
+             return;
+         }
+ 
+@@ -2439,10 +2481,46 @@
+         });
+         self.update_mouse_state(EnumSet::empty(), false, &mut false);
+ 
+-        // GC
+-        self.gc_arena.borrow_mut().collect_debt();
+-
++        self.collect_native_gc();
+         rval
++    }
++
++    /// Bounded artificial-debt admission, not a wall-clock work guarantee.
++    /// The small maintenance floor handles last-reference removals which have
++    /// no lifecycle signal (script properties, domains, independently owned data).
++    fn collect_native_gc(&mut self) {
++        let requested = self.gc_arena.borrow().mutate(|_, root| {
++            root.data.borrow().library.take_native_gc_request()
++        });
++        let admitted = std::mem::take(&mut self.native_gc_frame_pending);
++        let mut arena = self.gc_arena.borrow_mut();
++        if requested {
++            let needed = if arena.collection_phase() == gc_arena::arena::CollectionPhase::Sleeping { 1 } else { 2 };
++            self.native_gc_cycles = self.native_gc_cycles.max(needed);
++        }
++        if admitted {
++            self.native_gc_update_phase = (self.native_gc_update_phase + 1) % NATIVE_GC_UPDATE_INTERVAL;
++            // Signals accelerate collection, but do not determine its liveness.
++            // Hidden sleeping deficit consumes some grants without doing work.
++            let target = if self.native_gc_cycles != 0 && self.native_gc_update_phase == 0 {
++                512.0
++            } else {
++                32.0
++            };
++            let extra = (target - arena.metrics().allocation_debt()).max(0.0);
++            arena.metrics().adjust_debt(extra);
++        }
++        if admitted || self.native_gc_cycles != 0 {
++            let can_advance = arena.metrics().allocation_debt() > 0.0;
++            arena.cycle_debt();
++            if can_advance && arena.collection_phase() == gc_arena::arena::CollectionPhase::Sleeping {
++                self.native_gc_cycles = self.native_gc_cycles.saturating_sub(1);
++            }
++        } else {
++            // Preserve normal allocation-driven collection without granting extra
++            // debt merely because the host delivered input/timer/bookkeeping calls.
++            arena.collect_debt();
++        }
+     }
+ 
+     pub fn flush_shared_objects(&mut self) {
+@@ -3125,6 +3203,10 @@
+                 debug_ui: Default::default(),
+ 
+                 // GC data
++                native_gc_cycles: 0,
++                native_gc_update_phase: 0,
++                native_gc_frame_pending: false,
++                native_gc_idle_elapsed: FloatDuration::ZERO,
+                 gc_arena: Rc::new(RefCell::new(GcArena::new(|gc_context| {
+                     Self::create_gc_root(
+                         gc_context,
+--- a/render/src/backend.rs
++++ b/render/src/backend.rs
+@@ -30,6 +30,18 @@
+     // Do not call this method directly - use `player.set_viewport_dimensions`,
+     // which will ensure that the stage is properly updated as well.
+     fn set_viewport_dimensions(&mut self, dimensions: ViewportDimensions);
++
++    /// Optional lower-density onscreen target. The logical viewport, commands,
++    /// input and offscreen surfaces retain their original dimensions.
++    /// Return false without mutation if this backend cannot preserve that contract.
++    fn set_viewport_dimensions_with_backing(
++        &mut self,
++        _dimensions: ViewportDimensions,
++        _backing_width: u32,
++        _backing_height: u32,
++    ) -> bool {
++        false
++    }
+     fn register_shape(
+         &mut self,
+         shape: DistilledShape,
+--- a/render/webgl/src/lib.rs
++++ b/render/webgl/src/lib.rs
+@@ -152,6 +152,8 @@
+     // This is currently unused - we just hold on to it
+     // to expose via `get_viewport_dimensions`
+     viewport_scale_factor: f64,
++    // Only set by the opt-in dual-size path. The default getter is unchanged.
++    virtual_viewport: Option<ViewportDimensions>,
+ }
+ 
+ #[derive(Debug)]
+@@ -317,6 +319,7 @@
+             add_color: None,
+ 
+             viewport_scale_factor: 1.0,
++            virtual_viewport: None,
+         };
+ 
+         renderer.push_blend_mode(RenderBlendMode::Builtin(BlendMode::Normal));
+@@ -1004,6 +1007,9 @@
+     }
+ 
+     fn viewport_dimensions(&self) -> ViewportDimensions {
++        if let Some(dimensions) = self.virtual_viewport {
++            return dimensions;
++        }
+         ViewportDimensions {
+             width: self.renderbuffer_width as u32,
+             height: self.renderbuffer_height as u32,
+@@ -1012,6 +1018,7 @@
+     }
+ 
+     fn set_viewport_dimensions(&mut self, dimensions: ViewportDimensions) {
++        self.virtual_viewport = None;
+         // Build view matrix based on canvas size.
+         self.view_matrix = [
+             [1.0 / (dimensions.width as f32 / 2.0), 0.0, 0.0, 0.0],
+@@ -1034,6 +1041,39 @@
+         self.gl
+             .viewport(0, 0, self.renderbuffer_width, self.renderbuffer_height);
+         self.viewport_scale_factor = dimensions.scale_factor
++    }
++
++    fn set_viewport_dimensions_with_backing(
++        &mut self,
++        dimensions: ViewportDimensions,
++        backing_width: u32,
++        backing_height: u32,
++    ) -> bool {
++        let Some(limit) = self.gl.get_parameter(Gl::MAX_RENDERBUFFER_SIZE)
++            .ok().and_then(|value| value.as_f64())
++            .filter(|value| value.is_finite() && *value > 0.0)
++        else {
++            return false;
++        };
++        // The legacy custom MSAA allocator discards allocation errors in its
++        // setter. Do not claim a lower-density target succeeded through it.
++        // WGPU supports its own multisample path; WebGL falls back unchanged.
++        if (self.gl2.is_some() && self.msaa_sample_count > 1)
++            || f64::from(dimensions.width) > limit || f64::from(dimensions.height) > limit
++            || dimensions.width == 0 || dimensions.height == 0
++            || !dimensions.scale_factor.is_finite() || dimensions.scale_factor <= 0.0
++            || backing_width == 0 || backing_height == 0
++            || backing_width > dimensions.width || backing_height > dimensions.height
++            || self.gl.drawing_buffer_width() != backing_width as i32
++            || self.gl.drawing_buffer_height() != backing_height as i32
++        {
++            return false;
++        }
++        // Projection stays virtual; the existing setter clamps only renderbuffer
++        // allocation and GL viewport to the already-reduced drawing buffer.
++        self.set_viewport_dimensions(dimensions);
++        self.virtual_viewport = Some(dimensions);
++        true
+     }
+ 
+     fn register_shape(
+--- a/render/wgpu/src/backend.rs
++++ b/render/wgpu/src/backend.rs
+@@ -77,6 +77,9 @@
+     // This is currently unused - we just store it to report in
+     // `get_viewport_dimensions`
+     viewport_scale_factor: f64,
++    // Present only for the opt-in reduced backing path. Core geometry and input
++    // continue to use the original viewport, not the physical render target.
++    virtual_viewport: Option<ViewportDimensions>,
+     texture_pool: TexturePool,
+     offscreen_texture_pool: TexturePool,
+     pub(crate) offscreen_buffer_pool: Arc<BufferPool<wgpu::Buffer, BufferDimensions>>,
+@@ -274,6 +277,7 @@
+             meshes: Vec::new(),
+             shape_tessellator: ShapeTessellator::new(),
+             viewport_scale_factor: 1.0,
++            virtual_viewport: None,
+             texture_pool: TexturePool::new(),
+             offscreen_texture_pool: TexturePool::new(),
+             offscreen_buffer_pool: Arc::new(offscreen_buffer_pool),
+@@ -425,6 +429,7 @@
+ 
+ impl<T: RenderTarget + 'static> RenderBackend for WgpuRenderBackend<T> {
+     fn set_viewport_dimensions(&mut self, dimensions: ViewportDimensions) {
++        self.virtual_viewport = None;
+         // Avoid panics from creating 0-sized framebuffers.
+         // TODO: find a way to bubble an error when the size is too large
+         let width = std::cmp::max(
+@@ -453,6 +458,47 @@
+ 
+         self.viewport_scale_factor = dimensions.scale_factor;
+         self.texture_pool = TexturePool::new();
++    }
++
++    fn set_viewport_dimensions_with_backing(
++        &mut self,
++        dimensions: ViewportDimensions,
++        backing_width: u32,
++        backing_height: u32,
++    ) -> bool {
++        // Reject before mutating anything. In particular, do not use density to
++        // bypass the normal logical viewport limit or manufacture a zero size.
++        let limit = self.descriptors.limits.max_texture_dimension_2d;
++        if dimensions.width == 0
++            || dimensions.height == 0
++            || dimensions.width > limit
++            || dimensions.height > limit
++            || !dimensions.scale_factor.is_finite()
++            || dimensions.scale_factor <= 0.0
++            || backing_width == 0
++            || backing_height == 0
++            || backing_width > dimensions.width
++            || backing_height > dimensions.height
++        {
++            return false;
++        }
++
++        if backing_width == dimensions.width && backing_height == dimensions.height {
++            self.set_viewport_dimensions(dimensions);
++            return true;
++        }
++
++        // Reuse the normal physical resize/allocation path, then independently
++        // retain the virtual projection for the onscreen surface and its blends.
++        self.set_viewport_dimensions(ViewportDimensions {
++            width: backing_width,
++            height: backing_height,
++            scale_factor: dimensions.scale_factor,
++        });
++        self.surface
++            .set_projection_size((dimensions.width, dimensions.height));
++        self.virtual_viewport = Some(dimensions);
++        true
+     }
+ 
+     fn create_context3d(
+@@ -504,16 +550,21 @@
+     }
+ 
+     fn set_quality(&mut self, quality: StageQuality) {
++        let projection_size = self.surface.projection_size();
+         self.surface = Surface::new(
+             &self.descriptors,
+             quality,
+             self.surface.size().width,
+             self.surface.size().height,
+             self.target.format(),
+-        );
++        )
++        .with_projection_size(projection_size);
+     }
+ 
+     fn viewport_dimensions(&self) -> ViewportDimensions {
++        if let Some(dimensions) = self.virtual_viewport {
++            return dimensions;
++        }
+         ViewportDimensions {
+             width: self.target.width(),
+             height: self.target.height(),
+--- a/render/wgpu/src/surface.rs
++++ b/render/wgpu/src/surface.rs
+@@ -27,6 +27,9 @@
+ #[derive(Debug)]
+ pub struct Surface {
+     size: wgpu::Extent3d,
++    // Drawing coordinates can remain at the original viewport size while this
++    // onscreen target has fewer pixels. Offscreen surfaces default to identity.
++    projection_size: (u32, u32),
+     quality: StageQuality,
+     sample_count: u32,
+     pipelines: Arc<Pipelines>,
+@@ -55,11 +58,25 @@
+         let pipelines = descriptors.pipelines(sample_count, frame_buffer_format);
+         Self {
+             size,
++            projection_size: (width, height),
+             quality,
+             sample_count,
+             pipelines,
+             format: frame_buffer_format,
+         }
++    }
++
++    pub(crate) fn with_projection_size(mut self, size: (u32, u32)) -> Self {
++        self.set_projection_size(size);
++        self
++    }
++
++    pub(crate) fn set_projection_size(&mut self, size: (u32, u32)) {
++        self.projection_size = size;
++    }
++
++    pub(crate) fn projection_size(&self) -> (u32, u32) {
++        self.projection_size
+     }
+ 
+     #[expect(clippy::too_many_arguments)]
+@@ -114,7 +131,7 @@
+         nearest_layer: LayerRef<'encoder>,
+         texture_pool: &'encoder mut TexturePool,
+     ) -> CommandTarget {
+-        let target = CommandTarget::new(
++        let mut target = CommandTarget::new(
+             descriptors,
+             texture_pool,
+             self.size,
+@@ -123,6 +140,9 @@
+             render_target_mode,
+             draw_encoder,
+         );
++        if self.projection_size != (self.size.width, self.size.height) {
++            target.set_projection_size(descriptors, texture_pool, self.projection_size);
++        }
+ 
+         let mut num_masks = 0;
+         let mut mask_state = MaskState::NoMask;
+@@ -136,6 +156,7 @@
+             self.quality,
+             target.width(),
+             target.height(),
++            self.projection_size,
+             match nearest_layer {
+                 LayerRef::Current => LayerRef::Parent(&target),
+                 layer => layer,
+--- a/render/wgpu/src/surface/commands.rs
++++ b/render/wgpu/src/surface/commands.rs
+@@ -502,6 +502,7 @@
+     quality: StageQuality,
+     width: u32,
+     height: u32,
++    projection_size: (u32, u32),
+     nearest_layer: LayerRef,
+     texture_pool: &'encoder mut TexturePool,
+ ) -> Vec<Chunk> {
+@@ -514,6 +515,7 @@
+         quality,
+         width,
+         height,
++        projection_size,
+         nearest_layer,
+         texture_pool,
+     )
+@@ -525,6 +527,7 @@
+     quality: StageQuality,
+     width: u32,
+     height: u32,
++    projection_size: (u32, u32),
+     nearest_layer: LayerRef<'encoder>,
+     meshes: &'encoder Vec<Mesh>,
+     staging_belt: &'encoder mut wgpu::util::StagingBelt,
+@@ -552,6 +555,7 @@
+         quality: StageQuality,
+         width: u32,
+         height: u32,
++        projection_size: (u32, u32),
+         nearest_layer: LayerRef<'encoder>,
+         texture_pool: &'encoder mut TexturePool,
+     ) -> Self {
+@@ -568,6 +572,7 @@
+             quality,
+             width,
+             height,
++            projection_size,
+             nearest_layer,
+             meshes,
+             staging_belt,
+@@ -713,7 +718,8 @@
+             self.width,
+             self.height,
+             wgpu::TextureFormat::Rgba8Unorm,
+-        );
++        )
++        .with_projection_size(self.projection_size);
+         let target_layer = if let RenderBlendMode::Builtin(BlendMode::Layer) = &blend_mode {
+             LayerRef::Current
+         } else {
+@@ -749,7 +755,10 @@
+         match blend_type {
+             BlendType::Trivial(blend_mode) => {
+                 let transform = Transform {
+-                    matrix: Matrix::scale(target.width() as f32, target.height() as f32),
++                    matrix: Matrix::scale(
++                        self.projection_size.0 as f32,
++                        self.projection_size.1 as f32,
++                    ),
+                     tz: 0.0,
+                     color_transform: Default::default(),
+                     perspective_projection: None,
+@@ -969,7 +978,8 @@
+             self.width,
+             self.height,
+             wgpu::TextureFormat::Rgba8Unorm,
+-        );
++        )
++        .with_projection_size(self.projection_size);
+ 
+         let maskee = surface.draw_commands(
+             RenderTargetMode::FreshWithColor(wgpu::Color::TRANSPARENT),
+@@ -983,7 +993,10 @@
+             self.texture_pool,
+         );
+         maskee.ensure_cleared(self.draw_encoder);
+-        let matrix = Matrix::scale(maskee.width() as f32, maskee.height() as f32);
++        let matrix = Matrix::scale(
++            self.projection_size.0 as f32,
++            self.projection_size.1 as f32,
++        );
+         let maskee = maskee.take_color_texture();
+ 
+         let mask = surface.draw_commands(
+--- a/render/wgpu/src/surface/target.rs
++++ b/render/wgpu/src/surface/target.rs
+@@ -340,6 +340,15 @@
+ 
+     pub fn globals(&self) -> &Globals {
+         &self.globals
++    }
++
++    pub(crate) fn set_projection_size(
++        &mut self,
++        descriptors: &Descriptors,
++        pool: &mut TexturePool,
++        size: (u32, u32),
++    ) {
++        self.globals = pool.get_globals(descriptors, size.0, size.1);
+     }
+ 
+     pub fn color_attachments(&self) -> Option<wgpu::RenderPassColorAttachment<'_>> {
+--- a/web/packages/core/src/internal/builder.ts
++++ b/web/packages/core/src/internal/builder.ts
+@@ -68,6 +68,10 @@
+     } else if (isMobileOrTablet()) {
+         console.log("Running on a mobile device; defaulting to low quality");
+         builder.setQuality("low");
++    }
++    if (typeof config.renderScale === "number" &&
++        [1, 0.75, 0.5, 0.25].includes(config.renderScale)) {
++        builder.setRenderScale(config.renderScale);
+     }
+     if (isExplicit(config.scale)) {
+         builder.setScale(config.scale.toLowerCase());
+--- a/web/packages/core/src/public/config/default.ts
++++ b/web/packages/core/src/public/config/default.ts
+@@ -39,6 +39,7 @@
+     fullScreenAspectRatio: "",
+     forceAlign: false,
+     quality: null,
++    renderScale: null,
+     scale: "showAll",
+     forceScale: false,
+     frameRate: null,
+--- a/web/packages/core/src/public/config/load-options.ts
++++ b/web/packages/core/src/public/config/load-options.ts
+@@ -596,6 +596,13 @@
+     quality?: string | null;
+ 
+     /**
++     * FlashNest experimental onscreen sampling fraction, applied at load only.
++     * Does not change Stage geometry, DPR, input, offscreen buffers or game FPS.
++     * Unsupported backends retain original resolution. Default: 1.
++     */
++    renderScale?: 1 | 0.75 | 0.5 | 0.25 | null;
++
++    /**
+      * This is equivalent to Stage.scaleMode.
+      *
+      * @default "showAll"
+--- /dev/null
++++ b/web/packages/core/test/render-scale.ts
+@@ -0,0 +1,43 @@
++import { strict as assert } from "assert";
++import { configureBuilder } from "../src/internal/builder";
++import { DEFAULT_CONFIG } from "../src/public/config/default";
++import type { BaseLoadOptions } from "../src/public/config/index";
++
++function apply(options: Record<string, unknown>) {
++    const calls: [string, unknown][] = [];
++    const builder = {
++        setQuality: (value: string) => calls.push(["quality", value]),
++        setRenderScale: (value: number) => calls.push(["renderScale", value]),
++        setScale: (value: string) => calls.push(["scale", value]),
++        setForceScale: (value: boolean) => calls.push(["forceScale", value]),
++    };
++    configureBuilder(builder as unknown as Parameters<typeof configureBuilder>[0],
++        { quality: "high", ...options } as BaseLoadOptions);
++    return calls;
++}
++
++describe("FlashNest onscreen rendering density", function () {
++    it("does not call the new setter when the option is omitted", function () {
++        assert.equal(DEFAULT_CONFIG.renderScale, null);
++        assert.deepEqual(apply({}), [["quality", "high"]]);
++        assert.deepEqual(apply({ renderScale: DEFAULT_CONFIG.renderScale }),
++            [["quality", "high"]]);
++    });
++    it("passes exactly the four supported numeric tiers", function () {
++        for (const value of [1, 0.75, 0.5, 0.25]) {
++            assert.deepEqual(apply({ renderScale: value }),
++                [["quality", "high"], ["renderScale", value]]);
++        }
++    });
++    it("does not coerce or forward invalid values", function () {
++        for (const value of [null, undefined, "0.5", true, false, 0, -1, 0.3,
++            1.01, NaN, Infinity, -Infinity, {}, []]) {
++            assert.deepEqual(apply({ renderScale: value }), [["quality", "high"]]);
++        }
++    });
++    it("does not substitute quality or force a Stage scale mode", function () {
++        assert.deepEqual(apply({ renderScale: 0.25, scale: "noScale", forceScale: false }),
++            [["quality", "high"], ["renderScale", 0.25],
++             ["scale", "noscale"], ["forceScale", false]]);
++    });
++});
+--- a/web/src/builder.rs
++++ b/web/src/builder.rs
+@@ -46,6 +46,7 @@
+     pub(crate) stage_align: StageAlign,
+     pub(crate) force_align: bool,
+     pub(crate) quality: StageQuality,
++    pub(crate) render_scale: f64,
+     pub(crate) scale: StageScaleMode,
+     pub(crate) force_scale: bool,
+     pub(crate) frame_rate: Option<f64>,
+@@ -86,6 +87,7 @@
+             stage_align: StageAlign::empty(),
+             force_align: false,
+             quality: StageQuality::High,
++            render_scale: 1.0,
+             scale: StageScaleMode::ShowAll,
+             force_scale: false,
+             frame_rate: None,
+@@ -120,6 +122,16 @@
+     #[wasm_bindgen(js_name = "setAllowScriptAccess")]
+     pub fn set_allow_script_access(&mut self, value: bool) {
+         self.allow_script_access = value;
++    }
++
++    /// FlashNest's bounded, launch-only onscreen sampling tiers.
++    #[wasm_bindgen(js_name = "setRenderScale")]
++    pub fn set_render_scale(&mut self, value: f64) {
++        self.render_scale = if [0.25, 0.5, 0.75, 1.0].contains(&value) {
++            value
++        } else {
++            1.0
++        };
+     }
+ 
+     #[wasm_bindgen(js_name = "setBackgroundColor")]
+--- a/web/src/lib.rs
++++ b/web/src/lib.rs
+@@ -121,6 +121,7 @@
+     canvas_width: i32,
+     canvas_height: i32,
+     device_pixel_ratio: f64,
++    render_scale: f64,
+     window: Window,
+     timestamp: Option<f64>,
+     animation_handler: Option<AnimationHandler>, // requestAnimationFrame callback
+@@ -549,6 +550,7 @@
+             canvas_width: 0, // Initialize canvas width and height to 0 to force an initial canvas resize.
+             canvas_height: 0,
+             device_pixel_ratio: window.device_pixel_ratio(),
++            render_scale: config.render_scale,
+             window: window.clone(),
+             animation_handler: None,
+             animation_handler_id: None,
+@@ -1148,6 +1150,7 @@
+                     viewport_width,
+                     viewport_height,
+                     device_pixel_ratio,
++                    instance.render_scale,
+                 ));
+             }
+ 
+@@ -1230,17 +1233,37 @@
+                 core.handle_event(event);
+             }
+ 
+-            if let Some((ref canvas, viewport_width, viewport_height, device_pixel_ratio)) =
++            if let Some((ref canvas, viewport_width, viewport_height, device_pixel_ratio, render_scale)) =
+                 new_dimensions
+             {
+-                canvas.set_width(viewport_width);
+-                canvas.set_height(viewport_height);
+-
+-                core.set_viewport_dimensions(ViewportDimensions {
++                let dimensions = ViewportDimensions {
+                     width: viewport_width,
+                     height: viewport_height,
+                     scale_factor: device_pixel_ratio,
+-                });
++                };
++                let mut applied_scale = 1.0;
++                if render_scale < 1.0 && viewport_width > 0 && viewport_height > 0 {
++                    let backing_width = (f64::from(viewport_width) * render_scale).round().max(1.0) as u32;
++                    let backing_height = (f64::from(viewport_height) * render_scale).round().max(1.0) as u32;
++                    canvas.set_width(backing_width);
++                    canvas.set_height(backing_height);
++                    if core.set_viewport_dimensions_with_backing(dimensions, backing_width, backing_height) {
++                        applied_scale = render_scale;
++                    }
++                }
++                if applied_scale == 1.0 {
++                    // Exact old/default path, also the explicit unsupported-backend fallback.
++                    canvas.set_width(viewport_width);
++                    canvas.set_height(viewport_height);
++                    core.set_viewport_dimensions(dimensions);
++                }
++                // Small per-resize capability/result record. Read actual canvas and
++                // drawing-buffer dimensions separately; this is not a RAM estimate.
++                let _ = canvas.set_attribute("data-flashnest-render-request", &render_scale.to_string());
++                let _ = canvas.set_attribute("data-flashnest-render-scale", &applied_scale.to_string());
++                let _ = canvas.set_attribute("data-flashnest-viewport-width", &viewport_width.to_string());
++                let _ = canvas.set_attribute("data-flashnest-viewport-height", &viewport_height.to_string());
++                let _ = canvas.set_attribute("data-flashnest-renderer", core.renderer().name());
+             }
+ 
+             core.tick(FloatDuration::from_millis(dt));
