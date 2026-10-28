@@ -13,17 +13,19 @@ def journal(pid=42):
 def entry():
  return dict(attempt=1,explicitTermination={'returncode':0},freshPID=True,pid=42,samples=[{'pidAliveAsExpectedApp':True}],journalsBeforeTermination=[journal()],readyAtSeconds=58,observedPostReadySeconds=30,crashesCapturedDuringObservation=[])
 class ControlTests(unittest.TestCase):
- def test_architecture_timeout_is_setup_only_and_limits_unchanged(self):
-  import ast
-  source=Path(__file__).with_name('run_one.py').read_text();tree=ast.parse(source)
-  calls=[n for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='checked' and n.args and isinstance(n.args[0],ast.List)]
-  sim=[n for n in calls if [x.value for x in n.args[0].elts if isinstance(x,ast.Constant)]==['xcrun','simctl','spawn','uname','-m']]
-  host=[n for n in calls if [x.value for x in n.args[0].elts if isinstance(x,ast.Constant)]==['uname','-m']]
-  self.assertEqual(len(sim),1);self.assertEqual(len(sim[0].args),2);self.assertEqual(ast.literal_eval(sim[0].args[1]),120)
-  self.assertEqual(len(host),1);self.assertEqual(len(host[0].args),1)
-  for exact in ["if host_arch!='arm64' or sim_arch!='arm64':",'for attempt in (1,):','readiness_deadline=started+60','ready_at+30',"'maximumWindowSeconds':90",'time.sleep(60)',"command(['xcrun','simctl','launch',udid,BUNDLE,'-FlashNest.language','en','-AppleLanguages','(en)'],30,env)"]:
+ def test_main_executable_gate_and_observation_limits_unchanged(self):
+  source=Path(__file__).with_name('run_one.py').read_text()
+  self.assertNotIn("'spawn'",source)
+  self.assertIn("host_arch=checked(['uname','-m'],receipt_path=",source)
+  self.assertIn("if host_arch!='arm64':",source)
+  self.assertLess(source.index("arm64_simulator_executable(app/executable)"),source.index("install=command("))
+  self.assertLess(source.index("arm64_simulator_executable(installed/executable)"),source.index('for attempt in (1,):'))
+  self.assertIn("installed_executable!=receipt['builtExecutable']",source)
+  for exact in ['for attempt in (1,):','readiness_deadline=started+60','ready_at+30',"'maximumWindowSeconds':90",'time.sleep(60)',"command(['xcrun','simctl','launch',udid,BUNDLE,'-FlashNest.language','en','-AppleLanguages','(en)'],30,env)"]:
    self.assertIn(exact,source)
-  self.assertIn('def command(args,timeout=30',source)
+  workflow=Path(__file__).with_name('observe-sigill-phase-ios18_2.yml').read_text()
+  self.assertIn("id=${{ steps.simulator.outputs.device_id }},arch=arm64'",workflow)
+  self.assertIn('ARCHS=arm64 ONLY_ACTIVE_ARCH=YES',workflow)
  def test_exact_os_and_unique_device(self):
   d={'devices':{RUNTIME:[{'udid':'u','isAvailable':True}]}}
   self.assertEqual(device(json.dumps(d),'u')['udid'],'u')
@@ -148,9 +150,10 @@ class ControlTests(unittest.TestCase):
  def test_exactly_one_launch_finally_cleanup_and_window(self):
   import hashlib,plistlib,shutil
   from run_one import observe
+  from test_macho import macho
   with tempfile.TemporaryDirectory() as t:
    t=Path(t);app=t/'app';runtime=app/'Web/runtime';runtime.mkdir(parents=True);(runtime/'fixture.wasm').write_bytes(b'wasm')
-   (app/'Info.plist').write_bytes(plistlib.dumps({'CFBundleIdentifier':BUNDLE,'CFBundleExecutable':'AudioRecoveryDiagnostic'}));(app/'AudioRecoveryDiagnostic').write_bytes(b'bin')
+   (app/'Info.plist').write_bytes(plistlib.dumps({'CFBundleIdentifier':BUNDLE,'CFBundleExecutable':'AudioRecoveryDiagnostic'}));(app/'AudioRecoveryDiagnostic').write_bytes(macho())
    files={}
    for name in ['shell.js','startup-journal.js','audio-recovery-injection.js','startup-resources.json']:
     path=app/'Web'/name if name=='shell.js' else app/name;path.write_bytes(b'x');files['staged/App/Resources/Web/'+name if name=='shell.js' else 'staged/'+name]=hashlib.sha256(b'x').hexdigest()
@@ -159,8 +162,8 @@ class ControlTests(unittest.TestCase):
    def cmd(args,timeout=30,env=None,stdout_limit=65536):
     text='';code=0
     if args[:4]==['xcrun','simctl','list','devices']:text=json.dumps({'devices':{RUNTIME:[{'udid':'u','isAvailable':True,'state':'Booted','name':'iPhone','dataPath':str(data)}]}})
-    elif args==['uname','-m'] or args[:4]==['xcrun','simctl','spawn','u']:
-     self.assertEqual(timeout,30 if args==['uname','-m'] else 120);text='arm64'
+    elif args==['uname','-m']:
+     self.assertEqual(timeout,30);text='arm64'
     elif 'get_app_container'in args:text=str(installed if args[-1]=='app' else container)
     elif 'launch'in args:launches.append(40+len(launches));text=BUNDLE+': '+str(launches[-1]);self.assertEqual(env['SIMCTL_CHILD_AUDIO_RECOVERY_MODE'],'startup-only')
     elif 'terminate'in args:terminations.append(True)
@@ -171,6 +174,7 @@ class ControlTests(unittest.TestCase):
    with patch('run_one.command',side_effect=cmd),patch('run_one.time.monotonic',side_effect=lambda:clock[0]),patch('run_one.time.time',side_effect=lambda:1000+clock[0]),patch('run_one.time.sleep',side_effect=lambda n:clock.__setitem__(0,clock[0]+n)),patch('run_one.journals',side_effect=js),patch('run_one.crashes',return_value={'records':[],'omitted':0}):
     self.assertTrue(observe('u',app,t/'out','diagnostic',a,sm))
    result=json.loads((t/'out/control-results.json').read_text());self.assertEqual(len(launches),1);self.assertEqual(len(terminations),2);self.assertTrue(all(x['observedPostReadySeconds']==30 for x in result['attempts']))
+   self.assertTrue(result['executableBytesMatch']);self.assertEqual(result['builtExecutable'],result['installedExecutable']);self.assertEqual(result['installedExecutable']['platformID'],7)
    # A failed install CLI is not retried; exact installed bytes can resolve its uncertain side effect.
    launches.clear();terminations.clear();clock[0]=0;install_calls=[]
    def timed_install(args,timeout=30,env=None,stdout_limit=65536):
@@ -198,5 +202,10 @@ class ControlTests(unittest.TestCase):
     return result
    with patch('run_one.command',side_effect=wrong_arch):
     with self.assertRaises(ValueError):observe('u',app,t/'wrongarch','diagnostic',a,sm)
+   self.assertEqual(launches,[])
+   # Host architecture alone can never substitute for the exact built Mach-O proof.
+   launches.clear();(app/'AudioRecoveryDiagnostic').write_bytes(macho(cpu=0x01000007))
+   with patch('run_one.command',side_effect=cmd):
+    with self.assertRaises(ValueError):observe('u',app,t/'wrongbinary','diagnostic',a,sm)
    self.assertEqual(launches,[])
 if __name__=='__main__':unittest.main()

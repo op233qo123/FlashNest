@@ -66,20 +66,29 @@ def setup_command_statuses(private):
    except (OSError,ValueError):pass # Present but unknown is never inferred success.
   statuses.append(row)
  return statuses
+def executable_evidence(value):
+ if not isinstance(value,dict) or any(value.get(k)!=v for k,v in {
+  'architecture':'arm64','subtype':'ARM64_ALL','format':'thin-MH_MAGIC_64',
+  'platform':'iOSSimulator','platformID':7,'sdk':'18.2'}.items()) or not digest(value.get('sha256')):return None
+ return {key:value[key] for key in ['architecture','subtype','format','platform','platformID','sdk','sha256']}
 def export(private,output,approval):
  private,output=Path(private),Path(output)
  if output.exists() or private==output or output.is_relative_to(private) or private.is_relative_to(output):raise ValueError('Separate new public destination required')
  a=json.loads(Path(approval).read_text());resources=a['runtimes']['diagnostic']['files']
  if a.get('kind')!='sigill-phase-diagnostic-not-shipping' or a.get('authorizedObservationCount')!=1:raise ValueError('Wrong one-shot approval')
  if not re.fullmatch('[0-9a-f]{40}',a['buildCommit']) or not digest(a['archiveSHA256']) or any(type(a[k])is not int or a[k]<=0 for k in ['runID','artifactID']):raise ValueError('Unsafe public identity fields')
- result={'schema':1,'kind':'one-shot-phase-observation-not-fix','authorizedObservationCount':1,'expectedOS':'18.2','actualOS':None,'attempts':[],'setupCommands':setup_command_statuses(private),
+ result={'schema':1,'kind':'one-shot-phase-observation-not-fix','authorizedObservationCount':1,'expectedOS':'18.2','actualOS':None,'selectedSimulatorTarget':None,'builtMainExecutable':None,'installedMainExecutable':None,'executableBytesMatch':False,'architectureEvidenceScope':'diagnostic-main-executable-only; WebContent-not-independently-attested','attempts':[],'setupCommands':setup_command_statuses(private),
   'privacy':'allowlisted diagnostics only; no raw logs/IPS/xcresult/user data','claim':'observed report is not proof of reproducing original SIGILL or owning shared WebContent','rawRetention':'private raw command/crash receipts ephemeral until runner teardown; no unified-log collection','input':{'expectedProductionSourceCommit':'5862f8dbd414d9835f11872d3ebabd1eed315ffc','expectedOriginalInjectorSHA256':'d495f538242dd49915810a33478c17da9c1e7a831a721524a9136c4f2628176b','nativeWorkflowCommit':os.environ.get('GITHUB_SHA') if re.fullmatch('[0-9a-f]{40}',os.environ.get('GITHUB_SHA','')) else None,'buildCommit':a['buildCommit'],'runID':a['runID'],'artifactID':a['artifactID'],'archiveSHA256':a['archiveSHA256']},'crashes':[]}
  path=private/'control-results.json'
  if path.is_file():
   receipt=json.loads(path.read_text());entries=receipt.get('attempts',[])
   result['actualOS']='18.2' if receipt.get('actualOS')=='18.2' else None
   result['hostArchitecture']='arm64' if receipt.get('hostArchitecture')=='arm64' else 'unconfirmed'
-  result['simulatorArchitecture']='arm64' if receipt.get('simulatorArchitecture')=='arm64' else 'unconfirmed'
+  result['selectedSimulatorTarget']={'platform':'iOSSimulator','os':'18.2'} if result['actualOS']=='18.2' else None
+  built=executable_evidence(receipt.get('builtExecutable'));installed=executable_evidence(receipt.get('installedExecutable'))
+  result['builtMainExecutable']=built
+  result['executableBytesMatch']=bool(built is not None and installed==built and receipt.get('executableBytesMatch')is True)
+  result['installedMainExecutable']=installed if result['executableBytesMatch'] else None
   result['audioStateCoverage']='unknown-not-queried; phase-boundary-receipts-only'
   if len(entries)>1:raise ValueError('More than one attempt: publication rejected')
   for e in entries:

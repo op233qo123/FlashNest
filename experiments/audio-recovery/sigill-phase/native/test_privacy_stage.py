@@ -47,6 +47,21 @@ class PrivacyStageTests(unittest.TestCase):
    outside=t/'secret';outside.write_text(json.dumps({'returncode':0,'timedOut':False,'truncated':False,'stdout':'PRIVATE'}))
    (private/'boot-command.json').symlink_to(outside);result=export(private,t/'public',a)
    self.assertEqual(result['setupCommands'][0],{'command':'boot','present':True,'exitCode':None,'timedOut':None,'truncated':None})
+ def test_executable_evidence_scope_and_byte_equality_are_explicit(self):
+  proof={'architecture':'arm64','subtype':'ARM64_ALL','format':'thin-MH_MAGIC_64','platform':'iOSSimulator','platformID':7,'sdk':'18.2','sha256':'c'*64,'path':'PRIVATE_GAME'}
+  for change in ['valid','mismatch','device','unconfirmed']:
+   with self.subTest(change=change),tempfile.TemporaryDirectory()as t:
+    t=pathlib.Path(t);private=t/'private';private.mkdir();a=t/'approval.json';a.write_text(json.dumps(self.approval()))
+    installed=dict(proof)
+    if change=='mismatch':installed['sha256']='d'*64
+    if change=='device':installed['platformID']=2
+    receipt={'actualOS':'18.2','attempts':[],'simulatorArchitecture':'arm64','builtExecutable':proof,'installedExecutable':installed,'executableBytesMatch':change!='unconfirmed'}
+    (private/'control-results.json').write_text(json.dumps(receipt));result=export(private,t/'public',a)
+    self.assertNotIn('simulatorArchitecture',result);self.assertNotIn('PRIVATE_GAME',json.dumps(result))
+    self.assertEqual(result['selectedSimulatorTarget'],{'platform':'iOSSimulator','os':'18.2'})
+    self.assertIn('WebContent-not-independently-attested',result['architectureEvidenceScope'])
+    self.assertEqual(result['executableBytesMatch'],change=='valid')
+    self.assertEqual(result['installedMainExecutable']is not None,change=='valid')
  def test_publication_rejects_second_attempt_and_unapproved_payload(self):
   for invalid in ['second','payload']:
    with tempfile.TemporaryDirectory()as t:

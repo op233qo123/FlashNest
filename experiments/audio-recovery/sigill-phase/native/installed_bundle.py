@@ -55,3 +55,41 @@ def verify(built,installed,bundle_id,passive):
  matches=expected==actual
  if passive and any(Path(name).name=='audio-recovery-injection.js' for name in actual['files']):raise ValueError('Passive installed app contains injector')
  return {'verified':matches,'builtIdentity':expected,'installedIdentity':actual,'claim':'installed bundle identity/code/all resource bytes match built app; not engine execution'}
+
+
+def arm64_simulator_executable(path):
+ """Bounded thin Mach-O proof for this main executable, not WebContent/JIT.
+ Apple loader.h/machine.h: MH_MAGIC_64, CPU_TYPE_ARM64, MH_EXECUTE,
+ LC_BUILD_VERSION, PLATFORM_IOSSIMULATOR. Reject fat, foreign or ambiguous files.
+ """
+ import struct
+ path=Path(path)
+ if path.is_symlink() or not path.is_file():raise ValueError('Unsafe executable')
+ before=path.stat()
+ if not 32<=before.st_size<=MAX_BYTES:raise ValueError('Executable byte bound')
+ fd=os.open(path,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0))
+ with os.fdopen(fd,'rb')as stream:
+  opened=os.fstat(stream.fileno())
+  if not stat.S_ISREG(opened.st_mode) or (opened.st_dev,opened.st_ino,opened.st_size)!=(before.st_dev,before.st_ino,before.st_size):raise ValueError('Executable changed before read')
+  data=stream.read(MAX_BYTES+1)
+ after=path.stat()
+ if len(data)!=before.st_size or (before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns)!=(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns):raise ValueError('Executable changed during read')
+ magic,cpu,subtype,filetype,ncmds,sizeofcmds,flags,reserved=struct.unpack_from('<8I',data)
+ if (magic,cpu,subtype,filetype,reserved)!=(0xfeedfacf,0x0100000c,0,2,0):raise ValueError('Exact thin arm64 ALL executable required')
+ if not 1<=ncmds<=4096 or not 8*ncmds<=sizeofcmds<=4*1024*1024 or 32+sizeofcmds>len(data):raise ValueError('Load command bounds')
+ offset=32;end=32+sizeofcmds;build_count=0
+ for _ in range(ncmds):
+  if offset+8>end:raise ValueError('Truncated command header')
+  command,size=struct.unpack_from('<2I',data,offset)
+  if size<8 or size%8 or offset+size>end:raise ValueError('Invalid command size/alignment')
+  if command in (0x24,0x25,0x2f,0x30):raise ValueError('Ambiguous legacy platform command')
+  if command==0x32:
+   build_count+=1
+   if build_count!=1 or size<24:raise ValueError('Ambiguous/truncated build version')
+   platform,minos,sdk,ntools=struct.unpack_from('<4I',data,offset+8)
+   if platform!=7 or ntools>64 or size!=24+ntools*8:raise ValueError('Exact iOS Simulator platform and bounded tools required')
+   if sdk!=0x00120200 or minos>sdk:raise ValueError('Exact iOS18.2 SDK required')
+  offset+=size
+ if offset!=end or build_count!=1:raise ValueError('Missing/ambiguous load command coverage')
+ return {'architecture':'arm64','subtype':'ARM64_ALL','format':'thin-MH_MAGIC_64',
+         'platform':'iOSSimulator','platformID':7,'sdk':'18.2','sha256':hashlib.sha256(data).hexdigest()}

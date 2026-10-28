@@ -2,7 +2,7 @@
 import argparse,datetime,hashlib,json,os,plistlib,re,subprocess,time,tempfile
 from pathlib import Path
 from collect import journals,crashes
-from installed_bundle import installed_path,verify as verify_installed
+from installed_bundle import installed_path,verify as verify_installed,arm64_simulator_executable
 BUNDLE='com.flashnest.audio-recovery.diagnostic'
 RUNTIME='com.apple.CoreSimulator.SimRuntime.iOS-18-2'
 def command(args,timeout=30,env=None,stdout_limit=65536):
@@ -100,6 +100,8 @@ def observe(udid,app,output,arm,approval,source_manifest):
  resources=approved['runtimes'][arm]['files'];app=Path(app)
  info=plistlib.loads((app/'Info.plist').read_bytes())
  if info['CFBundleIdentifier']!=BUNDLE:raise ValueError('Wrong diagnostic app')
+ executable=info.get('CFBundleExecutable')
+ if not isinstance(executable,str) or not executable or executable in ('.','..') or '/'in executable or '\\'in executable:raise ValueError('Unsafe executable name')
  actual={str(p.relative_to(app/'Web/runtime')):hashlib.sha256(p.read_bytes()).hexdigest() for p in (app/'Web/runtime').rglob('*') if p.is_file()}
  if actual!=resources or any(p.is_symlink() for p in (app/'Web/runtime').rglob('*')):raise ValueError('Built runtime inventory mismatch')
  for name in ['shell.js']:
@@ -112,16 +114,16 @@ def observe(udid,app,output,arm,approval,source_manifest):
   if hashlib.sha256((app/name).read_bytes()).hexdigest()!=source['files']['staged/'+name]:raise ValueError('Built diagnostic asset drift')
  inventory=checked(['xcrun','simctl','list','devices','available','--json'],receipt_path=output/'inventory-command.json',inventory=True);selected=device(inventory,udid)
  (output/'simulator-inventory.json').write_text(inventory)
- receipt={'schema':1,'authorizedObservationCount':1,'arm':arm,'instrumentationProfile':profile,'registeredStartupScriptSHA256':source.get('registeredStartupScriptSHA256'),'audioStateCoverage':source.get('audioStateCoverage','existing-injector-context-observer'),'actualOS':'18.2','udid':udid,'deviceName':selected['name'],'sourceCommit':source['sourceCommit'],'runtime':source['runtime'],'appExecutableSHA256':hashlib.sha256((app/info['CFBundleExecutable']).read_bytes()).hexdigest(),'startupReadinessDeadlineSeconds':60,'postReadyObservationSeconds':30,'maximumWindowSeconds':90,'attempts':[],'cacheColdness':'unknown; fresh app PID does not imply fresh WebContent/JIT/cache','claim':'startup observation only, not recovery acceptance or crash fix'}
+ receipt={'schema':1,'authorizedObservationCount':1,'arm':arm,'instrumentationProfile':profile,'registeredStartupScriptSHA256':source.get('registeredStartupScriptSHA256'),'audioStateCoverage':source.get('audioStateCoverage','existing-injector-context-observer'),'actualOS':'18.2','udid':udid,'deviceName':selected['name'],'sourceCommit':source['sourceCommit'],'runtime':source['runtime'],'appExecutableSHA256':None,'startupReadinessDeadlineSeconds':60,'postReadyObservationSeconds':30,'maximumWindowSeconds':90,'attempts':[],'cacheColdness':'unknown; fresh app PID does not imply fresh WebContent/JIT/cache','claim':'startup observation only, not recovery acceptance or crash fix'}
  def persist(): (output/'control-results.json').write_text(json.dumps(receipt,indent=2)+'\n')
  persist()
  if selected['state']!='Booted':checked(['xcrun','simctl','boot',udid],receipt_path=output/'boot-command.json')
  checked(['xcrun','simctl','bootstatus',udid,'-b'],120,receipt_path=output/'bootstatus-command.json')
  host_arch=checked(['uname','-m'],receipt_path=output/'host-architecture-command.json')
- sim_arch=checked(['xcrun','simctl','spawn',udid,'uname','-m'],120,receipt_path=output/'simulator-architecture-command.json')
- receipt['hostArchitecture']=host_arch if host_arch=='arm64' else 'unsupported'
- receipt['simulatorArchitecture']=sim_arch if sim_arch=='arm64' else 'unsupported';persist()
- if host_arch!='arm64' or sim_arch!='arm64':raise ValueError('Exact arm64 host and simulator required before launch')
+ receipt['hostArchitecture']=host_arch if host_arch=='arm64' else 'unsupported';persist()
+ if host_arch!='arm64':raise ValueError('Exact arm64 host required before launch')
+ receipt['builtExecutable']=arm64_simulator_executable(app/executable)
+ receipt['appExecutableSHA256']=receipt['builtExecutable']['sha256'];persist()
  install=command(['xcrun','simctl','install',udid,str(app)],180)
  (output/'install-command.json').write_text(json.dumps(install,indent=2)+'\n')
  receipt['installCommandFailed']=bool(install['returncode'] or install.get('truncated'));persist()
@@ -132,6 +134,10 @@ def observe(udid,app,output,arm,approval,source_manifest):
   postcondition=verify_installed(app,installed,BUNDLE,profile=='passive-only')
   (output/'installed-app-verification.json').write_text(json.dumps(postcondition,indent=2)+'\n')
   if not postcondition['verified']:raise ValueError('Installed app does not match built bytes')
+  installed_executable=arm64_simulator_executable(installed/executable)
+  if installed_executable!=receipt['builtExecutable'] or postcondition['builtIdentity']['files'][executable]['sha256']!=installed_executable['sha256'] or postcondition['installedIdentity']['files'][executable]['sha256']!=installed_executable['sha256']:raise ValueError('Executable architecture proof not bound to installed bytes')
+  receipt['installedExecutable']=installed_executable
+  receipt['executableBytesMatch']=True
   receipt['installOutcome']='installed-verified-after-command-failure' if receipt['installCommandFailed'] else 'installed-verified'
  except Exception as error:
   receipt['installOutcome']='installed-postcondition-unconfirmed';receipt['installVerificationError']=type(error).__name__;persist();raise

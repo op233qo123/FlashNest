@@ -81,7 +81,7 @@ jobs:
         timeout-minutes: 15
         run: |
           set -euo pipefail
-          xcodebuild build -project "$RUNNER_TEMP/phase-stage/AudioRecoveryDiagnostic.xcodeproj" -scheme AudioRecoveryDiagnostic -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -derivedDataPath "$RUNNER_TEMP/phase-build" -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO > "$RUNNER_TEMP/phase-build.log" 2>&1
+          xcodebuild build -project "$RUNNER_TEMP/phase-stage/AudioRecoveryDiagnostic.xcodeproj" -scheme AudioRecoveryDiagnostic -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }},arch=arm64' -derivedDataPath "$RUNNER_TEMP/phase-build" -disableAutomaticPackageResolution ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO > "$RUNNER_TEMP/phase-build.log" 2>&1
       - name: Exactly one no-gesture observation, no retry
         timeout-minutes: 10
         run: |
