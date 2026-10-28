@@ -1,0 +1,69 @@
+{
+  "archiveBytes": 22076102,
+  "archivePath": "vendor/ruffle-audio-recovery-40614335019.zip",
+  "buildRunID": 40614335019,
+  "buildSourceCommit": "5d2cdcc6757d65194bd55c4a0395b76b0176d224",
+  "checksumProvenance": "Exact modified candidate GitHub Actions artifact hash, independently verified; not an upstream publisher signature",
+  "experimentSourceURL": "https://github.com/op233qo123/FlashNest/tree/5d2cdcc6757d65194bd55c4a0395b76b0176d224/experiments/audio-recovery",
+  "experimentalVersionName": "FlashNest experimental Ruffle 0.7.1 audio-recovery 3eea9c1603f4",
+  "identitySHA256": "bdb97b8e97e3c1bb0213d83ea5c541891643454cea347961c60038670d0f06dd",
+  "license": "MIT OR Apache-2.0",
+  "modifiedSources": [
+    {
+      "bytes": 189360,
+      "modifiedSHA256": "af780dae48b842e0756b8cd23f50a539737d0bcbbbdca970feb90f27725e96b0",
+      "originalSHA256": "fc229d96ab6fced20391cf810d9d89a2118803cb7f5ce48ddf6967e52e35700a",
+      "path": "core/src/display_object/movie_clip.rs"
+    },
+    {
+      "bytes": 6286,
+      "modifiedSHA256": "32986bab21da5cc3417ce2b67dfd6a3f829fa2b5c5910805e4a833fb1843a2cb",
+      "originalSHA256": null,
+      "path": "web/packages/core/src/internal/audio-operation.ts"
+    },
+    {
+      "bytes": 92823,
+      "modifiedSHA256": "657d499e59031824cc1e976fa21f3b74d72f9d855ff7a0e3f016676932b3df77",
+      "originalSHA256": "3161d60d8470c23cb93b99efcb4027ec53854ef6c7a304f2d7127ecaca1d8120",
+      "path": "web/packages/core/src/internal/player/inner.tsx"
+    },
+    {
+      "bytes": 1652,
+      "modifiedSHA256": "0cd19f0f895e3a3534dbb4ec29567cc569e871b8d8b4593b367fc35455f31111",
+      "originalSHA256": "d27cfb70999e57de053cc8caf6a5c7a925affa7a77059342319da039d0fbcb5e",
+      "path": "web/packages/core/src/ruffle-imports.ts"
+    },
+    {
+      "bytes": 12785,
+      "modifiedSHA256": "e03078285ccccc4734837f6bb79559e008a307e7acd2a0d6649c617d1dcb9dc1",
+      "originalSHA256": "0cca2bc14a593060a233ec68a2ae725efc381c9068626a92a82c67a3bc732b8b",
+      "path": "web/src/audio.rs"
+    }
+  ],
+  "name": "FlashNest modified Ruffle",
+  "patchSetSHA256": "3eea9c1603f46966d4de835325484d5433d8999998e6fb9baadf98c56b9fab2e",
+  "patches": [
+    {
+      "path": "experiments/frame-order/engine-patch/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f"
+    },
+    {
+      "path": "experiments/audio-lifecycle/engine-patch/audio-lifecycle.patch",
+      "sha256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9"
+    },
+    {
+      "path": "experiments/audio-recovery/audio-recovery.patch",
+      "sha256": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60"
+    }
+  ],
+  "provenancePath": "audio-recovery-candidate/provenance.json",
+  "provenanceSHA256": "01838aff92eb05cde33babb8153c82de2d9c2889a2795c2f2f2c72a65e3eed59",
+  "runtimeKind": "flashnest-audio-recovery-experimental",
+  "runtimePrefix": "audio-recovery-candidate/runtime/",
+  "schemaVersion": 3,
+  "sha256": "3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a",
+  "sourceURL": "https://github.com/ruffle-rs/ruffle/tree/89a7049965f3090e706265670df309a5128233ac",
+  "status": "experimental-candidate-not-universally-stable",
+  "upstreamSourceCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "version": "0.7.1"
+}

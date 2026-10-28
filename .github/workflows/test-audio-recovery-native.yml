@@ -1,6 +1,12 @@
-name: Diagnose owned audio recovery on iOS 18.5 (manual)
+name: Diagnose owned audio recovery on exact iOS (manual)
 on:
   workflow_dispatch:
+    inputs:
+      simulator_os:
+        description: Exact installed simulator OS (no fallback or download)
+        type: choice
+        options: ['18.5', '18.2']
+        default: '18.5'
 permissions:
   contents: read
   actions: read
@@ -13,10 +19,11 @@ jobs:
       fail-fast: false
       matrix:
         arm: [baseline, candidate]
-    runs-on: macos-15
+    runs-on: ${{ inputs.simulator_os == '18.2' && 'macos-14' || 'macos-15' }}
     timeout-minutes: 30
     env:
-      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      TEST_OS: ${{ inputs.simulator_os || '18.5' }}
+      DEVELOPER_DIR: ${{ inputs.simulator_os == '18.2' && '/Applications/Xcode_16.2.app/Contents/Developer' || '/Applications/Xcode_16.4.app/Contents/Developer' }}
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -29,6 +36,15 @@ jobs:
       - name: Require reviewed immutable candidate approval and local gates
         run: |
           set -euo pipefail
+          case "$TEST_OS" in
+            18.2) expected_xcode=16.2 ;;
+            18.5) expected_xcode=16.4 ;;
+            *) echo "Unsupported exact simulator OS" >&2; exit 1 ;;
+          esac
+          test "$DEVELOPER_DIR" = "/Applications/Xcode_$expected_xcode.app/Contents/Developer"
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          test "$(xcodebuild -version | head -n 1)" = "Xcode $expected_xcode"
+          test "$(xcrun --sdk iphonesimulator --show-sdk-version)" = "$TEST_OS"
           test -f experiments/audio-recovery/native/approval.json
           python3 -m unittest discover -s experiments/audio-recovery/native -p 'test_*.py'
           node experiments/audio-recovery/native/test_injection.mjs
@@ -79,7 +95,7 @@ jobs:
           (cd "$RUNNER_TEMP/recovery-stage" && "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate)
           mkdir -p "$RUNNER_TEMP/recovery-stage/AudioRecoveryDiagnostic.xcodeproj/project.xcworkspace/xcshareddata/swiftpm"
           cp "$RUNNER_TEMP/recovery-stage/Package.resolved" "$RUNNER_TEMP/recovery-stage/AudioRecoveryDiagnostic.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
-          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.5)
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py "$TEST_OS")
           echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
       - name: Actual trusted DOM retry and native fatal controls
         timeout-minutes: 12
@@ -91,7 +107,7 @@ jobs:
           if [ '${{ matrix.arm }}' = candidate ]; then selection=(-only-testing:AudioRecoveryUITests/AudioRecoveryUITests/testKnownOwnedResumeRejectsThenTrustedRetryKeepsSceneAndSave -only-testing:AudioRecoveryUITests/AudioRecoveryUITests/testUnknownResumeFailureStillReachesProductionNativeFailure); fi
           xcodebuild test -project "$RUNNER_TEMP/recovery-stage/AudioRecoveryDiagnostic.xcodeproj" -scheme AudioRecoveryDiagnostic -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -derivedDataPath "$RUNNER_TEMP/recovery-build" -resultBundlePath recovery-evidence/Results.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 180 -maximum-test-execution-time-allowance 360 "${selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee recovery-evidence/test.log
           xcrun xcresulttool get test-results summary --path recovery-evidence/Results.xcresult > recovery-evidence/summary.json
-          python3 experiments/audio-recovery/native/verify_results.py '${{ matrix.arm }}' recovery-evidence/summary.json recovery-evidence/test.log
+          python3 experiments/audio-recovery/native/verify_results.py '${{ matrix.arm }}' recovery-evidence/summary.json recovery-evidence/test.log "$TEST_OS"
       - name: Retain raw outcomes and source evidence
         if: always()
         run: |
@@ -105,6 +121,6 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: audio-recovery-native-${{ matrix.arm }}
+          name: audio-recovery-native-${{ env.TEST_OS }}-${{ matrix.arm }}
           path: recovery-evidence
           retention-days: 7

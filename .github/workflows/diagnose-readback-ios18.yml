@@ -1,0 +1,111 @@
+name: Compare historical AVM1 readback on exact iOS 18.2 (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-readback-ios18
+  cancel-in-progress: false
+jobs:
+  readback:
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: macos-14
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      PYTHONDONTWRITEBYTECODE: '1'
+      SOURCE: faa2b5fff98f81044de17f17eec23ddd9a9847e0
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Require exact toolchain and local fail-closed gates
+        run: |
+          set -euo pipefail
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          test "$(xcodebuild -version | head -n 1)" = 'Xcode 16.2'
+          test "$(xcrun --sdk iphonesimulator --show-sdk-version)" = '18.2'
+          python3 -m unittest discover -s experiments/readback-ios18 -p 'test_*.py'
+      - name: Verify immutable successful runtime artifact
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p readback-download readback-evidence
+          git show "$SOURCE:experiments/audio-recovery/native/approval.json" > readback-download/approval.json
+          git show "$SOURCE:experiments/audio-recovery/native/verify_download.py" > readback-download/verify_download.py
+          gh api repos/op233qo123/FlashNest/actions/runs/40614335019 > readback-download/run.json
+          gh api repos/op233qo123/FlashNest/actions/artifacts/12783974867 > readback-download/artifact.json
+          python3 - <<'PY'
+          import json
+          a=json.load(open('readback-download/approval.json'));m=json.load(open('readback-download/artifact.json'))
+          assert a['runID']==40614335019 and a['artifactID']==12783974867
+          assert a['archiveBytes']==22076102 and a['archiveSHA256']=='3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a'
+          assert m['id']==a['artifactID'] and m['workflow_run']['id']==a['runID'] and not m['expired'] and m['size_in_bytes']==a['archiveBytes']
+          PY
+          gh api repos/op233qo123/FlashNest/actions/artifacts/12783974867/zip > readback-download/runtime.zip
+          python3 readback-download/verify_download.py readback-download readback-download/approval.json
+      - name: Stage entire reviewed arm and install its own locked runtime
+        run: |
+          set -euo pipefail
+          python3 experiments/readback-ios18/stage.py --repo . --output "$RUNNER_TEMP/readback-stage" --arm '${{ matrix.arm }}' --archive readback-download/runtime.zip
+          (
+            cd "$RUNNER_TEMP/readback-stage"
+            python3 scripts/fetch_runtime.py
+            python3 scripts/verify_bundled_runtime.py App/Resources/Web
+            python3 scripts/test_runtime_bundle.py
+            python3 scripts/test_static.py
+            python3 scripts/test_licenses.py
+          )
+          python3 experiments/readback-ios18/attest.py "$RUNNER_TEMP/readback-stage" '${{ matrix.arm }}' > readback-evidence/runtime-attestation.json
+          git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
+      - name: Generate project and select only installed iOS 18.2
+        id: simulator
+        run: |
+          set -euo pipefail
+          curl --fail --location --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          cd "$RUNNER_TEMP/readback-stage"
+          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.2)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+      - name: Exact historical readback and two frame-order tests
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          touch readback-evidence/start.marker
+          xcodebuild test -project "$RUNNER_TEMP/readback-stage/FlashNest.xcodeproj" -scheme FlashNest -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -destination-timeout 90 -derivedDataPath "$RUNNER_TEMP/readback-build" -resultBundlePath readback-evidence/Results.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 120 -only-testing:FlashNestTests/SharedObjectPersistenceTests/testConfirmedImportAppliesOnceAndNewerLiveFlushSurvivesMissedNativeCapture -only-testing:FlashNestTests/FrameOrderRuntimeTests/testNestedChildGotoPreservesParentTarget -only-testing:FlashNestTests/FrameOrderRuntimeTests/testControlPreservesRecordedFrameOrder CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee readback-evidence/test.log
+          xcrun xcresulttool get test-results summary --path readback-evidence/Results.xcresult > readback-evidence/summary.json
+          python3 experiments/readback-ios18/verify_results.py '${{ matrix.arm }}' readback-evidence/summary.json readback-evidence/test.log > readback-evidence/verified-results.json
+      - name: Retain each arm raw outcomes and bounded crash evidence
+        if: always()
+        run: |
+          mkdir -p readback-evidence
+          cp "$RUNNER_TEMP/readback-stage/readback-stage-receipt.json" readback-evidence/ 2>/dev/null || true
+          cp readback-download/{run.json,artifact.json,approval.json} readback-evidence/ 2>/dev/null || true
+          if [ -d readback-evidence/Results.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path readback-evidence/Results.xcresult > readback-evidence/summary.json || true
+            xcrun xcresulttool export attachments --path readback-evidence/Results.xcresult --output-path readback-evidence/attachments || true
+          fi
+          if [ -f "$RUNNER_TEMP/readback-stage/scripts/collect_test_webkit_crashes.py" ]; then
+            python3 "$RUNNER_TEMP/readback-stage/scripts/collect_test_webkit_crashes.py" readback-evidence/start.marker readback-evidence/crashes || true
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: readback-ios18.2-${{ matrix.arm }}
+          path: readback-evidence
+          retention-days: 7

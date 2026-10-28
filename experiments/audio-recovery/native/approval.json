@@ -70,7 +70,7 @@
   },
   "diagnosticFiles": {
     "Host/AudioRecoveryHost.swift": "a98cdcfaaf3402d916cf863a588da391070d3504e816e00c32f2f5b97a75168f",
-    "README.md": "b6a7ec5cfcac00309bf5ca295025f3c551051dc360969232084ddcdd1a42c561",
+    "README.md": "00450c4936584016a371961ee168e8c82c8ce0f4520b1b6f2963a55fe94ca3b7",
     "UITests/AudioRecoveryUITests.swift": "e0028f29462dd2cd6e105950889c55d5fd32cd38b31e589975e8ab3118e77500",
     "apply_injection.py": "53ea8d5efa155cd7e6ca2ffac82abf300166615d78e25183c9587941ff6661ac",
     "audio-recovery-injection.js": "d495f538242dd49915810a33478c17da9c1e7a831a721524a9136c4f2628176b",
@@ -78,9 +78,9 @@
     "stage_host.py": "0028bbed445725de25048566daca5b3a4d1900b98d2f846fa9e35fbb9569d8e3",
     "test_apply_injection.py": "7c86c562f547cd96208a6f7ec59dcf9d6edb7db1c6950ba09a2e1b9d9dfb385e",
     "test_injection.mjs": "8ef71a583b4d62d90c69670b6a3693108040ca13d8f908732a5db0ccb8f7c75a",
-    "test_results.py": "15f2a807e83bbacc4a541e254a7d770b68d21da5e30df06a4e440731025e6443",
+    "test_results.py": "0c8abadb12ce36cd26e44014ead1932253ce8b990c77ab4fbe37cb46bb3c9546",
     "test_staging.py": "1e9aa3d6f8d880a5a15e99dab133652183f63f16ebdc00cacb0093ad50a03551",
     "verify_download.py": "e16d29ecb123fb82d6cf896ed3f1a95caffb70600125e518e0261f2c9047e123",
-    "verify_results.py": "cff0c32de5f045b08bd3d9bd43d2d8365a218123e270ceff9b2231b58393354b"
+    "verify_results.py": "1ac5ab5c909d7b72b407ad57b0a700c6549963d4ec69e85e50c2c4226626d964"
   }
 }

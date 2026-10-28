@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "baseRef": "faa2b5fff98f81044de17f17eec23ddd9a9847e0",
+  "promotionManifestSHA256": "3bcbcc205b84887b0b2e8bacc371277d4318b63c99aca7181faea3a0c9aae5c7",
+  "files": [
+    {
+      "path": "Tests/FrameOrderRuntimeTests.swift",
+      "sha256": "750e2344cd8da6c64e1c8d2188b327cc8f3e81cbcdffeed9d9ac972604821468",
+      "bytes": 23379,
+      "originalSHA256": "58140e8bb820930865afe034694f020d4675458bc9fdc7894ce99f7b474891bf"
+    },
+    {
+      "path": "runtime.lock.json",
+      "sha256": "ce33bd58ce5ad7ee8daa43b4dc450387ab24667099ced022944e87c2cb2ba41c",
+      "bytes": 3305,
+      "originalSHA256": "6b8574d470be5a86b3eb0336844099db306f64b32fc70bf86f68e686910be6b4"
+    },
+    {
+      "path": "runtime.files.json",
+      "sha256": "25d4453b0375349e55b9f63f609bd129d6a3549e1da792e811f0e5d121247e90",
+      "bytes": 1157,
+      "originalSHA256": "89cae8b5b24bf70a936f2340e31a5c88b34fd5eaa12039c11a7090b8f4939e70"
+    },
+    {
+      "path": "App/Resources/Web/runtime-identity.json",
+      "sha256": "bdb97b8e97e3c1bb0213d83ea5c541891643454cea347961c60038670d0f06dd",
+      "bytes": 4275,
+      "originalSHA256": "022c9939e113904bf83bbf245285025904f3cb9bd093e67ec592a01b478208a9"
+    },
+    {
+      "path": "App/Resources/Web/Ruffle-MODIFICATIONS.md",
+      "sha256": "626b21cfc6f409c98cdbd8192992114dabce5d8f2b3bd4ecfed6e28840c9dcae",
+      "bytes": 4890,
+      "originalSHA256": "d542c1cbbd0b6bf98638fb6b5e81aadd6708dbe4c7934f3d1f42c2707a64998a"
+    },
+    {
+      "path": "App/Resources/Web/licenses.manifest.json",
+      "sha256": "b0c0cb9a723f9cb5e296a966b103faaeed1c527c6e47231438c019c11313b2c9",
+      "bytes": 1309,
+      "originalSHA256": "d33dd57234aec6287de81f60a8b6aad3064e6fcc23a6a8e36301c31051d53a7c"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "2782048f32853bc1dca9a48248290fb2e1554bb1eed095f8227f658bacb375fc",
+      "bytes": 5281,
+      "originalSHA256": "d14d925991dc7047150702bf813041bdd6d201d6c39d97a6f38dbea80284c519"
+    },
+    {
+      "path": "App/Resources/Web/THIRD_PARTY_NOTICES.md",
+      "sha256": "2782048f32853bc1dca9a48248290fb2e1554bb1eed095f8227f658bacb375fc",
+      "bytes": 5281,
+      "originalSHA256": "d14d925991dc7047150702bf813041bdd6d201d6c39d97a6f38dbea80284c519"
+    },
+    {
+      "path": "scripts/fetch_runtime.py",
+      "sha256": "c321822c0d130d534679901fc90d0ddea5322a39507e23e6df128a6fe4995add",
+      "bytes": 15433,
+      "originalSHA256": "3fa077172622f0d7620c0080e2e8d75317f8218d96e21ea2556d3b25a2ddaaff"
+    },
+    {
+      "path": "scripts/verify_bundled_runtime.py",
+      "sha256": "feceb8c7655ecacb5f840659f012ce1f60d92f73a1a5974f0d308c3c1a986d5f",
+      "bytes": 3433,
+      "originalSHA256": "06ae653f157ca7db8e286a78244c93074575f10cce88324d5fc6723f9170dbe9"
+    },
+    {
+      "path": "scripts/test_runtime_bundle.py",
+      "sha256": "fe6614e382eb91e482ace1956b72314a5a40475e8165516dc57d1cd74ca35348",
+      "bytes": 17087,
+      "originalSHA256": "af6518597dbbc55e494e6d0f777e24eae3eb535c72fda7563ffe092ae5e53390"
+    },
+    {
+      "path": "vendor/README.md",
+      "sha256": "8ebb87f75d1fe65a65d892b32d2d3f9ef56c85f7e68421074fe73b3a78446c68",
+      "bytes": 2088,
+      "originalSHA256": "646668929809af0b7ccc46376134d9ccf81a9899077b6cdd81b146a224e9e593"
+    },
+    {
+      "path": ".github/workflows/build-unsigned.yml",
+      "sha256": "59d09f6ba79983db1bf29a9dcef13bf54ecfe1e892923ca3f6bbe3c83b38c791",
+      "bytes": 4935,
+      "originalSHA256": "1632201ee7f42d5e4594a1e11db0fd65fb348ae6e7005f1ea3d62151d8d6a8f9"
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-40614335019.zip",
+      "sha256": "3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a",
+      "bytes": 22076102,
+      "originalSHA256": null
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json",
+      "sha256": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4",
+      "bytes": 28950,
+      "originalSHA256": null
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
+      "bytes": 659,
+      "originalSHA256": null
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-source/audio-lifecycle.patch",
+      "sha256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9",
+      "bytes": 2506,
+      "originalSHA256": null
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-source/audio-recovery.patch",
+      "sha256": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60",
+      "bytes": 10224,
+      "originalSHA256": null
+    }
+  ]
+}
