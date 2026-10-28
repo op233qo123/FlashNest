@@ -1,0 +1,53 @@
+{
+  "kind": "sigill-phase-diagnostic-not-shipping",
+  "authorizedObservationCount": 1,
+  "observationLabel": "sigill-phase-40660800074-one",
+  "repository": "op233qo123/FlashNest",
+  "sourceCommit": "5862f8dbd414d9835f11872d3ebabd1eed315ffc",
+  "buildCommit": "3904bb3339cf5adfe170967ec702fee1fb674c03",
+  "runID": 40660800074,
+  "artifactID": 12805015552,
+  "archiveBytes": 10962962,
+  "archiveSHA256": "6586c448897a91f1d1798fefdb312a25f6088045610a00ec00688d0244880f76",
+  "provenanceSHA256": "64b84cb0b7484051760a900118d2a944a0991b71f9bed8db121753aac3fbea74",
+  "runtimes": {
+    "diagnostic": {
+      "directory": "runtime",
+      "files": {
+        "6e7428784621e02c315a.wasm": "ed14cdbc8ecb80362702a1f35ccdb90d5f6b987bc6689a2e043af86d6b44a195",
+        "89d38388d6d6224a3250.wasm": "7838696f702e68fca77cadc1fbbcc6a97c07064523266eb423617497240ad0af",
+        "LICENSE_APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE_MIT": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c",
+        "README.md": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde",
+        "core.ruffle.2dcaf0238f551b83e871.js": "67cb266e2bf39db8060a83ece6d2ab79d3a495e3b161a69edd7ef710553638c5",
+        "core.ruffle.2dcaf0238f551b83e871.js.map": "5b667b62fd3822c5deccc850e94eb534bc9f6c182dd74d9a3e4fa2ddef65183d",
+        "core.ruffle.b280d6051c3dbe4d7b0e.js": "f7775c98c1eeb0aa41e8890824a3b041991f82845a6c49f42d2a2dbb3904e689",
+        "core.ruffle.b280d6051c3dbe4d7b0e.js.map": "3236536bfbf9216f5fa83bc9e2eccf17374fc745de0d6210c477e3436a9c7dc7",
+        "package.json": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89",
+        "ruffle.js": "2cdb59e7bfd1f9b5f32145bd7e1ceb5c56baac57bf1e86743253222610e27526",
+        "ruffle.js.map": "cf73ec702c6f37777af40c39a7cf5c8b7fe994733a24354ae7fa4558865a5453"
+      }
+    }
+  },
+  "diagnosticFiles": {
+    "Host/AudioRecoveryHost.swift": "ccedbf2f7a71d7cd68ac4d8651f7c65e2f6aeb09b76995322eb443dc2dcae8b4",
+    "Host/StartupJournal.swift": "8d1b4a9ef1c8ce4028b9a553b0cef9dfad81c199dfb6777a1e1f7509cfe51610",
+    "README.md": "2ad5e7d95e92526b50ee929ee1f9dd970599272a42a806daf13eaac93546d273",
+    "apply_injection.py": "5ad6ffc33c6a528ea94e186dba9b9f7c328bb0909f5e19ac3e731bced4f96ab2",
+    "apply_startup.py": "142d25d7700151562f49b00485f6e19f4868354bf959c800d48d700446754941",
+    "audio-recovery-injection.js": "d495f538242dd49915810a33478c17da9c1e7a831a721524a9136c4f2628176b",
+    "collect.py": "ccebeba1003b00bdd451ab9b746e067ab3c709c9563abd028c8eeb32c84671e7",
+    "export_public.py": "0b9f6f7bbecab813cbce6bc1fef30d5c0415b1bf827ba40d4c7584173a4bd207",
+    "installed_bundle.py": "a2c88c29f1d8cc400aba3af6487a5167321e7595a3057dbfc02aa2e38522fdef",
+    "project.yml": "bb90cc4c57bc1334f7965e9d80238a6f33804cf4836f22087da0de8252a69ea1",
+    "run_one.py": "3fa20ca8466ba6a947f512a8ca9c4b30500c03bfc94fd9b05b4ba6e9c01d2976",
+    "stage_one.py": "15f947c0f195a88bc48ec4f1460193dd5219ec3447eefd97d2350ee5ea0f38d1",
+    "startup-journal.js": "7a5d334b01708c582f8a465e30b1726632115ebdcd239ed48dc71e86156f0dd0",
+    "test_crash_signature.py": "6938330c138615538d06fcaa87680493a4934ebfdb6ca87c7e96f908d6354bf3",
+    "test_engine.py": "0ba31d432fcd89d7511e060a984ddde603e3c7c63ce2346ae4024c7b94a8861d",
+    "test_one.py": "4818241f7b292685d3521d6e4b3b886074c8bcef51b7c4cb755d1ec22b63dbb5",
+    "test_privacy_stage.py": "f650338ceb6f48747c98cc898473eaa9a23c12cef9488f53c4606f8155d82d52",
+    "verify_engine.py": "3cb2d66686bbcaf7e5d9f0dae362fa63972fe2327f3792b9293bbfbef87a2f3d"
+  },
+  "note": "Distinct diagnostic engine only. Exactly one observation; no shipping promotion or crash-fix claim."
+}
