@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "kind": "sigill-phase-diagnostic-not-shipping",
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "sourceDateEpoch": 1791399335,
+  "historicalPatchSetSHA256": "3eea9c1603f46966d4de835325484d5433d8999998e6fb9baadf98c56b9fab2e",
+  "historicalModifiedSources": [
+    {
+      "path": "core/src/display_object/movie_clip.rs",
+      "originalSHA256": "fc229d96ab6fced20391cf810d9d89a2118803cb7f5ce48ddf6967e52e35700a",
+      "modifiedSHA256": "af780dae48b842e0756b8cd23f50a539737d0bcbbbdca970feb90f27725e96b0",
+      "bytes": 189360
+    },
+    {
+      "path": "web/packages/core/src/internal/audio-operation.ts",
+      "originalSHA256": null,
+      "modifiedSHA256": "32986bab21da5cc3417ce2b67dfd6a3f829fa2b5c5910805e4a833fb1843a2cb",
+      "bytes": 6286
+    },
+    {
+      "path": "web/packages/core/src/internal/player/inner.tsx",
+      "originalSHA256": "3161d60d8470c23cb93b99efcb4027ec53854ef6c7a304f2d7127ecaca1d8120",
+      "modifiedSHA256": "657d499e59031824cc1e976fa21f3b74d72f9d855ff7a0e3f016676932b3df77",
+      "bytes": 92823
+    },
+    {
+      "path": "web/packages/core/src/ruffle-imports.ts",
+      "originalSHA256": "d27cfb70999e57de053cc8caf6a5c7a925affa7a77059342319da039d0fbcb5e",
+      "modifiedSHA256": "0cd19f0f895e3a3534dbb4ec29567cc569e871b8d8b4593b367fc35455f31111",
+      "bytes": 1652
+    },
+    {
+      "path": "web/src/audio.rs",
+      "originalSHA256": "0cca2bc14a593060a233ec68a2ae725efc381c9068626a92a82c67a3bc732b8b",
+      "modifiedSHA256": "e03078285ccccc4734837f6bb79559e008a307e7acd2a0d6649c617d1dcb9dc1",
+      "bytes": 12785
+    }
+  ],
+  "patches": [
+    {
+      "path": "patches/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f"
+    },
+    {
+      "path": "patches/audio-lifecycle.patch",
+      "sha256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9"
+    },
+    {
+      "path": "patches/audio-recovery.patch",
+      "sha256": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60"
+    }
+  ],
+  "locks": {
+    "Cargo.lock": "c63981977750d740c24a70fdd1582f9f4b40f9bb8bf18fd8ed2790e576628e0d",
+    "Cargo.toml": "854668d871ba3d7ce4094abab61b7a3788aad156522403237f916704c9267596",
+    "web/package-lock.json": "fff432c1cd6a43c1b907dca1ebe438d38f28748368060cd1769bb9cb5bf05147",
+    "web/package.json": "7d208a1ada16acb0cd926ca7e4e3c1b7e67264e9d78f6def77efef3a7b18d5ca"
+  },
+  "proposal": [
+    {
+      "path": "web/src/audio.rs",
+      "beforeSHA256": "e03078285ccccc4734837f6bb79559e008a307e7acd2a0d6649c617d1dcb9dc1",
+      "afterSHA256": "e53917bf6a8fb750fa645d7d662a6a02d9f5ec6aeeac194cdca30bed19bfbf8d"
+    },
+    {
+      "path": "web/src/builder.rs",
+      "beforeSHA256": "161d7562774e28275f992fe8d27523804071d5552bd4fd859a61060cf01cfb6e",
+      "afterSHA256": "d1255e6dcd172a743d6d1a1d4759d69f6485dfdd12869027d7e67e7d63793956"
+    },
+    {
+      "path": "web/src/lib.rs",
+      "beforeSHA256": "aea9c76e9065f9035cdeb96b168bc93e06579c2a70f04c07eeae6bdaa78d33ae",
+      "afterSHA256": "7dedc9e329b733ae48b973515b3a69de99fa9e09667a276baca351343dd1f17f"
+    },
+    {
+      "path": "web/src/startup_phase.rs",
+      "beforeSHA256": null,
+      "afterSHA256": "6a35230fe3c33f35c01adfeae525b07eac0f0b0eead09bd41f404e82728c869d"
+    }
+  ]
+}

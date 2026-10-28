@@ -1,0 +1,75 @@
+name: Build isolated SIGILL phase diagnostic engine (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-sigill-phase-engine
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+      CARGO_BUILD_JOBS: 2
+      CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+      RUFFLE_SOURCE_DIR: ${{ github.workspace }}/.sigill-phase-ruffle
+      ENGINE_EVIDENCE_DIR: ${{ runner.temp }}/sigill-build-evidence
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ruffle-rs/ruffle
+          ref: 89a7049965f3090e706265670df309a5128233ac
+          path: .sigill-phase-ruffle
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Reconstruct exact historical candidate then diagnostic-only overlay
+        run: |
+          set -euo pipefail
+          python3 experiments/sigill-phase/build/provenance.py reconstruct "$RUFFLE_SOURCE_DIR" "$RUNNER_TEMP/sigill-source-verified.json"
+      - name: Install pinned Rust and checksum-pinned Java runtime
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          mkdir -p "$ENGINE_EVIDENCE_DIR"
+          rustup toolchain install 1.99.1 --profile minimal --component rust-src --target wasm32-unknown-unknown
+          curl --fail --location --retry 2 --max-time 180 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.13_9.tar.gz' -o "$RUNNER_TEMP/audio-jre.tar.gz"
+          echo "a535a1df9c6284d9618872984e026ae0352d1f7e9e0605425c0e6114f47351dd  $RUNNER_TEMP/audio-jre.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/audio-jre"
+          tar -xzf "$RUNNER_TEMP/audio-jre.tar.gz" -C "$RUNNER_TEMP/audio-jre" --strip-components=1
+          echo "$RUNNER_TEMP/audio-jre/bin" >> "$GITHUB_PATH"
+          rustc -vV > "$ENGINE_EVIDENCE_DIR/rustc.txt"
+          cargo --version > "$ENGINE_EVIDENCE_DIR/cargo.txt"
+      - name: Install pinned web toolchain
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y clang-18 libclang-18-dev libssl-dev pkg-config
+          cargo install --locked wasm-bindgen-cli --version 0.2.127
+          curl --fail --location --retry 2 --max-time 180 https://github.com/WebAssembly/binaryen/releases/download/version_129/binaryen-version_129-x86_64-linux.tar.gz -o "$RUNNER_TEMP/audio-binaryen.tar.gz"
+          echo "50b9fa62b9abea752da92ec57e0c555fee578760cd237c40107957715d2976ba  $RUNNER_TEMP/audio-binaryen.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/audio-binaryen"
+          tar -xzf "$RUNNER_TEMP/audio-binaryen.tar.gz" -C "$RUNNER_TEMP/audio-binaryen" --strip-components=1
+          echo "$RUNNER_TEMP/audio-binaryen/bin" >> "$GITHUB_PATH"
+          dpkg-query -W clang-18 libclang-18-dev libssl-dev pkg-config > "$ENGINE_EVIDENCE_DIR/web-system-packages.txt"
+      - name: Install exact locked JS dependencies
+        timeout-minutes: 10
+        run: cd "$RUFFLE_SOURCE_DIR/web" && npm ci
+      - name: Build distinct engine plus existing JS gates (no native observation)
+        timeout-minutes: 60
+        run: bash experiments/sigill-phase/build/build.sh "$RUFFLE_SOURCE_DIR" "$GITHUB_WORKSPACE/sigill-phase-engine"
+      - name: Upload only completed diagnostic engine, code and generated allowlisted manifests
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-sigill-phase-diagnostic-engine
+          retention-days: 7
+          path: sigill-phase-engine/
+          if-no-files-found: error

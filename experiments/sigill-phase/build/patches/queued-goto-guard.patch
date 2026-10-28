@@ -1,0 +1,17 @@
+--- a/core/src/display_object/movie_clip.rs
++++ b/core/src/display_object/movie_clip.rs
+@@ -2495,6 +2495,14 @@
+             }
+         }
+ 
++        // A nested goto on another clip can revisit us before our current
++        // frame script has returned. Leave our queued goto for the original
++        // invocation to drain after that script unwinds, just as we defer
++        // recursive frame-script execution above.
++        if self.is_executing_avm2_frame_script() {
++            return;
++        }
++
+         let goto_info = self.0.queued_goto.take();
+         if let Some(goto_info) = goto_info {
+             self.goto_frame_now(context, goto_info);
