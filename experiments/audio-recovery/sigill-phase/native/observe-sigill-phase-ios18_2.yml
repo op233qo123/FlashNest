@@ -1,0 +1,104 @@
+name: One diagnostic phase observation on exact iOS 18.2
+on:
+  workflow_dispatch:
+    inputs:
+      observation_label:
+        description: Exact one-shot label from reviewed immutable native approval
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-one-sigill-phase-observation
+  cancel-in-progress: false
+jobs:
+  observe:
+    if: github.run_attempt == 1
+    runs-on: macos-14
+    timeout-minutes: 40
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      PYTHONDONTWRITEBYTECODE: '1'
+      NATIVE: experiments/audio-recovery/sigill-phase/native
+      OBSERVATION_LABEL: ${{ inputs.observation_label }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require reviewed one-shot approval and exact free runner toolchain
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "$(xcodebuild -version | head -n 1)" = 'Xcode 16.2'
+          test "$(xcrun --sdk iphonesimulator --show-sdk-version)" = '18.2'
+          python3 - <<'PY'
+          import json,os,re
+          a=json.load(open(os.environ['NATIVE']+'/approval.json'))
+          assert a['kind']=='sigill-phase-diagnostic-not-shipping' and a['authorizedObservationCount']==1
+          assert re.fullmatch('[A-Za-z0-9_-]{1,64}',a['observationLabel'])
+          assert os.environ['OBSERVATION_LABEL']==a['observationLabel']
+          assert a['runID']!=40614335019 and a['artifactID']!=12783974867
+          PY
+          python3 -m unittest discover -s "$NATIVE" -p 'test_*.py'
+      - name: Download only separately reviewed new diagnostic engine
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/phase-download"
+          read -r run_id artifact_id < <(python3 - <<'PY'
+          import json,os
+          a=json.load(open(os.environ['NATIVE']+'/approval.json'))
+          assert type(a['runID'])is int and type(a['artifactID'])is int
+          print(a['runID'],a['artifactID'])
+          PY
+          )
+          gh api "repos/op233qo123/FlashNest/actions/runs/$run_id" > "$RUNNER_TEMP/phase-download/run.json"
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$artifact_id" > "$RUNNER_TEMP/phase-download/artifact.json"
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$artifact_id/zip" > "$RUNNER_TEMP/phase-download/runtime.zip"
+          python3 "$NATIVE/verify_engine.py" "$RUNNER_TEMP/phase-download" "$NATIVE/approval.json"
+      - name: Stage production host plus original injector and new phase engine
+        run: |
+          set -euo pipefail
+          python3 "$NATIVE/stage_one.py" --repo . --output "$RUNNER_TEMP/phase-stage" --runtime "$RUNNER_TEMP/phase-download/extracted/runtime" --approval "$NATIVE/approval.json"
+          git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
+      - name: Generate diagnostic-only project and select exact iOS 18.2
+        id: simulator
+        run: |
+          set -euo pipefail
+          curl --fail --location --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          (cd "$RUNNER_TEMP/phase-stage" && "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate) > "$RUNNER_TEMP/project-generation.log" 2>&1
+          mkdir -p "$RUNNER_TEMP/phase-stage/AudioRecoveryDiagnostic.xcodeproj/project.xcworkspace/xcshareddata/swiftpm"
+          cp "$RUNNER_TEMP/phase-stage/Package.resolved" "$RUNNER_TEMP/phase-stage/AudioRecoveryDiagnostic.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.2)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+      - name: Build app only; raw build log remains ephemeral
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          xcodebuild build -project "$RUNNER_TEMP/phase-stage/AudioRecoveryDiagnostic.xcodeproj" -scheme AudioRecoveryDiagnostic -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -derivedDataPath "$RUNNER_TEMP/phase-build" -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO > "$RUNNER_TEMP/phase-build.log" 2>&1
+      - name: Exactly one no-gesture observation, no retry
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          python3 "$NATIVE/run_one.py" --udid '${{ steps.simulator.outputs.device_id }}' --app "$RUNNER_TEMP/phase-build/Build/Products/Debug-iphonesimulator/AudioRecoveryDiagnostic.app" --private-output "$RUNNER_TEMP/phase-private" --arm diagnostic --approval "$NATIVE/approval.json" --source-manifest "$RUNNER_TEMP/phase-stage/source-manifest.json" > "$RUNNER_TEMP/phase-observer.log" 2>&1
+      - name: Export only allowlisted diagnostics, never raw logs or xcresult
+        if: always()
+        run: |
+          set -euo pipefail
+          python3 "$NATIVE/export_public.py" --private "$RUNNER_TEMP/phase-private" --output "$RUNNER_TEMP/phase-public" --approval "$NATIVE/approval.json"
+          git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: sigill-phase-single-ios18_2-allowlisted
+          path: |
+            ${{ runner.temp }}/phase-public/observation.json
+            ${{ runner.temp }}/phase-public/publication-manifest.json
+          if-no-files-found: error
+          retention-days: 7
