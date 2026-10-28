@@ -697,8 +697,8 @@
       "sha256": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac"
     },
     "validation-harness/browser-runtime-validation/manifest.json": {
-      "bytes": 7931,
-      "sha256": "3632fd767f6db4be8b522a61384a38070be74840ca970224e002434a41a17346"
+      "bytes": 7932,
+      "sha256": "607a37bcc1fd2c5104bdb626989b0a33fa1f0318b663f69d5aa6877a921b5936"
     },
     "validation-harness/browser-runtime-validation/matrix-plan.json": {
       "bytes": 163192,
@@ -717,8 +717,8 @@
       "sha256": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574"
     },
     "validation-harness/browser-runtime-validation/scripts/browser_matrix.py": {
-      "bytes": 9931,
-      "sha256": "9525e6bb97d855c4f3a9d965b1bc71a8e4698d7984bca534068f9415c5070857"
+      "bytes": 11002,
+      "sha256": "10ed09b213cc9dd41abf413d97f868772d3bcf3599b4ff41ed373abed248abeb"
     },
     "validation-harness/browser-runtime-validation/scripts/browser_preflight.py": {
       "bytes": 3149,
@@ -1149,7 +1149,7 @@
         ]
       ],
       "expectedRowsPerExecutedPath": 290,
-      "harnessManifestSHA256": "3632fd767f6db4be8b522a61384a38070be74840ca970224e002434a41a17346",
+      "harnessManifestSHA256": "607a37bcc1fd2c5104bdb626989b0a33fa1f0318b663f69d5aa6877a921b5936",
       "mvpSelectionOptionalWhenNoSupportedRoute": true,
       "perCommandTimeoutSeconds": 2400,
       "requiredShippingSelectionProof": true,

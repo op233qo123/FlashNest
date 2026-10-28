@@ -177,8 +177,8 @@
       "bytes": 89
     },
     "scripts/browser_matrix.py": {
-      "sha256": "9525e6bb97d855c4f3a9d965b1bc71a8e4698d7984bca534068f9415c5070857",
-      "bytes": 9931
+      "sha256": "10ed09b213cc9dd41abf413d97f868772d3bcf3599b4ff41ed373abed248abeb",
+      "bytes": 11002
     },
     "scripts/browser_preflight.py": {
       "sha256": "dc4b67b7a7b70ce1674840f613147828c10a68e2b65716dbe1c60ebea80c88ec",

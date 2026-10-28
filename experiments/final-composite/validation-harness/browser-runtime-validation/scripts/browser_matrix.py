@@ -13,6 +13,27 @@ def capture_failure(page,result):
  except Exception as exc:
   result['failureObservationError']=type(exc).__name__+': '+str(exc)[:2000]
 
+def prepare_pointer(page,result,index,out,width,height):
+ # The actual CPU-adapter frontend opens its warning on the first mouseover,
+ # not on READY. Trigger that one-time UI transition before any game click.
+ page.mouse.move(width/2,height/2)
+ warning=page.evaluate('window.hardwareWarningState()')
+ if warning['visible']:
+  validate_warning(warning);name=f'warning-{index}.png';write_png(out/name,page.screenshot())
+  assert page.evaluate('window.hardwareWarningState()')==warning
+  traces_before=page.evaluate('window.evidence.traces.slice()')
+  page.evaluate('window.pointerEvents=[]')
+  page.mouse.click(*warning['point']);page.wait_for_function('!window.hardwareWarningState().visible')
+  events=page.evaluate('window.pointerEvents')
+  assert len(events)==2,'Warning dismissal must be one separate trusted click'
+  for i,event in enumerate(events):
+   assert event['trusted'] is True and event['type']==['pointerdown','pointerup'][i]
+   assert [event['x'],event['y']]==warning['point'] and event['button']==0
+   assert any(e['id']=='hardware-acceleration-modal' for e in event['path'])
+  assert page.evaluate('window.evidence.traces.slice()')==traces_before,'Warning dismissal leaked into game input'
+  result.setdefault('warnings',[]).append({'index':index,'state':warning,'screenshot':name,'dismissalEvents':events,'gameClick':False})
+ assert page.evaluate('(p)=>window.gameHitTarget(...p).canvasTopmost',[width/2,height/2]),'Unknown overlay after pointer readiness'
+
 def run(a):
  from playwright.sync_api import sync_playwright
  from PIL import Image
@@ -68,12 +89,7 @@ def run(a):
     page.evaluate('(v)=>window.startCase(...v)',[fixture,row['scale'],w,h,row['renderer'],row['quality']])
     page.wait_for_function('window.evidence.loaded&&window.evidence.observerInstalled',timeout=30000)
     page.locator('#play').click();page.wait_for_function("window.evidence.traces.some(x=>x.startsWith('DENSITY|READY|'))",timeout=30000)
-    warning=page.evaluate('window.hardwareWarningState()')
-    if warning['visible']:
-     validate_warning(warning);name=f'warning-{index}.png';write_png(out/name,page.screenshot())
-     assert page.evaluate('window.hardwareWarningState()')==warning
-     page.mouse.click(*warning['point']);page.wait_for_function('!window.hardwareWarningState().visible')
-     result.setdefault('warnings',[]).append({'index':index,'state':warning,'screenshot':name})
+    prepare_pointer(page,result,index,out,w,h)
     page.evaluate('window.__resizePlayer=window.player');phases=[];initial_pixels=None
     for phase,pw_,ph_ in [('initial',w,h),('resized',h,w),('restored',w,h)]:
      page.evaluate('(v)=>{const h=document.getElementById("host");h.style.width=v[0]+"px";h.style.height=v[1]+"px"}',[pw_,ph_])
