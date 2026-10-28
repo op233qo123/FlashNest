@@ -1,0 +1,268 @@
+--- a/render/wgpu/src/backend.rs
++++ b/render/wgpu/src/backend.rs
+@@ -77,6 +77,9 @@
+     // This is currently unused - we just store it to report in
+     // `get_viewport_dimensions`
+     viewport_scale_factor: f64,
++    // Present only for the opt-in reduced backing path. Core geometry and input
++    // continue to use the original viewport, not the physical render target.
++    virtual_viewport: Option<ViewportDimensions>,
+     texture_pool: TexturePool,
+     offscreen_texture_pool: TexturePool,
+     pub(crate) offscreen_buffer_pool: Arc<BufferPool<wgpu::Buffer, BufferDimensions>>,
+@@ -274,6 +277,7 @@
+             meshes: Vec::new(),
+             shape_tessellator: ShapeTessellator::new(),
+             viewport_scale_factor: 1.0,
++            virtual_viewport: None,
+             texture_pool: TexturePool::new(),
+             offscreen_texture_pool: TexturePool::new(),
+             offscreen_buffer_pool: Arc::new(offscreen_buffer_pool),
+@@ -425,6 +429,7 @@
+ 
+ impl<T: RenderTarget + 'static> RenderBackend for WgpuRenderBackend<T> {
+     fn set_viewport_dimensions(&mut self, dimensions: ViewportDimensions) {
++        self.virtual_viewport = None;
+         // Avoid panics from creating 0-sized framebuffers.
+         // TODO: find a way to bubble an error when the size is too large
+         let width = std::cmp::max(
+@@ -453,6 +458,47 @@
+ 
+         self.viewport_scale_factor = dimensions.scale_factor;
+         self.texture_pool = TexturePool::new();
++    }
++
++    fn set_viewport_dimensions_with_backing(
++        &mut self,
++        dimensions: ViewportDimensions,
++        backing_width: u32,
++        backing_height: u32,
++    ) -> bool {
++        // Reject before mutating anything. In particular, do not use density to
++        // bypass the normal logical viewport limit or manufacture a zero size.
++        let limit = self.descriptors.limits.max_texture_dimension_2d;
++        if dimensions.width == 0
++            || dimensions.height == 0
++            || dimensions.width > limit
++            || dimensions.height > limit
++            || !dimensions.scale_factor.is_finite()
++            || dimensions.scale_factor <= 0.0
++            || backing_width == 0
++            || backing_height == 0
++            || backing_width > dimensions.width
++            || backing_height > dimensions.height
++        {
++            return false;
++        }
++
++        if backing_width == dimensions.width && backing_height == dimensions.height {
++            self.set_viewport_dimensions(dimensions);
++            return true;
++        }
++
++        // Reuse the normal physical resize/allocation path, then independently
++        // retain the virtual projection for the onscreen surface and its blends.
++        self.set_viewport_dimensions(ViewportDimensions {
++            width: backing_width,
++            height: backing_height,
++            scale_factor: dimensions.scale_factor,
++        });
++        self.surface
++            .set_projection_size((dimensions.width, dimensions.height));
++        self.virtual_viewport = Some(dimensions);
++        true
+     }
+ 
+     fn create_context3d(
+@@ -504,16 +550,21 @@
+     }
+ 
+     fn set_quality(&mut self, quality: StageQuality) {
++        let projection_size = self.surface.projection_size();
+         self.surface = Surface::new(
+             &self.descriptors,
+             quality,
+             self.surface.size().width,
+             self.surface.size().height,
+             self.target.format(),
+-        );
++        )
++        .with_projection_size(projection_size);
+     }
+ 
+     fn viewport_dimensions(&self) -> ViewportDimensions {
++        if let Some(dimensions) = self.virtual_viewport {
++            return dimensions;
++        }
+         ViewportDimensions {
+             width: self.target.width(),
+             height: self.target.height(),
+--- a/render/wgpu/src/surface/commands.rs
++++ b/render/wgpu/src/surface/commands.rs
+@@ -502,6 +502,7 @@
+     quality: StageQuality,
+     width: u32,
+     height: u32,
++    projection_size: (u32, u32),
+     nearest_layer: LayerRef,
+     texture_pool: &'encoder mut TexturePool,
+ ) -> Vec<Chunk> {
+@@ -514,6 +515,7 @@
+         quality,
+         width,
+         height,
++        projection_size,
+         nearest_layer,
+         texture_pool,
+     )
+@@ -525,6 +527,7 @@
+     quality: StageQuality,
+     width: u32,
+     height: u32,
++    projection_size: (u32, u32),
+     nearest_layer: LayerRef<'encoder>,
+     meshes: &'encoder Vec<Mesh>,
+     staging_belt: &'encoder mut wgpu::util::StagingBelt,
+@@ -552,6 +555,7 @@
+         quality: StageQuality,
+         width: u32,
+         height: u32,
++        projection_size: (u32, u32),
+         nearest_layer: LayerRef<'encoder>,
+         texture_pool: &'encoder mut TexturePool,
+     ) -> Self {
+@@ -568,6 +572,7 @@
+             quality,
+             width,
+             height,
++            projection_size,
+             nearest_layer,
+             meshes,
+             staging_belt,
+@@ -713,7 +718,8 @@
+             self.width,
+             self.height,
+             wgpu::TextureFormat::Rgba8Unorm,
+-        );
++        )
++        .with_projection_size(self.projection_size);
+         let target_layer = if let RenderBlendMode::Builtin(BlendMode::Layer) = &blend_mode {
+             LayerRef::Current
+         } else {
+@@ -749,7 +755,10 @@
+         match blend_type {
+             BlendType::Trivial(blend_mode) => {
+                 let transform = Transform {
+-                    matrix: Matrix::scale(target.width() as f32, target.height() as f32),
++                    matrix: Matrix::scale(
++                        self.projection_size.0 as f32,
++                        self.projection_size.1 as f32,
++                    ),
+                     tz: 0.0,
+                     color_transform: Default::default(),
+                     perspective_projection: None,
+@@ -969,7 +978,8 @@
+             self.width,
+             self.height,
+             wgpu::TextureFormat::Rgba8Unorm,
+-        );
++        )
++        .with_projection_size(self.projection_size);
+ 
+         let maskee = surface.draw_commands(
+             RenderTargetMode::FreshWithColor(wgpu::Color::TRANSPARENT),
+@@ -983,7 +993,10 @@
+             self.texture_pool,
+         );
+         maskee.ensure_cleared(self.draw_encoder);
+-        let matrix = Matrix::scale(maskee.width() as f32, maskee.height() as f32);
++        let matrix = Matrix::scale(
++            self.projection_size.0 as f32,
++            self.projection_size.1 as f32,
++        );
+         let maskee = maskee.take_color_texture();
+ 
+         let mask = surface.draw_commands(
+--- a/render/wgpu/src/surface/target.rs
++++ b/render/wgpu/src/surface/target.rs
+@@ -340,6 +340,15 @@
+ 
+     pub fn globals(&self) -> &Globals {
+         &self.globals
++    }
++
++    pub(crate) fn set_projection_size(
++        &mut self,
++        descriptors: &Descriptors,
++        pool: &mut TexturePool,
++        size: (u32, u32),
++    ) {
++        self.globals = pool.get_globals(descriptors, size.0, size.1);
+     }
+ 
+     pub fn color_attachments(&self) -> Option<wgpu::RenderPassColorAttachment<'_>> {
+--- a/render/wgpu/src/surface.rs
++++ b/render/wgpu/src/surface.rs
+@@ -27,6 +27,9 @@
+ #[derive(Debug)]
+ pub struct Surface {
+     size: wgpu::Extent3d,
++    // Drawing coordinates can remain at the original viewport size while this
++    // onscreen target has fewer pixels. Offscreen surfaces default to identity.
++    projection_size: (u32, u32),
+     quality: StageQuality,
+     sample_count: u32,
+     pipelines: Arc<Pipelines>,
+@@ -55,11 +58,25 @@
+         let pipelines = descriptors.pipelines(sample_count, frame_buffer_format);
+         Self {
+             size,
++            projection_size: (width, height),
+             quality,
+             sample_count,
+             pipelines,
+             format: frame_buffer_format,
+         }
++    }
++
++    pub(crate) fn with_projection_size(mut self, size: (u32, u32)) -> Self {
++        self.set_projection_size(size);
++        self
++    }
++
++    pub(crate) fn set_projection_size(&mut self, size: (u32, u32)) {
++        self.projection_size = size;
++    }
++
++    pub(crate) fn projection_size(&self) -> (u32, u32) {
++        self.projection_size
+     }
+ 
+     #[expect(clippy::too_many_arguments)]
+@@ -114,7 +131,7 @@
+         nearest_layer: LayerRef<'encoder>,
+         texture_pool: &'encoder mut TexturePool,
+     ) -> CommandTarget {
+-        let target = CommandTarget::new(
++        let mut target = CommandTarget::new(
+             descriptors,
+             texture_pool,
+             self.size,
+@@ -123,6 +140,9 @@
+             render_target_mode,
+             draw_encoder,
+         );
++        if self.projection_size != (self.size.width, self.size.height) {
++            target.set_projection_size(descriptors, texture_pool, self.projection_size);
++        }
+ 
+         let mut num_masks = 0;
+         let mut mask_state = MaskState::NoMask;
+@@ -136,6 +156,7 @@
+             self.quality,
+             target.width(),
+             target.height(),
++            self.projection_size,
+             match nearest_layer {
+                 LayerRef::Current => LayerRef::Parent(&target),
+                 layer => layer,

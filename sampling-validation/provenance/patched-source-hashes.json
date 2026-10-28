@@ -1,0 +1,29 @@
+{
+  "files": {
+    "Cargo.lock": "c63981977750d740c24a70fdd1582f9f4b40f9bb8bf18fd8ed2790e576628e0d",
+    "core/src/display_object/movie_clip.rs": "af780dae48b842e0756b8cd23f50a539737d0bcbbbdca970feb90f27725e96b0",
+    "core/src/player.rs": "55b30e11b3afe0f27f2c492eedabc95baed37d10368d9b924733765916ca626b",
+    "render/src/backend.rs": "7fa4fe412b019aa8c0e7d0e892a83239e4246135cf2343f3af085dc1d77b5f33",
+    "render/webgl/src/lib.rs": "2979d295bc76550d6c13d706cd7e8bb0794faa3aecf9ec6704a87187ded037a9",
+    "render/wgpu/src/backend.rs": "791f3a51e16719770739ae82e4dca7bf4b843252dc80e9b175e2dd2102176ca0",
+    "render/wgpu/src/surface.rs": "f0e7655c8ea7422a0c51702dee6cfb01cde1de4b82f49add03bad880219167e1",
+    "render/wgpu/src/surface/commands.rs": "7652d605d47e4b2568859e79a0dabb3994ec3005c1f1d16bae62fa1b06641c5c",
+    "render/wgpu/src/surface/target.rs": "769e55726b0ca1af6251210c922332d7066553dabbcec4637a97641046e42928",
+    "web/package-lock.json": "fff432c1cd6a43c1b907dca1ebe438d38f28748368060cd1769bb9cb5bf05147",
+    "web/packages/core/src/internal/audio-operation.ts": "32986bab21da5cc3417ce2b67dfd6a3f829fa2b5c5910805e4a833fb1843a2cb",
+    "web/packages/core/src/internal/builder.ts": "e2a5fec80bb51399d933b431c4156172fef837135c515355f9e1612d62f20b56",
+    "web/packages/core/src/internal/player/inner.tsx": "657d499e59031824cc1e976fa21f3b74d72f9d855ff7a0e3f016676932b3df77",
+    "web/packages/core/src/public/config/default.ts": "12d9c925f5e19c1d4601f992604e1352c3720999a0f8a9eb1828265e006f5237",
+    "web/packages/core/src/public/config/load-options.ts": "ec5df0e3a3666d9c23402ab827fec93a02c81faacbe941e3bac1f3546b8757e2",
+    "web/packages/core/src/ruffle-imports.ts": "0cd19f0f895e3a3534dbb4ec29567cc569e871b8d8b4593b367fc35455f31111",
+    "web/packages/core/test/render-scale.ts": "5d27bb6111d81098cdb0923adf0430046efe9904972713fb4d13d815bc177ae6",
+    "web/src/audio.rs": "e03078285ccccc4734837f6bb79559e008a307e7acd2a0d6649c617d1dcb9dc1",
+    "web/src/builder.rs": "1de5e6b9c21b2def41e6c692e0f6993557602f6a94fd9e9840f0c61d94067b65",
+    "web/src/lib.rs": "b28a878ccc1909e5e55b8ee134323421a978163de330f866d289fbab5948dd8f"
+  },
+  "gateSourceSHA256": "a823949c9b531a49251416b6acd12c789b522bdff62bd379b70401642e926e32",
+  "gate": false,
+  "referenceFiles": {
+    "render/src/quality.rs": "c9e4e5afadfce114e067b4e9e15b3bfcf0255b42ee820b72e5e31d404bd8e449"
+  }
+}

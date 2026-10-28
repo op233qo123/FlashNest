@@ -1,0 +1,57 @@
+# REVIEW ONLY: copy to .github/workflows/ only after explicit publication/run approval.
+name: Synthetic low-sampling geometry (manual only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: synthetic-low-sampling-geometry
+  cancel-in-progress: false
+jobs:
+  geometry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: sampling-validation
+        shell: bash
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          sparse-checkout: sampling-validation
+      - name: Verify exact reviewed synthetic payload before installation
+        run: python3 scripts/verify_payload.py
+      - name: Install pinned Playwright and its bundled Chromium (CI only)
+        run: |
+          set -euo pipefail
+          python3 -c 'import sys; assert sys.version_info[:2] == (3,12)'
+          python3 -m venv /tmp/sampling-venv
+          /tmp/sampling-venv/bin/pip install --only-binary=:all: -r requirements.txt
+          /tmp/sampling-venv/bin/python -m playwright install --with-deps chromium
+          /tmp/sampling-venv/bin/pip freeze > evidence/python-dependencies.txt
+          python3 --version > evidence/runner.txt
+          uname -a >> evidence/runner.txt
+          printf 'commit=%s\nrun=%s\nattempt=%s\nimage=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$ImageVersion" >> evidence/runner.txt
+      - name: Run static helper and integrity checks
+        run: /tmp/sampling-venv/bin/python scripts/test_static.py
+      - name: Run both real-browser backend matrices without retry or relaxed gates
+        run: |
+          set -uo pipefail
+          status=0
+          for backend in webgl wgpu-webgl; do
+            /tmp/sampling-venv/bin/python scripts/browser_geometry.py --baseline runtimes/baseline --candidate runtimes/candidate --backend "$backend" 2>&1 | /tmp/sampling-venv/bin/python scripts/evidence_budget.py log "evidence/$backend.log" || status=1
+          done
+          exit "$status"
+      - name: Check bounded artifact size
+        id: evidence-budget
+        if: always()
+        run: python3 scripts/evidence_budget.py
+      - name: Retain only synthetic diagnostics (including failed cases)
+        if: always() && steps.evidence-budget.outputs.allowed == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: synthetic-low-sampling-${{ github.run_id }}-${{ github.run_attempt }}
+          path: sampling-validation/evidence/
+          retention-days: 1
+          if-no-files-found: error

@@ -1,0 +1,318 @@
+--- a/core/src/player.rs
++++ b/core/src/player.rs
+@@ -986,6 +986,27 @@
+         })
+     }
+ 
++    /// Configure an independently sized onscreen target without changing the
++    /// stage's logical viewport. Unsupported backends leave state unchanged.
++    pub fn set_viewport_dimensions_with_backing(
++        &mut self,
++        dimensions: ViewportDimensions,
++        backing_width: u32,
++        backing_height: u32,
++    ) -> bool {
++        self.mutate_with_update_context(|context| {
++            if !context.renderer.set_viewport_dimensions_with_backing(
++                dimensions,
++                backing_width,
++                backing_height,
++            ) {
++                return false;
++            }
++            context.stage.build_matrices(context);
++            true
++        })
++    }
++
+     pub fn set_show_menu(&mut self, show_menu: bool) {
+         self.mutate_with_update_context(|context| {
+             let stage = context.stage;
+--- a/render/src/backend.rs
++++ b/render/src/backend.rs
+@@ -30,6 +30,18 @@
+     // Do not call this method directly - use `player.set_viewport_dimensions`,
+     // which will ensure that the stage is properly updated as well.
+     fn set_viewport_dimensions(&mut self, dimensions: ViewportDimensions);
++
++    /// Optional lower-density onscreen target. The logical viewport, commands,
++    /// input and offscreen surfaces retain their original dimensions.
++    /// Return false without mutation if this backend cannot preserve that contract.
++    fn set_viewport_dimensions_with_backing(
++        &mut self,
++        _dimensions: ViewportDimensions,
++        _backing_width: u32,
++        _backing_height: u32,
++    ) -> bool {
++        false
++    }
+     fn register_shape(
+         &mut self,
+         shape: DistilledShape,
+--- a/render/webgl/src/lib.rs
++++ b/render/webgl/src/lib.rs
+@@ -152,6 +152,8 @@
+     // This is currently unused - we just hold on to it
+     // to expose via `get_viewport_dimensions`
+     viewport_scale_factor: f64,
++    // Only set by the opt-in dual-size path. The default getter is unchanged.
++    virtual_viewport: Option<ViewportDimensions>,
+ }
+ 
+ #[derive(Debug)]
+@@ -317,6 +319,7 @@
+             add_color: None,
+ 
+             viewport_scale_factor: 1.0,
++            virtual_viewport: None,
+         };
+ 
+         renderer.push_blend_mode(RenderBlendMode::Builtin(BlendMode::Normal));
+@@ -1004,6 +1007,9 @@
+     }
+ 
+     fn viewport_dimensions(&self) -> ViewportDimensions {
++        if let Some(dimensions) = self.virtual_viewport {
++            return dimensions;
++        }
+         ViewportDimensions {
+             width: self.renderbuffer_width as u32,
+             height: self.renderbuffer_height as u32,
+@@ -1012,6 +1018,7 @@
+     }
+ 
+     fn set_viewport_dimensions(&mut self, dimensions: ViewportDimensions) {
++        self.virtual_viewport = None;
+         // Build view matrix based on canvas size.
+         self.view_matrix = [
+             [1.0 / (dimensions.width as f32 / 2.0), 0.0, 0.0, 0.0],
+@@ -1034,6 +1041,39 @@
+         self.gl
+             .viewport(0, 0, self.renderbuffer_width, self.renderbuffer_height);
+         self.viewport_scale_factor = dimensions.scale_factor
++    }
++
++    fn set_viewport_dimensions_with_backing(
++        &mut self,
++        dimensions: ViewportDimensions,
++        backing_width: u32,
++        backing_height: u32,
++    ) -> bool {
++        let Some(limit) = self.gl.get_parameter(Gl::MAX_RENDERBUFFER_SIZE)
++            .ok().and_then(|value| value.as_f64())
++            .filter(|value| value.is_finite() && *value > 0.0)
++        else {
++            return false;
++        };
++        // The legacy custom MSAA allocator discards allocation errors in its
++        // setter. Do not claim a lower-density target succeeded through it.
++        // WGPU supports its own multisample path; WebGL falls back unchanged.
++        if (self.gl2.is_some() && self.msaa_sample_count > 1)
++            || f64::from(dimensions.width) > limit || f64::from(dimensions.height) > limit
++            || dimensions.width == 0 || dimensions.height == 0
++            || !dimensions.scale_factor.is_finite() || dimensions.scale_factor <= 0.0
++            || backing_width == 0 || backing_height == 0
++            || backing_width > dimensions.width || backing_height > dimensions.height
++            || self.gl.drawing_buffer_width() != backing_width as i32
++            || self.gl.drawing_buffer_height() != backing_height as i32
++        {
++            return false;
++        }
++        // Projection stays virtual; the existing setter clamps only renderbuffer
++        // allocation and GL viewport to the already-reduced drawing buffer.
++        self.set_viewport_dimensions(dimensions);
++        self.virtual_viewport = Some(dimensions);
++        true
+     }
+ 
+     fn register_shape(
+--- a/web/packages/core/src/internal/builder.ts
++++ b/web/packages/core/src/internal/builder.ts
+@@ -68,6 +68,10 @@
+     } else if (isMobileOrTablet()) {
+         console.log("Running on a mobile device; defaulting to low quality");
+         builder.setQuality("low");
++    }
++    if (typeof config.renderScale === "number" &&
++        [1, 0.75, 0.5, 0.25].includes(config.renderScale)) {
++        builder.setRenderScale(config.renderScale);
+     }
+     if (isExplicit(config.scale)) {
+         builder.setScale(config.scale.toLowerCase());
+--- a/web/packages/core/src/public/config/default.ts
++++ b/web/packages/core/src/public/config/default.ts
+@@ -39,6 +39,7 @@
+     fullScreenAspectRatio: "",
+     forceAlign: false,
+     quality: null,
++    renderScale: null,
+     scale: "showAll",
+     forceScale: false,
+     frameRate: null,
+--- a/web/packages/core/src/public/config/load-options.ts
++++ b/web/packages/core/src/public/config/load-options.ts
+@@ -596,6 +596,13 @@
+     quality?: string | null;
+ 
+     /**
++     * FlashNest experimental onscreen sampling fraction, applied at load only.
++     * Does not change Stage geometry, DPR, input, offscreen buffers or game FPS.
++     * Unsupported backends retain original resolution. Default: 1.
++     */
++    renderScale?: 1 | 0.75 | 0.5 | 0.25 | null;
++
++    /**
+      * This is equivalent to Stage.scaleMode.
+      *
+      * @default "showAll"
+--- /dev/null
++++ b/web/packages/core/test/render-scale.ts
+@@ -0,0 +1,43 @@
++import { strict as assert } from "assert";
++import { configureBuilder } from "../src/internal/builder";
++import { DEFAULT_CONFIG } from "../src/public/config/default";
++import type { BaseLoadOptions } from "../src/public/config/index";
++
++function apply(options: Record<string, unknown>) {
++    const calls: [string, unknown][] = [];
++    const builder = {
++        setQuality: (value: string) => calls.push(["quality", value]),
++        setRenderScale: (value: number) => calls.push(["renderScale", value]),
++        setScale: (value: string) => calls.push(["scale", value]),
++        setForceScale: (value: boolean) => calls.push(["forceScale", value]),
++    };
++    configureBuilder(builder as unknown as Parameters<typeof configureBuilder>[0],
++        { quality: "high", ...options } as BaseLoadOptions);
++    return calls;
++}
++
++describe("FlashNest onscreen rendering density", function () {
++    it("does not call the new setter when the option is omitted", function () {
++        assert.equal(DEFAULT_CONFIG.renderScale, null);
++        assert.deepEqual(apply({}), [["quality", "high"]]);
++        assert.deepEqual(apply({ renderScale: DEFAULT_CONFIG.renderScale }),
++            [["quality", "high"]]);
++    });
++    it("passes exactly the four supported numeric tiers", function () {
++        for (const value of [1, 0.75, 0.5, 0.25]) {
++            assert.deepEqual(apply({ renderScale: value }),
++                [["quality", "high"], ["renderScale", value]]);
++        }
++    });
++    it("does not coerce or forward invalid values", function () {
++        for (const value of [null, undefined, "0.5", true, false, 0, -1, 0.3,
++            1.01, NaN, Infinity, -Infinity, {}, []]) {
++            assert.deepEqual(apply({ renderScale: value }), [["quality", "high"]]);
++        }
++    });
++    it("does not substitute quality or force a Stage scale mode", function () {
++        assert.deepEqual(apply({ renderScale: 0.25, scale: "noScale", forceScale: false }),
++            [["quality", "high"], ["renderScale", 0.25],
++             ["scale", "noscale"], ["forceScale", false]]);
++    });
++});
+--- a/web/src/builder.rs
++++ b/web/src/builder.rs
+@@ -46,6 +46,7 @@
+     pub(crate) stage_align: StageAlign,
+     pub(crate) force_align: bool,
+     pub(crate) quality: StageQuality,
++    pub(crate) render_scale: f64,
+     pub(crate) scale: StageScaleMode,
+     pub(crate) force_scale: bool,
+     pub(crate) frame_rate: Option<f64>,
+@@ -86,6 +87,7 @@
+             stage_align: StageAlign::empty(),
+             force_align: false,
+             quality: StageQuality::High,
++            render_scale: 1.0,
+             scale: StageScaleMode::ShowAll,
+             force_scale: false,
+             frame_rate: None,
+@@ -120,6 +122,16 @@
+     #[wasm_bindgen(js_name = "setAllowScriptAccess")]
+     pub fn set_allow_script_access(&mut self, value: bool) {
+         self.allow_script_access = value;
++    }
++
++    /// FlashNest's bounded, launch-only onscreen sampling tiers.
++    #[wasm_bindgen(js_name = "setRenderScale")]
++    pub fn set_render_scale(&mut self, value: f64) {
++        self.render_scale = if [0.25, 0.5, 0.75, 1.0].contains(&value) {
++            value
++        } else {
++            1.0
++        };
+     }
+ 
+     #[wasm_bindgen(js_name = "setBackgroundColor")]
+--- a/web/src/lib.rs
++++ b/web/src/lib.rs
+@@ -121,6 +121,7 @@
+     canvas_width: i32,
+     canvas_height: i32,
+     device_pixel_ratio: f64,
++    render_scale: f64,
+     window: Window,
+     timestamp: Option<f64>,
+     animation_handler: Option<AnimationHandler>, // requestAnimationFrame callback
+@@ -549,6 +550,7 @@
+             canvas_width: 0, // Initialize canvas width and height to 0 to force an initial canvas resize.
+             canvas_height: 0,
+             device_pixel_ratio: window.device_pixel_ratio(),
++            render_scale: config.render_scale,
+             window: window.clone(),
+             animation_handler: None,
+             animation_handler_id: None,
+@@ -1148,6 +1150,7 @@
+                     viewport_width,
+                     viewport_height,
+                     device_pixel_ratio,
++                    instance.render_scale,
+                 ));
+             }
+ 
+@@ -1230,17 +1233,37 @@
+                 core.handle_event(event);
+             }
+ 
+-            if let Some((ref canvas, viewport_width, viewport_height, device_pixel_ratio)) =
++            if let Some((ref canvas, viewport_width, viewport_height, device_pixel_ratio, render_scale)) =
+                 new_dimensions
+             {
+-                canvas.set_width(viewport_width);
+-                canvas.set_height(viewport_height);
+-
+-                core.set_viewport_dimensions(ViewportDimensions {
++                let dimensions = ViewportDimensions {
+                     width: viewport_width,
+                     height: viewport_height,
+                     scale_factor: device_pixel_ratio,
+-                });
++                };
++                let mut applied_scale = 1.0;
++                if render_scale < 1.0 && viewport_width > 0 && viewport_height > 0 {
++                    let backing_width = (f64::from(viewport_width) * render_scale).round().max(1.0) as u32;
++                    let backing_height = (f64::from(viewport_height) * render_scale).round().max(1.0) as u32;
++                    canvas.set_width(backing_width);
++                    canvas.set_height(backing_height);
++                    if core.set_viewport_dimensions_with_backing(dimensions, backing_width, backing_height) {
++                        applied_scale = render_scale;
++                    }
++                }
++                if applied_scale == 1.0 {
++                    // Exact old/default path, also the explicit unsupported-backend fallback.
++                    canvas.set_width(viewport_width);
++                    canvas.set_height(viewport_height);
++                    core.set_viewport_dimensions(dimensions);
++                }
++                // Small per-resize capability/result record. Read actual canvas and
++                // drawing-buffer dimensions separately; this is not a RAM estimate.
++                let _ = canvas.set_attribute("data-flashnest-render-request", &render_scale.to_string());
++                let _ = canvas.set_attribute("data-flashnest-render-scale", &applied_scale.to_string());
++                let _ = canvas.set_attribute("data-flashnest-viewport-width", &viewport_width.to_string());
++                let _ = canvas.set_attribute("data-flashnest-viewport-height", &viewport_height.to_string());
++                let _ = canvas.set_attribute("data-flashnest-renderer", core.renderer().name());
+             }
+ 
+             core.tick(FloatDuration::from_millis(dt));

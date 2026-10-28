@@ -1,0 +1,225 @@
+{
+  "original": true,
+  "stage": [
+    320,
+    240
+  ],
+  "files": {
+    "showAll-center.swf": {
+      "mode": "showAll",
+      "align": "",
+      "bytes": 1877,
+      "sha256": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac"
+    },
+    "showAll-T.swf": {
+      "mode": "showAll",
+      "align": "T",
+      "bytes": 1878,
+      "sha256": "5f092868b446c5eefe50ed8f025704917beb17213060e078f1759952fd957990"
+    },
+    "showAll-B.swf": {
+      "mode": "showAll",
+      "align": "B",
+      "bytes": 1878,
+      "sha256": "f721462bb1140ea60f085ba4fcd5fe5d5662586c2425cd255c63bd80886f6c68"
+    },
+    "showAll-L.swf": {
+      "mode": "showAll",
+      "align": "L",
+      "bytes": 1878,
+      "sha256": "8e4e9c2e611af8927871255531f4ef398b9bdef7ae5b6e062a4c537a922c90f9"
+    },
+    "showAll-R.swf": {
+      "mode": "showAll",
+      "align": "R",
+      "bytes": 1878,
+      "sha256": "72fe14da73250e7cf4b9f3cdd6bdd4e8c47bdc3d8f9c0f3ebbf678a3191f28b0"
+    },
+    "showAll-TL.swf": {
+      "mode": "showAll",
+      "align": "TL",
+      "bytes": 1879,
+      "sha256": "7365be945a2b8e6f19ee45398db7e37128d5d54a77b5c5fae86822bd24b1a150"
+    },
+    "showAll-TR.swf": {
+      "mode": "showAll",
+      "align": "TR",
+      "bytes": 1879,
+      "sha256": "c45b6fda759936684721de2d8046f36c1c105ad73daa9ccc17892009cd112eb5"
+    },
+    "showAll-BL.swf": {
+      "mode": "showAll",
+      "align": "BL",
+      "bytes": 1879,
+      "sha256": "93674c40feee066e64e6ef13d970cfc876f000f8a0b6c23e5a059b63e6870d3e"
+    },
+    "showAll-BR.swf": {
+      "mode": "showAll",
+      "align": "BR",
+      "bytes": 1879,
+      "sha256": "ead8281cc9ef71bc66978c06ce2433a2119240ced7560146e41497dab66c1476"
+    },
+    "noBorder-center.swf": {
+      "mode": "noBorder",
+      "align": "",
+      "bytes": 1878,
+      "sha256": "e552d6606437db5aa9214cc0a65cb16db9dff6e847077cc92a86fbbcbb3581b8"
+    },
+    "noBorder-T.swf": {
+      "mode": "noBorder",
+      "align": "T",
+      "bytes": 1879,
+      "sha256": "534ce1bfae867bcd3d8fc22fc914d8c800562a89810fde8008386ef25c9aabe6"
+    },
+    "noBorder-B.swf": {
+      "mode": "noBorder",
+      "align": "B",
+      "bytes": 1879,
+      "sha256": "3e14d8318571c867a88e5de014cbeed6f808a3100e51c8d5a337082252809585"
+    },
+    "noBorder-L.swf": {
+      "mode": "noBorder",
+      "align": "L",
+      "bytes": 1879,
+      "sha256": "ddf28565abf758de730becb2192782933a650e5c3a814674a55cd32a0b4032ae"
+    },
+    "noBorder-R.swf": {
+      "mode": "noBorder",
+      "align": "R",
+      "bytes": 1879,
+      "sha256": "5f009bb0c62332682071d064d91942a7e01ac52ab6663d892d03531ac78b5d46"
+    },
+    "noBorder-TL.swf": {
+      "mode": "noBorder",
+      "align": "TL",
+      "bytes": 1880,
+      "sha256": "3e1b6515e02f42ac76cfeb96ba51e14fbe0848556b4ab82e712abf6dd6375ed3"
+    },
+    "noBorder-TR.swf": {
+      "mode": "noBorder",
+      "align": "TR",
+      "bytes": 1880,
+      "sha256": "72130fc5582c6ba89d0de8cbce9369edf939b349beadadcaf556377722d73fe8"
+    },
+    "noBorder-BL.swf": {
+      "mode": "noBorder",
+      "align": "BL",
+      "bytes": 1880,
+      "sha256": "a5ecee2f97e5d19598b244aaa825bffa87594f9d0abc6b6934870ccad506fcaf"
+    },
+    "noBorder-BR.swf": {
+      "mode": "noBorder",
+      "align": "BR",
+      "bytes": 1880,
+      "sha256": "340e7ba92aa39a537f1950b9054b6b467b722bca372fc06c114e2ae44dfb66db"
+    },
+    "exactFit-center.swf": {
+      "mode": "exactFit",
+      "align": "",
+      "bytes": 1878,
+      "sha256": "afa1cbb4ffdbdea91d0a4caeb31edbf0e89c2de945c5c813fc739b4f9196bfbb"
+    },
+    "exactFit-T.swf": {
+      "mode": "exactFit",
+      "align": "T",
+      "bytes": 1879,
+      "sha256": "86c7693afb46cdb16eb787a6cd6e148f9ba92011093b0fdb3a2b6b374e5ad37f"
+    },
+    "exactFit-B.swf": {
+      "mode": "exactFit",
+      "align": "B",
+      "bytes": 1879,
+      "sha256": "f923ee1b6e4e0bb3fdd752e58dd352b5c04953aaf66273bc29f8205eddae534d"
+    },
+    "exactFit-L.swf": {
+      "mode": "exactFit",
+      "align": "L",
+      "bytes": 1879,
+      "sha256": "fbadca14716b389859e7e62aab931a52b42368da22b5044b71ad5dede2d8da64"
+    },
+    "exactFit-R.swf": {
+      "mode": "exactFit",
+      "align": "R",
+      "bytes": 1879,
+      "sha256": "c05f97480557aeea7bc54c4f4b60c422659d52046f173a4e2f79e58461879127"
+    },
+    "exactFit-TL.swf": {
+      "mode": "exactFit",
+      "align": "TL",
+      "bytes": 1880,
+      "sha256": "fc216d7c44b30db7e240c49d58fce9f912a4409bc4abd1723190cd6dd424d810"
+    },
+    "exactFit-TR.swf": {
+      "mode": "exactFit",
+      "align": "TR",
+      "bytes": 1880,
+      "sha256": "fcd9ba24b8e0ec516b7001b1396bfd79332342fb816160cfb33ecf61f9ca71d8"
+    },
+    "exactFit-BL.swf": {
+      "mode": "exactFit",
+      "align": "BL",
+      "bytes": 1880,
+      "sha256": "60edae7cfc379859a2489acf5538bfe624bc4b1ad758e56ba1924fc8402073fc"
+    },
+    "exactFit-BR.swf": {
+      "mode": "exactFit",
+      "align": "BR",
+      "bytes": 1880,
+      "sha256": "21a84f9059d5b7de580dc2f4e9aebf8fb5e5d5a53f23797575617f1202609f9e"
+    },
+    "noScale-center.swf": {
+      "mode": "noScale",
+      "align": "",
+      "bytes": 1877,
+      "sha256": "65d470ec5890ceeed4f16b6b6825ed1e9048eb36329cd7b8d7b388a52e844f34"
+    },
+    "noScale-T.swf": {
+      "mode": "noScale",
+      "align": "T",
+      "bytes": 1878,
+      "sha256": "fbf4eef0668484704c30e38c70470af046ff63c7f07baf509e79d9d4b83583ec"
+    },
+    "noScale-B.swf": {
+      "mode": "noScale",
+      "align": "B",
+      "bytes": 1878,
+      "sha256": "34378bf70d7de1e4a3f3c390bb45f628612cb6e08b01768696e33b92fc093831"
+    },
+    "noScale-L.swf": {
+      "mode": "noScale",
+      "align": "L",
+      "bytes": 1878,
+      "sha256": "23556d01daf9d7ee7aeed094d990522c00666fe98a43add6710b5941fee9e13f"
+    },
+    "noScale-R.swf": {
+      "mode": "noScale",
+      "align": "R",
+      "bytes": 1878,
+      "sha256": "d884a8ed91587c1a8325794b9191bcefbce400b65fb8a64c5e7d01a36d01b616"
+    },
+    "noScale-TL.swf": {
+      "mode": "noScale",
+      "align": "TL",
+      "bytes": 1879,
+      "sha256": "d19bd7bc525a9e1662691ffadbe7cb2394820078af9c0d702657016354d6327d"
+    },
+    "noScale-TR.swf": {
+      "mode": "noScale",
+      "align": "TR",
+      "bytes": 1879,
+      "sha256": "975c735a68a687b60111624e5fbb03be0fd3c5dda007d97d357252d31af25dd2"
+    },
+    "noScale-BL.swf": {
+      "mode": "noScale",
+      "align": "BL",
+      "bytes": 1879,
+      "sha256": "0196549af9e7592b9592b3f4e2189de59e32bae52a3f5011581231420a2b145a"
+    },
+    "noScale-BR.swf": {
+      "mode": "noScale",
+      "align": "BR",
+      "bytes": 1879,
+      "sha256": "9a31ae7c72362e47c61616993c664fae11e042523d430eb95d551e30f8559384"
+    }
+  }
+}
