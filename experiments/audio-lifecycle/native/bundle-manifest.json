@@ -1,12 +1,12 @@
 {
   "files": {
     "Host/NativeAudioHost.swift": {
-      "bytes": 19985,
-      "sha256": "903e7e87c23b4ab00f548f64e31aa47765c97e3630de48caddacf8c8aafc4eea"
+      "bytes": 26795,
+      "sha256": "a501f6c07799c7fb7e9974154ac420252e7e7064da439e3f7a67df69fe77f10f"
     },
     "README.md": {
-      "bytes": 15190,
-      "sha256": "c62ab2bd3013b6214da25e9fd0d51abe4fe0f38d445c356577623fcf848c95b1"
+      "bytes": 20837,
+      "sha256": "879646bc9a9e2d3d7d729ac3d048c38ec97972fb67d5916e3dc8deccb607b017"
     },
     "UITests/NativeAudioLifecycleUITests.swift": {
       "bytes": 7672,
@@ -25,16 +25,20 @@
       "sha256": "7b58dd7bfe8ec4beb22a12d4ad1fcf279baa2d45c37550da6b5d790b2d83a160"
     },
     "Web/native-runner.mjs": {
-      "bytes": 6608,
-      "sha256": "23d2e99aeb94d795f3cd72428abe551eb0946b5a6a32e2c50edc32e26d96e325"
+      "bytes": 8724,
+      "sha256": "86877bd50f102e236d84a2a48d45df1e99cf9f407286a9fc096e46e1efa8bf4f"
+    },
+    "Web/observer-window.mjs": {
+      "bytes": 3945,
+      "sha256": "dba2550eb72eaeb884c7e4800a35bb49e05f05ceb4fd356678bb0d7710acb86f"
     },
     "browser-approval.json": {
       "bytes": 627,
       "sha256": "3daa568934953609b3e98ea5576ba504cc6bc895db342c289a95ba164a8b3bcf"
     },
     "check_native_evidence.mjs": {
-      "bytes": 6242,
-      "sha256": "941c5e35aa188be1a10eddb00eb3d95ad0d1735a35409c3d98db220b2eedede0"
+      "bytes": 7425,
+      "sha256": "1349cf8225f21344ca0e7467ba332c71ce1a9132e85fa0c34dd15364103cb6a6"
     },
     "collect_native_evidence.py": {
       "bytes": 7824,
@@ -48,9 +52,21 @@
       "bytes": 2626,
       "sha256": "f257e69d9914d327a8fec3473a606d9ba50e0089419f1992225271e5644329bf"
     },
+    "recovery-approval.json": {
+      "bytes": 8118,
+      "sha256": "f521fea85ff0a6250083b6eb646644f10922ec670c67064b1178f69e4dffcec4"
+    },
+    "recovery_prerequisite.py": {
+      "bytes": 9503,
+      "sha256": "f8485a2b069b5d3873d2fc3365ebfd48d90a7bd888aa0fa41a92d16160d7412e"
+    },
     "stage_native.py": {
-      "bytes": 24401,
-      "sha256": "adac13e395ca332929d80d17becccf6365aa7410ca9adc03591cd295c170be09"
+      "bytes": 26142,
+      "sha256": "998cb471180f4ba68b4e568f48d5bf2dd6dbc6fde34fbb7e9a07d66122533d33"
+    },
+    "stage_recovery.py": {
+      "bytes": 3350,
+      "sha256": "d4e11a4251a3c73e1a21c6f057a972f0a5329a087d2376bbbcf2d63cdfb44e97"
     },
     "test_collect_native.py": {
       "bytes": 10278,
@@ -60,13 +76,29 @@
       "bytes": 13932,
       "sha256": "12403b58234936a1edd5c4081787951e39567736657ed44cd1505344b00c7f86"
     },
+    "test_observer_window.mjs": {
+      "bytes": 4603,
+      "sha256": "99618709b3c9ce8d601e798274bb1d1bf33be12124f42caf5cc07245021da790"
+    },
     "test_raw_replay.mjs": {
-      "bytes": 5619,
-      "sha256": "760ddd8bbe019c4b38ab80b114665126a13fe9dd709881a74c39fce187471ec8"
+      "bytes": 8360,
+      "sha256": "7636042ff0e37a4148d6ab7ba20c827fd485cdedbc20b910b3779544ba071bfa"
+    },
+    "test_recovery_prerequisite.py": {
+      "bytes": 6190,
+      "sha256": "057161223d4fc72e2926b8f82df09003496a4cf1dc1690bdf0e40ad9e492d4b9"
     },
     "test_stage_native.py": {
-      "bytes": 17430,
-      "sha256": "879f02a87382f32e9018844c5c0132612874d034d813127956d96a75643c3710"
+      "bytes": 17462,
+      "sha256": "19f01649457ae9982f41658dfd611ed33bf5cbb56ff3826a052215e1180bd9eb"
+    },
+    "test_staged_window.py": {
+      "bytes": 5187,
+      "sha256": "fe7d9de29161a8e7f2c22b261a2debded086b1f50ed0dfb41d5736b324b95153"
+    },
+    "test_window_replay.mjs": {
+      "bytes": 5676,
+      "sha256": "8cb3b86be5c3c98e47e340235c3495f82dff81cd2ac29234bd250ee2faa38185"
     },
     "verify_project_paths.py": {
       "bytes": 2688,
@@ -76,11 +108,15 @@
       "bytes": 2300,
       "sha256": "c594c202389c276d8e4994233daba0b99fafed649866bd498d7edaeed6416f7f"
     },
+    "window-replay.mjs": {
+      "bytes": 5722,
+      "sha256": "c49c06653ed0135b7774699f3e60f85be86d749b4dfbec70089be49c9ab7fdce"
+    },
     "workflow-draft.yml": {
-      "bytes": 10038,
-      "sha256": "34e1a3aa76d94c2acd89b12da2b7de7580ba0954e9017a52c8c65eb3692e6f59"
+      "bytes": 10018,
+      "sha256": "72ab80a7732f4ddaae84c180b0de692d2891838fde90bcea44184e995c134436"
     }
   },
   "schemaVersion": 1,
-  "scope": "Isolated native Canvas action scheduling and post-test evidence recovery repair; no production or runtime changes; native execution pending"
+  "scope": "Native-only acknowledged bounded event windows plus explicit recovery-candidate40614335019 reattestation; no production/runtime changes; native22 execution pending"
 }

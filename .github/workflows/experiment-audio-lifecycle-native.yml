@@ -22,14 +22,16 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24.22.1
-      - name: Validate preparation and reviewed successful browser prerequisite
+      - name: Validate native window and explicit recovery-candidate prerequisite
         run: |
           set -euo pipefail
-          test -f experiments/audio-lifecycle/native/browser-approval.json
+          test -f experiments/audio-lifecycle/native/recovery-approval.json
           python3 -m unittest discover -s experiments/audio-lifecycle/native -p 'test_*.py'
+          node experiments/audio-lifecycle/native/test_observer_window.mjs
+          node experiments/audio-lifecycle/native/test_window_replay.mjs
           node experiments/audio-lifecycle/native/test_raw_replay.mjs
-          for file in experiments/audio-lifecycle/native/Web/*.mjs experiments/audio-lifecycle/native/check_native_evidence.mjs; do node --check "$file"; done
-      - name: Fetch only reviewed successful corrected-browser artifact and exact metadata
+          for file in experiments/audio-lifecycle/native/Web/*.mjs experiments/audio-lifecycle/native/check_native_evidence.mjs experiments/audio-lifecycle/native/window-replay.mjs; do node --check "$file"; done
+      - name: Fetch only approved recovery build and exact successful metadata
         timeout-minutes: 5
         env:
           GH_TOKEN: ${{ github.token }}
@@ -40,7 +42,7 @@ jobs:
           read -r run_id artifact_id < <(python3 - <<'PY'
           import json
           from pathlib import Path
-          a=json.loads(Path('experiments/audio-lifecycle/native/browser-approval.json').read_text())
+          a=json.loads(Path('experiments/audio-lifecycle/native/recovery-approval.json').read_text())
           assert a['repository']=='op233qo123/FlashNest'
           assert type(a['runID']) is int and type(a['artifactID']) is int
           print(a['runID'], a['artifactID'])
@@ -54,8 +56,8 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          python3 experiments/audio-lifecycle/native/prepare_browser_archive.py --archive audio-native-download/browser.zip --metadata audio-native-download/metadata --approval experiments/audio-lifecycle/native/browser-approval.json --output audio-native-input
-          python3 experiments/audio-lifecycle/native/stage_native.py --verified-root audio-native-input/audio-reused-build --browser-results audio-native-input/audio-browser-reuse-evidence/browser/results.json --browser-provenance audio-native-input/audio-browser-reuse-evidence/browser/provenance.json --browser-approval experiments/audio-lifecycle/native/browser-approval.json --browser-metadata audio-native-download/metadata --stage audio-native-stage --repo-root .
+          python3 experiments/audio-lifecycle/native/recovery_prerequisite.py --archive audio-native-download/browser.zip --metadata audio-native-download/metadata --approval experiments/audio-lifecycle/native/recovery-approval.json --output audio-native-input
+          python3 experiments/audio-lifecycle/native/stage_recovery.py --verified-root audio-native-input --metadata audio-native-download/metadata --approval experiments/audio-lifecycle/native/recovery-approval.json --stage audio-native-stage --repo-root .
           git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
       - name: Prepare pinned project tool and exact simulator toolchain
         timeout-minutes: 5

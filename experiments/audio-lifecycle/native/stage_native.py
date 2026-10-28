@@ -17,12 +17,26 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 REUSE = ROOT / 'experiments/audio-lifecycle/browser-reuse'
 WORKFLOW = '.github/workflows/experiment-audio-lifecycle-browser.yml'
-NATIVE_WEB = {'index.html', 'native-runner.mjs', 'assert.mjs', 'fresh-action.mjs'}
-EXACT_HELPERS = ('observer.mjs', 'console-observer.mjs')
+NATIVE_WEB = {'index.html', 'native-runner.mjs', 'assert.mjs', 'fresh-action.mjs', 'observer-window.mjs'}
+EXACT_HELPERS = ('console-observer.mjs',)
+OBSERVER_TRANSFORMS = (
+    ("// Diagnostic-only passthrough hooks.", "import {createNativeEventWindow} from './observer-window.mjs';\n// Diagnostic-only passthrough hooks."),
+    ("  const record=(kind,data={})=>{if(events.length>=maxEvents){overflow=true;return}events.push({seq:events.length,kind,...data})};",
+     "  if(maxEvents!==4096||maxNodes!==4096)throw Error('Native evidence caps must remain 4096');\n"
+     "  const nativeWindow=createNativeEventWindow(events,maxEvents);\n"
+     "  const record=(kind,data={})=>nativeWindow.record(kind,data);"),
+    ("    snapshot(){return structuredClone({mode,overflow,injected,contexts:contextRows,nodes:nodeRows,events})},",
+     "    nativeWindow,\n"
+     "    snapshot(){const eventWindow=nativeWindow.status();return structuredClone({mode,overflow:overflow||eventWindow.overflow,injected,contexts:contextRows,nodes:nodeRows,events,eventWindow,lastReceipt:nativeWindow.lastReceipt()})},"),
+)
 PAGE_TRANSFORMS = (
     ("script.src='/'+runtime+'/ruffle.js'", "script.src='./'+runtime+'/ruffle.js'"),
     ("url:'/fixtures/silent.swf'", "url:'./fixtures/silent.swf'"),
     ("preferredRenderer:'wgpu-webgl'", "preferredRenderer:'canvas'"),
+    ("const observer=installAudioObserver(window,{mode});", "const observer=installAudioObserver(window,{mode});\nwindow.nativeAudioEvidenceWindow=observer.nativeWindow;"),
+    ("window.dispose=()=>{if(disposed)return;try{if(player)player.remove()}finally{player=null;api=null;observer.releaseRetained();try{observer.restore()}finally{consoleObserver.restore();disposed=true}}};",
+     "window.dispose=()=>{if(disposed)return;try{if(player)player.remove()}finally{player=null;api=null;observer.releaseRetained();disposed=true}};\n"
+     "window.restoreNativeAudioObservation=()=>{try{observer.restore()}finally{consoleObserver.restore()}};"),
     (" const gl=canvas.getContext('webgl2');if(!gl)throw Error('Expected actual WebGL2 context for wgpu-webgl');\n"
      "  row.context={kind:'webgl2',lost:gl.isContextLost(),drawingBufferWidth:gl.drawingBufferWidth,drawingBufferHeight:gl.drawingBufferHeight,dpr:devicePixelRatio};\n"
      "  if(row.context.lost)throw Error('Renderer context already lost');\n"
@@ -177,7 +191,7 @@ def validate_browser_metadata(run, artifact, jobs, approval):
                 'Browser prerequisite step incomplete/skipped: ' + name)
 
 
-def validate_browser_receipt(results_path, provenance_path, approval, lock, extracted):
+def validate_browser_receipt(results_path, provenance_path, approval, lock, extracted, runtime_prefix='audio-lifecycle-'):
     require(results_path.name == 'results.json' and provenance_path.name == 'provenance.json' and
             results_path.parent.resolve() == provenance_path.parent.resolve(), 'Use one complete browser evidence folder')
     require(sha(results_path) == approval['resultsSHA256'] and
@@ -188,7 +202,7 @@ def validate_browser_receipt(results_path, provenance_path, approval, lock, extr
     result, provenance = strict_json(results_path), strict_json(provenance_path)
     require(result['provenance'] == provenance, 'Browser result/provenance disagreement')
     for arm in ('baseline', 'candidate'):
-        manifest = extracted / ('audio-lifecycle-' + arm) / 'runtime.browser-manifest.json'
+        manifest = extracted / (runtime_prefix + arm) / 'runtime.browser-manifest.json'
         require(provenance[arm] == {'manifestSha256': sha(manifest), 'files': strict_json(manifest)},
                 'Browser tested another runtime: ' + arm)
     require(provenance['fixture'] == {
@@ -230,7 +244,7 @@ def transform(data, replacements, source_name, destination):
 
 
 def stage_web(stage, extracted, repo, source_build, browser_prerequisite,
-              runtime_files, helper_hashes, fixture_hash):
+              runtime_files, helper_hashes, fixture_hash, runtime_prefix='audio-lifecycle-'):
     """Called only after prerequisite validation; also tested with synthetic files."""
     require(not stage.exists() and not stage.is_symlink(), 'Stage must not exist')
     web_source = repo / 'experiments/audio-lifecycle/native/Web'
@@ -243,7 +257,7 @@ def stage_web(stage, extracted, repo, source_build, browser_prerequisite,
         web.mkdir()
         expected = {}
         for arm in ('baseline', 'candidate'):
-            shutil.copytree(extracted / ('audio-lifecycle-' + arm) / 'runtime', web / arm)
+            shutil.copytree(extracted / (runtime_prefix + arm) / 'runtime', web / arm)
             expected.update({arm + '/' + name: row for name, row in runtime_files[arm].items()})
         (web / 'fixtures').mkdir()
         fixture = file_bytes(repo / 'experiments/audio-lifecycle/fixtures/silent.swf')
@@ -256,7 +270,7 @@ def stage_web(stage, extracted, repo, source_build, browser_prerequisite,
             (web / name).write_bytes(data)
             expected[name] = {'bytes': len(data), 'sha256': helper_hashes[name]}
         transformations = []
-        for name, replacements in (('page.mjs', PAGE_TRANSFORMS), ('contracts.mjs', CONTRACT_TRANSFORMS)):
+        for name, replacements in (('observer.mjs', OBSERVER_TRANSFORMS), ('page.mjs', PAGE_TRANSFORMS), ('contracts.mjs', CONTRACT_TRANSFORMS)):
             original = file_bytes(helpers / name)
             require(digest(original) == helper_hashes[name], 'Corrected helper changed during staging: ' + name)
             changed, record = transform(original, replacements,
@@ -270,7 +284,7 @@ def stage_web(stage, extracted, repo, source_build, browser_prerequisite,
         actual = inventory(web)
         # A fresh manifest must not bless input/copy-time drift after verification.
         require(actual == expected, 'Staged bytes differ from already verified input inventories')
-        manifest = {'schemaVersion': 1, 'adapterScope': 'canvas-audio-only', 'files': actual, 'sourceBuild': source_build,
+        manifest = {'schemaVersion': 1, 'adapterScope': 'canvas-audio-only', 'eventWindowProtocol': 1, 'files': actual, 'sourceBuild': source_build,
                     'browserPrerequisite': browser_prerequisite, 'transformations': transformations}
         payload = json_bytes(manifest)
         (web / 'native-manifest.json').write_bytes(payload)
@@ -321,7 +335,7 @@ def stage_native(args):
     runtime_files = {arm: {name.removeprefix('runtime/'): row for name, row in rows.items()
                            if name.startswith('runtime/')} for arm, rows in inventories.items()}
     helper_hashes = {name: lock['correctedHarnessSHA256']['experiments/audio-lifecycle/browser-tests/' + name]
-                     for name in EXACT_HELPERS + ('page.mjs', 'contracts.mjs')}
+                     for name in EXACT_HELPERS + ('observer.mjs', 'page.mjs', 'contracts.mjs')}
     manifest, manifest_hash = stage_web(stage, args.verified_root, repo, source_build, prerequisite,
                                         runtime_files, helper_hashes,
                                         'e25f5dba4162a25b9a07832be4e6f8f62242734f6f39e92983c53467a28e7fd2')

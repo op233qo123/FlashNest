@@ -12,23 +12,39 @@ try{
  for(const name of ['assert.mjs','fresh-action.mjs'])fs.copyFileSync(path.join(here,'Web',name),path.join(web,name));
  const {verifyCycle}=await import(pathToFileURL(path.join(web,'contracts.mjs')));
  const files=Object.fromEntries(fs.readdirSync(web).map(name=>{const bytes=fs.readFileSync(path.join(web,name));return[name,{bytes:bytes.length,sha256:sha(bytes)}]}));
- const manifest={schemaVersion:1,adapterScope:'canvas-audio-only',files,sourceBuild:{testOnly:true},browserPrerequisite:{testOnly:true},transformations:[]};write(path.join(web,'native-manifest.json'),manifest);const pin=sha(fs.readFileSync(path.join(web,'native-manifest.json')));
+ const manifest={schemaVersion:1,adapterScope:'canvas-audio-only',eventWindowProtocol:1,files,sourceBuild:{testOnly:true},browserPrerequisite:{testOnly:true},transformations:[]};write(path.join(web,'native-manifest.json'),manifest);const pin=sha(fs.readFileSync(path.join(web,'native-manifest.json')));
  // Reuse the pure fixture builder from the locked original contract mocks.
  const source=fs.readFileSync(path.join(root,'experiments/audio-lifecycle/browser-tests/test_contracts.mjs'),'utf8');
  const definition=source.slice(source.indexOf('function fixture('),source.indexOf('\nlet checks='));
  const fixture=new Function(definition+';return fixture;')();
  for(const arm of ['baseline','candidate'])for(const mode of ['normal','start-first','start-second','synthetic-ended']){
-  const folder=path.join(suite,`${arm}-${mode}`),count=mode==='normal'?8:1,results=[];let last;
+  const folder=path.join(suite,`${arm}-${mode}`),count=mode==='normal'?8:1,results=[];let last,previousReceipt=null,nextSequence=0,allContexts=[],allNodes=[];
   write(path.join(folder,'identity.json'),{manifestSHA256:pin,manifest,systemVersion:'18.5',displayScale:3,mediaPolicy:'require-audio-and-video-user-action',arm,mode});
   for(let cycle=0;cycle<count;cycle++){
    const{e,config}=fixture(arm,mode);e.runtime=arm;e.mode=mode;e.rows[0].cycle=cycle;e.audio.contexts[0].cycle=cycle;e.rows[0].renderer='canvas';e.rows[0].context={kind:'2d',dpr:3,backingWidth:960,backingHeight:720};
    Object.assign(config,{cycle,expectedDPR:3});if(mode==='synthetic-ended')config.synthetic={hadHandler:arm==='baseline',beforeNodes:6,afterNodes:arm==='baseline'?7:6,beforeAttempts:6,afterAttempts:arm==='baseline'?7:6,beforeThrows:0,afterThrows:0};
-   const checked=verifyCycle(e,config),result={arm,mode,cycle,...checked,nativeDPR:3,renderer:'canvas'};results.push(result);last=e;
-   write(path.join(folder,`case-start-${cycle}.json`),{type:'case-start',arm,mode,cycle});
-   write(path.join(folder,`case-${cycle}.json`),{type:'case',arm,mode,config:{arm,mode,cycle},result,evidence:e,actions:config.actions,playback:config.playback,preRemove:config.preRemove,synthetic:config.synthetic??null,expectedDPR:3});
+   const c=e.audio.contexts[0];c.id=cycle+1;const nodeBase=allNodes.length;
+   c.closeSnapshots[0].attachedIds=arm==='baseline'?[nodeBase+1,nodeBase+2]:[];
+   allContexts.push(structuredClone(c));
+   for(let i=0;i<c.nodes;i++)allNodes.push({id:allNodes.length+1,context:c.id,cycle,attached:arm==='baseline',attaches:1,detaches:arm==='candidate'?1:0,starts:1});
+   e.audio.contexts=structuredClone(allContexts);e.audio.nodes=structuredClone(allNodes);
+   e.audio.events=e.audio.events.map((event,i)=>({...event,seq:nextSequence+i,context:c.id,node:nodeBase+1}));
+   const endExclusive=nextSequence+e.audio.events.length;
+   e.audio.eventWindow={start:nextSequence,endExclusive,count:e.audio.events.length,overflow:false,finalBoundary:null,postFinalActivity:0,receiptPending:false};
+   e.audio.lastReceipt=previousReceipt;
+   const checked=verifyCycle(e,config),result={arm,mode,cycle,...checked,nativeDPR:3,renderer:'canvas'};results.push(result);
+   write(path.join(folder,`case-start-${cycle}.json`),{type:'case-start',arm,mode,cycle,previousReceipt});
+   const eventWindow={token:`${arm}/${mode}/${cycle}/evidence`,cycle,start:nextSequence,endExclusive,count:e.audio.events.length};
+   const entry={type:'case',arm,mode,config:{arm,mode,cycle},result,evidence:e,actions:config.actions,playback:config.playback,preRemove:config.preRemove,synthetic:config.synthetic??null,expectedDPR:3,eventWindow};
+   const bytes=Buffer.from(JSON.stringify(entry));write(path.join(folder,`case-${cycle}.json`),bytes.toString());
+   previousReceipt={...eventWindow,bytes:bytes.length,sha256:sha(bytes)};write(path.join(folder,`case-receipt-${cycle}.json`),previousReceipt);
+   nextSequence=endExclusive;last=structuredClone(e);last.audio.events=[];last.audio.lastReceipt=previousReceipt;
+   last.audio.eventWindow={...last.audio.eventWindow,start:nextSequence,endExclusive:nextSequence,count:0};
   }
-  write(path.join(folder,'page-terminal.json'),{type:'complete',result:{passed:true,rows:results},lastEvidence:last});
-  write(path.join(folder,'host-final-snapshot.json'),{snapshotJSON:JSON.stringify(last)});
+  write(path.join(folder,'page-terminal.json'),{type:'complete',result:{passed:true,rows:results},lastEvidence:last,lastReceipt:previousReceipt});
+  const final=structuredClone(last);final.audio.eventWindow.finalBoundary=nextSequence;
+  write(path.join(folder,'host-final-snapshot.json'),{snapshotJSON:JSON.stringify(final)});
+  write(path.join(folder,'host-final-window.json'),final.audio.eventWindow);
   write(path.join(folder,'host-summary.json'),{passed:true,serverDrained:true,failures:[],completedCases:count,manifestSHA256:pin,systemVersion:'18.5',arm,mode,elapsedSeconds:10});
  }
  let index=0;function replay(ok){const result=spawnSync(process.execPath,[path.join(here,'check_native_evidence.mjs'),'--web',web,'--manifest-sha',pin,'--suite',suite,'--output',path.join(temp,`result-${index++}.json`)],{encoding:'utf8'});assert.equal(result.status===0,ok,result.stderr)}
@@ -39,5 +55,16 @@ try{
  mutate(path.join(suite,'baseline-normal','host-summary.json'),s=>s.serverDrained=false);
  const missing=path.join(suite,'candidate-start-first','case-0.json');fs.renameSync(missing,missing+'.held');replay(false);fs.renameSync(missing+'.held',missing);
  mutate(path.join(web,'native-manifest.json'),m=>m.adapterScope='graphics-full');
- console.log('PASS native raw22 replay +11 corrupt evidence cases on synthetic data; no native/browser/runtime execution');
+ // Keep interval/digest gates internally valid: this must reach the candidate
+ // post-close predicate, not merely fail a case-file checksum.
+ for(const arm of ['baseline','candidate']){
+  const finalFile=path.join(suite,`${arm}-normal`,'host-final-snapshot.json'),statusFile=path.join(suite,`${arm}-normal`,'host-final-window.json');
+  const originalFinal=fs.readFileSync(finalFile),originalStatus=fs.readFileSync(statusFile);
+  const wrapper=JSON.parse(originalFinal),snapshot=JSON.parse(wrapper.snapshotJSON),audio=snapshot.audio;
+  const seq=audio.eventWindow.endExclusive;audio.events.push({seq,kind:'source-attempt',context:1});audio.contexts[0].sourceAttempts++;
+  audio.eventWindow.endExclusive++;audio.eventWindow.count++;audio.eventWindow.finalBoundary++;
+  wrapper.snapshotJSON=JSON.stringify(snapshot);write(finalFile,wrapper);write(statusFile,audio.eventWindow);
+  replay(arm==='baseline');fs.writeFileSync(finalFile,originalFinal);fs.writeFileSync(statusFile,originalStatus);
+ }
+ console.log('PASS native raw22 receipt replay +11 corrupt cases +candidate late-refill rejection/baseline control on synthetic data; no native/browser/runtime execution');
 }finally{fs.rmSync(temp,{recursive:true,force:true})}

@@ -1,0 +1,185 @@
+{
+  "artifactBytes": 22076102,
+  "artifactID": 12783974867,
+  "artifactName": "FlashNest-experimental-audio-recovery",
+  "artifactSHA256": "3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a",
+  "audioOperationSourceSHA256": "32986bab21da5cc3417ce2b67dfd6a3f829fa2b5c5910805e4a833fb1843a2cb",
+  "baselineIdentitySHA256": "f12a14400ab66ee3f505a71145b9a43657dbea2f86fd6185f3d6307f970237b1",
+  "baselineProvenanceSHA256": "73829617008e26ffe48bfc29e689c0a719641f6c9e93214b29f8ee3c6bfd22d5",
+  "candidateProvenanceSHA256": "01838aff92eb05cde33babb8153c82de2d9c2889a2795c2f2f2c72a65e3eed59",
+  "fixture": {
+    "manifestSha256": "40687509557be41070b3a3eb19e550870e3ca8d902f2bfea2cedb03c8995ae0f",
+    "sha256": "e25f5dba4162a25b9a07832be4e6f8f62242734f6f39e92983c53467a28e7fd2"
+  },
+  "headSHA": "5d2cdcc6757d65194bd55c4a0395b76b0176d224",
+  "helpers": {
+    "console-observer.mjs": "e3444ba2b50b9d634c7aaf84859db96e7acd06876e31fafd2dc3841a5b0fe1e9",
+    "contracts.mjs": "53dbc06f8e4eb1d0a229ed0be717ccbe420fc22864dcd98ada878abf2c719ef4",
+    "observer.mjs": "f885f0dae122c26208ecc01e92d8b34469fe32dfa6d6f5e3614296b00a13bf6c",
+    "page.html": "b4b22e26f86fba516a5cd99d1324fd600561366b4c3d9841d4d52b76646dc910",
+    "page.mjs": "9cf500cc16b01329814734b51f47b439186d4c5122b98960d80dd2eeeb1c6d9e",
+    "run.mjs": "23b62f3e0860cd5eeb72db4d417bc8c242a782d23e20735f16af649e67062f3b",
+    "runner-guards.mjs": "aa16b5949d6db4e8d3a46813df503b8bb2f38d81d1c4a428ec3f36e73befeffe",
+    "wait-until.mjs": "69c0e5e07bdb54f9d35210c9af05984590c313965cbb7c6d3763020a857081e7",
+    "webdriver-node-entry.mjs": "f76bf9887c5e4c5385afa130e0146af934b728b52514c0760104ef9cccda1685"
+  },
+  "jobID": 122573186188,
+  "jobName": "validate-build-observe",
+  "patchSetSHA256": "3eea9c1603f46966d4de835325484d5433d8999998e6fb9baadf98c56b9fab2e",
+  "patches": [
+    {
+      "path": "experiments/frame-order/engine-patch/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f"
+    },
+    {
+      "path": "experiments/audio-lifecycle/engine-patch/audio-lifecycle.patch",
+      "sha256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9"
+    },
+    {
+      "path": "experiments/audio-recovery/audio-recovery.patch",
+      "sha256": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60"
+    }
+  ],
+  "provenanceSHA256": "833434b663b6f460e082be1382f440a7ef0ff713b3373d69e8a570b3e3567833",
+  "repository": "op233qo123/FlashNest",
+  "repositoryID": 1434064894,
+  "requiredSteps": [
+    "Set up job",
+    "Checkout original experiment",
+    "Checkout exact official Ruffle source",
+    "Install pinned Node",
+    "Validate original fixture and diagnostic observer before compilation",
+    "Install pinned Rust and checksum-pinned Java runtime",
+    "Verify exact guard baseline and additive audio patch",
+    "Compile and test source-bound helper before expensive WASM build",
+    "Compile exact guarded core regression targets",
+    "Preserve original frame order and 31 adjacent gates",
+    "Install pinned web toolchain",
+    "Build isolated dual-WASM audio candidate and unchanged core JS tests",
+    "Real WebAudio baseline versus candidate ownership gate",
+    "Preserve complete source and partial failures",
+    "Retain unpromoted candidate and ownership evidence",
+    "Post Install pinned Node",
+    "Post Checkout exact official Ruffle source",
+    "Post Checkout original experiment",
+    "Complete job"
+  ],
+  "resultsSHA256": "125f038b2592531a05a448e5a74c80a96b7b6e283abaa2a59ba4d0e1b29cf3f0",
+  "runAttempt": 1,
+  "runID": 40614335019,
+  "runtimes": {
+    "baseline": {
+      "directory": "audio-recovery-baseline/runtime",
+      "files": {
+        "1bab053d8911d6c21b75.wasm": {
+          "bytes": 14301916,
+          "sha256": "c7e7f3f2b92909971a65cd6bd4169d0b07ac360fff7d68753b651f3d36209671"
+        },
+        "8135809bc288856cefbf.wasm": {
+          "bytes": 14231816,
+          "sha256": "15a350b93dd3623b5bfdb7e0772c6f2b0e97a33cb93a931837d8cd1e40a9143e"
+        },
+        "LICENSE_APACHE": {
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        "LICENSE_MIT": {
+          "bytes": 1097,
+          "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c"
+        },
+        "README.md": {
+          "bytes": 2328,
+          "sha256": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde"
+        },
+        "core.ruffle.4bf43128d442d808d913.js": {
+          "bytes": 108322,
+          "sha256": "63177252735b59a2ad6ac645cde4e91c1afc47eeb80dc9e1adf26ad1aef7a1c5"
+        },
+        "core.ruffle.4bf43128d442d808d913.js.map": {
+          "bytes": 386183,
+          "sha256": "7bf41898910df3fd9d7d3e7099f673a8e295b2b10b4f13734d39fb39ea0340cc"
+        },
+        "core.ruffle.8ee07edaf47829ab3e6f.js": {
+          "bytes": 114741,
+          "sha256": "4cec3ffb0f5aa994e4bede3f182ba606edbc40611a3e1e563a1536a495cf5f61"
+        },
+        "core.ruffle.8ee07edaf47829ab3e6f.js.map": {
+          "bytes": 413473,
+          "sha256": "f6c3dbe4933d8813930905315c15e15862c83112ab4eab8ecda47a8640d35299"
+        },
+        "package.json": {
+          "bytes": 418,
+          "sha256": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89"
+        },
+        "ruffle.js": {
+          "bytes": 465970,
+          "sha256": "2f5c01e0e66f0f3e971b9dc7684d42986aadea7209bb56bafbdd3911903a1e31"
+        },
+        "ruffle.js.map": {
+          "bytes": 706781,
+          "sha256": "10174fcf4f0477488630859b04d1b6a43e9c8820fbcd2d6d962c6010820d3254"
+        }
+      },
+      "manifestSHA256": "7b5dc0993bbd35c8e336b3a021e381ca99618bd4e6538c9e21c7acdc56ce5c7c"
+    },
+    "candidate": {
+      "directory": "audio-recovery-candidate/runtime",
+      "files": {
+        "4b85d6e32912d24cca47.wasm": {
+          "bytes": 14300833,
+          "sha256": "2074371e1d8402b083207709e9b6f1fc3285a6845eaa850cdc545a390b5744b9"
+        },
+        "90aa6311b211f13e3cb5.wasm": {
+          "bytes": 14229006,
+          "sha256": "24d962eb2d975cada92a6db46b70ea5e331070a4746b5650ab95c4ab5e839ea7"
+        },
+        "LICENSE_APACHE": {
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        "LICENSE_MIT": {
+          "bytes": 1097,
+          "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c"
+        },
+        "README.md": {
+          "bytes": 2328,
+          "sha256": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde"
+        },
+        "core.ruffle.82997a6b688ba0eb49c2.js": {
+          "bytes": 114647,
+          "sha256": "a4059a19a8261b0b019cf30ca5990545adcddda52ed62de5c0c1b19831db37d5"
+        },
+        "core.ruffle.82997a6b688ba0eb49c2.js.map": {
+          "bytes": 413394,
+          "sha256": "c51b0dada0d6b16aaa0249c14026fcebbfe0f7d2fccde577e514b2b32773c0fc"
+        },
+        "core.ruffle.d7f503a65b18ef47bd04.js": {
+          "bytes": 108240,
+          "sha256": "9ca688ec3fadf47c55c8fef95e255b873ff09bbd77d748ac262790693fb99951"
+        },
+        "core.ruffle.d7f503a65b18ef47bd04.js.map": {
+          "bytes": 386159,
+          "sha256": "68743f6ad01f614562e0b0b36af1df5eead6dd51c087b5f340ef0f91e74002cb"
+        },
+        "package.json": {
+          "bytes": 418,
+          "sha256": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89"
+        },
+        "ruffle.js": {
+          "bytes": 468421,
+          "sha256": "6fb80f470e25f06bcd1aca9130919bd58631b1a405af9736d490e0144a2a8c28"
+        },
+        "ruffle.js.map": {
+          "bytes": 716096,
+          "sha256": "2c47f523b50d2fdcebdb00d3861a6278ddf84bd88121478c348275e33499fb5f"
+        }
+      },
+      "manifestSHA256": "2d9eac3bbf0c8d460e1cf6a22dfc0d4c454c8fba2389538d6d60f977ff6a6884"
+    }
+  },
+  "schemaVersion": 1,
+  "status": "reviewed-recovery-build-and-browser-22-pass",
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "workflowID": 398878885,
+  "workflowPath": ".github/workflows/experiment-audio-recovery.yml"
+}

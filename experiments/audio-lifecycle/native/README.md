@@ -24,7 +24,7 @@ spec, build settings and path-verification evidence are retained on failure.
 Runtime bytes, Swift/audio behavior, trusted-action predicates and deadlines are
 unchanged. Native compilation/execution remain unverified after this correction.
 
-## What is pinned, and what already passed
+## Historical Weak-only prerequisite (not the next selected candidate)
 
 - Immutable audio candidate: build `40540513351`, source
   `d3b402aec064f326a6b03c022253ccea559aa62f`, artifact `12752805773`.
@@ -41,10 +41,40 @@ unchanged. Native compilation/execution remain unverified after this correction.
   identity, reviewed ZIP, results/provenance and immutable build/helper lock.
   The prior build's failed browser result is retained, not reclassified.
 
-The current offline verifier has checked the accepted ZIP, all22 raw browser
+The historical offline verifier checked that accepted ZIP, all22 raw browser
 attachments,95 candidate provenance-inventoried files and12 baseline runtime files.
 Offline staging is not native execution. It also is not a signature or a second
 independent engine rebuild.
+
+## Explicit recovery-candidate reattestation for the next22-case run
+
+The manual workflow now selects the **new structured-audio-recovery candidate**,
+not the historical Weak-only candidate above. `recovery-approval.json` binds:
+
+- Successful build and Chrome22 run
+  [40614335019](https://github.com/op233qo123/FlashNest/actions/runs/40614335019),
+  source `5d2cdcc6757d65194bd55c4a0395b76b0176d224`, job `122573186188`.
+- Artifact `12783974867`,22,076,102 bytes, SHA-256
+  `3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a`.
+- Ordered queued-goto, Weak-ownership and structured-recovery patches; the last
+  patch is `631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60`.
+  The exact source-bound helper is
+  `32986bab21da5cc3417ce2b67dfd6a3f829fa2b5c5910805e4a833fb1843a2cb`.
+
+`recovery_prerequisite.py` validates successful API run/job/all-step identity,
+ZIP size/hash before bounded extraction, all145 candidate correspondence files,
+all12 files in each runtime, both actual JS/WASM manifests, the exact original
+nine browser helpers and complete Chrome22 row attachments. `stage_recovery.py`
+then repeats those checks and generates the34-file native Web bundle. The
+baseline remains the same existing queued-goto build17 bytes. No engine is
+rebuilt or production runtime replaced by this lane.
+
+The old `browser-approval.json`, Weak-only validators and all failed native run
+records remain unchanged as historical evidence; the active workflow explicitly
+calls the new prerequisite/stager and records the new source/build identity.
+Local exact-artifact preparation and staging succeeded. These are offline
+checks, not native22 execution. The separate three-arm injected-recovery native
+experiment does not replace this ownership matrix or prove real hardware repair.
 
 ## Deliberate renderer boundary
 
@@ -62,8 +92,9 @@ FlashNest/default-renderer lifecycle stability. The production/default-backend
 lifecycle gate remains separately required before shipping.
 
 Original Chrome helpers remain byte-unchanged. Staging generates auditable native
-copies with exactly four page transformations (two capability-relative paths,
-Canvas preference, real2D proof) and five contract transformations (two import
+copies with six page transformations (two capability-relative paths, Canvas
+preference, real2D proof, window export and deferred observer restoration),
+three observer transformations (native-only event window), and five contract transformations (two import
 adapters, truthful expected-DPR parameter, Canvas banner, real2D backing proof).
 The original/derived hashes and each exact single-occurrence replacement are
 recorded. No GL fields are fabricated or normalized in raw evidence.
@@ -105,7 +136,7 @@ Baseline/candidate must select the same WASM feature path across all22 cases.
    complete successful corrected-browser22 prerequisite. Missing, skipped,
    foreign or partial evidence refuses staging. It never downloads or runs code.
 3. A fresh Web directory contains both exact runtimes and only the original
-   fixture plus reviewed helpers. Its complete33-file inventory is pinned in
+   fixture plus reviewed helpers. Its complete34-file inventory is pinned in
    `native-manifest.json`; a generated compiled Swift SHA binds that manifest.
    Copy-time drift, extra files, missing files and symlinks fail closed.
 4. The host hashes every bundled file before creating a WKWebView. Every mode's
@@ -115,7 +146,8 @@ Baseline/candidate must select the same WASM feature path across all22 cases.
    Readiness/action waits are bounded and fail immediately on assertions,
    including falsy thrown values. Native JS callback operations each have a
    three-second deadline and ignore late callbacks safely. Finalization allows
-   at most two such calls plus the existing five-second server drain.
+   at most three such calls plus the existing five-second server drain, after
+   awaiting already-started case-receipt operations (each independently bounded).
 6. Failure invokes native Abort to attempt snapshot/disposal/drain before app
    termination. If the host does not confirm it within15 seconds, evidence marks
    forced termination; this is not clean close/drain proof. A host/AX hang may
@@ -135,6 +167,8 @@ causality, arbitrary-game behavior or Adobe equivalence.
 
 ```sh
 python3 -m unittest discover -s experiments/audio-lifecycle/native -p 'test_*.py'
+node experiments/audio-lifecycle/native/test_observer_window.mjs
+node experiments/audio-lifecycle/native/test_window_replay.mjs
 node experiments/audio-lifecycle/native/test_raw_replay.mjs
 for f in experiments/audio-lifecycle/native/Web/*.mjs; do node --check "$f"; done
 ```
@@ -234,3 +268,56 @@ exit/stderr/timeout results. Unknown/unavailable/non-Shutdown states fail closed
 Reports produced by evidence-only boot are not relabeled as test-window crashes.
 These changes are diagnostic harness repairs only; runtime bytes and production
 App behavior are unchanged. Actual repaired native execution remains pending.
+
+
+## Bounded native event windows — unexecuted diagnostic repair
+
+Run [40606502048](https://github.com/op233qo123/FlashNest/actions/runs/40606502048)
+retained two completed baseline-normal cases, then failed during cycle2 with
+`events=4096`, `nodes=1019`, `contexts=3`: the original cumulative observer event
+cap was reached while native accessibility actions were comparatively slow.
+The candidate arm was not reached. This is an observer-cap failure, not evidence
+that the audio patch passed or that the engine leaked1019 live nodes. The
+artifact is `12781751317`,83,481,754 bytes, SHA-256
+`1afb6288eb62ea16eedbdb062a6bbb1d903afd9bf4fa1ba70170767bed9248ad`.
+
+The native adapter now uses a monotonically numbered **4096-event window**.
+Each case serializes its exact original evidence and interval. Only after the
+host atomically writes those exact bytes, reads back at most2MiB+1 and verifies
+byte equality, does it return a receipt binding the case, unique token, interval,
+byte count and SHA-256. The page validates every receipt field before removing
+that prefix. Events arriving during serialization, write, readback or delivery
+remain in the tail. A failed write/readback, missing/late/wrong/duplicate receipt,
+gap, overflow or mismatched hash cannot authorize a drain. Each acknowledgment
+uses the existing20-second functional bound and global600-second deadline;
+native JavaScript callbacks keep their three-second bound.
+
+Global node/context metadata, original close-entry snapshots and their counters
+are **never reset**, and the original4096-node cap remains fatal. Completed cases
+in the failed run used267 and208 new sources;8 times their mean is about1900,
+but the incomplete third case used544. Thus variable accessibility delay may
+still reach the node cap or unchanged global deadline. This repair does not
+inflate either cap, speed up engine callbacks, reset the page per normal cycle,
+or guarantee that all8 cycles fit the budget.
+
+The writer remains active through player disposal and a host-requested final
+snapshot. Observed resume/suspend/close promises must settle; that is not proof
+that no future callback can ever occur. The host marks a finite final boundary,
+persists the extended tail, then reads status and restores the observer hooks
+synchronously. Any recorded activity between boundary and final status fails.
+Offline replay requires every case exactly once, contiguous global sequences,
+unchanged old metadata/close snapshots and an extending final tail. For the
+candidate only, new source/start/handler-attachment activity after close entry
+fails, including activity on old contexts in later windows or the final tail.
+The baseline's retained-handler negative control remains separate and intact.
+The claim ends at this explicit observation cutoff, not at an assumed GC event.
+
+The original Chrome observer, contracts and goldens remain byte-unchanged;
+only auditable native copies are adapted. Preparation checks exercise the actual
+transformed observer with fake native objects, missing/mismatched receipts,
+post-acknowledgment late events, retained global node overflow, candidate-only
+post-close rejection and synthetic full22 replay. The Swift write/readback
+failure test currently inspects throwing control flow; it does **not** execute
+FileManager failure injection or establish native compilation. Native execution
+of this window repair is still pending, and the separate focused recovery gate
+must not be labeled a successful22-case ownership matrix.

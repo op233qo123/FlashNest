@@ -28,6 +28,9 @@ import WebKit
     private var watchdog: Task<Void, Never>?
     private var arm = "", mode = ""
     private var completedCases = 0
+    private var nextEventSequence = 0
+    private var lastCaseReceipt: [String: Any]?
+    private var caseReceiptTasks: [Task<String?, Never>] = []
     private var diagnostics: [String] = []
     private var deadlineMS = 0.0
     private var startTime = Date()
@@ -159,17 +162,63 @@ import WebKit
             case "case-start":
                 let cycle = try required(body["cycle"] as? Int, "Missing start cycle")
                 try require(cycle == completedCases && cycle < (mode == "normal" ? 8 : 1), "Invalid start cycle")
+                if let lastCaseReceipt {
+                    let previous = try required(body["previousReceipt"] as? [String: Any], "Missing accepted previous receipt")
+                    try require(NSDictionary(dictionary: previous).isEqual(to: lastCaseReceipt), "Wrong accepted previous receipt")
+                } else { try require(body["previousReceipt"] is NSNull, "Unexpected initial receipt") }
                 try retain("case-start-\(cycle).json", body)
                 status.text = "LOADING"
             case "case":
                 let config = try required(body["config"] as? [String: Any], "Missing case configuration")
                 let cycle = try required(config["cycle"] as? Int, "Missing cycle")
                 try require(cycle == completedCases && cycle < (mode == "normal" ? 8 : 1), "Duplicate/out-of-order case")
-                try retain("case-\(cycle).json", body)
-                completedCases += 1
+                let serialized = try required(body["caseJSON"] as? String, "Missing serialized case")
+                let bytes = Data(serialized.utf8)
+                try require(bytes.count > 0 && bytes.count <= 2 * 1024 * 1024, "Case byte bound")
+                let expectedDigest = try required(body["sha256"] as? String, "Missing case digest")
+                let actualDigest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+                try require(expectedDigest == actualDigest, "Serialized case digest mismatch")
+                let entry = try required(try JSONSerialization.jsonObject(with: bytes) as? [String: Any], "Invalid serialized case")
+                try require(entry["type"] as? String == "case" && entry["arm"] as? String == arm && entry["mode"] as? String == mode,
+                            "Foreign serialized case")
+                let entryConfig = try required(entry["config"] as? [String: Any], "Missing serialized configuration")
+                try require(NSDictionary(dictionary: entryConfig).isEqual(to: config), "Serialized configuration mismatch")
+                let window = try required(entry["eventWindow"] as? [String: Any], "Missing case event interval")
+                try require(Set(window.keys) == ["token", "cycle", "start", "endExclusive", "count"], "Event interval schema")
+                let token = try required(window["token"] as? String, "Missing receipt token")
+                try require(token == "\(arm)/\(mode)/\(cycle)/evidence", "Wrong receipt token")
+                let first = try required(window["start"] as? Int, "Missing event start")
+                let end = try required(window["endExclusive"] as? Int, "Missing event end")
+                let count = try required(window["count"] as? Int, "Missing event count")
+                try require(window["cycle"] as? Int == cycle && first == nextEventSequence && end >= first &&
+                            count == end - first && count <= 4096, "Noncontiguous case interval")
+                let evidence = try required(entry["evidence"] as? [String: Any], "Missing original case evidence")
+                let audio = try required(evidence["audio"] as? [String: Any], "Missing original audio evidence")
+                let events = try required(audio["events"] as? [[String: Any]], "Missing original events")
+                try require(events.count == count && events.enumerated().allSatisfy { $0.element["seq"] as? Int == first + $0.offset },
+                            "Case event sequence differs")
+                try retainBytes("case-\(cycle).json", bytes)
+                let receipt: [String: Any] = ["token": token, "cycle": cycle, "start": first, "endExclusive": end,
+                    "count": count, "bytes": bytes.count, "sha256": actualDigest]
+                try retain("case-receipt-\(cycle).json", receipt)
+                lastCaseReceipt = receipt; nextEventSequence = end; completedCases += 1
+                let receiptJSON = String(decoding: try JSONSerialization.data(withJSONObject: receipt, options: [.sortedKeys]), as: UTF8.self)
+                let target = try required(webView, "Receipt target unavailable")
+                caseReceiptTasks.append(Task { [weak self, weak target] in
+                    guard let self, let target else { return "Receipt target retired" }
+                    do {
+                        let accepted = try await self.evaluate("window.__nativeAudioReceipt(\(receiptJSON))", in: target)
+                        guard accepted as? Bool == true else { return "Case receipt not accepted" }
+                        return nil
+                    } catch { return "Case receipt delivery: \(error)" }
+                })
             case "complete":
                 let result = try required(body["result"] as? [String: Any], "Missing terminal result")
-                let passed = result["passed"] as? Bool == true && completedCases == (mode == "normal" ? 8 : 1)
+                let receiptMatches: Bool
+                if let lastCaseReceipt, let terminalReceipt = body["lastReceipt"] as? [String: Any] {
+                    receiptMatches = NSDictionary(dictionary: terminalReceipt).isEqual(to: lastCaseReceipt)
+                } else { receiptMatches = lastCaseReceipt == nil && body["lastReceipt"] is NSNull }
+                let passed = result["passed"] as? Bool == true && receiptMatches && completedCases == (mode == "normal" ? 8 : 1)
                 // Original-fixture evidence only. Retain the exact terminal body in
                 // XCTest as well as Documents; container lookup can fail after exit.
                 // The full observer snapshot can exceed AX limits. Mirror only
@@ -177,7 +226,7 @@ import WebKit
                 // digest/size; raw Documents remains the independent acceptance gate.
                 var summary: [String: Any] = ["diagnosticOnly": true, "type": "complete",
                     "arm": arm, "mode": mode, "completedCases": completedCases]
-                for key in ["passed", "error", "errorMessage", "errorStack", "cleanupError", "snapshotError"] {
+                for key in ["passed", "error", "errorMessage", "errorStack", "cleanupError", "snapshotError", "tailSettlementError"] {
                     if let value = result[key] { summary[key] = value }
                 }
                 if let value = body["diagnosticContext"] { summary["diagnosticContext"] = value }
@@ -216,12 +265,28 @@ import WebKit
         watchdog?.cancel()
         status.text = "DRAINING"
         var failures: [String] = []
+        // Delivery callbacks have their original individual three-second bound.
+        // A JS receipt may have been accepted before the native completion arrives.
+        for task in caseReceiptTasks { if let reason = await task.value { failures.append(reason) } }
         if let payload { do { try retain("page-terminal.json", payload) } catch { failures.append("Terminal evidence: \(error)") } }
         if let webView {
             do {
-                let snapshot = try await evaluate("JSON.stringify(window.snapshot?.() ?? {snapshotUnavailable:true})", in: webView)
-                try retain("host-final-snapshot.json", ["snapshotJSON": snapshot as? String ?? "unavailable"])
+                let snapshot = try await evaluate("(() => { window.nativeAudioEvidenceWindow.markFinalBoundary(); return JSON.stringify(window.snapshot()); })()", in: webView)
+                let text = try required(snapshot as? String, "Final snapshot unavailable")
+                try retain("host-final-snapshot.json", ["snapshotJSON": text])
             } catch { failures.append("Final snapshot: \(error)") }
+            do {
+                // The finite observation cutoff is this final status read followed
+                // synchronously by hook restoration, not a claim about future GC.
+                let result = try await evaluate("(() => { const status=window.nativeAudioEvidenceWindow.status(); window.restoreNativeAudioObservation(); return JSON.stringify(status); })()", in: webView)
+                let text = try required(result as? String, "Final window status unavailable")
+                let window = try required(try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any], "Invalid final window status")
+                try retain("host-final-window.json", window)
+                let end = try required(window["endExclusive"] as? Int, "Missing final event end")
+                try require(window["overflow"] as? Bool == false && window["receiptPending"] as? Bool == false &&
+                            window["postFinalActivity"] as? Int == 0 && window["finalBoundary"] as? Int == end,
+                            "Late activity after final snapshot or incomplete event window")
+            } catch { failures.append("Final evidence cutoff: \(error)") }
             do { _ = try await evaluate("window.dispose?.(); true", in: webView) }
             catch { failures.append("Page cleanup: \(error)") }
             webView.configuration.userContentController.removeScriptMessageHandler(forName: "audioLifecycle")
@@ -276,12 +341,23 @@ import WebKit
     }
 
     private func retain(_ name: String, _ body: [String: Any]) throws {
+        let data = try JSONSerialization.data(withJSONObject: body, options: [.prettyPrinted, .sortedKeys])
+        try retainBytes(name, data)
+    }
+
+    private func retainBytes(_ name: String, _ data: Data) throws {
         let root = try required(evidenceRoot, "Evidence directory unavailable")
         try require(!name.contains("/") && !name.contains("..") && !files.contains(name), "Duplicate/unsafe evidence name")
-        let data = try JSONSerialization.data(withJSONObject: body, options: [.prettyPrinted, .sortedKeys])
         try require(data.count <= 2 * 1024 * 1024 && retainedBytes + data.count <= 16 * 1024 * 1024, "Evidence byte limit")
-        try data.write(to: root.appendingPathComponent(name), options: [.atomic])
+        let file = root.appendingPathComponent(name)
+        try data.write(to: file, options: [.atomic])
         retainedBytes += data.count; files.insert(name)
+        let attributes = try FileManager.default.attributesOfItem(atPath: file.path)
+        try require(attributes[.size] as? Int == data.count, "Persisted evidence size mismatch")
+        let handle = try FileHandle(forReadingFrom: file)
+        defer { try? handle.close() }
+        let readback = try handle.read(upToCount: 2 * 1024 * 1024 + 1) ?? Data()
+        try require(readback == data, "Persisted evidence readback mismatch")
     }
 
     private func verifyBundle(_ root: URL) throws -> [String: Any] {
@@ -290,6 +366,7 @@ import WebKit
         let manifest = try required(try JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL)) as? [String: Any], "Invalid manifest")
         try require(manifest["schemaVersion"] as? Int == 1, "Unsupported native manifest")
         try require(manifest["adapterScope"] as? String == "canvas-audio-only", "Wrong native adapter scope")
+        try require(manifest["eventWindowProtocol"] as? Int == 1, "Missing native event-window protocol")
         let files = try required(manifest["files"] as? [String: [String: Any]], "Missing exact inventory")
         let keys: Set<URLResourceKey> = [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]
         let rootType = try root.resourceValues(forKeys: keys)

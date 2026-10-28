@@ -120,7 +120,7 @@ class NativeStageTests(unittest.TestCase):
 
     def test_exact_canvas_audio_only_transformations(self):
         repo = stage.ROOT
-        for name, replacements, count in [('page.mjs', stage.PAGE_TRANSFORMS, 4),
+        for name, replacements, count in [('page.mjs', stage.PAGE_TRANSFORMS, 6),
                                            ('contracts.mjs', stage.CONTRACT_TRANSFORMS, 5)]:
             source = stage.file_bytes(repo / 'experiments/audio-lifecycle/browser-tests' / name)
             out, evidence = stage.transform(source, replacements, name, name)
@@ -155,7 +155,7 @@ class NativeStageTests(unittest.TestCase):
             write(extracted / ('audio-lifecycle-' + arm) / 'runtime/ruffle.js',
                   ('synthetic-' + arm).encode())
         helpers = repo / 'experiments/audio-lifecycle/browser-tests'
-        for name in stage.EXACT_HELPERS + ('page.mjs', 'contracts.mjs'):
+        for name in stage.EXACT_HELPERS + ('observer.mjs', 'page.mjs', 'contracts.mjs'):
             write(helpers / name, (stage.ROOT / 'experiments/audio-lifecycle/browser-tests' / name).read_bytes())
         for name in stage.NATIVE_WEB:
             write(repo / 'experiments/audio-lifecycle/native/Web' / name, ('synthetic-' + name).encode())
@@ -166,7 +166,7 @@ class NativeStageTests(unittest.TestCase):
         runtimes = {arm: stage.inventory(extracted / ('audio-lifecycle-' + arm) / 'runtime')
                     for arm in ('baseline', 'candidate')}
         helpers = {name: stage.sha(repo / 'experiments/audio-lifecycle/browser-tests' / name)
-                   for name in stage.EXACT_HELPERS + ('page.mjs', 'contracts.mjs')}
+                   for name in stage.EXACT_HELPERS + ('observer.mjs', 'page.mjs', 'contracts.mjs')}
         fixture = stage.sha(repo / 'experiments/audio-lifecycle/fixtures/silent.swf')
         return runtimes, helpers, fixture
 
