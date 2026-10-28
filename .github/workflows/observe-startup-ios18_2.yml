@@ -1,6 +1,12 @@
 name: Observe pre-gesture startup on exact iOS 18.2 (manual)
 on:
   workflow_dispatch:
+    inputs:
+      instrumentation_profile:
+        description: Instrumentation profile (passive-only omits fault injector)
+        type: choice
+        options: [instrumented, passive-only]
+        default: instrumented
 permissions:
   contents: read
   actions: read
@@ -17,6 +23,7 @@ jobs:
     timeout-minutes: 40
     env:
       TEST_OS: '18.2'
+      STARTUP_PROFILE: ${{ inputs.instrumentation_profile || 'instrumented' }}
       DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
@@ -80,6 +87,7 @@ jobs:
           set -euo pipefail
           runtime=$(python3 -c "import json;print(json.load(open('experiments/audio-recovery/native/approval.json'))['runtimes']['${{ matrix.arm }}']['directory'])")
           python3 experiments/audio-recovery/native/stage_host.py --repo . --output "$RUNNER_TEMP/recovery-stage" --arm '${{ matrix.arm }}' --runtime "recovery-download/extracted/$runtime" --approval experiments/audio-recovery/native/approval.json
+          python3 experiments/audio-recovery/startup-control/profile.py --stage "$RUNNER_TEMP/recovery-stage" --profile "$STARTUP_PROFILE" --approval experiments/audio-recovery/native/approval.json
           git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
       - name: Build pinned diagnostic target on exact simulator
         id: simulator
@@ -108,7 +116,7 @@ jobs:
         if: always()
         run: |
           mkdir -p startup-evidence
-          cp "$RUNNER_TEMP/recovery-stage/"{source-manifest.json,overlay-manifest.json,session-injection.diff,startup-shell.diff} startup-evidence/ 2>/dev/null || true
+          cp "$RUNNER_TEMP/recovery-stage/"{source-manifest.json,overlay-manifest.json,instrumented-overlay-manifest.json,session-injection.diff,startup-shell.diff,startup-profile.diff} startup-evidence/ 2>/dev/null || true
           cp recovery-download/{run.json,artifact.json} startup-evidence/ 2>/dev/null || true
           cp experiments/audio-recovery/native/approval.json startup-evidence/
           git rev-parse HEAD > startup-evidence/workflow-source.txt
@@ -116,6 +124,6 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: startup-control-18.2-${{ matrix.arm }}
+          name: startup-control-18.2-${{ env.STARTUP_PROFILE }}-${{ matrix.arm }}
           path: startup-evidence
           retention-days: 7

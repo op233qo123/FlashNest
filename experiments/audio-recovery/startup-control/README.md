@@ -74,3 +74,31 @@ boot/install/teardown and final report retention; readiness60+postready30 and
 exactly3attempts remain unchanged. No absence claim extends beyond the final
 report-collection cutoff, and an unassigned/malformed/omitted report cannot
 produce overall complete-evidence success.
+
+## Optional passive-only profile (startup control only)
+The existing/default `instrumented` profile retains the unarmed diagnostic fault
+injector; its constructor/resume/event/Retry hooks are an experimental confound.
+The optional `passive-only` profile removes its entire WKUserScript guard/read/
+registration and bundled resource before compilation, rather than disarming or
+restoring wrappers after the engine has captured constructor references. It is
+restricted to this no-gesture simctl lane. The host's unused Inject/Snapshot/Close
+buttons still require the probe and are NOT valid acceptance paths in this mode.
+
+Production Session configuration, conditional save-restore bootstrap and shell
+load arguments remain unchanged. Passive fetch/console observations, shell
+milestones and native journal remain timing perturbations. Staging retains a
+profile diff, original instrumented receipt, updated Session/source hashes and
+the SHA256 of the exact diagnostic startup-script string. After registering
+that exact WKUserScript, the native journal hashes the supplied string and emits
+`native-script-registered`. This attests registration/installation requested,
+NOT execution; the separately received document-start/phase records supply
+execution evidence. It is not a claim to inventory arbitrary production restore
+payloads. The fault script is absent from both staged project and compiled app.
+
+Without the fault injector there is no AudioContext or source-audio-event probe:
+contextCreatedObserved is JSON null and audioStateCoverage is explicitly
+unavailable, not zero contexts or failed/successful audio. Actual renderer/flavor
+still requires the exact real banner; resource hashes mean requests only. No
+backend override, extra focus, resume, input, retry or restoration behavior is
+introduced. A clean passive-only run remains finite non-reproduction, not proof
+that the prior SIGILL was caused by instrumentation or that recovery is fixed.

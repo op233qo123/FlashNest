@@ -70,7 +70,7 @@
   },
   "diagnosticFiles": {
     "Host/AudioRecoveryHost.swift": "ccedbf2f7a71d7cd68ac4d8651f7c65e2f6aeb09b76995322eb443dc2dcae8b4",
-    "Host/StartupJournal.swift": "31bbd6f61e0eaf5cfcfb3f1eaf1b9856cd65b9d5d265d8ed67a77c46146703ca",
+    "Host/StartupJournal.swift": "137eae6a3d82d0140e38017f83c165b5715379e0bc8f2bad24436cce9dd8e833",
     "README.md": "0a1517e18f5dba11642a0b935a6f8906806ac1d040302cc22d4ab82050697756",
     "UITests/AudioRecoveryUITests.swift": "6d98aa87079b042970b53626f67d302e831bad0394421ff5d1eafc97c572a419",
     "apply_injection.py": "5ad6ffc33c6a528ea94e186dba9b9f7c328bb0909f5e19ac3e731bced4f96ab2",

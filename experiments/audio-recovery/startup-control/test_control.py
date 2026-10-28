@@ -31,6 +31,13 @@ class ControlTests(unittest.TestCase):
   e=entry();self.assertEqual(outcome(e),'complete-no-crash-observed')
   e['observedPostReadySeconds']=2;self.assertEqual(outcome(e),'observation-window-incomplete')
   e['readyAtSeconds']=61;e['observedPostReadySeconds']=30;self.assertEqual(outcome(e),'observation-window-incomplete')
+ def test_passive_requires_exact_native_registration_receipt(self):
+  e=entry();e.update(instrumentationProfile='passive-only',expectedRegisteredScriptSHA256='a'*64)
+  self.assertEqual(outcome(e),'registered-script-unconfirmed')
+  e['journalsBeforeTermination'][0]['rows'].append({'phase':'native-script-registered','scriptSHA256':'a'*64})
+  self.assertEqual(outcome(e),'complete-no-crash-observed')
+  e['journalsBeforeTermination'][0]['rows'][-1]['scriptSHA256']='b'*64
+  self.assertEqual(outcome(e),'registered-script-unconfirmed')
  def test_distinct_failure_outcomes(self):
   cases=[('freshPID',False,'launch-unconfirmed'),('readyAtSeconds',None,'startup-not-ready'),('collectionIncomplete',True,'evidence-incomplete'),('crashesCapturedDuringObservation',['x'],'crash-observed'),('samples',[{'pidAliveAsExpectedApp':False}],'process-exit-or-unconfirmed'),('journalsBeforeTermination',[],'journal-identity-unconfirmed')]
   for key,value,want in cases:

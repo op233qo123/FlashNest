@@ -79,6 +79,9 @@ def outcome(entry):
  journal=matching_journal(entry.get('journalsBeforeTermination',[]),entry['pid'])
  if entry.get('reusedJournalIdentity'):return 'journal-identity-unconfirmed'
  if not journal or journal['file']!=entry.get('readyJournalFile',journal['file']):return 'journal-identity-unconfirmed'
+ if entry.get('instrumentationProfile')=='passive-only':
+  hashes=[x.get('scriptSHA256') for x in journal['rows'] if x['phase']=='native-script-registered']
+  if hashes!=[entry.get('expectedRegisteredScriptSHA256')]:return 'registered-script-unconfirmed'
  if any(x['phase']=='native-failure' for x in journal['rows']):return 'native-failure'
  if any(x['phase']=='journal-truncated' for x in journal['rows']):return 'evidence-incomplete'
  if entry.get('readyAtSeconds') is None or not ready(journal):return 'startup-not-ready'
@@ -99,11 +102,15 @@ def observe(udid,app,output,arm,approval,source_manifest):
  if actual!=resources or any(p.is_symlink() for p in (app/'Web/runtime').rglob('*')):raise ValueError('Built runtime inventory mismatch')
  for name in ['shell.js']:
   if hashlib.sha256((app/'Web'/name).read_bytes()).hexdigest()!=source['files']['staged/App/Resources/Web/'+name]:raise ValueError('Built shell differs from staged source')
- for name in ['startup-journal.js','audio-recovery-injection.js','startup-resources.json']:
+ profile=source.get('instrumentationProfile','instrumented')
+ if profile not in ('instrumented','passive-only'):raise ValueError('Unknown instrumentation profile')
+ if profile=='passive-only' and (app/'audio-recovery-injection.js').exists():raise ValueError('Passive profile bundles fault injector')
+ assets=['startup-journal.js','startup-resources.json']+(['audio-recovery-injection.js'] if profile=='instrumented' else [])
+ for name in assets:
   if hashlib.sha256((app/name).read_bytes()).hexdigest()!=source['files']['staged/'+name]:raise ValueError('Built diagnostic asset drift')
  inventory=checked(['xcrun','simctl','list','devices','available','--json'],receipt_path=output/'inventory-command.json',inventory=True);selected=device(inventory,udid)
  (output/'simulator-inventory.json').write_text(inventory)
- receipt={'schema':1,'arm':arm,'actualOS':'18.2','udid':udid,'deviceName':selected['name'],'sourceCommit':source['sourceCommit'],'runtime':source['runtime'],'appExecutableSHA256':hashlib.sha256((app/info['CFBundleExecutable']).read_bytes()).hexdigest(),'startupReadinessDeadlineSeconds':60,'postReadyObservationSeconds':30,'maximumWindowSeconds':90,'attempts':[],'cacheColdness':'unknown; fresh app PID does not imply fresh WebContent/JIT/cache','claim':'startup observation only, not recovery acceptance or crash fix'}
+ receipt={'schema':1,'arm':arm,'instrumentationProfile':profile,'registeredStartupScriptSHA256':source.get('registeredStartupScriptSHA256'),'audioStateCoverage':source.get('audioStateCoverage','existing-injector-context-observer'),'actualOS':'18.2','udid':udid,'deviceName':selected['name'],'sourceCommit':source['sourceCommit'],'runtime':source['runtime'],'appExecutableSHA256':hashlib.sha256((app/info['CFBundleExecutable']).read_bytes()).hexdigest(),'startupReadinessDeadlineSeconds':60,'postReadyObservationSeconds':30,'maximumWindowSeconds':90,'attempts':[],'cacheColdness':'unknown; fresh app PID does not imply fresh WebContent/JIT/cache','claim':'startup observation only, not recovery acceptance or crash fix'}
  def persist(): (output/'control-results.json').write_text(json.dumps(receipt,indent=2)+'\n')
  persist()
  if selected['state']!='Booted':checked(['xcrun','simctl','boot',udid],receipt_path=output/'boot-command.json')
@@ -114,7 +121,7 @@ def observe(udid,app,output,arm,approval,source_manifest):
  reports=Path.home()/'Library/Logs/DiagnosticReports'
  all_since=time.time();prior_pids=set();prior_journals=set()
  for attempt in range(1,4):
-  folder=output/f'attempt-{attempt}';folder.mkdir();entry={'attempt':attempt,'preLaunchTermination':command(['xcrun','simctl','terminate',udid,BUNDLE]),'wallStart':time.time(),'monotonicStart':time.monotonic(),'samples':[]};receipt['attempts'].append(entry);persist()
+  folder=output/f'attempt-{attempt}';folder.mkdir();entry={'attempt':attempt,'instrumentationProfile':profile,'expectedRegisteredScriptSHA256':source.get('registeredStartupScriptSHA256'),'preLaunchTermination':command(['xcrun','simctl','terminate',udid,BUNDLE]),'wallStart':time.time(),'monotonicStart':time.monotonic(),'samples':[]};receipt['attempts'].append(entry);persist()
   try:
    env=dict(os.environ);env['SIMCTL_CHILD_AUDIO_RECOVERY_MODE']='startup-only'
    try:entry['launch']=command(['xcrun','simctl','launch',udid,BUNDLE,'-FlashNest.language','en','-AppleLanguages','(en)'],30,env)
@@ -170,7 +177,7 @@ def observe(udid,app,output,arm,approval,source_manifest):
   entry['reusedJournalIdentity']=final_journal is not None and final_journal['file'] in prior_journals
   if final_journal:prior_journals.add(final_journal['file'])
   final_rows=final_journal['rows'] if final_journal else []
-  entry['contextCreatedObserved']=any(x['phase']=='context-created' for x in final_rows)
+  entry['contextCreatedObserved']=None if profile=='passive-only' else any(x['phase']=='context-created' for x in final_rows)
   entry['executedBanners']=[{'flavor':x.get('flavor'),'backend':x.get('backend')} for x in final_rows if x['phase']=='instance-banner']
   entry['outcome']=outcome(entry)
   entry['completeObservation']=entry['outcome']=='complete-no-crash-observed'

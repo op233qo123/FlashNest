@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import WebKit
+import CryptoKit
 
 /// CI-only passive receipt journal. Never stores URLs, query tokens, save keys or values.
 @MainActor final class StartupJournal: NSObject, ObservableObject {
@@ -41,6 +42,10 @@ import WebKit
         let mode = ProcessInfo.processInfo.environment["AUDIO_RECOVERY_MODE"] ?? "unknown"
         let knownMode = ["candidate-known", "candidate-unknown", "baseline-known", "startup-only"].contains(mode) ? mode : "unknown"
         retain(["phase": "native-open", "caseMode": knownMode, "processID": ProcessInfo.processInfo.processIdentifier], critical: true)
+    }
+    func registeredScript(source: String) {
+        let digest = SHA256.hash(data: Data(source.utf8)).map { String(format: "%02x", $0) }.joined()
+        retain(["phase": "native-script-registered", "scriptSHA256": digest], critical: true)
     }
     func nativeOpened() { retain(["phase": "native-opened"], critical: true) }
     func nativeFailure() { retain(["phase": "native-failure"], critical: true) }

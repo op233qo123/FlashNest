@@ -2,8 +2,8 @@
 import hashlib,json,re,shutil
 from pathlib import Path
 UUID=re.compile(r'^[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\.json$')
-PHASES={'native-open','native-opened','native-controller','native-failure','stale-controller-rejected','journal-truncated','document-start','shell-load-call','shell-load-return','loadeddata','context-created','context-state','audio-status','resource-request','resource-complete','instance-banner','disposed'}
-KEYS={'phase','caseMode','processID','nativeSequence','receiptAgeMs','controllerGeneration','page','jsSequence','contexts','contextId','operationId','intentId','state','audioPhase','status','current','resource','sha256','resourceEvidence','requestedFlavor','flavor','backend','omittedAtLeast'}
+PHASES={'native-script-registered','native-open','native-opened','native-controller','native-failure','stale-controller-rejected','journal-truncated','document-start','shell-load-call','shell-load-return','loadeddata','context-created','context-state','audio-status','resource-request','resource-complete','instance-banner','disposed'}
+KEYS={'scriptSHA256','phase','caseMode','processID','nativeSequence','receiptAgeMs','controllerGeneration','page','jsSequence','contexts','contextId','operationId','intentId','state','audioPhase','status','current','resource','sha256','resourceEvidence','requestedFlavor','flavor','backend','omittedAtLeast'}
 def validate_journal(data,resources):
  if len(data)>65536:raise ValueError('Journal exceeds64KiB')
  rows=json.loads(data)
@@ -14,6 +14,7 @@ def validate_journal(data,resources):
    if k in {'nativeSequence','receiptAgeMs','controllerGeneration','page','jsSequence','contexts','contextId','operationId','intentId','processID','omittedAtLeast'} and (type(v)is not int or not 0<=v<=1000000000):raise ValueError('Invalid bounded number')
   enums={'caseMode':{'candidate-known','candidate-unknown','baseline-known','startup-only','unknown'},'state':{'suspended','running','closed','interrupted'},'audioPhase':{'bind','release','core-play','core-pause','visibility','unmute'},'status':{'bound','released','pending','fulfilled','rejected'},'requestedFlavor':{'extensions','mvp'},'flavor':{'extensions','mvp'},'backend':{'webgpu','wgpu-webgl','webgl','canvas'},'resourceEvidence':{'requested-or-completed-not-executed'}}
   if any(k in x and x[k] not in allowed for k,allowed in enums.items()):raise ValueError('Unknown enum')
+  if 'scriptSHA256'in x and (x['phase']!='native-script-registered' or not isinstance(x['scriptSHA256'],str) or not re.fullmatch('[0-9a-f]{64}',x['scriptSHA256'])):raise ValueError('Invalid registered script hash')
   if 'current'in x and type(x['current'])is not bool:raise ValueError('Invalid bool')
   if 'resource'in x and (x['resource'] not in resources or x.get('sha256')!=resources[x['resource']]):raise ValueError('Unapproved public runtime resource')
   if 'sha256'in x and 'resource'not in x:raise ValueError('Unbound hash')
