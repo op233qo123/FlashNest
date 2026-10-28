@@ -2,6 +2,11 @@ name: Observe pre-gesture startup on exact iOS 18.2 (manual)
 on:
   workflow_dispatch:
     inputs:
+      arm:
+        description: Exact runtime arm (both by default)
+        type: choice
+        options: [both, baseline, candidate]
+        default: both
       instrumentation_profile:
         description: Instrumentation profile (passive-only omits fault injector)
         type: choice
@@ -18,11 +23,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arm: [baseline, candidate]
+        arm: ${{ inputs.arm == 'baseline' && fromJSON('["baseline"]') || inputs.arm == 'candidate' && fromJSON('["candidate"]') || fromJSON('["baseline","candidate"]') }}
     runs-on: macos-14
     timeout-minutes: 40
     env:
       TEST_OS: '18.2'
+      TEST_ARM: ${{ inputs.arm || 'both' }}
       STARTUP_PROFILE: ${{ inputs.instrumentation_profile || 'instrumented' }}
       DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
       PYTHONDONTWRITEBYTECODE: '1'
@@ -37,6 +43,7 @@ jobs:
       - name: Require reviewed immutable candidate approval and local gates
         run: |
           set -euo pipefail
+          case "$TEST_ARM" in both|baseline|candidate) ;; *) echo "Unknown runtime arm" >&2; exit 1 ;; esac
           case "$TEST_OS" in
             18.2) expected_xcode=16.2 ;;
             18.5) expected_xcode=16.4 ;;

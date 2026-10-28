@@ -2,6 +2,7 @@
 import argparse,datetime,hashlib,json,os,plistlib,re,subprocess,time,tempfile
 from pathlib import Path
 from collect import journals,crashes
+from installed_bundle import installed_path,verify as verify_installed
 BUNDLE='com.flashnest.audio-recovery.diagnostic'
 RUNTIME='com.apple.CoreSimulator.SimRuntime.iOS-18-2'
 def command(args,timeout=30,env=None,stdout_limit=65536):
@@ -115,7 +116,20 @@ def observe(udid,app,output,arm,approval,source_manifest):
  persist()
  if selected['state']!='Booted':checked(['xcrun','simctl','boot',udid],receipt_path=output/'boot-command.json')
  checked(['xcrun','simctl','bootstatus',udid,'-b'],120,receipt_path=output/'bootstatus-command.json')
- checked(['xcrun','simctl','install',udid,str(app)],60,receipt_path=output/'install-command.json')
+ install=command(['xcrun','simctl','install',udid,str(app)],180)
+ (output/'install-command.json').write_text(json.dumps(install,indent=2)+'\n')
+ receipt['installCommandFailed']=bool(install['returncode'] or install.get('truncated'));persist()
+ # A timed-out CLI may already have installed the app. Inspect, never reinstall.
+ try:
+  raw_installed=checked(['xcrun','simctl','get_app_container',udid,BUNDLE,'app'],receipt_path=output/'installed-app-command.json')
+  installed=installed_path(raw_installed,selected['dataPath'],udid,app.name)
+  postcondition=verify_installed(app,installed,BUNDLE,profile=='passive-only')
+  (output/'installed-app-verification.json').write_text(json.dumps(postcondition,indent=2)+'\n')
+  if not postcondition['verified']:raise ValueError('Installed app does not match built bytes')
+  receipt['installOutcome']='installed-verified-after-command-failure' if receipt['installCommandFailed'] else 'installed-verified'
+ except Exception as error:
+  receipt['installOutcome']='installed-postcondition-unconfirmed';receipt['installVerificationError']=type(error).__name__;persist();raise
+ persist()
  container=Path(checked(['xcrun','simctl','get_app_container',udid,BUNDLE,'data'],receipt_path=output/'container-command.json'))
  if not container.is_absolute() or not container.is_dir():raise ValueError('Invalid simulator app container')
  reports=Path.home()/'Library/Logs/DiagnosticReports'

@@ -102,3 +102,36 @@ still requires the exact real banner; resource hashes mean requests only. No
 backend override, extra focus, resume, input, retry or restoration behavior is
 introduced. A clean passive-only run remains finite non-reproduction, not proof
 that the prior SIGILL was caused by instrumentation or that recovery is fixed.
+
+## Targeted missing-arm completion and installed-app postcondition
+The manual arm choice is closed to both (default), baseline or candidate. Unknown
+choices fail preflight; selecting baseline creates no candidate job. This allows
+completing the missing passive baseline from40646521966 without repeating its
+already observed candidate windows.
+
+That baseline stopped before launch when simctl install reached60seconds after
+successful simulator boot. The revised setup makes exactly ONE install call,
+bounded180seconds. This is installation infrastructure only; no launch, readiness,
+post-ready, report-grace or engine deadline changes and no automatic reinstall.
+The CLI result (including timeout/failure) is retained before inspecting the
+selected simulator's installed app container. A timeout does not prove the side
+effect failed: if the complete installed bundle matches the exact built bundle,
+observations may proceed under `installed-verified-after-command-failure`, with
+the failed command still explicitly recorded. Missing/mismatched/unsafe/inconclusive
+postconditions stop before every launch, even after a successful CLI response.
+
+Verification binds the exact selected simulator data directory, UUID bundle
+container and app name; rejects symlinks/nonregular members and case collisions;
+checks bundle identifier/executable and SHA256+size of EVERY code/resource file,
+including the entire runtime, against the built app. Bounds are5000files and
+256MiB total, streaming1MiB chunks; byte/file caps fail closed. Passive mode also
+rejects a fault-injector resource at any bundle-relative location. Both complete
+inventories are retained before a mismatch is raised. This verifies installed
+bytes at inspection time, not future immutability or successful engine execution.
+
+Only workflow/runner/setup verification changes: the exact passive Session,
+startup observer, fixture, renderer/media/save configuration and both immutable
+runtime inventories are unchanged from candidate40646521966. The target is still
+three baseline fresh-process60+30second windows and final60second report grace.
+No successful window can erase the earlier realSIGILL or prove instrumentation
+was its cause.
