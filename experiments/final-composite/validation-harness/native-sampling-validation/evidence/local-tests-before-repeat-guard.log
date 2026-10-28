@@ -1,0 +1,25 @@
+test_actual_custom_msaa_fallback (__main__.Contracts.test_actual_custom_msaa_fallback) ... ok
+test_approved_app_manifest_pinned (__main__.Contracts.test_approved_app_manifest_pinned) ... ok
+test_backing_status_identity_quality_mutants_rejected (__main__.Contracts.test_backing_status_identity_quality_mutants_rejected) ... ok
+test_exact_overlay_preserves_navigation_policy (__main__.Contracts.test_exact_overlay_preserves_navigation_policy) ... FAIL
+test_explicit_low_reduces (__main__.Contracts.test_explicit_low_reduces) ... ok
+test_fixture_exact_original_bytes (__main__.Contracts.test_fixture_exact_original_bytes) ... ok
+test_incomplete_matrix_never_passes (__main__.Contracts.test_incomplete_matrix_never_passes) ... ok
+test_shipping_mobile_omitted_quality_reduction (__main__.Contracts.test_shipping_mobile_omitted_quality_reduction) ... ok
+test_trace_geometry_mismatch_rejected (__main__.Contracts.test_trace_geometry_mismatch_rejected) ... ok
+test_unavailable_high_msaa_is_explicitly_unsupported (__main__.Contracts.test_unavailable_high_msaa_is_explicitly_unsupported) ... ok
+
+======================================================================
+FAIL: test_exact_overlay_preserves_navigation_policy (__main__.Contracts.test_exact_overlay_preserves_navigation_policy)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/bbe5ec6ec106/native-sampling-validation/scripts/test_verifier.py", line 70, in test_exact_overlay_preserves_navigation_policy
+    with self.assertRaises(AssertionError):staging.session_overlay(after)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: AssertionError not raised
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.003s
+
+FAILED (failures=1)
+PASS observer mock contracts: transparent calls, allocation evidence, bounded passive touch, privacy, explicit diagnostic identity; NOT native execution

@@ -1,0 +1,1 @@
+Original synthetic AVM2 SWF37 writer/reader: SharedObject.getLocal("FlashNestFixture", "/"), trace RAW_SOL_BEFORE value and RAW_SOL_READY; writer sets progress42 and calls flush. Original AMF3 SOL sets progress7. No user/game data. Source scripts/make_raw_sol_fixtures.py uses existing original ABC assembler.

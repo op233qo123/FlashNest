@@ -1,0 +1,71 @@
+(node:44) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS loading and creating after readiness never changes constructors/EventTarget/native descriptors
+PASS requires genuine readiness evidence: trustedPlay
+PASS requires genuine readiness evidence: rootReady
+PASS requires genuine readiness evidence: childReady
+PASS requires genuine readiness evidence: saveReady
+PASS candidate production helper and UI recover with one trusted tuple and post-retry child continuity
+PASS wrapper preserves native Promise, receiver, argument identities, public result and exact descriptor
+PASS synchronous native exception preserves original object and descriptor
+PASS public callback synchronous exception preserves identity even after native call
+PASS zero calls rejected; later asynchronous call cannot rescue capture
+PASS valid synchronous call plus late asynchronous call invalidates candidate capture
+PASS extra core-play after capture before intended suspend invalidates arm
+PASS two same-receiver synchronous calls rejected without concealing second
+PASS two native receivers are rejected, both calls forwarded unchanged
+PASS reentrant foreign native call is counted and rejected
+PASS capture only native call without candidate pending rejects
+PASS rejects stale capture status without observer throw
+PASS rejects non-core capture status without observer throw
+PASS rejects malformed capture status without observer throw
+PASS rejects foreign player capture status without observer throw
+PASS duplicate tuple rejected without altering native Promise
+PASS prototype conflict restored exactly and rejected
+PASS preexisting own method means zero prototype capture, never guessed receiver
+PASS closed context cannot arm
+PASS intended production suspend fulfillment required before arm
+PASS nonextensible WebIDL instance override fails closed
+PASS instance descriptor conflict before arm fails closed without overwrite
+PASS one shot restores instance before rejection handlers and real retry
+PASS incidental instance call outside explicit injection forwards native and cannot consume synthetic error
+PASS incidental non-core operation aborts and forwards native
+PASS unknown original object follows real helper fatal route exactly once
+PASS unknown hostile Error getter preserves fatal object, not replacement observer error
+PASS untrusted click cannot pass or trigger production retry
+PASS warning hidden alone/reset cannot prove recovery
+PASS release/reset during warning invalidates evidence
+PASS rebind/new context status cannot claim same-context recovery
+PASS fresh foreign-context status invalidates evidence
+PASS background intent invalidates warning retry
+PASS trusted click without synchronous current operation fails
+PASS late async retry after dispatch cannot pass
+PASS microtask during target-phase after callback cannot bypass production arming gate
+PASS duplicate retry pending and repeated trusted tap fail closed
+PASS missing bubble validation fails after dispatch ends
+PASS same page, child and unchanged real SOL are all required
+PASS page token or player identity change invalidates evidence
+PASS baseline recovery is explicitly unsupported, total context coverage stays unknown
+PASS dispose removes only own listeners/override and drops context reference
+PASS bounded native call accounting forwards every call and rejects overflow
+PASS nonconfigurable native prototype descriptor prevents installation without mutation
+PASS capture native rejection cannot be mistaken for completed capture
+PASS instance descriptor conflict at injection restores original and forwards without injecting
+PASS injection callback throw preserves original identity and removes unused override
+PASS unexpected receiver for own override is forwarded but never injected
+PASS released while armed removes override before any following call
+PASS background while armed removes override without synthetic rejection
+PASS hidden or disabled trusted retry is rejected before counting
+PASS getter exception in a diagnostic status never escapes the event observer
+PASS compact native status and separately bounded full event evidence
+PASS reentrant disposal cannot mask public return or restore failure
+PASS candidate natural unknown capture rejection preserves only its helper-owned fatal route
+PASS capture completion observer may only start once, including while pending
+PASS delayed baseline completeCapture cannot duplicate the original-object fatal route
+PASS post-scope Promise observation starts only after prototype restoration
+PASS delayed candidate completeCapture cannot duplicate its helper-owned fatal route
+PASS outcome-observer setup failure never replaces the public return value
+PASS only exact production selector button/panel can be installed
+PASS duplicate production retry selector invalidates active diagnostic
+PASS baseline injected known failure stays original fatal when public void path ignores native Promise
+PASS 68 local late-probe groups; mocked DOM/native audio only, not native iOS acceptance

@@ -1,0 +1,23 @@
+{
+  "original": true,
+  "stage": [
+    320,
+    240
+  ],
+  "files": {
+    "showAll-center.swf": {
+      "mode": "showAll",
+      "align": "",
+      "fixtureQuality": null,
+      "bytes": 1877,
+      "sha256": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac"
+    },
+    "noScale-center.swf": {
+      "mode": "noScale",
+      "align": "",
+      "fixtureQuality": null,
+      "bytes": 1877,
+      "sha256": "65d470ec5890ceeed4f16b6b6825ed1e9048eb36329cd7b8d7b388a52e844f34"
+    }
+  }
+}

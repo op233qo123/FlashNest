@@ -1,0 +1,15 @@
+{
+  "provenance": "Original generated diagnostic; no game-derived binary/code/assets",
+  "swfVersion": 37,
+  "referenceFlashRun": false,
+  "files": {
+    "nested-child-goto.swf": {
+      "bytes": 1548,
+      "sha256": "ae3e561e8695a0be147e2192cd6d067eaa9462daedf92213bed86c9e4c4a4d8b"
+    },
+    "control-no-child-goto.swf": {
+      "bytes": 1538,
+      "sha256": "dd85e9f2b63b32199b7d04def4efbd80ccf68fb42da63cfe987e94358c49f030"
+    }
+  }
+}

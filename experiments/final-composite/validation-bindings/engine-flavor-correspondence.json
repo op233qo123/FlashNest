@@ -1,0 +1,60 @@
+{
+  "mapping": {
+    "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b": "extensions",
+    "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263": "mvp"
+  },
+  "flavors": {
+    "extensions": {
+      "sourceMap": "core.ruffle.b000fdd7bd51db350c2e.js.map",
+      "sourceMapSHA256": "2de27d962c84f9f98ed37aab8ab0e8dcaadd669ff9ba0fd67b85b0e8c4989c9d",
+      "mappedSource": "webpack://ruffle-selfhosted/../core/dist/ruffle_web.js",
+      "mappedSourceSHA256": "24abfbf2ff12ac1774726a9cb72a1bfd15d7b80c7657e52718c182a5434be02b",
+      "mappedSourceWasmURL": "ruffle_web_bg.wasm",
+      "coreChunk": "core.ruffle.b000fdd7bd51db350c2e.js",
+      "coreChunkSHA256": "b28727c844c608de48b6c649719c0fa3b53bf4a6e37ce624301382a630e4890a",
+      "chunkID": 110,
+      "compiledInitURL": "new URL(n(797),n.b)",
+      "compiledInitURLOffset": 107194,
+      "assetModuleID": 797,
+      "mainAssetExport": "797(e,n,a){e.exports=a.p+\"90bbf4885cbe4b972b5d.wasm\"}",
+      "mainAssetExportOffset": 773,
+      "wasmPath": "90bbf4885cbe4b972b5d.wasm",
+      "sha256": "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b",
+      "bytes": 14223192
+    },
+    "mvp": {
+      "sourceMap": "core.ruffle.3ce933515526b167bacd.js.map",
+      "sourceMapSHA256": "c96f0502a89087090a56b3036cf5ddffc6624d328a5371f8d4738c9813d73fa5",
+      "mappedSource": "webpack://ruffle-selfhosted/../core/dist/ruffle_web-wasm_mvp.js",
+      "mappedSourceSHA256": "18a9decbedf27e9d381679f90b09c4cbb81d948e6206f1c159353b75c22020eb",
+      "mappedSourceWasmURL": "ruffle_web-wasm_mvp_bg.wasm",
+      "coreChunk": "core.ruffle.3ce933515526b167bacd.js",
+      "coreChunkSHA256": "9a8dc73ddea707c7af9222e3957b54923afe7a428fc2a74d84fff16a48159edd",
+      "chunkID": 993,
+      "compiledInitURL": "new URL(n(124),n.b)",
+      "compiledInitURLOffset": 113601,
+      "assetModuleID": 124,
+      "mainAssetExport": "124(e,n,a){e.exports=a.p+\"ba4cc242c45ddd367372.wasm\"}",
+      "mainAssetExportOffset": 719,
+      "wasmPath": "ba4cc242c45ddd367372.wasm",
+      "sha256": "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263",
+      "bytes": 14245700
+    }
+  },
+  "mainBundleSHA256": "07b1a097dc3a446470b530ebc1cfaf7612454b19cd392a31b2b6922e47f40711",
+  "mainSourceMapSHA256": "7ba876032a1d34aafc8ee8f6f5ac03287400c2106567d333a70130cd6e44cdaf",
+  "loaderMappedSource": "webpack://ruffle-selfhosted/../core/dist/load-ruffle.js",
+  "loaderMappedSourceSHA256": "18de11ab4b278d229316aed9bdb6ad0e8ceee99dfc88ca001102b66d05526fc6",
+  "compiledPredicate": "const n=(await Promise.all([en(),rn(),an(),tn(),nn()])).every(Boolean);",
+  "compiledPredicateOffset": 416569,
+  "compiledShippingBranch": "await(n?a.e(110).then(()=>a(110)):a.e(993).then(()=>a(993)));let i;const s=n?new URL(a(797),a.b):new URL(a(124),a.b),l=await fetch(s)",
+  "compiledShippingBranchOffset": 416862,
+  "schemaVersion": 1,
+  "archiveSHA256": "26c1e61f0d8d1b1f4dffcd0ddfe886604098384360c6c20e1f094d9c0c2a6e4e",
+  "runID": 40753314834,
+  "sourceCommit": "29b344137313b81a6cf53c662efb4edd8a452d61",
+  "runtimeInventorySHA256": "6aadf8b728be885b518b16f77430e128ba677c97df03598b9a50d07101dfed9a",
+  "provenanceSHA256": "2002ff3558a6593b6f7b8a0d892945b73b8c4a9fa1638c8407573c40ad74f8b7",
+  "basis": "Exact packaged source maps + compiled core URL asset import + main webpack asset export + same-condition shipping branch; not filename order or size",
+  "runtimeExecutionClaim": false
+}

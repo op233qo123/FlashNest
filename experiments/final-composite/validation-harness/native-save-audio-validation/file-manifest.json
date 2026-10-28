@@ -1,0 +1,229 @@
+{
+  "schema": 1,
+  "state": "authored-not-executed",
+  "shippingFilesChanged": [],
+  "productionBundleID": "com.flashnest.app",
+  "diagnosticBundleID": "com.flashnest.late-audio.diagnostic",
+  "testSelectionSHA256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583",
+  "files": {
+    "README.md": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "8c263d0d319b278d6f8d5f59daf94db3ac678058ebda34e76971d0ec26a49ce1",
+        "bytes": 9856
+      },
+      "scope": "test-only"
+    },
+    "Tests/NativeSaveSettingsPreservationTests.swift": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "3854a5d718164ea770225b58268ce707a6bef62873b5dded33c739281a324dbc",
+        "bytes": 10942
+      },
+      "scope": "test-bundle-only; no App edit",
+      "target": "final-app/Tests/NativeSaveSettingsPreservationTests.swift"
+    },
+    "diagnostics/Host/LateAudioHost.swift": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "06fe5b9000a6cd66c26f5863b894cbb01a26fc8ebf4f8623b7c3383a7998962e",
+        "bytes": 10452
+      },
+      "scope": "test-only"
+    },
+    "diagnostics/Info.plist": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "e4af5aaba32185944005d25c6d7b27775402771994ac568d3373195e1484007f",
+        "bytes": 1278
+      },
+      "scope": "test-only"
+    },
+    "diagnostics/UITests/LateAudioUITests.swift": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "67867cb50e0bbd226ae2cfebf99eb52c60e1a01949bfd7e94723c70db7a4999d",
+        "bytes": 11941
+      },
+      "scope": "test-only"
+    },
+    "diagnostics/baseline-runtime-identity.json": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "7971584216be895d47e01f877e2ba3dad1aba07ce796e654fe8e6d3b6cd6ee69",
+        "bytes": 2280
+      },
+      "scope": "test-only"
+    },
+    "diagnostics/evidence-bridge.inc.js": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "03a3a5da5097d21cadd97dcdfa48fd44e1b33430077b36354a8922af0cc5c893",
+        "bytes": 3458
+      },
+      "scope": "test-only"
+    },
+    "diagnostics/late-audio-probe.js": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "01231807a4e5fa1f85e1182c08dcf498d87319ede55075cdd68c3ffc420d32db",
+        "bytes": 21950
+      },
+      "scope": "test-only"
+    },
+    "diagnostics/late-host-adapter.js": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "d01d52e3a6abc67e70f6ec780abbb7329964ac1ad6cefb49e69ec5bba42aef77",
+        "bytes": 3677
+      },
+      "scope": "test-only"
+    },
+    "diagnostics/retired-candidate-runtime-files.json": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "ce542724b7486d9852b0e503427e9364983ac70ef1990948999e04d2442e09d4",
+        "bytes": 1644
+      },
+      "scope": "test-only"
+    },
+    "diagnostics/verify_late_evidence.py": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "f63cd8121b95c42860f90a70a1cb70a8fb3856a058e64052c615f1ad4d8c22e0",
+        "bytes": 12270
+      },
+      "scope": "test-only"
+    },
+    "evidence/audio-overlay-plan.json": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "c35ddcf9706f8cd1b68a9f410374f739efae68680c4d82bf0437be97faf1e636",
+        "bytes": 12772
+      },
+      "scope": "test-only"
+    },
+    "evidence/audio-warning.log": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "487c20e1f8a1418d7a6e37e95eff0b42970d65cb68922cee3a22e1631f579940",
+        "bytes": 66
+      },
+      "scope": "test-only"
+    },
+    "evidence/bridge-adapter.log": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "11f1b262c5525befd047a590cc0878bb1fa84f349e11ea993b12d1b0b61a72da",
+        "bytes": 1194
+      },
+      "scope": "test-only"
+    },
+    "evidence/late-probe.log": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "5e3d6f40cb0f7c60b5ca1ad78a0b6692d17817c9baae1cece3744986849b59dc",
+        "bytes": 5129
+      },
+      "scope": "test-only"
+    },
+    "evidence/local-contract-tests.log": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "dadac9843170a864174fd2fe05efb0fe2d6ed95a42f6d4bbf25f5cb9613e1146",
+        "bytes": 3997
+      },
+      "scope": "test-only"
+    },
+    "evidence/shell-en.log": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "ce252cb46941efed3f2df3c97cdf1dec1152a1cf27b92dedfb99a3216d3a1fc7",
+        "bytes": 526
+      },
+      "scope": "test-only"
+    },
+    "evidence/shell-zh.log": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "8aa6f14007863aebb984657fe5fd9e5cebbe5fce40301f28105434510f1644f1",
+        "bytes": 536
+      },
+      "scope": "test-only"
+    },
+    "fixture-inventory.json": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "8899119e854eb19e1a9f37a73d541cd75900eda6114352a90911b09dad5bce34",
+        "bytes": 2415
+      },
+      "scope": "test-only"
+    },
+    "input-lock.json": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "f755e3b80f6c38b7bf00de3f61c5386d8f2e8dc87c31f01b9f5df4a30e2ef533",
+        "bytes": 13010
+      },
+      "scope": "test-only"
+    },
+    "overlay/App/Player/PlayerSession.swift": {
+      "baselineSHA256": "6225d8143031c56531e7f2499a14146ea94b0bd26c1e71c18070104f142a6316",
+      "new": {
+        "sha256": "0829c9ca7f86fbb94e28075fcc7e5c38826b2ef8dc7833284cbfc7e7e8255a96",
+        "bytes": 41657
+      },
+      "scope": "test-only",
+      "target": "isolated-audio/App/Player/PlayerSession.swift"
+    },
+    "overlay/App/Resources/Web/shell.js": {
+      "baselineSHA256": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd",
+      "new": {
+        "sha256": "8adf97bc8437e07d83deeb6b8642cc69b012190173bf0367d7ea9c374e206bbe",
+        "bytes": 27987
+      },
+      "scope": "test-only",
+      "target": "isolated-audio/App/Resources/Web/shell.js"
+    },
+    "scripts/run_shell_regression.cjs": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "d5f7cdbb1486d7ca8318f22026c432c0901acacb234066b0d3be0fd19882f03c",
+        "bytes": 1024
+      },
+      "scope": "test-only"
+    },
+    "scripts/stage_audio_target.py": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "ee51987b9cf5fa822104fb7fca171cb4656ebb37d10cad1f4aacc2617517a321",
+        "bytes": 14313
+      },
+      "scope": "test-only"
+    },
+    "scripts/test_contracts.py": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "907238f7996296c8fd70de9604a36a6059903e4bbe89616a6c4da3c82cb4c4d2",
+        "bytes": 12551
+      },
+      "scope": "test-only"
+    },
+    "scripts/verify_results.py": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "182d8685478cda416fe279adf480360aeb6427a9ac907db570c6c470f12f410e",
+        "bytes": 4148
+      },
+      "scope": "test-only"
+    },
+    "test-selection.json": {
+      "baselineSHA256": null,
+      "new": {
+        "sha256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583",
+        "bytes": 20648
+      },
+      "scope": "test-only"
+    }
+  }
+}

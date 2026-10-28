@@ -1,0 +1,36 @@
+test_anchor_drift_rejected (test_contracts.OverlayContracts.test_anchor_drift_rejected) ... ok
+test_exact_source_plan_and_no_execution_claim (test_contracts.OverlayContracts.test_exact_source_plan_and_no_execution_claim) ... ok
+test_existing_injector_rejected (test_contracts.OverlayContracts.test_existing_injector_rejected) ... ok
+test_late_readiness_precedes_loading_and_no_synthetic_retry (test_contracts.OverlayContracts.test_late_readiness_precedes_loading_and_no_synthetic_retry) ... ok
+test_metadata_cannot_authorize_code_drift (test_contracts.OverlayContracts.test_metadata_cannot_authorize_code_drift) ... ok
+test_native_save_fixture_is_nonempty_readonly_exact_bytes (test_contracts.OverlayContracts.test_native_save_fixture_is_nonempty_readonly_exact_bytes) ... ok
+test_one_scoped_injection_no_production_paused_override (test_contracts.OverlayContracts.test_one_scoped_injection_no_production_paused_override) ... ok
+test_project_is_diagnostic_only_and_locked_package (test_contracts.OverlayContracts.test_project_is_diagnostic_only_and_locked_package) ... ok
+test_rebound_transforms_identical_to_reviewed_original_operations (test_contracts.OverlayContracts.test_rebound_transforms_identical_to_reviewed_original_operations) ... ok
+test_shell_only_observes_exact_production_intent (test_contracts.OverlayContracts.test_shell_only_observes_exact_production_intent) ... ok
+test_symlink_and_ancestor_rejected (test_contracts.OverlayContracts.test_symlink_and_ancestor_rejected) ... ok
+test_unsafe_paths_rejected (test_contracts.OverlayContracts.test_unsafe_paths_rejected) ... ok
+test_accepts_exact_synthetic_record_semantics_only (test_contracts.ResultContracts.test_accepts_exact_synthetic_record_semantics_only) ... ok
+test_rejects_duplicate_execution (test_contracts.ResultContracts.test_rejects_duplicate_execution) ... ok
+test_rejects_expected_failure (test_contracts.ResultContracts.test_rejects_expected_failure) ... ok
+test_rejects_foreign_model_audio_record (test_contracts.ResultContracts.test_rejects_foreign_model_audio_record) ... ok
+test_rejects_missing_case (test_contracts.ResultContracts.test_rejects_missing_case) ... ok
+test_rejects_no_audio_terminal_records (test_contracts.ResultContracts.test_rejects_no_audio_terminal_records) ... ok
+test_rejects_same_count_foreign_selector (test_contracts.ResultContracts.test_rejects_same_count_foreign_selector) ... ok
+test_rejects_skip (test_contracts.ResultContracts.test_rejects_skip) ... ok
+test_rejects_wrong_os (test_contracts.ResultContracts.test_rejects_wrong_os) ... ok
+test_rejects_zero_case_summary (test_contracts.ResultContracts.test_rejects_zero_case_summary) ... ok
+test_accepts_exact_inventory_semantics_not_runtime_eligibility (test_contracts.RuntimeInventoryContracts.test_accepts_exact_inventory_semantics_not_runtime_eligibility) ... ok
+test_rejects_changed_runtime_bytes (test_contracts.RuntimeInventoryContracts.test_rejects_changed_runtime_bytes) ... ok
+test_rejects_missing_or_extra_runtime_file (test_contracts.RuntimeInventoryContracts.test_rejects_missing_or_extra_runtime_file) ... ok
+test_rejects_subset_browser_manifest (test_contracts.RuntimeInventoryContracts.test_rejects_subset_browser_manifest) ... ok
+test_rejects_undeclared_role (test_contracts.RuntimeInventoryContracts.test_rejects_undeclared_role) ... ok
+test_rejects_wrong_explicit_inventory_hash (test_contracts.RuntimeInventoryContracts.test_rejects_wrong_explicit_inventory_hash) ... ok
+test_rejects_wrong_runtime_for_historical_baseline (test_contracts.RuntimeInventoryContracts.test_rejects_wrong_runtime_for_historical_baseline) ... ok
+test_exact_counts_no_duplicate_or_picker_sampling_overlap (test_contracts.SelectionContracts.test_exact_counts_no_duplicate_or_picker_sampling_overlap) ... ok
+test_exact_selected_source_methods_and_hashes (test_contracts.SelectionContracts.test_exact_selected_source_methods_and_hashes) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 0.339s
+
+OK

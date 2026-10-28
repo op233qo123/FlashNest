@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "scope": "existing original synthetic fixtures only; no private data",
+  "files": {
+    "fixtures/shared-object/README.txt": {
+      "sha256": "2c47fa3268b35fccef7896b66c2823c6b92d6bcc5ae3e926245867521bb7d821",
+      "bytes": 457
+    },
+    "fixtures/shared-object/close-flush.swf": {
+      "sha256": "fdfe1058419b6b4d5c89498f9991f35cb0e6b49ea84b670c7a91f601c33719e0",
+      "bytes": 245
+    },
+    "fixtures/shared-object/explicit-flush.swf": {
+      "sha256": "19325f1da4afce8c3f32a0ff92aaa151e5736517893d3fb9b24d98efa45db472",
+      "bytes": 302
+    },
+    "fixtures/shared-object/read-only.swf": {
+      "sha256": "92daf5242e633e520216b469b98fee34436c77cbaf0c8a811c88c3511ebac941",
+      "bytes": 203
+    },
+    "fixtures/raw-sol/README.txt": {
+      "sha256": "52391530a0d32075ee09046ffad0b76b32b600fb6aaf8e473b4a3056e2e5194c",
+      "bytes": 310
+    },
+    "fixtures/raw-sol/manifest.json": {
+      "sha256": "0442c0becd655ea4b8387e881db265ffd8036fe9989ec82fc47b79814a19037b",
+      "bytes": 442
+    },
+    "fixtures/raw-sol/original-progress-7.sol": {
+      "sha256": "f4b7c9e57f4d695fa41ff37b6d59390ea114977be52bb8ccc4eda92373013745",
+      "bytes": 50
+    },
+    "fixtures/raw-sol/reader.swf": {
+      "sha256": "2dedca3baa0c8013279cd9b7bb587790d9b95a3b02211c76c50e26f67a9dbb31",
+      "bytes": 678
+    },
+    "fixtures/raw-sol/writer.swf": {
+      "sha256": "f50bcc17c2eac6c88e2b702a9b18cafc542c06f69534ebba124e7e0c2d8ec848",
+      "bytes": 702
+    },
+    "fixtures/input-focus/README.txt": {
+      "sha256": "302f7b634075bfef376b2545b7fc7ecf65129113eef5bfd750b6d673b7223e10",
+      "bytes": 494
+    },
+    "fixtures/input-focus/main.swf": {
+      "sha256": "9ed4aa409818109d0b13b7dfa1a642fe92b00440d46fb94543851829aea28da0",
+      "bytes": 234
+    },
+    "fixtures/input-focus/sub/scene.swf": {
+      "sha256": "780b884d137df3ff752ebf3f833e30110b2958114f9562c2bac1d7cb97e4e978",
+      "bytes": 304
+    },
+    "fixtures/lifecycle/README.txt": {
+      "sha256": "86320933fccc0612635d820a75fcb8d4cdc9bfc3eaf2656bc121102b54d53a0f",
+      "bytes": 888
+    },
+    "fixtures/lifecycle/main.swf": {
+      "sha256": "dcf106e34f02618f25d089085ce88f0a4b01e796d5df0a11924baaf555916ee9",
+      "bytes": 563
+    },
+    "fixtures/lifecycle/sub/scene.swf": {
+      "sha256": "943b378dce0eb35099e51b3d3103c42364ab1a6d3c96aa81735d8e5d8411b559",
+      "bytes": 803
+    }
+  },
+  "newBinaryFixtures": []
+}

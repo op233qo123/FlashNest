@@ -1,0 +1,383 @@
+{
+  "schema": 1,
+  "state": "authored-not-executed",
+  "osVersion": "18.2",
+  "platform": "iOS Simulator",
+  "requiredXcode": "16.2",
+  "lanes": [
+    {
+      "name": "save-models",
+      "scheme": "FlashNest",
+      "target": "FlashNestTests",
+      "expectedCount": 48,
+      "expectedSkipped": 0,
+      "expectedFailures": 0,
+      "selectors": [
+        "FlashNestTests/SaveStoreTests/testAtomicCaptureReloadAndPackageFilter",
+        "FlashNestTests/SaveStoreTests/testEmptyCaptureIsExplicitlyEmpty",
+        "FlashNestTests/SaveStoreTests/testValidationDoesNotCreateBackupDirectory",
+        "FlashNestTests/SaveStoreTests/testObjectAndAggregateByteLimits",
+        "FlashNestTests/SaveStoreTests/testHashAndIdentityTamperingIsRejected",
+        "FlashNestTests/SaveStoreTests/testWriteFailureDoesNotReportBackupSuccess",
+        "FlashNestTests/SaveStoreTests/testSymlinkBackupIsRejected",
+        "FlashNestTests/SaveStoreTests/testLatestAtomicUpdateAndInvalidCapturePreservesCurrent",
+        "FlashNestTests/SaveStoreTests/testImportMapsOnlyToSelectedPackageAndBacksUpPreviousCurrent",
+        "FlashNestTests/SaveStoreTests/testDecodeImportRejectsTamperedAndOversizedArchives",
+        "FlashNestTests/SaveStoreTests/testRootPackageAndCurrentSymlinksAreRejected",
+        "FlashNestTests/SaveStoreTests/testLogicalKeyGrammarPreservesOpaqueNames",
+        "FlashNestTests/SaveStoreTests/testSavedPackageSummariesIncludeCurrentOnlyAndArchivedBackups",
+        "FlashNestTests/SaveStoreTests/testRestoreAcknowledgmentIsImmediateAtomicAndIdentityGuarded",
+        "FlashNestTests/SaveStoreTests/testCorruptCurrentDoesNotHideValidArchivedBackups",
+        "FlashNestTests/SaveStoreTests/testCorruptImmutableBackupDoesNotSuppressOtherGroupsOrValidExports",
+        "FlashNestTests/SaveImportReaderTests/testCoordinatedJSONAndCustomExtensionValidateWithoutSelectingOrWritingTarget",
+        "FlashNestTests/SaveImportReaderTests/testRawSOLMatchesExistingNamespaceWithoutChangingCurrentOrOriginal",
+        "FlashNestTests/SaveImportReaderTests/testUnknownJSONMissingProviderSymlinkAndOversizedSOLFailWithoutMutation",
+        "FlashNestTests/RawSOLImportTests/testAMF0AndAMF3PreserveExactOriginalBytes",
+        "FlashNestTests/RawSOLImportTests/testMalformedTruncatedOversizedAndUnsupportedPayloadsFail",
+        "FlashNestTests/RawSOLImportTests/testNestedValuesAndComplexityLimits",
+        "FlashNestTests/RawSOLImportTests/testAMF0ComplexReferencesDoNotCountDatesOrXMLAndUnsupportedIsDefined",
+        "FlashNestTests/RawSOLImportTests/testPreviewDoesNotWriteAndRequiresExistingMatchingIdentity",
+        "FlashNestTests/RawSOLImportTests/testAmbiguousScopesRequireExplicitExistingSelectionWithoutFanout",
+        "FlashNestTests/RawSOLImportTests/testCanonicalUnicodeEquivalenceDoesNotGuessRawNameOrTargetIdentity",
+        "FlashNestTests/RawSOLImportTests/testAtomicImportPreservesOtherObjectsAndBacksUpPreimage",
+        "FlashNestTests/RawSOLImportTests/testStalePreviewCannotOverwriteNewerCurrentOrAnotherGame",
+        "FlashNestTests/LegacySavePreservationDiagnosticsTests/testColdHandshakeDeadlineClassificationDoesNotTreatNotReadyAsSuccess",
+        "FlashNestTests/LegacySavePreservationDiagnosticsTests/testFailureAndTerminationAreNotMislabelledAsColdStart",
+        "FlashNestTests/LegacySavePreservationDiagnosticsTests/testDiagnosticContainsOnlyFixedCodesAndNumericEvidence",
+        "FlashNestTests/SaveManagementEntryPolicyTests/testRequestOnlyPresentsWarningAndCancelReturnsToMenu",
+        "FlashNestTests/SaveManagementEntryPolicyTests/testOnlyExplicitConfirmationMayCloseAndManageSaves",
+        "FlashNestTests/SaveManagementEntryPolicyTests/testSaveAndRestartIsSeparateFromOpeningBackupManagement",
+        "FlashNestTests/PlayerSessionTests/testStopBeforeStartAndRepeatedStopAreSafe",
+        "FlashNestTests/LegacySaveDiagnosticLocalizationTests/testPreparationFailureShowsLocalizedNeutralTextAndFixedCodeOnly",
+        "FlashNestTests/PreviousSessionDiagnosticsLocalizationTests/testPreviousSessionSectionAndClearActionAreBilingual",
+        "FlashNestTests/LocalizationTests/testBothLocalizedResourceBundlesArePackagedAndSwitchable",
+        "FlashNestTests/LocalizationTests/testAppVersionIsExplicitAndIconIsConfigured",
+        "FlashNestTests/SaveStoreSummaryTests/testSummariesMatchValidatedCurrentAndBackupMetadataAndOrdering",
+        "FlashNestTests/SaveStoreSummaryTests/testCorruptNeighborIsIsolatedAndStrictOldAPIUnchanged",
+        "FlashNestTests/SaveStoreSummaryTests/testExportRejectsCorruptMissingAndReplacedNamedArchiveAfterListing",
+        "FlashNestTests/SaveStoreSummaryTests/testExportRejectsWrongPackageAndChangedCurrentWithoutFallingBackToBackup",
+        "FlashNestTests/SaveStoreSummaryTests/testExportRejectsSymlinkReplacementAndWrongIdentityOnListing",
+        "FlashNestTests/SaveStoreSummaryTests/testEmptyAndCombiningCharacterNamesHaveBoundedDisplayMetadata",
+        "FlashNestTests/SaveStoreSummaryTests/testOversizedArchiveIsSkippedWithoutHidingValidMetadata",
+        "FlashNestTests/SaveStoreSummaryTests/testDirectoryEntryBudgetStillRejectsOversizedListing",
+        "FlashNestTests/SaveStoreSummaryTests/testNamedExportPreservesListedFilenameCaseAndRejectsForgedPath"
+      ],
+      "classes": [
+        "SaveStoreTests",
+        "SaveImportReaderTests",
+        "RawSOLImportTests",
+        "LegacySavePreservationDiagnosticsTests",
+        "SaveManagementEntryPolicyTests",
+        "PlayerSessionTests",
+        "LegacySaveDiagnosticLocalizationTests",
+        "PreviousSessionDiagnosticsLocalizationTests",
+        "LocalizationTests",
+        "SaveStoreSummaryTests"
+      ],
+      "maximumTestExecutionSeconds": 180,
+      "parallelTesting": false
+    },
+    {
+      "name": "save-webkit",
+      "scheme": "FlashNest",
+      "target": "FlashNestTests",
+      "expectedCount": 19,
+      "expectedSkipped": 0,
+      "expectedFailures": 0,
+      "selectors": [
+        "FlashNestTests/SharedObjectWebKitTests/testDestroyFlushCaptureRestoreAndPackageStorageIsolation",
+        "FlashNestTests/SharedObjectWebKitTests/testExplicitSharedObjectFlushIsCapturedWithoutChangingItsBytes",
+        "FlashNestTests/SharedObjectPersistenceTests/testLiveCheckpointCopiesExplicitlyFlushedSaveWithoutRestartingScene",
+        "FlashNestTests/SharedObjectPersistenceTests/testLiveCheckpointDoesNotPretendToFlushRAMOnlySave",
+        "FlashNestTests/SharedObjectPersistenceTests/testExplicitSaveAndRestartUsesNewPageAndPreservesSaveAndGameFiles",
+        "FlashNestTests/SharedObjectPersistenceTests/testDestroyFlushPersistsAndRestartReadsActualSharedObject",
+        "FlashNestTests/SharedObjectPersistenceTests/testExportImportMapsToSelectedNewPackageAndDoesNotLeakToAnotherGame",
+        "FlashNestTests/SharedObjectPersistenceTests/testUpgradePreservesExistingWebKitSaveBeforeFirstNativeArchive",
+        "FlashNestTests/SharedObjectPersistenceTests/testConfirmedImportAppliesOnceAndNewerLiveFlushSurvivesMissedNativeCapture",
+        "FlashNestTests/SharedObjectPersistenceTests/testUnconfirmedFlushBlocksSameProfileAcrossSessionsWithoutReplacingCurrent",
+        "FlashNestTests/SharedObjectPersistenceTests/testProcessTerminationKeepsNativeArchiveAndAllowsCleanReopen",
+        "FlashNestTests/SharedObjectPersistenceTests/testCloseWaitsForCheckpointThenStillClosesPlayer",
+        "FlashNestTests/RawSOLWebKitTests/testRawAMF3ImportIsReadThenWrittenAndReadAfterReopenWithoutCrossGameLeak",
+        "FlashNestTests/LegacySavePreservationWebKitTests/testActualStorageOnlyPreservationCapturesVerifiedEmptyProfileWithoutMovie",
+        "FlashNestTests/PlayerCallbackIdentityTests/testPriorPageMessagesCannotMutateReplacementAtSameShellURL",
+        "FlashNestTests/PlayerCallbackIdentityTests/testNilForeignFrameAndStoppedPageMessagesAreRejected",
+        "FlashNestTests/PlayerCallbackIdentityTests/testStaleNavigationFailuresCannotOverwriteActiveOrTerminatedPageState",
+        "FlashNestTests/InputFocusRuntimeTests/testVirtualKeyRefocusesPlayerAfterChildSceneAndExternalBlur",
+        "FlashNestTests/NativeSaveSettingsPreservationTests/testNonemptySOLBytesSurviveSamplingRendererChangesPauseBackgroundAndReopen"
+      ],
+      "classes": [
+        "SharedObjectWebKitTests",
+        "SharedObjectPersistenceTests",
+        "RawSOLWebKitTests",
+        "LegacySavePreservationWebKitTests",
+        "PlayerCallbackIdentityTests",
+        "InputFocusRuntimeTests",
+        "NativeSaveSettingsPreservationTests"
+      ],
+      "maximumTestExecutionSeconds": 180,
+      "parallelTesting": false
+    },
+    {
+      "name": "save-ui",
+      "scheme": "FlashNestUI",
+      "target": "FlashNestUITests",
+      "expectedCount": 1,
+      "expectedSkipped": 0,
+      "expectedFailures": 0,
+      "selectors": [
+        "FlashNestUITests/LifecyclePlayerUITests/testBackgroundDirectSaveCancelManagementAndRestartSameGame"
+      ],
+      "classes": [
+        "LifecyclePlayerUITests"
+      ],
+      "maximumTestExecutionSeconds": 420,
+      "parallelTesting": false
+    },
+    {
+      "name": "audio-candidate",
+      "scheme": "LateAudioDiagnostic",
+      "target": "LateAudioUITests",
+      "expectedCount": 2,
+      "expectedSkipped": 0,
+      "expectedFailures": 0,
+      "selectors": [
+        "LateAudioUITests/LateAudioUITests/testLateKnownRecoveryKeepsLiveChildAndRealSOL",
+        "LateAudioUITests/LateAudioUITests/testLateUnknownRemainsProductionFatal"
+      ],
+      "classes": [
+        "LateAudioUITests"
+      ],
+      "maximumTestExecutionSeconds": 360,
+      "parallelTesting": false
+    },
+    {
+      "name": "audio-baseline",
+      "scheme": "LateAudioDiagnostic",
+      "target": "LateAudioUITests",
+      "expectedCount": 1,
+      "expectedSkipped": 0,
+      "expectedFailures": 0,
+      "selectors": [
+        "LateAudioUITests/LateAudioUITests/testLateBaselineKnownRemainsProductionFatal"
+      ],
+      "classes": [
+        "LateAudioUITests"
+      ],
+      "maximumTestExecutionSeconds": 180,
+      "parallelTesting": false
+    }
+  ],
+  "sourceTests": {
+    "InputFocusRuntimeTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/InputFocusRuntimeTests.swift",
+      "sha256": "c46ed67f70ffecbfe2ae6ed937bcb1cace40944e9f77cabcae2a7f96757ad634",
+      "tests": [
+        "testVirtualKeyRefocusesPlayerAfterChildSceneAndExternalBlur"
+      ]
+    },
+    "LateAudioUITests": {
+      "path": "native-save-audio-validation/diagnostics/UITests/LateAudioUITests.swift",
+      "sha256": "67867cb50e0bbd226ae2cfebf99eb52c60e1a01949bfd7e94723c70db7a4999d",
+      "tests": [
+        "testLateKnownRecoveryKeepsLiveChildAndRealSOL",
+        "testLateUnknownRemainsProductionFatal",
+        "testLateBaselineKnownRemainsProductionFatal"
+      ]
+    },
+    "LegacySaveDiagnosticLocalizationTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/LegacySaveDiagnosticLocalizationTests.swift",
+      "sha256": "28bdfe54c1190623e63c40d4106f8f0306ac7d50c43447ef60ae2cc7d7d35929",
+      "tests": [
+        "testPreparationFailureShowsLocalizedNeutralTextAndFixedCodeOnly"
+      ]
+    },
+    "LegacySavePreservationDiagnosticsTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/LegacySavePreservationDiagnosticsTests.swift",
+      "sha256": "0af8d34b54545ffbb386fda9ade8ff35c84e73063492f6cc28481d644db0f3c6",
+      "tests": [
+        "testColdHandshakeDeadlineClassificationDoesNotTreatNotReadyAsSuccess",
+        "testFailureAndTerminationAreNotMislabelledAsColdStart",
+        "testDiagnosticContainsOnlyFixedCodesAndNumericEvidence"
+      ]
+    },
+    "LegacySavePreservationWebKitTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/LegacySavePreservationDiagnosticsTests.swift",
+      "sha256": "0af8d34b54545ffbb386fda9ade8ff35c84e73063492f6cc28481d644db0f3c6",
+      "tests": [
+        "testActualStorageOnlyPreservationCapturesVerifiedEmptyProfileWithoutMovie"
+      ]
+    },
+    "LifecyclePlayerUITests": {
+      "path": "next-ipa-156-prep/app-integration/source/UITests/LifecyclePlayerUITests.swift",
+      "sha256": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
+      "tests": [
+        "testBackgroundDirectSaveCancelManagementAndRestartSameGame"
+      ]
+    },
+    "LocalizationTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/LocalizationTests.swift",
+      "sha256": "19c143383c6adc27a8093c4e7c4688bea97be004c9becf54217ca7684721f1c1",
+      "tests": [
+        "testBothLocalizedResourceBundlesArePackagedAndSwitchable",
+        "testAppVersionIsExplicitAndIconIsConfigured"
+      ]
+    },
+    "NativeSaveSettingsPreservationTests": {
+      "path": "native-save-audio-validation/Tests/NativeSaveSettingsPreservationTests.swift",
+      "sha256": "3854a5d718164ea770225b58268ce707a6bef62873b5dded33c739281a324dbc",
+      "tests": [
+        "testNonemptySOLBytesSurviveSamplingRendererChangesPauseBackgroundAndReopen"
+      ]
+    },
+    "PlayerCallbackIdentityTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/PlayerCallbackIdentityTests.swift",
+      "sha256": "7d058a13f6c2830989c4dc7fe1d791cf5a23147526900c05497be90d73383af7",
+      "tests": [
+        "testPriorPageMessagesCannotMutateReplacementAtSameShellURL",
+        "testNilForeignFrameAndStoppedPageMessagesAreRejected",
+        "testStaleNavigationFailuresCannotOverwriteActiveOrTerminatedPageState"
+      ]
+    },
+    "PlayerSessionTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/PlayerSessionTests.swift",
+      "sha256": "d6dbde2201967017858e0a4f4a5424bc426f8e20a795bff0f511462f167c1e91",
+      "tests": [
+        "testStopBeforeStartAndRepeatedStopAreSafe"
+      ]
+    },
+    "PreviousSessionDiagnosticsLocalizationTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/PreviousSessionDiagnosticsLocalizationTests.swift",
+      "sha256": "46926b1e9979cd7801112635974c6547566823197a935359c75bf6fbd731d324",
+      "tests": [
+        "testPreviousSessionSectionAndClearActionAreBilingual"
+      ]
+    },
+    "RawSOLImportTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/RawSOLImportTests.swift",
+      "sha256": "9de352c6fcd49abb7ac70e190f11f462e4c451b6e6033b50ad0e70f72e8526d1",
+      "tests": [
+        "testAMF0AndAMF3PreserveExactOriginalBytes",
+        "testMalformedTruncatedOversizedAndUnsupportedPayloadsFail",
+        "testNestedValuesAndComplexityLimits",
+        "testAMF0ComplexReferencesDoNotCountDatesOrXMLAndUnsupportedIsDefined",
+        "testPreviewDoesNotWriteAndRequiresExistingMatchingIdentity",
+        "testAmbiguousScopesRequireExplicitExistingSelectionWithoutFanout",
+        "testCanonicalUnicodeEquivalenceDoesNotGuessRawNameOrTargetIdentity",
+        "testAtomicImportPreservesOtherObjectsAndBacksUpPreimage",
+        "testStalePreviewCannotOverwriteNewerCurrentOrAnotherGame"
+      ]
+    },
+    "RawSOLWebKitTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/RawSOLWebKitTests.swift",
+      "sha256": "aef374878ad70920779cad38f970c108c25bb737e79c7f72937134a8a7352090",
+      "tests": [
+        "testRawAMF3ImportIsReadThenWrittenAndReadAfterReopenWithoutCrossGameLeak"
+      ]
+    },
+    "SaveImportReaderTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/SaveImportReaderTests.swift",
+      "sha256": "c4482d2ba8927f1fda42ee99e9b0532bd2b57e9b3c90c46f6c054c2c885fe7e3",
+      "tests": [
+        "testCoordinatedJSONAndCustomExtensionValidateWithoutSelectingOrWritingTarget",
+        "testRawSOLMatchesExistingNamespaceWithoutChangingCurrentOrOriginal",
+        "testUnknownJSONMissingProviderSymlinkAndOversizedSOLFailWithoutMutation"
+      ]
+    },
+    "SaveManagementEntryPolicyTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/SaveManagementEntryPolicyTests.swift",
+      "sha256": "aa583fa45cb0fda54eb56f7947fb27df661de551a1d24facae243ed5908f459d",
+      "tests": [
+        "testRequestOnlyPresentsWarningAndCancelReturnsToMenu",
+        "testOnlyExplicitConfirmationMayCloseAndManageSaves",
+        "testSaveAndRestartIsSeparateFromOpeningBackupManagement"
+      ]
+    },
+    "SaveStoreSummaryTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/SaveStoreSummaryTests.swift",
+      "sha256": "259101480e0689faaebdff9cb42050605fce629539a3db0b61a3ca7582ee5774",
+      "tests": [
+        "testSummariesMatchValidatedCurrentAndBackupMetadataAndOrdering",
+        "testCorruptNeighborIsIsolatedAndStrictOldAPIUnchanged",
+        "testExportRejectsCorruptMissingAndReplacedNamedArchiveAfterListing",
+        "testExportRejectsWrongPackageAndChangedCurrentWithoutFallingBackToBackup",
+        "testExportRejectsSymlinkReplacementAndWrongIdentityOnListing",
+        "testEmptyAndCombiningCharacterNamesHaveBoundedDisplayMetadata",
+        "testOversizedArchiveIsSkippedWithoutHidingValidMetadata",
+        "testDirectoryEntryBudgetStillRejectsOversizedListing",
+        "testNamedExportPreservesListedFilenameCaseAndRejectsForgedPath"
+      ]
+    },
+    "SaveStoreTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/SaveStoreTests.swift",
+      "sha256": "5c1d105e8849de3edb8f649430b6f825e0cf8c51a4c6ceea615bab25d7498286",
+      "tests": [
+        "testAtomicCaptureReloadAndPackageFilter",
+        "testEmptyCaptureIsExplicitlyEmpty",
+        "testValidationDoesNotCreateBackupDirectory",
+        "testObjectAndAggregateByteLimits",
+        "testHashAndIdentityTamperingIsRejected",
+        "testWriteFailureDoesNotReportBackupSuccess",
+        "testSymlinkBackupIsRejected",
+        "testLatestAtomicUpdateAndInvalidCapturePreservesCurrent",
+        "testImportMapsOnlyToSelectedPackageAndBacksUpPreviousCurrent",
+        "testDecodeImportRejectsTamperedAndOversizedArchives",
+        "testRootPackageAndCurrentSymlinksAreRejected",
+        "testLogicalKeyGrammarPreservesOpaqueNames",
+        "testSavedPackageSummariesIncludeCurrentOnlyAndArchivedBackups",
+        "testRestoreAcknowledgmentIsImmediateAtomicAndIdentityGuarded",
+        "testCorruptCurrentDoesNotHideValidArchivedBackups",
+        "testCorruptImmutableBackupDoesNotSuppressOtherGroupsOrValidExports"
+      ]
+    },
+    "SharedObjectPersistenceTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/SharedObjectPersistenceTests.swift",
+      "sha256": "01add01052d6c527b9fa8d8cb88c85629491471bee5bd66f2f49b3aa98a8e57b",
+      "tests": [
+        "testLiveCheckpointCopiesExplicitlyFlushedSaveWithoutRestartingScene",
+        "testLiveCheckpointDoesNotPretendToFlushRAMOnlySave",
+        "testExplicitSaveAndRestartUsesNewPageAndPreservesSaveAndGameFiles",
+        "testDestroyFlushPersistsAndRestartReadsActualSharedObject",
+        "testExportImportMapsToSelectedNewPackageAndDoesNotLeakToAnotherGame",
+        "testUpgradePreservesExistingWebKitSaveBeforeFirstNativeArchive",
+        "testConfirmedImportAppliesOnceAndNewerLiveFlushSurvivesMissedNativeCapture",
+        "testUnconfirmedFlushBlocksSameProfileAcrossSessionsWithoutReplacingCurrent",
+        "testProcessTerminationKeepsNativeArchiveAndAllowsCleanReopen",
+        "testCloseWaitsForCheckpointThenStillClosesPlayer"
+      ]
+    },
+    "SharedObjectWebKitTests": {
+      "path": "next-ipa-156-prep/app-integration/source/Tests/SharedObjectWebKitTests.swift",
+      "sha256": "2a6412f12af0d0af7b6bb226fedfb11fb9edbdc255526f895d15834d4e4771f5",
+      "tests": [
+        "testDestroyFlushCaptureRestoreAndPackageStorageIsolation",
+        "testExplicitSharedObjectFlushIsCapturedWithoutChangingItsBytes"
+      ]
+    }
+  },
+  "forbiddenOverlapClasses": [
+    "PackageImporterTests",
+    "ImportFlowTests",
+    "DocumentPickerDelegateTests",
+    "ImportAliasTests",
+    "LocalImportInboxTests",
+    "ExternalImportInboxTests",
+    "ExternalImportCopyTests",
+    "ZIPSelectionUITests",
+    "RenderSamplingSettingsTests",
+    "SamplingSessionTests",
+    "SamplingAppliedStatusTests",
+    "SamplingDocumentBindingTests",
+    "RendererSettingsTests",
+    "RendererSessionTests",
+    "FullscreenPlayerUITests",
+    "RendererCompatibilityUITests"
+  ],
+  "notes": [
+    "67 exact FlashNest unit tests=48 save models+19 real WebKit; 66 existing plus1 new.",
+    "1 existing LifecyclePlayerUITest; trusted OS Home/save-menu flow, no audible assertion.",
+    "2 final-candidate late audio cases plus1 original40614335019 baseline fatal control.",
+    "Do not run baseline-known with final candidate engine; role is semantically different.",
+    "Any skip, expected failure, zero case, duplicate selector/retry, wrong runtime or wrong OS fails.",
+    "Existing original31picker tests and low sampling suites are deliberately not selected here."
+  ]
+}

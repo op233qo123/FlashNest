@@ -1,0 +1,15 @@
+{
+  "FlashNest-LICENSE.txt": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
+  "ZIPFoundation-LICENSE.txt": "93a5b6f4c4fcfbca71aaf17f5758d249cf205d5d1c237becc37f14e43af09f6b",
+  "Ruffle-THIRD-PARTY-LICENSES.md": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71",
+  "runtime/LICENSE_MIT": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c",
+  "runtime/LICENSE_APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+  "licenses/fluent-bundle-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "licenses/fluent-bundle-NOTICE": "edae6bb683e0187423baa8adeedd31ec3e5778aa56be1f4c1269663e260adbaf",
+  "licenses/fluent-langneg-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "licenses/fluent-langneg-NOTICE": "edae6bb683e0187423baa8adeedd31ec3e5778aa56be1f4c1269663e260adbaf",
+  "licenses/tsx-dom-LICENSE": "a1b4fcc0102c5dca085eb9e3b7395bb9262be7390f3c90109c03b7ff3c2b4aa8",
+  "licenses/wasm-feature-detect-LICENSE": "bcf29b4fd3ec2cb5f9d40a0866da446f6da62170d2ccedf4aeca9cf9406dd20c",
+  "licenses/webpack-LICENSE": "9068a8782d2fb4c6e432cfa25334efa56f722822180570802bf86e71b6003b1e",
+  "Ruffle-MODIFICATIONS.md": "d542c1cbbd0b6bf98638fb6b5e81aadd6708dbe4c7934f3d1f42c2707a64998a"
+}

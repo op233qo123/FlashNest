@@ -1,0 +1,33 @@
+{
+  "ready": false,
+  "appFiles": {},
+  "helperLockSHA256": "REVIEWED_HELPER_LOCK_HASH",
+  "engine": {
+    "sha256": "FINAL_ARTIFACT_ARCHIVE_SHA256",
+    "provenanceSHA256": "FINAL_PROVENANCE_SHA256",
+    "runtimeInventorySHA256": "FULL_PATH_TO_SHA256_BYTES_MAP_HASH"
+  },
+  "xcodegenExecutable": "/RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen",
+  "xcodegenExecutableSHA256": null,
+  "xcodegenArchiveSHA256": "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82",
+  "simulatorNames": {
+    "2": "iPhone SE (3rd generation)",
+    "3": "iPhone 16"
+  },
+  "samplingAppManifests": {
+    "baseline": {
+      "path": "sampling-baseline-approved-app.json",
+      "sha256": "REVIEWED_PER_ARM_MAP"
+    },
+    "candidate": {
+      "path": "sampling-candidate-approved-app.json",
+      "sha256": "REVIEWED_PER_ARM_MAP"
+    }
+  },
+  "samplingBaselineMetadata": {},
+  "audioFinalMetadata": {
+    "candidate-composite": {},
+    "baseline-historical": {}
+  },
+  "xcodegenArchivePath": "/RUNNER_TEMP/xcodegen.zip"
+}

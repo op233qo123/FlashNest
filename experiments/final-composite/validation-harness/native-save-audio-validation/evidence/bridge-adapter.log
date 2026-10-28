@@ -1,0 +1,22 @@
+PASS readiness starts false; passive snapshot never creates audio state
+PASS genuine trace order, trusted click and actual nonempty 420 SOL required
+PASS pre-Play traces cannot become readiness after later trusted tap
+PASS unrelated SOL scope and oversized trace fail or remain bounded
+PASS untrusted and disabled or hidden Play never count
+PASS child before root and skipped serial cannot manufacture readiness
+PASS real SOL rejects empty
+PASS real SOL rejects root410
+PASS real SOL rejects corrupt
+PASS real SOL rejects wrongValue
+PASS production passive intent rejects player
+PASS production passive intent rejects started
+PASS production passive intent rejects paused
+PASS production passive intent rejects backgrounded
+PASS production passive intent rejects closing
+PASS production passive intent rejects fatal
+PASS document hidden changes real intent, no warning inference
+PASS snapshot reads current SOL, never cache
+PASS trace serial advances on trace only, bounded record history
+PASS renamed retry label is pending until source fulfillment plus actual hidden panel
+PASS adapter ordered capture/poll/atomic injection/disposal
+21 local bridge/adapter groups passed (mocked, not native)

@@ -1,0 +1,19 @@
+{
+  "localStagingOnly": true,
+  "nativeExecuted": false,
+  "changedAppFiles": {
+    "App/Player/PlayerSession.swift": {
+      "before": "6225d8143031c56531e7f2499a14146ea94b0bd26c1e71c18070104f142a6316",
+      "after": "7dfa70a49f9e027fc9f4ee763d4f21b5405fa6a07d56767a49df5cb1e4b77f15"
+    },
+    "App/Resources/Web/shell.js": {
+      "before": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd",
+      "after": "631ad42ed49a232c21448818c7e2aef3139b0f8882a79ee3572b39535f0b5a22"
+    },
+    "App/Server/LoopbackServer.swift": {
+      "before": "d196a07aad788aa74658e4c656d87263b9d42394f2c7935d86e8751e7d4c11e1",
+      "after": "cb42fac3f7a9b04f4952d99030293f0e64789acd725cdcf29b840d1842efe553"
+    }
+  },
+  "runtimeInventorySHA256": "25d4453b0375349e55b9f63f609bd129d6a3549e1da792e811f0e5d121247e90"
+}

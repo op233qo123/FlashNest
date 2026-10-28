@@ -1,0 +1,17 @@
+{
+  "original": true,
+  "files": {
+    "writer.swf": {
+      "bytes": 702,
+      "sha256": "f50bcc17c2eac6c88e2b702a9b18cafc542c06f69534ebba124e7e0c2d8ec848"
+    },
+    "reader.swf": {
+      "bytes": 678,
+      "sha256": "2dedca3baa0c8013279cd9b7bb587790d9b95a3b02211c76c50e26f67a9dbb31"
+    },
+    "original-progress-7.sol": {
+      "bytes": 50,
+      "sha256": "f4b7c9e57f4d695fa41ff37b6d59390ea114977be52bb8ccc4eda92373013745"
+    }
+  }
+}

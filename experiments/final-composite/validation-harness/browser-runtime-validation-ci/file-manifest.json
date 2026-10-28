@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "status": "AUTHORED_LOCAL_TESTED_NO_BROWSER_EXECUTION",
+  "frozenHarnessManifestSHA256": "c688a37a6b1938f05ca6a5308e26852e4d5271a5098931f90c4be136362bd1f6",
+  "files": {
+    "README.md": {
+      "sha256": "f2ff83b499f490244e0fa4cd8bab045bf3cb3973d5edbaa9cb1c2fb603d89f20",
+      "bytes": 4209
+    },
+    "run.py": {
+      "sha256": "64fa7054c78f79d5277bdc5b28f44816cad82a66563bd74201d057cc0ef83650",
+      "bytes": 8835
+    },
+    "test_runner.py": {
+      "sha256": "7e16dec72800c0872e31d00c01b369667dca4227c6e830de4aa6698e6d1ba58b",
+      "bytes": 3825
+    }
+  }
+}

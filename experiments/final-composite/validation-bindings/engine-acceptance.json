@@ -1,0 +1,35 @@
+{
+  "artifactID": 12844754314,
+  "runID": 40753314834,
+  "sourceCommit": "29b344137313b81a6cf53c662efb4edd8a452d61",
+  "bytes": 13328842,
+  "sha256": "26c1e61f0d8d1b1f4dffcd0ddfe886604098384360c6c20e1f094d9c0c2a6e4e",
+  "provenanceSHA256": "2002ff3558a6593b6f7b8a0d892945b73b8c4a9fa1638c8407573c40ad74f8b7",
+  "sourceSetSHA256": "0434fe9a2a3d2e4637938f6b0f67fe7eff17dd777ea940f02b29febc8b6d70aa",
+  "runtimeInventorySHA256": "6aadf8b728be885b518b16f77430e128ba677c97df03598b9a50d07101dfed9a",
+  "wasmSHA256": [
+    "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b",
+    "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263"
+  ],
+  "engineAccepted": true,
+  "reviewScope": "Actual release-equivalent engine artifact only; browser/native/IPA/device gates remain pending",
+  "sourceLockSHA256": "95d65b7b023a58d5dc059fac7eaed2215c1a75ce3adceac5efaa370c9e048dc8",
+  "fullSourceManifestSHA256": "f6ff53247b252b9490ece92f5ecc36d36558a39c101e6bc63cceba41762a917a",
+  "verifiedFullSourceFiles": 25921,
+  "localTestOnlyDifferences": [
+    "core/src/backend/audio.rs",
+    "core/src/backend/audio/mixer.rs",
+    "core/src/player.rs",
+    "tests/framework/src/backends/log.rs"
+  ],
+  "zipFilesVerified": 127,
+  "runtimeFilesVerified": 12,
+  "correspondenceFilesVerified": 106,
+  "coreJSTestsPassed": 63,
+  "nativeAccepted": false,
+  "browserAccepted": false,
+  "ipaAccepted": false,
+  "physicalDeviceAccepted": false,
+  "peakMemoryImprovementEstablished": false,
+  "reviewedAtUTC": "2026-10-28T19:43:00Z"
+}

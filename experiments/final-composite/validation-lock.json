@@ -1,0 +1,1197 @@
+{
+  "appSourceManifest": {
+    "files": {
+      "App/FlashNestApp.swift": "da2506630a583c2acde466a83a839a914185eaa88347c3818fd337626a9902c2",
+      "App/Import/ExternalImportInbox.swift": "a647ace26edd37344eb93d6ea724c89d8b13b556030e45ba9a014d631529b5d0",
+      "App/Import/ImportControl.swift": "78fb1d1c64b39d3e53e0f3ac4d6d6e6b104deb9d3571e1f0cdcb32dbd1f9150b",
+      "App/Import/LocalImportInbox.swift": "95f3994a81c8d5e635f8bb41d9cecc7d42272ea83fa1ff2ce0dfd07e2540e33f",
+      "App/Import/PackageDocumentPicker.swift": "bf1839f3b362d784df95c03880cd984d86942f605ffea1df1b4c68bf9aec76cb",
+      "App/Import/PackageImporter.swift": "3d48828d83a6f29de920827cc5e8290e272bcf7e22e64f0f3490d6f6096b6fc9",
+      "App/Import/ZIPIntegrity.swift": "878382765edba65617ab161fde074f77630f44af3051485275b06492d7d834fe",
+      "App/Info-Debug.plist": "d1b98ec51c1638e9db22ea1e2ba232ea52645989e7467c27b6828ac98c7b42a4",
+      "App/Localization/L10n.swift": "cf58cafe35064b95a0d69fc43a2772cd98674f07227ed35b9cc03d2abf3f00c3",
+      "App/Models/GamePackage.swift": "e9b43efa845f71b61b888e7afc1c5c753c294abe5dabd9207de0df0f3c776ec6",
+      "App/Models/LibraryPreferences.swift": "b7aea093302d2b8a6e5269a462e9ec6f928ca601b0a74f3359d7cff41e39c780",
+      "App/Models/LibraryStore.swift": "ec03e5e52044f0b562c659f480042c26437174e2270023082336610d49e913ac",
+      "App/Models/RawSOLImport.swift": "e25e85ce7d37c8d406acd52eaf98248d3f71b7f69d55fdaa991bdd1f87d26253",
+      "App/Models/SaveStore.swift": "507bfe3a2959c511b0b37aa798d439636f1566fc518dc43cc2ed190c8a4c636d",
+      "App/Player/CacheCleanupError.swift": "94b24c90c419a028f8f8e9dc532fab7d7bd7f1644439fd254a9c13a943ffc8d2",
+      "App/Player/CacheCleanupWarmLease.swift": "7a65228c2f54f10709f7ff570fe0c46c8d8ed7095405aac75e5c280b383fd5b6",
+      "App/Player/LastSessionDiagnostics.swift": "2c3b885317918f913065c36c09a13de689420e71a971960d018fb728a6bbbba2",
+      "App/Player/LegacySavePreservationError.swift": "7f382319af7e2b80967f7f757793627668db7a3d87f45beba14e19869dd7ec1c",
+      "App/Player/PackageWebKitProfiles.swift": "a02b15af8ac09cfab6ba93e47fc829f387154210238acc201823d22f98a23234",
+      "App/Player/PlayerSession.swift": "6225d8143031c56531e7f2499a14146ea94b0bd26c1e71c18070104f142a6316",
+      "App/Player/RenderSamplingSettings.swift": "a823949c9b531a49251416b6acd12c789b522bdff62bd379b70401642e926e32",
+      "App/Player/RendererSettings.swift": "7ef4c48fbbeaa394aeae03aced47065db4b20c626696f7c80ffeadd885ecfb89",
+      "App/Player/SamplingAppliedStatus.swift": "f6811ed78e642097fde19b75956f7f43a23a37cf306f04a0ebc5c072545cdf62",
+      "App/Player/SaveManagementEntryPolicy.swift": "76d51e310f3a800ea2d4e2b1c2f613fbf67b32d04fcd36623016d6c81eb28498",
+      "App/Player/Touch/TouchControlSettings.swift": "4018f22370a70b5a82146cf4b56fd61316d4cdb1da32c41c9f73fe7b7237c14a",
+      "App/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png": "910122c9200caa5a47e14ce27ad8911d03b27583c2485c9086f2102a6d47016a",
+      "App/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json": "3c6addf3f20972a12a0c33e6f6fe9e0857a0bdb512dce5d59f4bd007b236c157",
+      "App/Resources/Assets.xcassets/Contents.json": "f5fb0e1f3a8142892ed092efb5955c1c2cc537003a89ad7bbdb9dade7fe8985f",
+      "App/Resources/Localization/en.lproj/Localizable.strings": "685a28d471363d9555408f6b6d3243885f021eb82aea5401c8731f3ab191c3dc",
+      "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "bfcf35a86757c64153f2be3ec7f9b92a062496ecbace5139562225e7a7acd4ff",
+      "App/Resources/Web/FlashNest-LICENSE.txt": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
+      "App/Resources/Web/Ruffle-MODIFICATIONS.md": "ae805d1fd39bc73c5e8c03cbf7be2599bfabfe81b817f0f5c066bf40061a3f9d",
+      "App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71",
+      "App/Resources/Web/THIRD_PARTY_NOTICES.md": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
+      "App/Resources/Web/ZIPFoundation-LICENSE.txt": "93a5b6f4c4fcfbca71aaf17f5758d249cf205d5d1c237becc37f14e43af09f6b",
+      "App/Resources/Web/audio-warning.js": "b3285f7ece398349740242bfc84e78a9389ed2152c635b8a0a654e10014fa282",
+      "App/Resources/Web/index.html": "dc644cc31bdfd20428af68b5343b223f1573dc4c360bd34162bc52a046f8ece4",
+      "App/Resources/Web/licenses.manifest.json": "62a4c30099db9dbcb1db91f8ec939d32a6680e26c0dcec229b28c85166528e0d",
+      "App/Resources/Web/licenses/fluent-bundle-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "App/Resources/Web/licenses/fluent-bundle-NOTICE": "edae6bb683e0187423baa8adeedd31ec3e5778aa56be1f4c1269663e260adbaf",
+      "App/Resources/Web/licenses/fluent-langneg-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "App/Resources/Web/licenses/fluent-langneg-NOTICE": "edae6bb683e0187423baa8adeedd31ec3e5778aa56be1f4c1269663e260adbaf",
+      "App/Resources/Web/licenses/tsx-dom-LICENSE": "a1b4fcc0102c5dca085eb9e3b7395bb9262be7390f3c90109c03b7ff3c2b4aa8",
+      "App/Resources/Web/licenses/wasm-feature-detect-LICENSE": "bcf29b4fd3ec2cb5f9d40a0866da446f6da62170d2ccedf4aeca9cf9406dd20c",
+      "App/Resources/Web/licenses/webpack-LICENSE": "9068a8782d2fb4c6e432cfa25334efa56f722822180570802bf86e71b6003b1e",
+      "App/Resources/Web/runtime-identity.json": "14c4855750ce5843383a5f71074f263beb54e414d0f9ed8d6038ce1d320fe34a",
+      "App/Resources/Web/runtime/90bbf4885cbe4b972b5d.wasm": "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b",
+      "App/Resources/Web/runtime/LICENSE_APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+      "App/Resources/Web/runtime/LICENSE_MIT": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c",
+      "App/Resources/Web/runtime/README.md": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde",
+      "App/Resources/Web/runtime/ba4cc242c45ddd367372.wasm": "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263",
+      "App/Resources/Web/runtime/core.ruffle.3ce933515526b167bacd.js": "9a8dc73ddea707c7af9222e3957b54923afe7a428fc2a74d84fff16a48159edd",
+      "App/Resources/Web/runtime/core.ruffle.3ce933515526b167bacd.js.map": "c96f0502a89087090a56b3036cf5ddffc6624d328a5371f8d4738c9813d73fa5",
+      "App/Resources/Web/runtime/core.ruffle.b000fdd7bd51db350c2e.js": "b28727c844c608de48b6c649719c0fa3b53bf4a6e37ce624301382a630e4890a",
+      "App/Resources/Web/runtime/core.ruffle.b000fdd7bd51db350c2e.js.map": "2de27d962c84f9f98ed37aab8ab0e8dcaadd669ff9ba0fd67b85b0e8c4989c9d",
+      "App/Resources/Web/runtime/package.json": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89",
+      "App/Resources/Web/runtime/ruffle.js": "07b1a097dc3a446470b530ebc1cfaf7612454b19cd392a31b2b6922e47f40711",
+      "App/Resources/Web/runtime/ruffle.js.map": "7ba876032a1d34aafc8ee8f6f5ac03287400c2106567d333a70130cd6e44cdaf",
+      "App/Resources/Web/sampling-status.js": "b9491c617606c8b9bd69da0808107e87b79a1cc4eef03497488884f0dea79a7a",
+      "App/Resources/Web/save-bridge.js": "50de61bc2d2aeb13671d51094aca5c902080ef66b017c63489181cc511d96d4c",
+      "App/Resources/Web/shell.css": "4b359ebc5dd677a94f0b1d1ea65a41405008b323ca1cb0b0c7e8dcbf01c62773",
+      "App/Resources/Web/shell.js": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd",
+      "App/Server/HTTPProtocol.swift": "3e5c8806a10ad1de4fceee5bc8157d6f94aa1e79f3559bb96db9539eb2c5f0b4",
+      "App/Server/LoopbackServer.swift": "d196a07aad788aa74658e4c656d87263b9d42394f2c7935d86e8751e7d4c11e1",
+      "App/Views/EntrySelectionView.swift": "55a22fd154dface9ab87367c6a303eda50b01cd296c1c0c14aa691d12b933b4a",
+      "App/Views/LibraryHomeComponents.swift": "3b6901fd67dea8eb8cb53f1d70f2c85f66f5471e5df298806f0e3b383ff40cfe",
+      "App/Views/LibrarySettingsView.swift": "cda71cf25ccc47160358df3ec30f2f3c41ba1be107370f5a5bc85cccd480cdd9",
+      "App/Views/LibraryView.swift": "c762a9186e4adeda48908af9610c22ea66b9ae59d506b055a4f645e720165900",
+      "App/Views/LocalImportInboxView.swift": "dd56b7a0e5857f03afe18474b65d9c3d79d372f26ecfe75070638ccea7bca902",
+      "App/Views/PlayerRendererSettingsView.swift": "1c6d1702c452407b12d916ac8a85e45f111bd354c5d2b32e42c85d879f75a3c6",
+      "App/Views/PlayerSamplingSettingsView.swift": "08985f9b458bee0bf52734f9c3dd52cc527475a484db5c2cb35589085d93dc2a",
+      "App/Views/PlayerView.swift": "5a47e35af1161cba3bfaa11affb9ecb736ccdd249a1ed15194906dbec9547ba2",
+      "App/Views/RawSOLImportPreviewView.swift": "76ff710bfdf784eb3d7a4e4b0c6ac73ead3755f5afadb4e55a8da03ff703bd5a",
+      "App/Views/SaveAreaView.swift": "aa3101faccfc1636bd63f5d24dea84a83fe4ce2c7b03c3924461d2f9195661b4",
+      "App/Views/TouchControlsView.swift": "372ecaae7b940b0439ec4d59ecfd48feae59861d1d7556e650f8e73e1a6c7ca4",
+      "FINAL_ENGINE_STAGING.json": "bd0575269068dbb26b3fa341918da0fdf76b9ffc8bc91d67f3340dfa1fec829f",
+      "LICENSE": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
+      "Package.resolved": "8e1a1d7de570f9bacd587f56f70f41fa0da6d077505047bdf26ed31437e9dfc1",
+      "THIRD_PARTY_NOTICES.md": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
+      "Tests/ArchivedSaveDeletionTests.swift": "4c7ea8572689f61b184e796f3427a0e5112a4662d4e5c6f35a410ab29131db3f",
+      "Tests/CacheCleanupLeaseLifecycleTests.swift": "cfc3d58ff54a451d40e093caf8f0dbe5ef946378a8d87b470ffdada947fe5885",
+      "Tests/CacheCleanupPresentationTests.swift": "ec86c95272280ad9492573938e255379fb3168fd666980deee7aba02f707a813",
+      "Tests/CacheCleanupTests.swift": "707eedf5dc7a36607f088cc386f39ae647d62a409fedc83070f5868db5028347",
+      "Tests/ExternalImportInboxTests.swift": "3595349aaba6d6e8a9ceefcec7549755744da656b128b45936fb39b5f0639403",
+      "Tests/FrameOrderRuntimeTests.swift": "f437be6e9d50eb29c041b52d5471c4f89969feb00051243d66f1199bfc7bfc30",
+      "Tests/HTTPServerTests.swift": "cca67f9bbd0b214f4ebeb1b6d36e07d3aa1cd5216b9cab1ab1f973d1508990e5",
+      "Tests/ImportAliasTests.swift": "d8539494b606925bb7ce03ad4a3fa152fc87c902c411d771a98deca630d7adb3",
+      "Tests/ImportFlowTests.swift": "1d7e26449fb39a1c2968ce88127e1f5ac0b87320940aba16ef4f29b0f3bcd6bb",
+      "Tests/InputFocusRuntimeTests.swift": "c46ed67f70ffecbfe2ae6ed937bcb1cace40944e9f77cabcae2a7f96757ad634",
+      "Tests/LargeAssetWebKitTests.swift": "61d923ce857fecb0302615673ad417c571ac04f19160a6263fb284adb3fde36f",
+      "Tests/LastSessionDiagnosticsTests.swift": "c14f9abfa8a00b8839668f3a4c947e8c5b4cda4fc7863773d141a785686a996d",
+      "Tests/LegacySaveDiagnosticLocalizationTests.swift": "28bdfe54c1190623e63c40d4106f8f0306ac7d50c43447ef60ae2cc7d7d35929",
+      "Tests/LegacySavePreservationDiagnosticsTests.swift": "0af8d34b54545ffbb386fda9ade8ff35c84e73063492f6cc28481d644db0f3c6",
+      "Tests/LibraryPreferencesTests.swift": "c467227748d191c8ffd8b5ded01bc7228105e749980a36b6081faf4553b3f8bf",
+      "Tests/LibraryRemovalTests.swift": "f6604c80306931fd3df2dc68ae8ffb01f95c17438453f7220094d5fb8c9ba671",
+      "Tests/LocalImportInboxTests.swift": "a55bcf80a6aea5a851b8b8aab07d4510c9a5062d0904a9416fe0ff03675715d7",
+      "Tests/LocalizationTests.swift": "19c143383c6adc27a8093c4e7c4688bea97be004c9becf54217ca7684721f1c1",
+      "Tests/ManifestRecoveryTests.swift": "90e66eebb4c3263c193eaa3198a033f870b4bba50a721831519f7bef791e2a4b",
+      "Tests/PackageImporterTests.swift": "0a9de2ab6eeddeb86aa06ecab94859eb1cad4c0431857197b6cd35a8e7ba6eb2",
+      "Tests/PackageWebKitProfilesTests.swift": "6ac4270fb7158a308d3bbddc3e69f24c9deb4f0d336e7a9c6aa50707081d446d",
+      "Tests/PlayerCallbackIdentityTests.swift": "7d058a13f6c2830989c4dc7fe1d791cf5a23147526900c05497be90d73383af7",
+      "Tests/PlayerSessionTests.swift": "d6dbde2201967017858e0a4f4a5424bc426f8e20a795bff0f511462f167c1e91",
+      "Tests/PreviousSessionDiagnosticsLocalizationTests.swift": "46926b1e9979cd7801112635974c6547566823197a935359c75bf6fbd731d324",
+      "Tests/RawSOLImportTests.swift": "9de352c6fcd49abb7ac70e190f11f462e4c451b6e6033b50ad0e70f72e8526d1",
+      "Tests/RawSOLWebKitTests.swift": "aef374878ad70920779cad38f970c108c25bb737e79c7f72937134a8a7352090",
+      "Tests/RenderSamplingSettingsTests.swift": "776bbc35ee7e8c182eefcd169f40dcbb29e49c861bd4298b9dce11497f3218c6",
+      "Tests/RendererSessionTests.swift": "7819b7bbc9d3f9b56e573c4ce20dd57ba4095f2f13968cd40812fbc271efe0f6",
+      "Tests/RendererSettingsTests.swift": "ee31383482cfaff725b236bb10ea7d79c07131cfe897168d8393356477885575",
+      "Tests/RuffleRuntimeTests.swift": "8a8364cee19f6b53490b6e8706a3e35b34c9eb4e191fa1f013591992d376e192",
+      "Tests/SamplingAppliedStatusTests.swift": "f0daaa980a392bbbd27dd0a1d932ec1270f352e1a3b6abd1f50b1273a92080fe",
+      "Tests/SamplingSessionTests.swift": "b92ffde221369178b1f8eddd6694a7941776a06333ec3b6e983455a4686c3214",
+      "Tests/SaveImportReaderTests.swift": "c4482d2ba8927f1fda42ee99e9b0532bd2b57e9b3c90c46f6c054c2c885fe7e3",
+      "Tests/SaveListingMemoryTests.swift": "8f5e5f4af50f0b2f1d04e8d66c88a9dd3c059ecbb680b602bc024262fc607248",
+      "Tests/SaveManagementEntryPolicyTests.swift": "aa583fa45cb0fda54eb56f7947fb27df661de551a1d24facae243ed5908f459d",
+      "Tests/SaveStoreMemoryTests.swift": "90ae65a10dc12b51dc0b025e6c4f4a9104402cf452d59bfeae4a413296e480e9",
+      "Tests/SaveStoreSummaryTests.swift": "259101480e0689faaebdff9cb42050605fce629539a3db0b61a3ca7582ee5774",
+      "Tests/SaveStoreTests.swift": "5c1d105e8849de3edb8f649430b6f825e0cf8c51a4c6ceea615bab25d7498286",
+      "Tests/SharedObjectPersistenceTests.swift": "01add01052d6c527b9fa8d8cb88c85629491471bee5bd66f2f49b3aa98a8e57b",
+      "Tests/SharedObjectWebKitTests.swift": "2a6412f12af0d0af7b6bb226fedfb11fb9edbdc255526f895d15834d4e4771f5",
+      "Tests/TouchControlSettingsTests.swift": "622d63ea0dd9640e5892a160da254a60b2d2673c5551864b54df8a419e048c9c",
+      "UITestSupport/FixtureSource/FixtureSourceApp.swift": "284a2c8874959b8e37ded594b5cc5d017c36f359032dd1cf3b053674af9dc8c2",
+      "UITests/ExternalDocumentImportUITests.swift": "1116770cac0c4ef3f4504dffb926f15db9b159282cfcc240da3c4136c852374c",
+      "UITests/FolderPickerUITests.swift": "336bb1e21af18470bcc97a98b81a7fc34c0db095eb578087525ec2a06ed9650c",
+      "UITests/FullscreenPlayerUITests.swift": "bfae22f1b0dcc5cc5567194c47af519971e428f19c019fd98c294ac83a816e0d",
+      "UITests/LibraryAccessibilityUITests.swift": "eab9a28188adc6ea528f73c9ecb3d90eb8f1ad42646a276428ca23c427a72db8",
+      "UITests/LibraryHomeUITests.swift": "19b240cefb5ddb4d651fe29acc3337126de5c5e305e1f37afab7282bbfde8a9e",
+      "UITests/LibraryNavigation.swift": "481c5a5822ef96fca610ab4da5287b7c47bafe108d7c00f4905678b7201dc140",
+      "UITests/LibraryToolbarDiagnosticsUITests.swift": "2eb3e026d5c82035fb854ad9ef1f3746bf0ccdf984a06e3e32549da997fff8ea",
+      "UITests/LifecyclePlayerUITests.swift": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
+      "UITests/RendererCompatibilityUITests.swift": "53525d5987822a18e598bacd71194bf64d39480b5d9e37c544abc0051ded9913",
+      "experiments/frame-order/FrameOrderRuntimeTests.swift": "5beb4b3205cf5b7b8fe09a8b5cc0b946a235612501d2072a50ab255c7db92308",
+      "experiments/frame-order/candidate-native/FrameOrderCandidateRuntimeTests.swift": "cc21f16dbd9341d9f1256baf72384fe41e3a786d14235f5153e974ca3d730645",
+      "experiments/frame-order/engine-patch/expectations/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
+      "experiments/frame-order/engine-patch/expectations/nested-repair-target.txt": "57648847e013eb2aaa9e45a91eb0a55c66c97862defd8e3c1cd5b74ef4e3c2ae",
+      "experiments/frame-order/fixtures/control-no-child-goto.swf": "dd85e9f2b63b32199b7d04def4efbd80ccf68fb42da63cfe987e94358c49f030",
+      "experiments/frame-order/fixtures/manifest.json": "11781c6ac90429fd62e86e3f8de4f9d3e7614c65521c89608d7bc0cab491e5d7",
+      "experiments/frame-order/fixtures/nested-child-goto.swf": "ae3e561e8695a0be147e2192cd6d067eaa9462daedf92213bed86c9e4c4a4d8b",
+      "experiments/frame-order/make_fixtures.py": "d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701",
+      "experiments/frame-order/source/BClip.as": "4039de65a973b740fb6fc06fb78a410dfad9fba41c2870b066e7bc5788676c5f",
+      "experiments/frame-order/source/PClip.as": "5443be0bb36cded341e7584666777481b1ba453867b8ca96019c90076582bfbb",
+      "experiments/frame-order/structural-validation.json": "b3992c64a734e99a420a696839f73f1152a04d97393aebe45fdc4b7f324e22b9",
+      "experiments/frame-order/test_harness_js.py": "fbe8ce777a5163cfd86adb64a604095f05558c2f8400aa6dac7e08cd78d7b8ed",
+      "experiments/frame-order/validate_fixtures.py": "a0e1dabebc0b621550558be7febafd17f6bdee3d7faac8c56fe2d20948cd71f7",
+      "experiments/half-resolution/Tests/ViewportRenderingRuntimeTests.swift": "dedf9f369667ac92e3569e21facb5129ba99ef1ca6b7af08aa6a113a58d700a5",
+      "fixtures/frame-order/README.md": "b5c7c5c77bb86a3e785db8e32e6563c0440000e432de7a6be261232f073e2845",
+      "fixtures/frame-order/control-no-child-goto.swf": "dd85e9f2b63b32199b7d04def4efbd80ccf68fb42da63cfe987e94358c49f030",
+      "fixtures/frame-order/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
+      "fixtures/frame-order/nested-child-goto.swf": "ae3e561e8695a0be147e2192cd6d067eaa9462daedf92213bed86c9e4c4a4d8b",
+      "fixtures/frame-order/nested-repair-target.txt": "57648847e013eb2aaa9e45a91eb0a55c66c97862defd8e3c1cd5b74ef4e3c2ae",
+      "fixtures/input-focus/README.txt": "302f7b634075bfef376b2545b7fc7ecf65129113eef5bfd750b6d673b7223e10",
+      "fixtures/input-focus/main.swf": "9ed4aa409818109d0b13b7dfa1a642fe92b00440d46fb94543851829aea28da0",
+      "fixtures/input-focus/sub/scene.swf": "780b884d137df3ff752ebf3f833e30110b2958114f9562c2bac1d7cb97e4e978",
+      "fixtures/lifecycle/README.txt": "86320933fccc0612635d820a75fcb8d4cdc9bfc3eaf2656bc121102b54d53a0f",
+      "fixtures/lifecycle/main.swf": "dcf106e34f02618f25d089085ce88f0a4b01e796d5df0a11924baaf555916ee9",
+      "fixtures/lifecycle/sub/scene.swf": "943b378dce0eb35099e51b3d3103c42364ab1a6d3c96aa81735d8e5d8411b559",
+      "fixtures/multi-swf.zip": "5f7109b483bfa039837aeafd67bd38ee4cc909e7d408a5411e3a2573b3cbe93e",
+      "fixtures/multi-swf/README.txt": "3d0fdc851128260057bff388e21cfc69091e05ab20c91139f29f6567d3a3a528",
+      "fixtures/multi-swf/main.swf": "409c254575aaab1ec9671db53193d299f3c906dbc2d6fa5c1ae4ff1d27c6b78c",
+      "fixtures/multi-swf/sibling.txt": "062de40b81fe0c2c2f5dfdfc8ec3cdaaad4a13d3739813d7a474c54f8085d46f",
+      "fixtures/multi-swf/sub/child.swf": "f4c1f9540ad0a29a19a37acbb9704eab100221e0dc2cad61e38d90b41579f091",
+      "fixtures/raw-sol/README.txt": "52391530a0d32075ee09046ffad0b76b32b600fb6aaf8e473b4a3056e2e5194c",
+      "fixtures/raw-sol/manifest.json": "0442c0becd655ea4b8387e881db265ffd8036fe9989ec82fc47b79814a19037b",
+      "fixtures/raw-sol/original-progress-7.sol": "f4b7c9e57f4d695fa41ff37b6d59390ea114977be52bb8ccc4eda92373013745",
+      "fixtures/raw-sol/reader.swf": "2dedca3baa0c8013279cd9b7bb587790d9b95a3b02211c76c50e26f67a9dbb31",
+      "fixtures/raw-sol/writer.swf": "f50bcc17c2eac6c88e2b702a9b18cafc542c06f69534ebba124e7e0c2d8ec848",
+      "fixtures/shared-object/README.txt": "2c47fa3268b35fccef7896b66c2823c6b92d6bcc5ae3e926245867521bb7d821",
+      "fixtures/shared-object/close-flush.swf": "fdfe1058419b6b4d5c89498f9991f35cb0e6b49ea84b670c7a91f601c33719e0",
+      "fixtures/shared-object/explicit-flush.swf": "19325f1da4afce8c3f32a0ff92aaa151e5736517893d3fb9b24d98efa45db472",
+      "fixtures/shared-object/read-only.swf": "92daf5242e633e520216b469b98fee34436c77cbaf0c8a811c88c3511ebac941",
+      "project.yml": "0613646031133b46d6f4b5d4f56de5efbc1361dfa611d4e1ba8ebf67bdad0ae7",
+      "runtime.files.json": "b62aff962835ac18438ea30f77b24aeab406b92c139845980fa1a0fc8f4bee72",
+      "runtime.lock.json": "788f545d8fc20daa5f6b620fd342453465b53703947f940fe11bec64b06198d7",
+      "scripts/README.md": "827d35df82858af3582c82049480a2326e22c936a29ed43288044301e2436c1d",
+      "scripts/collect_preservation_diagnostics.py": "a5bf869ea629554a15b8194355ece81fc1666a2c7d57fe243c096747e49da5c2",
+      "scripts/collect_test_webkit_crashes.py": "fcba44fe0cb1290b272291d956cddf4e2759fbca45463e4d8fbeb9d2756f9bdb",
+      "scripts/composite_runtime.py": "1293c8100260831fc0a26c3740bc1d0a17d9d1e0cd8414872f828df40f4401d7",
+      "scripts/fetch_runtime.py": "3d025b86eaf2d5968d1595eedfe02558e0baaf681eea15c89ff5b4f48b84e442",
+      "scripts/make_fixtures.py": "2592091666d9bcddb20fd62cf022274cae33d05d950dc5d4a3c817f0d66828db",
+      "scripts/make_input_fixture.py": "6199722f95715c333102bf62944d434779d9773dcfc138064f295fb21033a6e4",
+      "scripts/make_lifecycle_fixture.py": "8dc8194ef27d5d2a6c0f2ea0fa79c14e1216dba064c9567612ff71097aba7221",
+      "scripts/make_raw_sol_fixtures.py": "e43323ed22a01deedccf995e66604cd2ca8daedb9296887842ffb9fb7678b994",
+      "scripts/package_unsigned.sh": "a223bdbfa77cf37fd5820f2f09a98b99f05f3970616960c01d522ec20b3274ff",
+      "scripts/select_simulator.py": "51eddbb30aa37bb56f1183fd4cf9b683af68a36e2cd36abbe5b75e3c3f5300e7",
+      "scripts/serve_fixture.py": "bd5158d9f2d00f1c6ae2ec815954d307af531f44f6493a074786b9876fdd8237",
+      "scripts/test_audio_warning.js": "1bcefe944e0332e3f3b03c6b20e87e4f74ed4f8d52927e7842c08366f10a2417",
+      "scripts/test_licenses.py": "69575e3ddc3eea31e351bc8ac98e221cdda1b3779e14413003f5b560918d9998",
+      "scripts/test_localization.py": "e82a02a9081972a1371445064020426c5d3ab90c4b4bef880e1badd7d7423e72",
+      "scripts/test_package_metadata.py": "fc701a17c54e1300aead3ac01ef649503b8df48e1aa9de61136e7a0741519d03",
+      "scripts/test_preservation_diagnostics.py": "2a565ec07ab4bf6ccd1c25ec81c6a29665374f8811b35e6f30abad0f5668fd15",
+      "scripts/test_raw_sol_fixtures.py": "17ee8e831d0909eddd3d00af8bf34071cc879ec873cd9450416f9b35eac77063",
+      "scripts/test_runtime_browser.py": "d7ec77bfd717868c7fdb490ec0523dca1fc5f873a1ae0e09ce12ee9ce4cfab57",
+      "scripts/test_runtime_bundle.py": "fe6614e382eb91e482ace1956b72314a5a40475e8165516dc57d1cd74ca35348",
+      "scripts/test_sampling_status.js": "d1837ad38b14b438a754acb355d3876b1c1a1de3004275fcb2849528094e13ac",
+      "scripts/test_save_bridge.js": "43bce2e8d20e6177c40f9d49cfb7e34c586476aef72d80a6e7c696591521e579",
+      "scripts/test_saves_browser.py": "c55c8142e23f405c55284725793f68a8c683896649015167f084d1f5cc07f7c2",
+      "scripts/test_shell.js": "65702fd15b6170ca60a1b9381497dad51085f2d321006223d68349413b85c830",
+      "scripts/test_static.py": "6ff7ae2fedb4bf94346a7e7826cdebfb679e7e0b3552dc37cffa293e1445a341",
+      "scripts/verify_bundled_runtime.py": "feceb8c7655ecacb5f840659f012ce1f60d92f73a1a5974f0d308c3c1a986d5f",
+      "vendor/ruffle-audio-recovery-40614335019.zip": "3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a",
+      "vendor/ruffle-audio-recovery-source/audio-lifecycle.patch": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9",
+      "vendor/ruffle-audio-recovery-source/audio-recovery.patch": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60",
+      "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
+      "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4",
+      "vendor/ruffle-composite-40753314834.zip": "26c1e61f0d8d1b1f4dffcd0ddfe886604098384360c6c20e1f094d9c0c2a6e4e"
+    }
+  },
+  "appTemplateFiles": {
+    "App/FlashNestApp.swift": "da2506630a583c2acde466a83a839a914185eaa88347c3818fd337626a9902c2",
+    "App/Import/ExternalImportInbox.swift": "a647ace26edd37344eb93d6ea724c89d8b13b556030e45ba9a014d631529b5d0",
+    "App/Import/ImportControl.swift": "78fb1d1c64b39d3e53e0f3ac4d6d6e6b104deb9d3571e1f0cdcb32dbd1f9150b",
+    "App/Import/LocalImportInbox.swift": "95f3994a81c8d5e635f8bb41d9cecc7d42272ea83fa1ff2ce0dfd07e2540e33f",
+    "App/Import/PackageDocumentPicker.swift": "bf1839f3b362d784df95c03880cd984d86942f605ffea1df1b4c68bf9aec76cb",
+    "App/Import/PackageImporter.swift": "3d48828d83a6f29de920827cc5e8290e272bcf7e22e64f0f3490d6f6096b6fc9",
+    "App/Import/ZIPIntegrity.swift": "878382765edba65617ab161fde074f77630f44af3051485275b06492d7d834fe",
+    "App/Info-Debug.plist": "d1b98ec51c1638e9db22ea1e2ba232ea52645989e7467c27b6828ac98c7b42a4",
+    "App/Localization/L10n.swift": "cf58cafe35064b95a0d69fc43a2772cd98674f07227ed35b9cc03d2abf3f00c3",
+    "App/Models/GamePackage.swift": "e9b43efa845f71b61b888e7afc1c5c753c294abe5dabd9207de0df0f3c776ec6",
+    "App/Models/LibraryPreferences.swift": "b7aea093302d2b8a6e5269a462e9ec6f928ca601b0a74f3359d7cff41e39c780",
+    "App/Models/LibraryStore.swift": "ec03e5e52044f0b562c659f480042c26437174e2270023082336610d49e913ac",
+    "App/Models/RawSOLImport.swift": "e25e85ce7d37c8d406acd52eaf98248d3f71b7f69d55fdaa991bdd1f87d26253",
+    "App/Models/SaveStore.swift": "507bfe3a2959c511b0b37aa798d439636f1566fc518dc43cc2ed190c8a4c636d",
+    "App/Player/CacheCleanupError.swift": "94b24c90c419a028f8f8e9dc532fab7d7bd7f1644439fd254a9c13a943ffc8d2",
+    "App/Player/CacheCleanupWarmLease.swift": "7a65228c2f54f10709f7ff570fe0c46c8d8ed7095405aac75e5c280b383fd5b6",
+    "App/Player/LastSessionDiagnostics.swift": "2c3b885317918f913065c36c09a13de689420e71a971960d018fb728a6bbbba2",
+    "App/Player/LegacySavePreservationError.swift": "7f382319af7e2b80967f7f757793627668db7a3d87f45beba14e19869dd7ec1c",
+    "App/Player/PackageWebKitProfiles.swift": "a02b15af8ac09cfab6ba93e47fc829f387154210238acc201823d22f98a23234",
+    "App/Player/PlayerSession.swift": "6225d8143031c56531e7f2499a14146ea94b0bd26c1e71c18070104f142a6316",
+    "App/Player/RenderSamplingSettings.swift": "a823949c9b531a49251416b6acd12c789b522bdff62bd379b70401642e926e32",
+    "App/Player/RendererSettings.swift": "7ef4c48fbbeaa394aeae03aced47065db4b20c626696f7c80ffeadd885ecfb89",
+    "App/Player/SamplingAppliedStatus.swift": "f6811ed78e642097fde19b75956f7f43a23a37cf306f04a0ebc5c072545cdf62",
+    "App/Player/SaveManagementEntryPolicy.swift": "76d51e310f3a800ea2d4e2b1c2f613fbf67b32d04fcd36623016d6c81eb28498",
+    "App/Player/Touch/TouchControlSettings.swift": "4018f22370a70b5a82146cf4b56fd61316d4cdb1da32c41c9f73fe7b7237c14a",
+    "App/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png": "910122c9200caa5a47e14ce27ad8911d03b27583c2485c9086f2102a6d47016a",
+    "App/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json": "3c6addf3f20972a12a0c33e6f6fe9e0857a0bdb512dce5d59f4bd007b236c157",
+    "App/Resources/Assets.xcassets/Contents.json": "f5fb0e1f3a8142892ed092efb5955c1c2cc537003a89ad7bbdb9dade7fe8985f",
+    "App/Resources/Localization/en.lproj/Localizable.strings": "685a28d471363d9555408f6b6d3243885f021eb82aea5401c8731f3ab191c3dc",
+    "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "bfcf35a86757c64153f2be3ec7f9b92a062496ecbace5139562225e7a7acd4ff",
+    "App/Resources/Web/FlashNest-LICENSE.txt": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
+    "App/Resources/Web/Ruffle-MODIFICATIONS.md": "ae805d1fd39bc73c5e8c03cbf7be2599bfabfe81b817f0f5c066bf40061a3f9d",
+    "App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71",
+    "App/Resources/Web/THIRD_PARTY_NOTICES.md": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
+    "App/Resources/Web/ZIPFoundation-LICENSE.txt": "93a5b6f4c4fcfbca71aaf17f5758d249cf205d5d1c237becc37f14e43af09f6b",
+    "App/Resources/Web/audio-warning.js": "b3285f7ece398349740242bfc84e78a9389ed2152c635b8a0a654e10014fa282",
+    "App/Resources/Web/index.html": "dc644cc31bdfd20428af68b5343b223f1573dc4c360bd34162bc52a046f8ece4",
+    "App/Resources/Web/licenses.manifest.json": "62a4c30099db9dbcb1db91f8ec939d32a6680e26c0dcec229b28c85166528e0d",
+    "App/Resources/Web/licenses/fluent-bundle-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "App/Resources/Web/licenses/fluent-bundle-NOTICE": "edae6bb683e0187423baa8adeedd31ec3e5778aa56be1f4c1269663e260adbaf",
+    "App/Resources/Web/licenses/fluent-langneg-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "App/Resources/Web/licenses/fluent-langneg-NOTICE": "edae6bb683e0187423baa8adeedd31ec3e5778aa56be1f4c1269663e260adbaf",
+    "App/Resources/Web/licenses/tsx-dom-LICENSE": "a1b4fcc0102c5dca085eb9e3b7395bb9262be7390f3c90109c03b7ff3c2b4aa8",
+    "App/Resources/Web/licenses/wasm-feature-detect-LICENSE": "bcf29b4fd3ec2cb5f9d40a0866da446f6da62170d2ccedf4aeca9cf9406dd20c",
+    "App/Resources/Web/licenses/webpack-LICENSE": "9068a8782d2fb4c6e432cfa25334efa56f722822180570802bf86e71b6003b1e",
+    "App/Resources/Web/runtime-identity.json": "bdb97b8e97e3c1bb0213d83ea5c541891643454cea347961c60038670d0f06dd",
+    "App/Resources/Web/runtime/LICENSE_APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+    "App/Resources/Web/runtime/LICENSE_MIT": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c",
+    "App/Resources/Web/sampling-status.js": "b9491c617606c8b9bd69da0808107e87b79a1cc4eef03497488884f0dea79a7a",
+    "App/Resources/Web/save-bridge.js": "50de61bc2d2aeb13671d51094aca5c902080ef66b017c63489181cc511d96d4c",
+    "App/Resources/Web/shell.css": "4b359ebc5dd677a94f0b1d1ea65a41405008b323ca1cb0b0c7e8dcbf01c62773",
+    "App/Resources/Web/shell.js": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd",
+    "App/Server/HTTPProtocol.swift": "3e5c8806a10ad1de4fceee5bc8157d6f94aa1e79f3559bb96db9539eb2c5f0b4",
+    "App/Server/LoopbackServer.swift": "d196a07aad788aa74658e4c656d87263b9d42394f2c7935d86e8751e7d4c11e1",
+    "App/Views/EntrySelectionView.swift": "55a22fd154dface9ab87367c6a303eda50b01cd296c1c0c14aa691d12b933b4a",
+    "App/Views/LibraryHomeComponents.swift": "3b6901fd67dea8eb8cb53f1d70f2c85f66f5471e5df298806f0e3b383ff40cfe",
+    "App/Views/LibrarySettingsView.swift": "cda71cf25ccc47160358df3ec30f2f3c41ba1be107370f5a5bc85cccd480cdd9",
+    "App/Views/LibraryView.swift": "c762a9186e4adeda48908af9610c22ea66b9ae59d506b055a4f645e720165900",
+    "App/Views/LocalImportInboxView.swift": "dd56b7a0e5857f03afe18474b65d9c3d79d372f26ecfe75070638ccea7bca902",
+    "App/Views/PlayerRendererSettingsView.swift": "1c6d1702c452407b12d916ac8a85e45f111bd354c5d2b32e42c85d879f75a3c6",
+    "App/Views/PlayerSamplingSettingsView.swift": "08985f9b458bee0bf52734f9c3dd52cc527475a484db5c2cb35589085d93dc2a",
+    "App/Views/PlayerView.swift": "5a47e35af1161cba3bfaa11affb9ecb736ccdd249a1ed15194906dbec9547ba2",
+    "App/Views/RawSOLImportPreviewView.swift": "76ff710bfdf784eb3d7a4e4b0c6ac73ead3755f5afadb4e55a8da03ff703bd5a",
+    "App/Views/SaveAreaView.swift": "aa3101faccfc1636bd63f5d24dea84a83fe4ce2c7b03c3924461d2f9195661b4",
+    "App/Views/TouchControlsView.swift": "372ecaae7b940b0439ec4d59ecfd48feae59861d1d7556e650f8e73e1a6c7ca4",
+    "LICENSE": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
+    "Package.resolved": "8e1a1d7de570f9bacd587f56f70f41fa0da6d077505047bdf26ed31437e9dfc1",
+    "THIRD_PARTY_NOTICES.md": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
+    "Tests/ArchivedSaveDeletionTests.swift": "4c7ea8572689f61b184e796f3427a0e5112a4662d4e5c6f35a410ab29131db3f",
+    "Tests/CacheCleanupLeaseLifecycleTests.swift": "cfc3d58ff54a451d40e093caf8f0dbe5ef946378a8d87b470ffdada947fe5885",
+    "Tests/CacheCleanupPresentationTests.swift": "ec86c95272280ad9492573938e255379fb3168fd666980deee7aba02f707a813",
+    "Tests/CacheCleanupTests.swift": "707eedf5dc7a36607f088cc386f39ae647d62a409fedc83070f5868db5028347",
+    "Tests/ExternalImportInboxTests.swift": "3595349aaba6d6e8a9ceefcec7549755744da656b128b45936fb39b5f0639403",
+    "Tests/FrameOrderRuntimeTests.swift": "750e2344cd8da6c64e1c8d2188b327cc8f3e81cbcdffeed9d9ac972604821468",
+    "Tests/HTTPServerTests.swift": "cca67f9bbd0b214f4ebeb1b6d36e07d3aa1cd5216b9cab1ab1f973d1508990e5",
+    "Tests/ImportAliasTests.swift": "d8539494b606925bb7ce03ad4a3fa152fc87c902c411d771a98deca630d7adb3",
+    "Tests/ImportFlowTests.swift": "1d7e26449fb39a1c2968ce88127e1f5ac0b87320940aba16ef4f29b0f3bcd6bb",
+    "Tests/InputFocusRuntimeTests.swift": "c46ed67f70ffecbfe2ae6ed937bcb1cace40944e9f77cabcae2a7f96757ad634",
+    "Tests/LargeAssetWebKitTests.swift": "61d923ce857fecb0302615673ad417c571ac04f19160a6263fb284adb3fde36f",
+    "Tests/LastSessionDiagnosticsTests.swift": "c14f9abfa8a00b8839668f3a4c947e8c5b4cda4fc7863773d141a785686a996d",
+    "Tests/LegacySaveDiagnosticLocalizationTests.swift": "28bdfe54c1190623e63c40d4106f8f0306ac7d50c43447ef60ae2cc7d7d35929",
+    "Tests/LegacySavePreservationDiagnosticsTests.swift": "0af8d34b54545ffbb386fda9ade8ff35c84e73063492f6cc28481d644db0f3c6",
+    "Tests/LibraryPreferencesTests.swift": "c467227748d191c8ffd8b5ded01bc7228105e749980a36b6081faf4553b3f8bf",
+    "Tests/LibraryRemovalTests.swift": "f6604c80306931fd3df2dc68ae8ffb01f95c17438453f7220094d5fb8c9ba671",
+    "Tests/LocalImportInboxTests.swift": "a55bcf80a6aea5a851b8b8aab07d4510c9a5062d0904a9416fe0ff03675715d7",
+    "Tests/LocalizationTests.swift": "19c143383c6adc27a8093c4e7c4688bea97be004c9becf54217ca7684721f1c1",
+    "Tests/ManifestRecoveryTests.swift": "90e66eebb4c3263c193eaa3198a033f870b4bba50a721831519f7bef791e2a4b",
+    "Tests/PackageImporterTests.swift": "0a9de2ab6eeddeb86aa06ecab94859eb1cad4c0431857197b6cd35a8e7ba6eb2",
+    "Tests/PackageWebKitProfilesTests.swift": "6ac4270fb7158a308d3bbddc3e69f24c9deb4f0d336e7a9c6aa50707081d446d",
+    "Tests/PlayerCallbackIdentityTests.swift": "7d058a13f6c2830989c4dc7fe1d791cf5a23147526900c05497be90d73383af7",
+    "Tests/PlayerSessionTests.swift": "d6dbde2201967017858e0a4f4a5424bc426f8e20a795bff0f511462f167c1e91",
+    "Tests/PreviousSessionDiagnosticsLocalizationTests.swift": "46926b1e9979cd7801112635974c6547566823197a935359c75bf6fbd731d324",
+    "Tests/RawSOLImportTests.swift": "9de352c6fcd49abb7ac70e190f11f462e4c451b6e6033b50ad0e70f72e8526d1",
+    "Tests/RawSOLWebKitTests.swift": "aef374878ad70920779cad38f970c108c25bb737e79c7f72937134a8a7352090",
+    "Tests/RenderSamplingSettingsTests.swift": "776bbc35ee7e8c182eefcd169f40dcbb29e49c861bd4298b9dce11497f3218c6",
+    "Tests/RendererSessionTests.swift": "7819b7bbc9d3f9b56e573c4ce20dd57ba4095f2f13968cd40812fbc271efe0f6",
+    "Tests/RendererSettingsTests.swift": "ee31383482cfaff725b236bb10ea7d79c07131cfe897168d8393356477885575",
+    "Tests/RuffleRuntimeTests.swift": "8a8364cee19f6b53490b6e8706a3e35b34c9eb4e191fa1f013591992d376e192",
+    "Tests/SamplingAppliedStatusTests.swift": "f0daaa980a392bbbd27dd0a1d932ec1270f352e1a3b6abd1f50b1273a92080fe",
+    "Tests/SamplingSessionTests.swift": "b92ffde221369178b1f8eddd6694a7941776a06333ec3b6e983455a4686c3214",
+    "Tests/SaveImportReaderTests.swift": "c4482d2ba8927f1fda42ee99e9b0532bd2b57e9b3c90c46f6c054c2c885fe7e3",
+    "Tests/SaveListingMemoryTests.swift": "8f5e5f4af50f0b2f1d04e8d66c88a9dd3c059ecbb680b602bc024262fc607248",
+    "Tests/SaveManagementEntryPolicyTests.swift": "aa583fa45cb0fda54eb56f7947fb27df661de551a1d24facae243ed5908f459d",
+    "Tests/SaveStoreMemoryTests.swift": "90ae65a10dc12b51dc0b025e6c4f4a9104402cf452d59bfeae4a413296e480e9",
+    "Tests/SaveStoreSummaryTests.swift": "259101480e0689faaebdff9cb42050605fce629539a3db0b61a3ca7582ee5774",
+    "Tests/SaveStoreTests.swift": "5c1d105e8849de3edb8f649430b6f825e0cf8c51a4c6ceea615bab25d7498286",
+    "Tests/SharedObjectPersistenceTests.swift": "01add01052d6c527b9fa8d8cb88c85629491471bee5bd66f2f49b3aa98a8e57b",
+    "Tests/SharedObjectWebKitTests.swift": "2a6412f12af0d0af7b6bb226fedfb11fb9edbdc255526f895d15834d4e4771f5",
+    "Tests/TouchControlSettingsTests.swift": "622d63ea0dd9640e5892a160da254a60b2d2673c5551864b54df8a419e048c9c",
+    "UITestSupport/FixtureSource/FixtureSourceApp.swift": "284a2c8874959b8e37ded594b5cc5d017c36f359032dd1cf3b053674af9dc8c2",
+    "UITests/ExternalDocumentImportUITests.swift": "1116770cac0c4ef3f4504dffb926f15db9b159282cfcc240da3c4136c852374c",
+    "UITests/FolderPickerUITests.swift": "336bb1e21af18470bcc97a98b81a7fc34c0db095eb578087525ec2a06ed9650c",
+    "UITests/FullscreenPlayerUITests.swift": "bfae22f1b0dcc5cc5567194c47af519971e428f19c019fd98c294ac83a816e0d",
+    "UITests/LibraryAccessibilityUITests.swift": "eab9a28188adc6ea528f73c9ecb3d90eb8f1ad42646a276428ca23c427a72db8",
+    "UITests/LibraryHomeUITests.swift": "19b240cefb5ddb4d651fe29acc3337126de5c5e305e1f37afab7282bbfde8a9e",
+    "UITests/LibraryNavigation.swift": "481c5a5822ef96fca610ab4da5287b7c47bafe108d7c00f4905678b7201dc140",
+    "UITests/LibraryToolbarDiagnosticsUITests.swift": "2eb3e026d5c82035fb854ad9ef1f3746bf0ccdf984a06e3e32549da997fff8ea",
+    "UITests/LifecyclePlayerUITests.swift": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
+    "UITests/RendererCompatibilityUITests.swift": "53525d5987822a18e598bacd71194bf64d39480b5d9e37c544abc0051ded9913",
+    "experiments/frame-order/FrameOrderRuntimeTests.swift": "5beb4b3205cf5b7b8fe09a8b5cc0b946a235612501d2072a50ab255c7db92308",
+    "experiments/frame-order/candidate-native/FrameOrderCandidateRuntimeTests.swift": "cc21f16dbd9341d9f1256baf72384fe41e3a786d14235f5153e974ca3d730645",
+    "experiments/frame-order/engine-patch/expectations/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
+    "experiments/frame-order/engine-patch/expectations/nested-repair-target.txt": "57648847e013eb2aaa9e45a91eb0a55c66c97862defd8e3c1cd5b74ef4e3c2ae",
+    "experiments/frame-order/fixtures/control-no-child-goto.swf": "dd85e9f2b63b32199b7d04def4efbd80ccf68fb42da63cfe987e94358c49f030",
+    "experiments/frame-order/fixtures/manifest.json": "11781c6ac90429fd62e86e3f8de4f9d3e7614c65521c89608d7bc0cab491e5d7",
+    "experiments/frame-order/fixtures/nested-child-goto.swf": "ae3e561e8695a0be147e2192cd6d067eaa9462daedf92213bed86c9e4c4a4d8b",
+    "experiments/frame-order/make_fixtures.py": "d8d7f30cc2edc06fda039f0d57fc8b8e38126b5f98d0b6b7b82e0de464de6701",
+    "experiments/frame-order/source/BClip.as": "4039de65a973b740fb6fc06fb78a410dfad9fba41c2870b066e7bc5788676c5f",
+    "experiments/frame-order/source/PClip.as": "5443be0bb36cded341e7584666777481b1ba453867b8ca96019c90076582bfbb",
+    "experiments/frame-order/structural-validation.json": "b3992c64a734e99a420a696839f73f1152a04d97393aebe45fdc4b7f324e22b9",
+    "experiments/frame-order/test_harness_js.py": "fbe8ce777a5163cfd86adb64a604095f05558c2f8400aa6dac7e08cd78d7b8ed",
+    "experiments/frame-order/validate_fixtures.py": "a0e1dabebc0b621550558be7febafd17f6bdee3d7faac8c56fe2d20948cd71f7",
+    "experiments/half-resolution/Tests/ViewportRenderingRuntimeTests.swift": "dedf9f369667ac92e3569e21facb5129ba99ef1ca6b7af08aa6a113a58d700a5",
+    "fixtures/frame-order/README.md": "b5c7c5c77bb86a3e785db8e32e6563c0440000e432de7a6be261232f073e2845",
+    "fixtures/frame-order/control-no-child-goto.swf": "dd85e9f2b63b32199b7d04def4efbd80ccf68fb42da63cfe987e94358c49f030",
+    "fixtures/frame-order/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
+    "fixtures/frame-order/nested-child-goto.swf": "ae3e561e8695a0be147e2192cd6d067eaa9462daedf92213bed86c9e4c4a4d8b",
+    "fixtures/frame-order/nested-repair-target.txt": "57648847e013eb2aaa9e45a91eb0a55c66c97862defd8e3c1cd5b74ef4e3c2ae",
+    "fixtures/input-focus/README.txt": "302f7b634075bfef376b2545b7fc7ecf65129113eef5bfd750b6d673b7223e10",
+    "fixtures/input-focus/main.swf": "9ed4aa409818109d0b13b7dfa1a642fe92b00440d46fb94543851829aea28da0",
+    "fixtures/input-focus/sub/scene.swf": "780b884d137df3ff752ebf3f833e30110b2958114f9562c2bac1d7cb97e4e978",
+    "fixtures/lifecycle/README.txt": "86320933fccc0612635d820a75fcb8d4cdc9bfc3eaf2656bc121102b54d53a0f",
+    "fixtures/lifecycle/main.swf": "dcf106e34f02618f25d089085ce88f0a4b01e796d5df0a11924baaf555916ee9",
+    "fixtures/lifecycle/sub/scene.swf": "943b378dce0eb35099e51b3d3103c42364ab1a6d3c96aa81735d8e5d8411b559",
+    "fixtures/multi-swf.zip": "5f7109b483bfa039837aeafd67bd38ee4cc909e7d408a5411e3a2573b3cbe93e",
+    "fixtures/multi-swf/README.txt": "3d0fdc851128260057bff388e21cfc69091e05ab20c91139f29f6567d3a3a528",
+    "fixtures/multi-swf/main.swf": "409c254575aaab1ec9671db53193d299f3c906dbc2d6fa5c1ae4ff1d27c6b78c",
+    "fixtures/multi-swf/sibling.txt": "062de40b81fe0c2c2f5dfdfc8ec3cdaaad4a13d3739813d7a474c54f8085d46f",
+    "fixtures/multi-swf/sub/child.swf": "f4c1f9540ad0a29a19a37acbb9704eab100221e0dc2cad61e38d90b41579f091",
+    "fixtures/raw-sol/README.txt": "52391530a0d32075ee09046ffad0b76b32b600fb6aaf8e473b4a3056e2e5194c",
+    "fixtures/raw-sol/manifest.json": "0442c0becd655ea4b8387e881db265ffd8036fe9989ec82fc47b79814a19037b",
+    "fixtures/raw-sol/original-progress-7.sol": "f4b7c9e57f4d695fa41ff37b6d59390ea114977be52bb8ccc4eda92373013745",
+    "fixtures/raw-sol/reader.swf": "2dedca3baa0c8013279cd9b7bb587790d9b95a3b02211c76c50e26f67a9dbb31",
+    "fixtures/raw-sol/writer.swf": "f50bcc17c2eac6c88e2b702a9b18cafc542c06f69534ebba124e7e0c2d8ec848",
+    "fixtures/shared-object/README.txt": "2c47fa3268b35fccef7896b66c2823c6b92d6bcc5ae3e926245867521bb7d821",
+    "fixtures/shared-object/close-flush.swf": "fdfe1058419b6b4d5c89498f9991f35cb0e6b49ea84b670c7a91f601c33719e0",
+    "fixtures/shared-object/explicit-flush.swf": "19325f1da4afce8c3f32a0ff92aaa151e5736517893d3fb9b24d98efa45db472",
+    "fixtures/shared-object/read-only.swf": "92daf5242e633e520216b469b98fee34436c77cbaf0c8a811c88c3511ebac941",
+    "project.yml": "0613646031133b46d6f4b5d4f56de5efbc1361dfa611d4e1ba8ebf67bdad0ae7",
+    "runtime.files.json": "25d4453b0375349e55b9f63f609bd129d6a3549e1da792e811f0e5d121247e90",
+    "runtime.lock.json": "ce33bd58ce5ad7ee8daa43b4dc450387ab24667099ced022944e87c2cb2ba41c",
+    "scripts/README.md": "827d35df82858af3582c82049480a2326e22c936a29ed43288044301e2436c1d",
+    "scripts/collect_preservation_diagnostics.py": "a5bf869ea629554a15b8194355ece81fc1666a2c7d57fe243c096747e49da5c2",
+    "scripts/collect_test_webkit_crashes.py": "fcba44fe0cb1290b272291d956cddf4e2759fbca45463e4d8fbeb9d2756f9bdb",
+    "scripts/composite_runtime.py": "1293c8100260831fc0a26c3740bc1d0a17d9d1e0cd8414872f828df40f4401d7",
+    "scripts/fetch_runtime.py": "3d025b86eaf2d5968d1595eedfe02558e0baaf681eea15c89ff5b4f48b84e442",
+    "scripts/make_fixtures.py": "2592091666d9bcddb20fd62cf022274cae33d05d950dc5d4a3c817f0d66828db",
+    "scripts/make_input_fixture.py": "6199722f95715c333102bf62944d434779d9773dcfc138064f295fb21033a6e4",
+    "scripts/make_lifecycle_fixture.py": "8dc8194ef27d5d2a6c0f2ea0fa79c14e1216dba064c9567612ff71097aba7221",
+    "scripts/make_raw_sol_fixtures.py": "e43323ed22a01deedccf995e66604cd2ca8daedb9296887842ffb9fb7678b994",
+    "scripts/package_unsigned.sh": "a223bdbfa77cf37fd5820f2f09a98b99f05f3970616960c01d522ec20b3274ff",
+    "scripts/select_simulator.py": "51eddbb30aa37bb56f1183fd4cf9b683af68a36e2cd36abbe5b75e3c3f5300e7",
+    "scripts/serve_fixture.py": "bd5158d9f2d00f1c6ae2ec815954d307af531f44f6493a074786b9876fdd8237",
+    "scripts/test_audio_warning.js": "1bcefe944e0332e3f3b03c6b20e87e4f74ed4f8d52927e7842c08366f10a2417",
+    "scripts/test_licenses.py": "69575e3ddc3eea31e351bc8ac98e221cdda1b3779e14413003f5b560918d9998",
+    "scripts/test_localization.py": "e82a02a9081972a1371445064020426c5d3ab90c4b4bef880e1badd7d7423e72",
+    "scripts/test_package_metadata.py": "fc701a17c54e1300aead3ac01ef649503b8df48e1aa9de61136e7a0741519d03",
+    "scripts/test_preservation_diagnostics.py": "2a565ec07ab4bf6ccd1c25ec81c6a29665374f8811b35e6f30abad0f5668fd15",
+    "scripts/test_raw_sol_fixtures.py": "17ee8e831d0909eddd3d00af8bf34071cc879ec873cd9450416f9b35eac77063",
+    "scripts/test_runtime_browser.py": "d7ec77bfd717868c7fdb490ec0523dca1fc5f873a1ae0e09ce12ee9ce4cfab57",
+    "scripts/test_runtime_bundle.py": "fe6614e382eb91e482ace1956b72314a5a40475e8165516dc57d1cd74ca35348",
+    "scripts/test_sampling_status.js": "d1837ad38b14b438a754acb355d3876b1c1a1de3004275fcb2849528094e13ac",
+    "scripts/test_save_bridge.js": "43bce2e8d20e6177c40f9d49cfb7e34c586476aef72d80a6e7c696591521e579",
+    "scripts/test_saves_browser.py": "c55c8142e23f405c55284725793f68a8c683896649015167f084d1f5cc07f7c2",
+    "scripts/test_shell.js": "65702fd15b6170ca60a1b9381497dad51085f2d321006223d68349413b85c830",
+    "scripts/test_static.py": "6ff7ae2fedb4bf94346a7e7826cdebfb679e7e0b3552dc37cffa293e1445a341",
+    "scripts/verify_bundled_runtime.py": "feceb8c7655ecacb5f840659f012ce1f60d92f73a1a5974f0d308c3c1a986d5f",
+    "vendor/ruffle-audio-recovery-source/audio-lifecycle.patch": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9",
+    "vendor/ruffle-audio-recovery-source/audio-recovery.patch": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60",
+    "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
+    "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4"
+  },
+  "dispatchAllowed": true,
+  "engine": {
+    "artifactID": 12844754314,
+    "bytes": 13328842,
+    "provenanceSHA256": "2002ff3558a6593b6f7b8a0d892945b73b8c4a9fa1638c8407573c40ad74f8b7",
+    "runID": 40753314834,
+    "runtimeInventorySHA256": "6aadf8b728be885b518b16f77430e128ba677c97df03598b9a50d07101dfed9a",
+    "sha256": "26c1e61f0d8d1b1f4dffcd0ddfe886604098384360c6c20e1f094d9c0c2a6e4e",
+    "sourceCommit": "29b344137313b81a6cf53c662efb4edd8a452d61",
+    "sourceSetSHA256": "0434fe9a2a3d2e4637938f6b0f67fe7eff17dd777ea940f02b29febc8b6d70aa",
+    "wasmFlavorBySHA256": {
+      "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263": "mvp",
+      "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b": "extensions"
+    },
+    "wasmSHA256": [
+      "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b",
+      "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263"
+    ]
+  },
+  "harnessFiles": {
+    "runtime-consumer/composite_runtime.py": {
+      "bytes": 9444,
+      "sha256": "1293c8100260831fc0a26c3740bc1d0a17d9d1e0cd8414872f828df40f4401d7"
+    },
+    "runtime-consumer/prepare_app_runtime.py": {
+      "bytes": 4997,
+      "sha256": "ef0f0713761bf7f3bb973e826be90596626be14b021c2e349b61ca6d67824b52"
+    },
+    "scripts/check_contract.py": {
+      "bytes": 2520,
+      "sha256": "84c39df9c3a6e31f63fc3f0e1d9fd4eebaf8884113d11c0a5b1966c3315132a7"
+    },
+    "scripts/evidence_budget.py": {
+      "bytes": 756,
+      "sha256": "ee9784dfb511e071b35c14118d26a1e495260939a8c73a0473e46ec81d09b5bd"
+    },
+    "scripts/run_bound_lane.py": {
+      "bytes": 2383,
+      "sha256": "f4e570f42fc35545afbd288b82f30f46a24594188c27d2171c3cc050eb6fcda7"
+    },
+    "scripts/run_native_validation.py": {
+      "bytes": 1667,
+      "sha256": "510fb0b9a1d95247590db09b2952e708e91e0403d505fa760542d6f7aed62ef2"
+    },
+    "scripts/stage_validation_inputs.py": {
+      "bytes": 3367,
+      "sha256": "84c4e86db58cd4dcdc12359dfda451923906838abef6263d57ea4e8435490953"
+    },
+    "scripts/stage_validation_runtime.py": {
+      "bytes": 5323,
+      "sha256": "49a7fd3cb77227f170c62db54b6d6ae3529b235726005f16090d81ce0ba5988c"
+    },
+    "scripts/validate_binding.py": {
+      "bytes": 1233,
+      "sha256": "28438ce1db549b89fcbfe6abf07dc175731fd6dcfe3c77b4f3bb8d920e667a1d"
+    },
+    "scripts/validate_final_app.py": {
+      "bytes": 3530,
+      "sha256": "ca0b9cbde4f1ea890cb4d6e612c1657d77bd4368a3993ca71085bf6d54918633"
+    },
+    "scripts/verify_lane_receipt.py": {
+      "bytes": 2039,
+      "sha256": "1f79fba4e4eea5e201f8ebb2c8f684e36f14d1595c546aedf41fd5e20f0e1913"
+    },
+    "validation-bindings/engine-acceptance.json": {
+      "bytes": 1526,
+      "sha256": "71d8e3e282d8d2b4a3abc5c1233a3eb280038bfbeec697708f9658ebca219016"
+    },
+    "validation-bindings/engine-flavor-correspondence.json": {
+      "bytes": 3445,
+      "sha256": "9ea8348fc4bd59a2fd248604aa7d9901fa63527922b2defc599de25977cbed7d"
+    },
+    "validation-bindings/historical/app-metadata/App/Resources/Web/Ruffle-MODIFICATIONS.md": {
+      "bytes": 4105,
+      "sha256": "d542c1cbbd0b6bf98638fb6b5e81aadd6708dbe4c7934f3d1f42c2707a64998a"
+    },
+    "validation-bindings/historical/app-metadata/App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md": {
+      "bytes": 108294,
+      "sha256": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71"
+    },
+    "validation-bindings/historical/app-metadata/App/Resources/Web/THIRD_PARTY_NOTICES.md": {
+      "bytes": 4832,
+      "sha256": "d14d925991dc7047150702bf813041bdd6d201d6c39d97a6f38dbea80284c519"
+    },
+    "validation-bindings/historical/app-metadata/App/Resources/Web/licenses.manifest.json": {
+      "bytes": 1309,
+      "sha256": "d33dd57234aec6287de81f60a8b6aad3064e6fcc23a6a8e36301c31051d53a7c"
+    },
+    "validation-bindings/historical/app-metadata/App/Resources/Web/runtime-identity.json": {
+      "bytes": 2501,
+      "sha256": "022c9939e113904bf83bbf245285025904f3cb9bd093e67ec592a01b478208a9"
+    },
+    "validation-bindings/native-binding.json": {
+      "bytes": 26798,
+      "sha256": "bc309716db8e99ca451e083949b1ecb71af71dcd988813669df3b804fdb800a7"
+    },
+    "validation-bindings/sampling-baseline-approved-app.json": {
+      "bytes": 30481,
+      "sha256": "73ec83c59403e48105ff0c3ef16ac58c967270751774f56dc7cd95de3a0b83c3"
+    },
+    "validation-bindings/sampling-baseline-runtime.files.json": {
+      "bytes": 1157,
+      "sha256": "25d4453b0375349e55b9f63f609bd129d6a3549e1da792e811f0e5d121247e90"
+    },
+    "validation-bindings/sampling-candidate-approved-app.json": {
+      "bytes": 9636,
+      "sha256": "6ddf65d3e1686e5255d79252ad90268677cb65a9b1b6c95f538348f16c22551c"
+    },
+    "validation-bindings/sampling/app-metadata/App/Resources/Web/Ruffle-MODIFICATIONS.md": {
+      "bytes": 5752,
+      "sha256": "73267ff97e6260191d8b0ab7fd98cfb4cf48a052078c3c2468b4122066e2047c"
+    },
+    "validation-bindings/sampling/app-metadata/App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md": {
+      "bytes": 108294,
+      "sha256": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71"
+    },
+    "validation-bindings/sampling/app-metadata/App/Resources/Web/THIRD_PARTY_NOTICES.md": {
+      "bytes": 5281,
+      "sha256": "2782048f32853bc1dca9a48248290fb2e1554bb1eed095f8227f658bacb375fc"
+    },
+    "validation-bindings/sampling/app-metadata/App/Resources/Web/licenses.manifest.json": {
+      "bytes": 1309,
+      "sha256": "8a2e489c351c268776487c0f9b2cc79fe276b8dcaaec5cedec1c23831c0652d2"
+    },
+    "validation-bindings/sampling/app-metadata/App/Resources/Web/runtime-identity.json": {
+      "bytes": 4275,
+      "sha256": "bdb97b8e97e3c1bb0213d83ea5c541891643454cea347961c60038670d0f06dd"
+    },
+    "validation-harness/browser-runtime-validation-ci/README.md": {
+      "bytes": 4209,
+      "sha256": "f2ff83b499f490244e0fa4cd8bab045bf3cb3973d5edbaa9cb1c2fb603d89f20"
+    },
+    "validation-harness/browser-runtime-validation-ci/file-manifest.json": {
+      "bytes": 593,
+      "sha256": "428e273589d52e94501940e434dee7a4036817221a8d88602d08afe9f3993775"
+    },
+    "validation-harness/browser-runtime-validation-ci/run.py": {
+      "bytes": 8835,
+      "sha256": "64fa7054c78f79d5277bdc5b28f44816cad82a66563bd74201d057cc0ef83650"
+    },
+    "validation-harness/browser-runtime-validation-ci/test_runner.py": {
+      "bytes": 3825,
+      "sha256": "7e16dec72800c0872e31d00c01b369667dca4227c6e830de4aa6698e6d1ba58b"
+    },
+    "validation-harness/browser-runtime-validation/README.md": {
+      "bytes": 5063,
+      "sha256": "3985178ab769d49f6a3995b3924e7693c045582ad3aab7ac41cce6f2785fc386"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-B.swf": {
+      "bytes": 1879,
+      "sha256": "f923ee1b6e4e0bb3fdd752e58dd352b5c04953aaf66273bc29f8205eddae534d"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-BL.swf": {
+      "bytes": 1880,
+      "sha256": "60edae7cfc379859a2489acf5538bfe624bc4b1ad758e56ba1924fc8402073fc"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-BR.swf": {
+      "bytes": 1880,
+      "sha256": "21a84f9059d5b7de580dc2f4e9aebf8fb5e5d5a53f23797575617f1202609f9e"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-L.swf": {
+      "bytes": 1879,
+      "sha256": "fbadca14716b389859e7e62aab931a52b42368da22b5044b71ad5dede2d8da64"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-R.swf": {
+      "bytes": 1879,
+      "sha256": "c05f97480557aeea7bc54c4f4b60c422659d52046f173a4e2f79e58461879127"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-T.swf": {
+      "bytes": 1879,
+      "sha256": "86c7693afb46cdb16eb787a6cd6e148f9ba92011093b0fdb3a2b6b374e5ad37f"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-TL.swf": {
+      "bytes": 1880,
+      "sha256": "fc216d7c44b30db7e240c49d58fce9f912a4409bc4abd1723190cd6dd424d810"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-TR.swf": {
+      "bytes": 1880,
+      "sha256": "fcd9ba24b8e0ec516b7001b1396bfd79332342fb816160cfb33ecf61f9ca71d8"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/exactFit-center.swf": {
+      "bytes": 1878,
+      "sha256": "afa1cbb4ffdbdea91d0a4caeb31edbf0e89c2de945c5c813fc739b4f9196bfbb"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/manifest.json": {
+      "bytes": 6603,
+      "sha256": "930e39152a29a209c46a7d022f8830b76d046222c0caaae8fe2990d7698585ac"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-B.swf": {
+      "bytes": 1879,
+      "sha256": "3e14d8318571c867a88e5de014cbeed6f808a3100e51c8d5a337082252809585"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-BL.swf": {
+      "bytes": 1880,
+      "sha256": "a5ecee2f97e5d19598b244aaa825bffa87594f9d0abc6b6934870ccad506fcaf"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-BR.swf": {
+      "bytes": 1880,
+      "sha256": "340e7ba92aa39a537f1950b9054b6b467b722bca372fc06c114e2ae44dfb66db"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-L.swf": {
+      "bytes": 1879,
+      "sha256": "ddf28565abf758de730becb2192782933a650e5c3a814674a55cd32a0b4032ae"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-R.swf": {
+      "bytes": 1879,
+      "sha256": "5f009bb0c62332682071d064d91942a7e01ac52ab6663d892d03531ac78b5d46"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-T.swf": {
+      "bytes": 1879,
+      "sha256": "534ce1bfae867bcd3d8fc22fc914d8c800562a89810fde8008386ef25c9aabe6"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-TL.swf": {
+      "bytes": 1880,
+      "sha256": "3e1b6515e02f42ac76cfeb96ba51e14fbe0848556b4ab82e712abf6dd6375ed3"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-TR.swf": {
+      "bytes": 1880,
+      "sha256": "72130fc5582c6ba89d0de8cbce9369edf939b349beadadcaf556377722d73fe8"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noBorder-center.swf": {
+      "bytes": 1878,
+      "sha256": "e552d6606437db5aa9214cc0a65cb16db9dff6e847077cc92a86fbbcbb3581b8"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-B.swf": {
+      "bytes": 1878,
+      "sha256": "34378bf70d7de1e4a3f3c390bb45f628612cb6e08b01768696e33b92fc093831"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-BL.swf": {
+      "bytes": 1879,
+      "sha256": "0196549af9e7592b9592b3f4e2189de59e32bae52a3f5011581231420a2b145a"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-BR.swf": {
+      "bytes": 1879,
+      "sha256": "9a31ae7c72362e47c61616993c664fae11e042523d430eb95d551e30f8559384"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-L.swf": {
+      "bytes": 1878,
+      "sha256": "23556d01daf9d7ee7aeed094d990522c00666fe98a43add6710b5941fee9e13f"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-R.swf": {
+      "bytes": 1878,
+      "sha256": "d884a8ed91587c1a8325794b9191bcefbce400b65fb8a64c5e7d01a36d01b616"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-T.swf": {
+      "bytes": 1878,
+      "sha256": "fbf4eef0668484704c30e38c70470af046ff63c7f07baf509e79d9d4b83583ec"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-TL.swf": {
+      "bytes": 1879,
+      "sha256": "d19bd7bc525a9e1662691ffadbe7cb2394820078af9c0d702657016354d6327d"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-TR.swf": {
+      "bytes": 1879,
+      "sha256": "975c735a68a687b60111624e5fbb03be0fd3c5dda007d97d357252d31af25dd2"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/noScale-center.swf": {
+      "bytes": 1877,
+      "sha256": "65d470ec5890ceeed4f16b6b6825ed1e9048eb36329cd7b8d7b388a52e844f34"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-B.swf": {
+      "bytes": 1878,
+      "sha256": "f721462bb1140ea60f085ba4fcd5fe5d5662586c2425cd255c63bd80886f6c68"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-BL.swf": {
+      "bytes": 1879,
+      "sha256": "93674c40feee066e64e6ef13d970cfc876f000f8a0b6c23e5a059b63e6870d3e"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-BR.swf": {
+      "bytes": 1879,
+      "sha256": "ead8281cc9ef71bc66978c06ce2433a2119240ced7560146e41497dab66c1476"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-L.swf": {
+      "bytes": 1878,
+      "sha256": "8e4e9c2e611af8927871255531f4ef398b9bdef7ae5b6e062a4c537a922c90f9"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-R.swf": {
+      "bytes": 1878,
+      "sha256": "72fe14da73250e7cf4b9f3cdd6bdd4e8c47bdc3d8f9c0f3ebbf678a3191f28b0"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-T.swf": {
+      "bytes": 1878,
+      "sha256": "5f092868b446c5eefe50ed8f025704917beb17213060e078f1759952fd957990"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-TL.swf": {
+      "bytes": 1879,
+      "sha256": "7365be945a2b8e6f19ee45398db7e37128d5d54a77b5c5fae86822bd24b1a150"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-TR.swf": {
+      "bytes": 1879,
+      "sha256": "c45b6fda759936684721de2d8046f36c1c105ad73daa9ccc17892009cd112eb5"
+    },
+    "validation-harness/browser-runtime-validation/fixtures/showAll-center.swf": {
+      "bytes": 1877,
+      "sha256": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac"
+    },
+    "validation-harness/browser-runtime-validation/manifest.json": {
+      "bytes": 7931,
+      "sha256": "c688a37a6b1938f05ca6a5308e26852e4d5271a5098931f90c4be136362bd1f6"
+    },
+    "validation-harness/browser-runtime-validation/matrix-plan.json": {
+      "bytes": 163192,
+      "sha256": "0979986409d8d34d76dbbe8ba83f8a68d9e79d376a830413b8cf35ceb7541061"
+    },
+    "validation-harness/browser-runtime-validation/page.html": {
+      "bytes": 9555,
+      "sha256": "670b6f691cde740f66b9fd0edd08e5466abda9645da43f31a2369f4ff6208f03"
+    },
+    "validation-harness/browser-runtime-validation/provenance/delivered-155-runtime.json": {
+      "bytes": 6551,
+      "sha256": "4f6c0ce66c2287ecaf64246e92b9b72b4e5d354fdaafdbe2b4c48243eaf5d3b4"
+    },
+    "validation-harness/browser-runtime-validation/requirements.txt": {
+      "bytes": 89,
+      "sha256": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574"
+    },
+    "validation-harness/browser-runtime-validation/scripts/browser_matrix.py": {
+      "bytes": 9298,
+      "sha256": "97b16b81549f108153c7378f3dee98e18c79c877edd9512f218bff5ca114a12a"
+    },
+    "validation-harness/browser-runtime-validation/scripts/browser_preflight.py": {
+      "bytes": 3149,
+      "sha256": "dc4b67b7a7b70ce1674840f613147828c10a68e2b65716dbe1c60ebea80c88ec"
+    },
+    "validation-harness/browser-runtime-validation/scripts/contracts.py": {
+      "bytes": 5471,
+      "sha256": "3899231e759b1e3972984f572d9e5a897bffaacf3dc91f71d576a7f973eb9266"
+    },
+    "validation-harness/browser-runtime-validation/scripts/evidence_budget.py": {
+      "bytes": 1819,
+      "sha256": "2f2f5c9735e014819917532f9158f91d9af3ab7e7db10a40abece5a4ff2a6445"
+    },
+    "validation-harness/browser-runtime-validation/scripts/pixel_checks.py": {
+      "bytes": 1592,
+      "sha256": "4725bf77716ebf38b327034f97888e9156f61505ac94f579219d6d2d46373147"
+    },
+    "validation-harness/browser-runtime-validation/scripts/prepare_contract.py": {
+      "bytes": 1580,
+      "sha256": "2cfc55b8cf68ed27d69730da3b7abeb02ff6ffedad5d3d9f0b71d7967d3dacff"
+    },
+    "validation-harness/browser-runtime-validation/scripts/test_contracts.py": {
+      "bytes": 6148,
+      "sha256": "0798e8a2591df2b61ddfb25b75c4063ab5ec3a792c91f13407afc78bc53c9858"
+    },
+    "validation-harness/browser-runtime-validation/scripts/test_page.cjs": {
+      "bytes": 3014,
+      "sha256": "6935081a2d048a94473c0198c35768a5d3e5ff316e7314149fe2cd0de98770ef"
+    },
+    "validation-harness/browser-runtime-validation/scripts/verify_results.py": {
+      "bytes": 3754,
+      "sha256": "52d64cfb5ab7593a6f1a00d80950b4aff0acc3c1bd1031b321f751030b1ec73f"
+    },
+    "validation-harness/native-composite-runner/README.md": {
+      "bytes": 6000,
+      "sha256": "da04b43f2664dfbedd6ed872a6e73d1222addd2e2a7199700d474012b5abb847"
+    },
+    "validation-harness/native-composite-runner/binding-template.json": {
+      "bytes": 1018,
+      "sha256": "c1371a2e9797fce726cae6ca2100baece17e80ae99d9c8f74b61e3c91b1d28b4"
+    },
+    "validation-harness/native-composite-runner/file-manifest.json": {
+      "bytes": 894,
+      "sha256": "ffbfb5f008d71468b463c99c377243a16ecbd45c01680ce8890d710eefa7a747"
+    },
+    "validation-harness/native-composite-runner/helper-lock.json": {
+      "bytes": 8354,
+      "sha256": "d0e48ea48f89dbc54bc8bdb524e33d47b8ff9957c50a451632866eeac126492a"
+    },
+    "validation-harness/native-composite-runner/local-tests.log": {
+      "bytes": 1198,
+      "sha256": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc"
+    },
+    "validation-harness/native-composite-runner/run.py": {
+      "bytes": 22041,
+      "sha256": "7b56d16300a80dd87736bc8a516617ad9c65f3a52c5899dab96af115f5a589a0"
+    },
+    "validation-harness/native-composite-runner/test_runner.py": {
+      "bytes": 4573,
+      "sha256": "fd44e2ca9de012e6b6794407d9ef023d9acdfb3801c75ea3a4c312aad328b871"
+    },
+    "validation-harness/native-sampling-validation/Host/SamplingHost.swift": {
+      "bytes": 13629,
+      "sha256": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4"
+    },
+    "validation-harness/native-sampling-validation/Host/sampling-probe.js": {
+      "bytes": 4142,
+      "sha256": "2dc7adf093da00a3539f5cfa1f8aacb19f6cecf45010fccdacc74da69f826653"
+    },
+    "validation-harness/native-sampling-validation/README.md": {
+      "bytes": 8485,
+      "sha256": "2c15c8f9ddf874ff0afea844b518251060247d1af803e5b16d5969bc15aa33bd"
+    },
+    "validation-harness/native-sampling-validation/UITests/NativeSamplingUITests.swift": {
+      "bytes": 15987,
+      "sha256": "8c28a9e58277e20f2c3f1b0c8624c180ab75b617d05cccd256d15b289c163ae3"
+    },
+    "validation-harness/native-sampling-validation/approved-app-source-manifest.json": {
+      "bytes": 30427,
+      "sha256": "15a788b157e88407b7ae11b0e48c8922ed9fd2f05007b78d37a6ca9deb12d062"
+    },
+    "validation-harness/native-sampling-validation/evidence/baseline-staging-check.json": {
+      "bytes": 817,
+      "sha256": "6efc9c2f3ad6470cd39f706d9be58f0f57ae5c781314286c20af50a4883a4618"
+    },
+    "validation-harness/native-sampling-validation/evidence/final-local-tests.log": {
+      "bytes": 1586,
+      "sha256": "e6f35c0b4da3447853800075af6b6018f268af739d51f7e3cbc9287c81bec64d"
+    },
+    "validation-harness/native-sampling-validation/evidence/local-tests-before-repeat-guard.log": {
+      "bytes": 1966,
+      "sha256": "5ffd0e6e9e7b0758db10ebde09ef5906055478ad39623303e46fb4c30a051be2"
+    },
+    "validation-harness/native-sampling-validation/evidence/local-tests.log": {
+      "bytes": 1336,
+      "sha256": "03a30b0b1ed75b8e75c8aa5367a6d1619db75b17a50194b7b32aa603d2856f52"
+    },
+    "validation-harness/native-sampling-validation/file-manifest.json": {
+      "bytes": 2599,
+      "sha256": "0e2f6dce74b236297b4de54ab4ce753d465430bd620fc96e678d8bf6af32c917"
+    },
+    "validation-harness/native-sampling-validation/fixtures/manifest.json": {
+      "bytes": 501,
+      "sha256": "639c633673285c28c21a7d2ef6a7dacbcba6fa9c8a7be7c085f28cb068ce782a"
+    },
+    "validation-harness/native-sampling-validation/fixtures/noScale-center.swf": {
+      "bytes": 1877,
+      "sha256": "65d470ec5890ceeed4f16b6b6825ed1e9048eb36329cd7b8d7b388a52e844f34"
+    },
+    "validation-harness/native-sampling-validation/fixtures/showAll-center.swf": {
+      "bytes": 1877,
+      "sha256": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac"
+    },
+    "validation-harness/native-sampling-validation/scripts/make_fixture.py": {
+      "bytes": 3676,
+      "sha256": "fe1f7b427dcfd5b579d8c0f6c5f9bab8bf8266cb26ad7f609d760a658dc122bc"
+    },
+    "validation-harness/native-sampling-validation/scripts/prepare_overlay.py": {
+      "bytes": 12429,
+      "sha256": "b9fa875e757bdf3736cc5ff0fa73bffb6040275bf43dc0beb42e1f00e7ff0bab"
+    },
+    "validation-harness/native-sampling-validation/scripts/test_probe.cjs": {
+      "bytes": 3721,
+      "sha256": "046b837adb8e77d71cafec393d4ae1c9d5cb5fcbd02a0ac0db020731f2f66493"
+    },
+    "validation-harness/native-sampling-validation/scripts/test_verifier.py": {
+      "bytes": 7127,
+      "sha256": "aa3e67114a06c4a21b5b23e9ce4c193168381295313f50c2945e0d1022ee2f8b"
+    },
+    "validation-harness/native-sampling-validation/scripts/verify_results.py": {
+      "bytes": 17611,
+      "sha256": "6531b7c0ed2e51a8ee1b8a9386f1fea0cde2401f4cbe961562ffe6967fb6ed7f"
+    },
+    "validation-harness/native-save-audio-validation/README.md": {
+      "bytes": 9856,
+      "sha256": "8c263d0d319b278d6f8d5f59daf94db3ac678058ebda34e76971d0ec26a49ce1"
+    },
+    "validation-harness/native-save-audio-validation/Tests/NativeSaveSettingsPreservationTests.swift": {
+      "bytes": 10942,
+      "sha256": "3854a5d718164ea770225b58268ce707a6bef62873b5dded33c739281a324dbc"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/Host/LateAudioHost.swift": {
+      "bytes": 10452,
+      "sha256": "06fe5b9000a6cd66c26f5863b894cbb01a26fc8ebf4f8623b7c3383a7998962e"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/Info.plist": {
+      "bytes": 1278,
+      "sha256": "e4af5aaba32185944005d25c6d7b27775402771994ac568d3373195e1484007f"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/UITests/LateAudioUITests.swift": {
+      "bytes": 11941,
+      "sha256": "67867cb50e0bbd226ae2cfebf99eb52c60e1a01949bfd7e94723c70db7a4999d"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/baseline-runtime-identity.json": {
+      "bytes": 2280,
+      "sha256": "7971584216be895d47e01f877e2ba3dad1aba07ce796e654fe8e6d3b6cd6ee69"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/evidence-bridge.inc.js": {
+      "bytes": 3458,
+      "sha256": "03a3a5da5097d21cadd97dcdfa48fd44e1b33430077b36354a8922af0cc5c893"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/late-audio-probe.js": {
+      "bytes": 21950,
+      "sha256": "01231807a4e5fa1f85e1182c08dcf498d87319ede55075cdd68c3ffc420d32db"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/late-host-adapter.js": {
+      "bytes": 3677,
+      "sha256": "d01d52e3a6abc67e70f6ec780abbb7329964ac1ad6cefb49e69ec5bba42aef77"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/retired-candidate-runtime-files.json": {
+      "bytes": 1644,
+      "sha256": "ce542724b7486d9852b0e503427e9364983ac70ef1990948999e04d2442e09d4"
+    },
+    "validation-harness/native-save-audio-validation/diagnostics/verify_late_evidence.py": {
+      "bytes": 12270,
+      "sha256": "f63cd8121b95c42860f90a70a1cb70a8fb3856a058e64052c615f1ad4d8c22e0"
+    },
+    "validation-harness/native-save-audio-validation/evidence/audio-overlay-plan.json": {
+      "bytes": 12772,
+      "sha256": "c35ddcf9706f8cd1b68a9f410374f739efae68680c4d82bf0437be97faf1e636"
+    },
+    "validation-harness/native-save-audio-validation/evidence/audio-warning.log": {
+      "bytes": 66,
+      "sha256": "487c20e1f8a1418d7a6e37e95eff0b42970d65cb68922cee3a22e1631f579940"
+    },
+    "validation-harness/native-save-audio-validation/evidence/bridge-adapter.log": {
+      "bytes": 1194,
+      "sha256": "11f1b262c5525befd047a590cc0878bb1fa84f349e11ea993b12d1b0b61a72da"
+    },
+    "validation-harness/native-save-audio-validation/evidence/late-probe.log": {
+      "bytes": 5129,
+      "sha256": "5e3d6f40cb0f7c60b5ca1ad78a0b6692d17817c9baae1cece3744986849b59dc"
+    },
+    "validation-harness/native-save-audio-validation/evidence/local-contract-tests.log": {
+      "bytes": 3997,
+      "sha256": "dadac9843170a864174fd2fe05efb0fe2d6ed95a42f6d4bbf25f5cb9613e1146"
+    },
+    "validation-harness/native-save-audio-validation/evidence/shell-en.log": {
+      "bytes": 526,
+      "sha256": "ce252cb46941efed3f2df3c97cdf1dec1152a1cf27b92dedfb99a3216d3a1fc7"
+    },
+    "validation-harness/native-save-audio-validation/evidence/shell-zh.log": {
+      "bytes": 536,
+      "sha256": "8aa6f14007863aebb984657fe5fd9e5cebbe5fce40301f28105434510f1644f1"
+    },
+    "validation-harness/native-save-audio-validation/file-manifest.json": {
+      "bytes": 7019,
+      "sha256": "7c3b9ce49174712b80456941a219f1d9425cccb3ceda42f07f5e7314eca7edaf"
+    },
+    "validation-harness/native-save-audio-validation/fixture-inventory.json": {
+      "bytes": 2415,
+      "sha256": "8899119e854eb19e1a9f37a73d541cd75900eda6114352a90911b09dad5bce34"
+    },
+    "validation-harness/native-save-audio-validation/input-lock.json": {
+      "bytes": 13010,
+      "sha256": "f755e3b80f6c38b7bf00de3f61c5386d8f2e8dc87c31f01b9f5df4a30e2ef533"
+    },
+    "validation-harness/native-save-audio-validation/overlay/App/Player/PlayerSession.swift": {
+      "bytes": 41657,
+      "sha256": "0829c9ca7f86fbb94e28075fcc7e5c38826b2ef8dc7833284cbfc7e7e8255a96"
+    },
+    "validation-harness/native-save-audio-validation/overlay/App/Resources/Web/shell.js": {
+      "bytes": 27987,
+      "sha256": "8adf97bc8437e07d83deeb6b8642cc69b012190173bf0367d7ea9c374e206bbe"
+    },
+    "validation-harness/native-save-audio-validation/scripts/run_shell_regression.cjs": {
+      "bytes": 1024,
+      "sha256": "d5f7cdbb1486d7ca8318f22026c432c0901acacb234066b0d3be0fd19882f03c"
+    },
+    "validation-harness/native-save-audio-validation/scripts/stage_audio_target.py": {
+      "bytes": 14313,
+      "sha256": "ee51987b9cf5fa822104fb7fca171cb4656ebb37d10cad1f4aacc2617517a321"
+    },
+    "validation-harness/native-save-audio-validation/scripts/test_contracts.py": {
+      "bytes": 12551,
+      "sha256": "907238f7996296c8fd70de9604a36a6059903e4bbe89616a6c4da3c82cb4c4d2"
+    },
+    "validation-harness/native-save-audio-validation/scripts/verify_results.py": {
+      "bytes": 4148,
+      "sha256": "182d8685478cda416fe279adf480360aeb6427a9ac907db570c6c470f12f410e"
+    },
+    "validation-harness/native-save-audio-validation/test-selection.json": {
+      "bytes": 20648,
+      "sha256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/README.md": {
+      "bytes": 4949,
+      "sha256": "278e2dea670173cf08c988442085e9f8afe989f443dbdda67e22cc09c354e7a3"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/collect_evidence.py": {
+      "bytes": 2450,
+      "sha256": "2ecad29f4f8f180a4b8ea9d261a0606445c50f6623abfbb0bf8bc1fe3f36a7e3"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/fixtures/tiny-valid.swf": {
+      "bytes": 18,
+      "sha256": "1f423571c52a23d6dde6facb43d4048bc810e9db3eff3a1185f8a2576cb1e54c"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/fixtures/tiny-valid.zip": {
+      "bytes": 132,
+      "sha256": "b2992dc78b82f52df5cd98c138e4fc6cd914b4ec83b04f34ea57fa7c7762cf05"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/overlay/FixtureSourceApp.swift": {
+      "bytes": 1860,
+      "sha256": "1fd34bcd7635ea96e7cee56e59a835ee8b4a1ffd2221b513473e0b894ee6fe0a"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/overlay/PackageDocumentPicker.swift": {
+      "bytes": 7987,
+      "sha256": "bf1839f3b362d784df95c03880cd984d86942f605ffea1df1b4c68bf9aec76cb"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/overlay/ZIPSelectionUITests.swift": {
+      "bytes": 6260,
+      "sha256": "4a899062db770051177dabf807aaf9eb78dd84f84f79ce5da6bdc6a9bec7ae7b"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/source-freeze.json": {
+      "bytes": 8265,
+      "sha256": "9d9539a3cef7e6e55e5ea5dba74cf7127c6c00d9b6e6f57dbab67b4f8dccf000"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/stage.py": {
+      "bytes": 1748,
+      "sha256": "631d90bcf2ec1bf54051fd05b271b8028a70775a33f4bfa0a95dc3a302224746"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/verify_containers.py": {
+      "bytes": 2879,
+      "sha256": "3f8e0da03ec748839bf6dd89addbd602722fcde1c7399e1c6e98a02a4d513560"
+    },
+    "validation-harness/zip-native-validation/payload/experiments/zip-selection/verify_results.py": {
+      "bytes": 1591,
+      "sha256": "19b7e52b01a19e667c607057fa24226d4b72b07be4a25ee9452f139fbb9fb16e"
+    }
+  },
+  "historicalBaseline": {
+    "artifactID": 12783974867,
+    "bytes": 22076102,
+    "roles": {
+      "historical": "pre-recovery fatal-audio negative control only",
+      "sampling": "actual delivered1.5.5/build18 recovery candidate"
+    },
+    "runID": 40614335019,
+    "runtimeFiles": {
+      "historical": {
+        "1bab053d8911d6c21b75.wasm": {
+          "bytes": 14301916,
+          "sha256": "c7e7f3f2b92909971a65cd6bd4169d0b07ac360fff7d68753b651f3d36209671"
+        },
+        "8135809bc288856cefbf.wasm": {
+          "bytes": 14231816,
+          "sha256": "15a350b93dd3623b5bfdb7e0772c6f2b0e97a33cb93a931837d8cd1e40a9143e"
+        },
+        "LICENSE_APACHE": {
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        "LICENSE_MIT": {
+          "bytes": 1097,
+          "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c"
+        },
+        "README.md": {
+          "bytes": 2328,
+          "sha256": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde"
+        },
+        "core.ruffle.4bf43128d442d808d913.js": {
+          "bytes": 108322,
+          "sha256": "63177252735b59a2ad6ac645cde4e91c1afc47eeb80dc9e1adf26ad1aef7a1c5"
+        },
+        "core.ruffle.4bf43128d442d808d913.js.map": {
+          "bytes": 386183,
+          "sha256": "7bf41898910df3fd9d7d3e7099f673a8e295b2b10b4f13734d39fb39ea0340cc"
+        },
+        "core.ruffle.8ee07edaf47829ab3e6f.js": {
+          "bytes": 114741,
+          "sha256": "4cec3ffb0f5aa994e4bede3f182ba606edbc40611a3e1e563a1536a495cf5f61"
+        },
+        "core.ruffle.8ee07edaf47829ab3e6f.js.map": {
+          "bytes": 413473,
+          "sha256": "f6c3dbe4933d8813930905315c15e15862c83112ab4eab8ecda47a8640d35299"
+        },
+        "package.json": {
+          "bytes": 418,
+          "sha256": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89"
+        },
+        "ruffle.js": {
+          "bytes": 465970,
+          "sha256": "2f5c01e0e66f0f3e971b9dc7684d42986aadea7209bb56bafbdd3911903a1e31"
+        },
+        "ruffle.js.map": {
+          "bytes": 706781,
+          "sha256": "10174fcf4f0477488630859b04d1b6a43e9c8820fbcd2d6d962c6010820d3254"
+        }
+      },
+      "sampling": {
+        "4b85d6e32912d24cca47.wasm": {
+          "bytes": 14300833,
+          "sha256": "2074371e1d8402b083207709e9b6f1fc3285a6845eaa850cdc545a390b5744b9"
+        },
+        "90aa6311b211f13e3cb5.wasm": {
+          "bytes": 14229006,
+          "sha256": "24d962eb2d975cada92a6db46b70ea5e331070a4746b5650ab95c4ab5e839ea7"
+        },
+        "LICENSE_APACHE": {
+          "bytes": 9723,
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        "LICENSE_MIT": {
+          "bytes": 1097,
+          "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c"
+        },
+        "README.md": {
+          "bytes": 2328,
+          "sha256": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde"
+        },
+        "core.ruffle.82997a6b688ba0eb49c2.js": {
+          "bytes": 114647,
+          "sha256": "a4059a19a8261b0b019cf30ca5990545adcddda52ed62de5c0c1b19831db37d5"
+        },
+        "core.ruffle.82997a6b688ba0eb49c2.js.map": {
+          "bytes": 413394,
+          "sha256": "c51b0dada0d6b16aaa0249c14026fcebbfe0f7d2fccde577e514b2b32773c0fc"
+        },
+        "core.ruffle.d7f503a65b18ef47bd04.js": {
+          "bytes": 108240,
+          "sha256": "9ca688ec3fadf47c55c8fef95e255b873ff09bbd77d748ac262790693fb99951"
+        },
+        "core.ruffle.d7f503a65b18ef47bd04.js.map": {
+          "bytes": 386159,
+          "sha256": "68743f6ad01f614562e0b0b36af1df5eead6dd51c087b5f340ef0f91e74002cb"
+        },
+        "package.json": {
+          "bytes": 418,
+          "sha256": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89"
+        },
+        "ruffle.js": {
+          "bytes": 468421,
+          "sha256": "6fb80f470e25f06bcd1aca9130919bd58631b1a405af9736d490e0144a2a8c28"
+        },
+        "ruffle.js.map": {
+          "bytes": 716096,
+          "sha256": "2c47f523b50d2fdcebdb00d3861a6278ddf84bd88121478c348275e33499fb5f"
+        }
+      }
+    },
+    "sha256": "3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a",
+    "sourceCommit": "5d2cdcc6757d65194bd55c4a0395b76b0176d224"
+  },
+  "lanes": {
+    "browser": {
+      "commands": [
+        [
+          "validation-venv/bin/python",
+          "scripts/stage_validation_runtime.py"
+        ],
+        [
+          "validation-venv/bin/python",
+          "scripts/stage_validation_inputs.py"
+        ],
+        [
+          "validation-venv/bin/python",
+          "scripts/validate_final_app.py",
+          "--app",
+          "validation-app"
+        ],
+        [
+          "validation-venv/bin/python",
+          "validation-harness/browser-runtime-validation-ci/run.py",
+          "--composite-root",
+          ".",
+          "--harness",
+          "validation-harness/browser-runtime-validation"
+        ]
+      ],
+      "expectedRowsPerExecutedPath": 290,
+      "harnessManifestSHA256": "c688a37a6b1938f05ca6a5308e26852e4d5271a5098931f90c4be136362bd1f6",
+      "mvpSelectionOptionalWhenNoSupportedRoute": true,
+      "perCommandTimeoutSeconds": 2400,
+      "requiredShippingSelectionProof": true,
+      "shippingQualityMustBeObserved": true,
+      "verifier": [
+        "validation-venv/bin/python",
+        "scripts/verify_lane_receipt.py",
+        "browser"
+      ]
+    },
+    "native": {
+      "commands": [
+        [
+          "validation-venv/bin/python",
+          "scripts/stage_validation_runtime.py"
+        ],
+        [
+          "validation-venv/bin/python",
+          "scripts/stage_validation_inputs.py"
+        ],
+        [
+          "validation-venv/bin/python",
+          "scripts/validate_final_app.py",
+          "--app",
+          "validation-app"
+        ],
+        [
+          "validation-venv/bin/python",
+          "scripts/run_native_validation.py"
+        ]
+      ],
+      "evidenceKind": "iOS simulator",
+      "perCommandTimeoutSeconds": 8100,
+      "physicalDeviceCertified": false,
+      "requiresRealShippingTierApplication": true,
+      "verifier": [
+        "validation-venv/bin/python",
+        "scripts/verify_lane_receipt.py",
+        "native"
+      ]
+    }
+  },
+  "reason": "Exact corrected engine and independently reviewed final App/native binding; actual validation still required",
+  "schemaVersion": 1
+}

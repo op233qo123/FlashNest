@@ -1,0 +1,142 @@
+<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:#111}#host{width:443px;height:287px}ruffle-player{display:block;width:100%;height:100%}#play{position:fixed;right:0;bottom:0;z-index:9}</style><div id="host"></div><button id="play">Play</button><script>
+'use strict';
+window.evidence={traces:[],errors:[],overflow:false,loaded:false};
+const originalLog=console.log;
+console.log=function(...args){
+ const text=String(args[0]);const match=text.match(/New Ruffle instance created .*\| Used renderer: ([^)]+)\)/);
+ if(match)window.evidence.actualRenderer=match[1];
+ return originalLog.apply(console,args);
+};
+window.contexts=new WeakMap();
+const getContext=HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext=function(type,...args){
+ const context=getContext.call(this,type,...args);
+ if(context && !window.contexts.has(this)) window.contexts.set(this,{type,context,storage:[]});
+ return context;
+};
+// Observe real custom allocator calls without changing their arguments or GL state.
+window.allocationOverflow=false;
+for(const [Ctor,name,sampleIndex,wi,hi] of [
+ [window.WebGL2RenderingContext,'renderbufferStorageMultisample',1,3,4],
+ [window.WebGLRenderingContext,'renderbufferStorage',null,2,3]]){
+ if(!Ctor||typeof Ctor.prototype[name]!=='function')continue;
+ const original=Ctor.prototype[name];
+ Ctor.prototype[name]=function(...args){
+  const result=Reflect.apply(original,this,args),entry=window.contexts.get(this.canvas);
+  if(entry){const tuple=[sampleIndex===null?1:args[sampleIndex],args[wi],args[hi]];
+   if(!entry.storage.some(t=>t.every((v,i)=>v===tuple[i]))){
+    if(entry.storage.length>=64)window.allocationOverflow=true;else entry.storage.push(tuple);
+   }
+  }
+  return result;
+ };
+}
+window.gpuAllocations=[];
+if(window.GPUDevice&&typeof GPUDevice.prototype.createTexture==='function'){
+ const original=GPUDevice.prototype.createTexture;
+ GPUDevice.prototype.createTexture=function(...args){
+  const texture=Reflect.apply(original,this,args);
+  const tuple=[texture.sampleCount,texture.width,texture.height];
+  if(!window.gpuAllocations.some(t=>t.every((v,i)=>v===tuple[i]))){
+   if(window.gpuAllocations.length>=64)window.allocationOverflow=true;else window.gpuAllocations.push(tuple);
+  }
+  return texture;
+ };
+}
+if(window.GPUCanvasContext&&typeof GPUCanvasContext.prototype.getCurrentTexture==='function'){
+ const original=GPUCanvasContext.prototype.getCurrentTexture;
+ GPUCanvasContext.prototype.getCurrentTexture=function(...args){
+  const texture=Reflect.apply(original,this,args),entry=window.contexts.get(this.canvas);
+  if(entry)entry.texture=[texture.width,texture.height];
+  return texture;
+ };
+}
+window.RufflePlayer={config:{autoplay:'off',unmuteOverlay:'hidden',warnOnUnsupportedContent:false}};
+const runtime=new URLSearchParams(location.search).get('runtime');
+if(!['baseline','candidate'].includes(runtime)) throw Error('Unknown runtime');
+const script=document.createElement('script'); script.src='/'+runtime+'/ruffle.js';document.head.append(script);
+script.onload=()=>{window.runtimeReady=true};script.onerror=()=>{window.evidence.errors.push('loader failed')};
+window.startCase=async function(fixture,scale,width,height,renderer,quality){
+ if(window.player)window.player.remove();
+ window.evidence={traces:[],errors:[],overflow:false,loaded:false};window.pointerEvents=[];window.allocationOverflow=false;window.gpuAllocations=[];
+ const host=document.getElementById('host');host.style.width=width+'px';host.style.height=height+'px';
+ const p=window.RufflePlayer.newest().createPlayer();window.player=p;host.append(p);
+ const api=p.ruffle(),e=window.evidence;
+ const observe=(message)=>{
+  const text=String(message);if(e.traces.length>=512||text.length>2048){e.overflow=true;return}e.traces.push(text);
+ };
+ p.addEventListener('loadeddata',()=>{e.loaded=true},{once:true});
+ document.getElementById('play').onclick=()=>api.resume();
+ // Diagnostic-only explicit backend selection; production shell is unchanged.
+ try {
+  const config={url:fixture,renderScale:scale,autoplay:'off',unmuteOverlay:'hidden',allowScriptAccess:false};
+  if(renderer!=='auto')config.preferredRenderer=renderer;
+  if(quality!==null)config.quality=quality; // null means OMIT, never default to Low.
+  e.launchConfig=JSON.parse(JSON.stringify(config));
+  await api.load(config);
+  // The pinned API has no pre-instance trace-observer cache. load resolves
+  // after instance creation but before trusted resume / frame execution.
+  api.traceObserver=observe;e.observerInstalled=true;
+ } catch {e.errors.push('load rejected')}
+
+};
+// Passive observations only: never synthesize or alter input events.
+window.pointerEvents=[];
+for(const type of ['pointerdown','pointerup'])document.addEventListener(type,event=>{
+ if(!event.isTrusted)return;
+ const describe=e=>({tag:String(e?.tagName||'').slice(0,40),id:String(e?.id||'').slice(0,80)});
+ window.pointerEvents.push({type,x:event.clientX,y:event.clientY,button:event.button,trusted:event.isTrusted,
+  target:describe(event.target),path:event.composedPath().slice(0,8).map(describe)});
+ if(window.pointerEvents.length>32)window.pointerEvents.shift();
+},{capture:true,passive:true});
+window.screenshotGeometry=function(){
+ const r=document.getElementById('host').getBoundingClientRect();
+ return {rect:[r.x,r.y,r.width,r.height],viewport:[innerWidth,innerHeight],dpr:devicePixelRatio};
+};
+window.gameHitTarget=function(x,y){
+ const player=window.player,shadow=player?.shadowRoot,canvas=shadow?.querySelector('canvas');
+ const outer=document.elementFromPoint(x,y),inner=shadow?.elementFromPoint(x,y);
+ return {canvasTopmost:!!canvas&&outer===player&&inner===canvas,
+  outer:{tag:String(outer?.tagName||'').slice(0,40),id:String(outer?.id||'').slice(0,80)},
+  inner:{tag:String(inner?.tagName||'').slice(0,40),id:String(inner?.id||'').slice(0,80)}};
+};
+window.hardwareWarningState=function(){
+ const shadow=window.player?.shadowRoot,modal=shadow?.querySelector('#hardware-acceleration-modal');
+ if(!modal)return {visible:false};
+ const style=getComputedStyle(modal),r=modal.getBoundingClientRect();
+ const visible=style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0&&r.width>0&&r.height>0;
+ if(!visible)return {visible:false};
+ const controls=modal.querySelectorAll('.modal-area > .close-modal'),close=controls[0],c=close?.getBoundingClientRect();
+ const point=c?[Math.round(c.x+c.width/2),Math.round(c.y+c.height/2)]:null;
+ const hit=point?shadow.elementFromPoint(...point):null;
+ const link=modal.querySelector('a.modal-button');
+ const normalize=value=>String(value||'').replace(/\s+/g,' ').trim();
+ return {visible,id:modal.id,text:normalize(modal.querySelector('#acceleration-text')?.textContent),
+  linkText:normalize(link?.textContent),link:link?.href||null,closeCount:controls.length,
+  closeHit:!!close&&(hit===close||close.contains(hit)),point,rect:[r.x,r.y,r.width,r.height]};
+};
+window.pointerContext=function(){
+ const r=document.getElementById('host').getBoundingClientRect();
+ const describe=e=>{const s=getComputedStyle(e);return {tag:e.tagName,id:String(e.id||'').slice(0,80),display:s.display,visibility:s.visibility,pointerEvents:s.pointerEvents,opacity:s.opacity}};
+ const points=[[.05,.05],[.95,.05],[.05,.95],[.95,.95],[.5,.5]];
+ return {events:window.pointerEvents.slice(-32),focused:document.hasFocus(),visibility:document.visibilityState,active:document.activeElement?describe(document.activeElement):null,
+  targets:points.map(([x,y])=>({point:[r.x+x*r.width,r.y+y*r.height],stack:document.elementsFromPoint(r.x+x*r.width,r.y+y*r.height).slice(0,6).map(describe),shadowStack:window.player?.shadowRoot?.elementsFromPoint?.(r.x+x*r.width,r.y+y*r.height).slice(0,8).map(describe)||[]})),
+  shadow:window.player?.shadowRoot?[...window.player.shadowRoot.querySelectorAll('canvas,button,[role="button"],#play-button,#splash-screen,#unmute-overlay,#message-overlay,#panic,#hardware-acceleration-modal,.play-overlay,.unmute-overlay')].slice(0,12).map(describe):[]};
+};
+window.measure=function(){
+ const c=window.player?.shadowRoot?.querySelector('canvas');if(!c)return null;
+ const r=c.getBoundingClientRect(),entry=window.contexts.get(c);
+ const gl=entry&&/^webgl/.test(entry.type)?[entry.context.drawingBufferWidth,entry.context.drawingBufferHeight]:null;
+ let graphics={available:false};
+ if(gl){try{
+  const context=entry.context,extension=context.getExtension('WEBGL_debug_renderer_info');
+  const bounded=value=>value==null?null:String(value).slice(0,240);
+  graphics={available:true,vendor:bounded(context.getParameter(context.VENDOR)),renderer:bounded(context.getParameter(context.RENDERER)),
+   debugExtensionAvailable:!!extension,unmaskedVendor:extension?bounded(context.getParameter(extension.UNMASKED_VENDOR_WEBGL)):null,
+   unmaskedRenderer:extension?bounded(context.getParameter(extension.UNMASKED_RENDERER_WEBGL)):null};
+ }catch{graphics={available:false,reason:'query-unavailable'}}}
+
+ return {width:c.width,height:c.height,css:[r.x,r.y,r.width,r.height],client:[c.clientWidth,c.clientHeight],dpr:devicePixelRatio,
+  texture:entry?.texture||null,storage:entry?.type==='webgpu'?window.gpuAllocations:(entry?.storage||[]),allocationOverflow:window.allocationOverflow,mobileQualityBranch:typeof window.orientation!=='undefined',launchConfig:window.evidence.launchConfig,backend:entry?.type||null,actualRenderer:window.evidence.actualRenderer||null,gl,graphics,attributes:Object.fromEntries([...c.attributes].filter(a=>a.name.startsWith('data-flashnest-')).map(a=>[a.name,a.value]))};
+};
+</script>

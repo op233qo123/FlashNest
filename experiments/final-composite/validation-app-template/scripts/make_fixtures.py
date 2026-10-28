@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Original minimal SWF 7 fixtures; no Adobe compiler or third-party movie code.
+Uses documented AVM1 GetURL(_level1) and GetURL2(LoadVariables) opcodes.
+"""
+import struct, pathlib, zipfile
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+def tag(n, b=b''):
+    return struct.pack('<H', n << 6 | (len(b) if len(b)<63 else 63)) + (b'' if len(b)<63 else struct.pack('<I',len(b))) + b
+def action(n,b=b''):
+    return bytes([n]) + (struct.pack('<H',len(b))+b if n>=128 else b'')
+def push(s): return action(0x96,b'\0'+s.encode()+b'\0')
+def trace(s): return push(s)+action(0x26)
+def rect():
+    bits = '01110'+''.join(format(x & ((1<<14)-1),'014b') for x in (0,6400,0,4800))
+    bits += '0' * (-len(bits)%8)
+    return int(bits,2).to_bytes(len(bits)//8,'big')
+def movie(actions,color):
+    body=rect()+struct.pack('<HH',12*256,1)+tag(9,bytes(color))+tag(12,actions+b'\0')+tag(1)+tag(0)
+    return b'FWS'+bytes([7])+struct.pack('<I',len(body)+8)+body
+base=ROOT/'fixtures'/'multi-swf'; (base/'sub').mkdir(parents=True,exist_ok=True)
+main=trace('FLASHNEST_MAIN_OK')+action(0x83,b'sub/child.swf\0_level1\0')
+# A string MovieClip path needs BOTH flags: LoadVariables (0x80) and
+# LoadTarget (0x40). With only 0x80, '_root' is treated as browser navigation,
+# which the offline policy correctly blocks. Pinned Ruffle v0.7.1:
+# core/src/avm1/activation.rs::action_get_url_2, is_load_vars branch.
+main+=push('sibling.txt')+push('_root')+action(0x9a,b'\xc0')+action(0x07)
+(base/'main.swf').write_bytes(movie(main,(22,44,88)))
+(base/'sub'/'child.swf').write_bytes(movie(trace('FLASHNEST_CHILD_OK')+action(0x07),(24,130,96)))
+(base/'sibling.txt').write_text('fixture=FLASHNEST_TEXT_OK&answer=42\n')
+(base/'README.txt').write_text('Original FlashNest synthetic AVM1 test. main.swf loads sub/child.swf into _level1 and sibling.txt with LoadVariables+LoadTarget (GetURL2 flags 0xC0) targeting _root. Child background green and trace FLASHNEST_CHILD_OK prove execution. No external assets.\n')
+with zipfile.ZipFile(ROOT/'fixtures'/'multi-swf.zip','w',zipfile.ZIP_DEFLATED) as z:
+    for p in sorted(base.rglob('*')):
+        if p.is_file():
+            info=zipfile.ZipInfo(str(p.relative_to(base)),(2026,1,1,0,0,0))
+            info.compress_type=zipfile.ZIP_DEFLATED; info.external_attr=0o100644 << 16
+            z.writestr(info,p.read_bytes())
+print('Generated original multi-SWF fixture and import ZIP')
+
+# Original AVM1 SharedObject regression fixture. The root localPath deliberately
+# exercises keys without a package-path prefix; native per-package WK stores
+# must provide isolation. This is real SWF bytecode, not a JavaScript write.
+def integer(n): return action(0x96,b'\x07'+struct.pack('<i',n))
+def variable(name): return push(name)+action(0x1c)
+def member(obj,name): return obj+push(name)+action(0x4e)
+def call_method(obj,name,args=()):
+    return b''.join(reversed(args))+integer(len(args))+obj+push(name)+action(0x52)
+get_save=call_method(variable('SharedObject'),'getLocal',(push('FlashNestFixture'),push('/')))
+set_save=push('save')+get_save+action(0x1d)
+data=member(variable('save'),'data')
+read=push('FLASHNEST_SAVE_BEFORE:')+member(data,'progress')+action(0x47)+action(0x26)
+write=data+push('progress')+integer(42)+action(0x4f)
+flush=push('FLASHNEST_SAVE_FLUSH:')+call_method(variable('save'),'flush')+action(0x47)+action(0x26)
+saves=ROOT/'fixtures'/'shared-object'; saves.mkdir(exist_ok=True)
+(saves/'explicit-flush.swf').write_bytes(movie(set_save+read+write+flush+trace('FLASHNEST_SAVE_READY')+action(0x07),(54,70,120)))
+(saves/'close-flush.swf').write_bytes(movie(set_save+read+write+trace('FLASHNEST_SAVE_READY')+action(0x07),(54,70,120)))
+(saves/'read-only.swf').write_bytes(movie(set_save+read+trace('FLASHNEST_SAVE_READY')+action(0x07),(54,70,120)))
+(saves/'README.txt').write_text('Original AVM1 SharedObject fixture: getLocal("FlashNestFixture", "/"). Trace FLASHNEST_SAVE_BEFORE:<progress>. explicit-flush sets progress=42 and calls flush(); close-flush sets42 without flush; read-only reads only. FLASHNEST_SAVE_READY ends actions. Native tests must use actual bundled Ruffle, await close/destroy before snapshot, restart same package profile, and verify another profile has undefined progress. This is game save data, not a savestate.\n')
+print('Generated original SharedObject fixtures')

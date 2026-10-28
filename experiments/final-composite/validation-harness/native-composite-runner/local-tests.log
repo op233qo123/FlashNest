@@ -1,0 +1,14 @@
+test_default_receipt_not_inferred_from_explicit_webgl (__main__.Contracts.test_default_receipt_not_inferred_from_explicit_webgl) ... ok
+test_duplicate_or_missing_class_fails (__main__.Contracts.test_duplicate_or_missing_class_fails) ... ok
+test_exact_selection_counts_and_no_picker_save_overlap (__main__.Contracts.test_exact_selection_counts_and_no_picker_save_overlap) ... ok
+test_expected_method_count_total (__main__.Contracts.test_expected_method_count_total) ... ok
+test_gate_on_changes_exact_two_lines_and_rejects_repeat (__main__.Contracts.test_gate_on_changes_exact_two_lines_and_rejects_repeat) ... ok
+test_pinned_xcodegen_archive_hash_matches_approved_route (__main__.Contracts.test_pinned_xcodegen_archive_hash_matches_approved_route) ... ok
+test_same_line_actor_class_boundaries (__main__.Contracts.test_same_line_actor_class_boundaries) ... ok
+test_source_has_separate_baselines_and_prelaunch_identity_freeze (__main__.Contracts.test_source_has_separate_baselines_and_prelaunch_identity_freeze) ... ok
+test_symlink_input_rejected (__main__.Contracts.test_symlink_input_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.028s
+
+OK
