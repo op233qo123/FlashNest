@@ -23,6 +23,30 @@ class PrivacyStageTests(unittest.TestCase):
    result=export(t/'missing-private',t/'public',a)
    self.assertEqual(result['expectedOS'],'18.2');self.assertIsNone(result['actualOS'])
    self.assertEqual(result['attempts'],[]);self.assertFalse(result['singleObservationComplete'])
+ def test_preflight_command_statuses_exist_without_control_receipt_and_no_text(self):
+  with tempfile.TemporaryDirectory()as t:
+   t=pathlib.Path(t);private=t/'private';private.mkdir();a=t/'approval.json';a.write_text(json.dumps(self.approval()))
+   (private/'bootstatus-command.json').write_text(json.dumps({'returncode':-1,'timedOut':True,'truncated':False,'stdout':'PRIVATE_DEVICE_UDID','stderr':'PRIVATE_GAME_PATH'}))
+   (private/'host-architecture-command.json').write_text(json.dumps({'returncode':0,'timedOut':False,'truncated':True,'stdout':'PRIVATE_DEVICE_UDID'}))
+   (private/'simulator-architecture-command.json').write_text(json.dumps({'returncode':127,'timedOut':False,'truncated':False,'stderr':'PRIVATE_GAME_PATH'}))
+   result=export(private,t/'public',a);rows=result['setupCommands']
+   self.assertEqual(rows,[{'command':'boot','present':False,'exitCode':None,'timedOut':None,'truncated':None},
+    {'command':'bootstatus','present':True,'exitCode':-1,'timedOut':True,'truncated':False},
+    {'command':'host-architecture','present':True,'exitCode':0,'timedOut':False,'truncated':True},
+    {'command':'simulator-architecture','present':True,'exitCode':127,'timedOut':False,'truncated':False}])
+   self.assertIsNone(result['actualOS']);self.assertEqual(result['attempts'],[])
+   self.assertNotIn('PRIVATE_',json.dumps(result));self.assertNotIn('stdout',json.dumps(rows));self.assertNotIn('stderr',json.dumps(rows))
+ def test_preflight_bad_receipts_explicit_unknown_not_success(self):
+  for raw in [b'not json',b'[]',b'null',b'x'*1048577,json.dumps({'returncode':True,'timedOut':'PRIVATE','truncated':0}).encode(),json.dumps({'returncode':-256}).encode(),json.dumps({'returncode':256}).encode()]:
+   with self.subTest(raw=raw[:20]),tempfile.TemporaryDirectory()as t:
+    t=pathlib.Path(t);private=t/'private';private.mkdir();a=t/'approval.json';a.write_text(json.dumps(self.approval()))
+    (private/'boot-command.json').write_bytes(raw);result=export(private,t/'public',a)
+    self.assertEqual(result['setupCommands'][0],{'command':'boot','present':True,'exitCode':None,'timedOut':None,'truncated':None})
+  with tempfile.TemporaryDirectory()as t:
+   t=pathlib.Path(t);private=t/'private';private.mkdir();a=t/'approval.json';a.write_text(json.dumps(self.approval()))
+   outside=t/'secret';outside.write_text(json.dumps({'returncode':0,'timedOut':False,'truncated':False,'stdout':'PRIVATE'}))
+   (private/'boot-command.json').symlink_to(outside);result=export(private,t/'public',a)
+   self.assertEqual(result['setupCommands'][0],{'command':'boot','present':True,'exitCode':None,'timedOut':None,'truncated':None})
  def test_publication_rejects_second_attempt_and_unapproved_payload(self):
   for invalid in ['second','payload']:
    with tempfile.TemporaryDirectory()as t:

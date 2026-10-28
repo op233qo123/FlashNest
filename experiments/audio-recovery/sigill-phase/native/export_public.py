@@ -44,13 +44,35 @@ def crash_summary(path):
   'signal':signal if signal in {'SIGILL','SIGTRAP','SIGABRT','SIGSEGV','SIGBUS','SIGKILL'} else None,
   'exceptionType':kind if kind in {'EXC_BAD_INSTRUCTION','EXC_BREAKPOINT','EXC_CRASH','EXC_BAD_ACCESS','EXC_RESOURCE','EXC_GUARD'} else None,
   'terminationCode':number(term.get('code')),**fault_signature(body)}
+def setup_command_statuses(private):
+ # Fixed receipt paths only. Never expose command text, stderr, paths or UDIDs.
+ statuses=[]
+ for command,filename in [('boot','boot-command.json'),('bootstatus','bootstatus-command.json'),
+                          ('host-architecture','host-architecture-command.json'),
+                          ('simulator-architecture','simulator-architecture-command.json')]:
+  path=Path(private)/filename
+  row={'command':command,'present':path.exists() or path.is_symlink(),
+       'exitCode':None,'timedOut':None,'truncated':None}
+  if row['present'] and not path.is_symlink() and path.is_file():
+   try:
+    # Existing receipts can include bounded stdout+stderr; parse privately only.
+    if path.stat().st_size<=1048576:
+     value=json.loads(path.read_bytes())
+     if isinstance(value,dict):
+      code=value.get('returncode')
+      if type(code)is int and -255<=code<=255:row['exitCode']=code
+      for key in ['timedOut','truncated']:
+       if type(value.get(key))is bool:row[key]=value[key]
+   except (OSError,ValueError):pass # Present but unknown is never inferred success.
+  statuses.append(row)
+ return statuses
 def export(private,output,approval):
  private,output=Path(private),Path(output)
  if output.exists() or private==output or output.is_relative_to(private) or private.is_relative_to(output):raise ValueError('Separate new public destination required')
  a=json.loads(Path(approval).read_text());resources=a['runtimes']['diagnostic']['files']
  if a.get('kind')!='sigill-phase-diagnostic-not-shipping' or a.get('authorizedObservationCount')!=1:raise ValueError('Wrong one-shot approval')
  if not re.fullmatch('[0-9a-f]{40}',a['buildCommit']) or not digest(a['archiveSHA256']) or any(type(a[k])is not int or a[k]<=0 for k in ['runID','artifactID']):raise ValueError('Unsafe public identity fields')
- result={'schema':1,'kind':'one-shot-phase-observation-not-fix','authorizedObservationCount':1,'expectedOS':'18.2','actualOS':None,'attempts':[],
+ result={'schema':1,'kind':'one-shot-phase-observation-not-fix','authorizedObservationCount':1,'expectedOS':'18.2','actualOS':None,'attempts':[],'setupCommands':setup_command_statuses(private),
   'privacy':'allowlisted diagnostics only; no raw logs/IPS/xcresult/user data','claim':'observed report is not proof of reproducing original SIGILL or owning shared WebContent','rawRetention':'private raw command/crash receipts ephemeral until runner teardown; no unified-log collection','input':{'expectedProductionSourceCommit':'5862f8dbd414d9835f11872d3ebabd1eed315ffc','expectedOriginalInjectorSHA256':'d495f538242dd49915810a33478c17da9c1e7a831a721524a9136c4f2628176b','nativeWorkflowCommit':os.environ.get('GITHUB_SHA') if re.fullmatch('[0-9a-f]{40}',os.environ.get('GITHUB_SHA','')) else None,'buildCommit':a['buildCommit'],'runID':a['runID'],'artifactID':a['artifactID'],'archiveSHA256':a['archiveSHA256']},'crashes':[]}
  path=private/'control-results.json'
  if path.is_file():

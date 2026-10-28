@@ -37,7 +37,7 @@
     "apply_startup.py": "142d25d7700151562f49b00485f6e19f4868354bf959c800d48d700446754941",
     "audio-recovery-injection.js": "d495f538242dd49915810a33478c17da9c1e7a831a721524a9136c4f2628176b",
     "collect.py": "ccebeba1003b00bdd451ab9b746e067ab3c709c9563abd028c8eeb32c84671e7",
-    "export_public.py": "0b9f6f7bbecab813cbce6bc1fef30d5c0415b1bf827ba40d4c7584173a4bd207",
+    "export_public.py": "3cf408ba22178f0a3a55aea0500b44bb3a4f3c3312139bf31570582dcbc0039a",
     "installed_bundle.py": "a2c88c29f1d8cc400aba3af6487a5167321e7595a3057dbfc02aa2e38522fdef",
     "project.yml": "bb90cc4c57bc1334f7965e9d80238a6f33804cf4836f22087da0de8252a69ea1",
     "run_one.py": "3fa20ca8466ba6a947f512a8ca9c4b30500c03bfc94fd9b05b4ba6e9c01d2976",
@@ -46,7 +46,7 @@
     "test_crash_signature.py": "6938330c138615538d06fcaa87680493a4934ebfdb6ca87c7e96f908d6354bf3",
     "test_engine.py": "0ba31d432fcd89d7511e060a984ddde603e3c7c63ce2346ae4024c7b94a8861d",
     "test_one.py": "4818241f7b292685d3521d6e4b3b886074c8bcef51b7c4cb755d1ec22b63dbb5",
-    "test_privacy_stage.py": "f650338ceb6f48747c98cc898473eaa9a23c12cef9488f53c4606f8155d82d52",
+    "test_privacy_stage.py": "915963ef295c11c6bae6d4e2568f9f48492e3ae26e6c27b995a9b2baf6b43814",
     "verify_engine.py": "3cb2d66686bbcaf7e5d9f0dae362fa63972fe2327f3792b9293bbfbef87a2f3d"
   },
   "note": "Distinct diagnostic engine only. Exactly one observation; no shipping promotion or crash-fix claim."
