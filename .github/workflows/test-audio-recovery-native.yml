@@ -1,0 +1,110 @@
+name: Diagnose owned audio recovery on iOS 18.5 (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-audio-recovery-native
+  cancel-in-progress: false
+jobs:
+  recovery:
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [baseline, candidate]
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Require reviewed immutable candidate approval and local gates
+        run: |
+          set -euo pipefail
+          test -f experiments/audio-recovery/native/approval.json
+          python3 -m unittest discover -s experiments/audio-recovery/native -p 'test_*.py'
+          node experiments/audio-recovery/native/test_injection.mjs
+          node scripts/test_audio_warning.js
+      - name: Fetch only approved runtime build artifact
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p recovery-download
+          read -r run_id artifact_id < <(python3 - <<'PY'
+          import json
+          a=json.load(open('experiments/audio-recovery/native/approval.json'))
+          assert a['repository']=='op233qo123/FlashNest'
+          assert type(a['runID']) is int and type(a['artifactID']) is int
+          print(a['runID'], a['artifactID'])
+          PY
+          )
+          gh api "repos/op233qo123/FlashNest/actions/runs/$run_id" > recovery-download/run.json
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$artifact_id" > recovery-download/artifact.json
+          python3 - <<'PYMETA'
+          import json
+          a=json.load(open('experiments/audio-recovery/native/approval.json'))
+          m=json.load(open('recovery-download/artifact.json'))
+          assert m['id']==a['artifactID'] and m['workflow_run']['id']==a['runID'] and not m['expired']
+          assert type(a['archiveBytes']) is int and 0<a['archiveBytes']<=128*1024*1024
+          assert m['size_in_bytes']==a['archiveBytes']
+          PYMETA
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$artifact_id/zip" > recovery-download/runtime.zip
+          python3 experiments/audio-recovery/native/verify_download.py recovery-download experiments/audio-recovery/native/approval.json
+          helper=$(python3 -c "import json;print(json.load(open('experiments/audio-recovery/native/approval.json'))['audioOperationSource']['path'])")
+          FLASHNEST_AUDIO_OPERATION_SOURCE="$GITHUB_WORKSPACE/recovery-download/extracted/$helper" node scripts/test_shell.js en
+          FLASHNEST_AUDIO_OPERATION_SOURCE="$GITHUB_WORKSPACE/recovery-download/extracted/$helper" node scripts/test_shell.js zh-Hans
+      - name: Stage isolated production host and exact runtime arm
+        run: |
+          set -euo pipefail
+          runtime=$(python3 -c "import json;print(json.load(open('experiments/audio-recovery/native/approval.json'))['runtimes']['${{ matrix.arm }}']['directory'])")
+          python3 experiments/audio-recovery/native/stage_host.py --repo . --output "$RUNNER_TEMP/recovery-stage" --arm '${{ matrix.arm }}' --runtime "recovery-download/extracted/$runtime" --approval experiments/audio-recovery/native/approval.json
+          git diff --exit-code -- App Tests UITests fixtures project.yml runtime.lock.json runtime.files.json
+      - name: Build pinned diagnostic target on exact simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          curl --fail --location --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          (cd "$RUNNER_TEMP/recovery-stage" && "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate)
+          mkdir -p "$RUNNER_TEMP/recovery-stage/AudioRecoveryDiagnostic.xcodeproj/project.xcworkspace/xcshareddata/swiftpm"
+          cp "$RUNNER_TEMP/recovery-stage/Package.resolved" "$RUNNER_TEMP/recovery-stage/AudioRecoveryDiagnostic.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+          device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py 18.5)
+          echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
+      - name: Actual trusted DOM retry and native fatal controls
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          mkdir -p recovery-evidence
+          touch recovery-evidence/start.marker
+          selection=(-only-testing:AudioRecoveryUITests/AudioRecoveryUITests/testUnpatchedBaselineKnownFailureStillReachesProductionNativeFailure)
+          if [ '${{ matrix.arm }}' = candidate ]; then selection=(-only-testing:AudioRecoveryUITests/AudioRecoveryUITests/testKnownOwnedResumeRejectsThenTrustedRetryKeepsSceneAndSave -only-testing:AudioRecoveryUITests/AudioRecoveryUITests/testUnknownResumeFailureStillReachesProductionNativeFailure); fi
+          xcodebuild test -project "$RUNNER_TEMP/recovery-stage/AudioRecoveryDiagnostic.xcodeproj" -scheme AudioRecoveryDiagnostic -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -derivedDataPath "$RUNNER_TEMP/recovery-build" -resultBundlePath recovery-evidence/Results.xcresult -disableAutomaticPackageResolution -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -test-timeouts-enabled YES -default-test-execution-time-allowance 180 -maximum-test-execution-time-allowance 180 "${selection[@]}" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee recovery-evidence/test.log
+          xcrun xcresulttool get test-results summary --path recovery-evidence/Results.xcresult > recovery-evidence/summary.json
+          python3 experiments/audio-recovery/native/verify_results.py '${{ matrix.arm }}' recovery-evidence/summary.json recovery-evidence/test.log
+      - name: Retain raw outcomes and source evidence
+        if: always()
+        run: |
+          mkdir -p recovery-evidence
+          cp "$RUNNER_TEMP/recovery-stage/"{source-manifest.json,overlay-manifest.json,session-injection.diff} recovery-evidence/ 2>/dev/null || true
+          if [ -d recovery-evidence/Results.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path recovery-evidence/Results.xcresult > recovery-evidence/summary.json || true
+            xcrun xcresulttool export attachments --path recovery-evidence/Results.xcresult --output-path recovery-evidence/attachments || true
+          fi
+          python3 scripts/collect_test_webkit_crashes.py recovery-evidence/start.marker recovery-evidence/crashes || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: audio-recovery-native-${{ matrix.arm }}
+          path: recovery-evidence
+          retention-days: 7
