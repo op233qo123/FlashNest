@@ -1,0 +1,86 @@
+name: Build experimental 1.5.5 device IPA (not release acceptance)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-experimental-ipa-155
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: macos-15
+    timeout-minutes: 35
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - name: Checkout isolated packaging recipe
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - name: Checkout exact implemented App snapshot
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 7f51087c662688bda6757df08d94c0aca7ae2e0e
+          path: candidate
+          persist-credentials: false
+      - name: Stage reviewed experimental overlay only
+        run: |
+          python3 recipe/experiments/test-ipa-155/test_packaging.py
+          python3 recipe/experiments/test-ipa-155/stage.py candidate
+      - name: Retrieve exact original engine artifact (not phase engine)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repos/op233qo123/FlashNest/actions/artifacts/12783974867/zip > candidate/vendor/ruffle-audio-recovery-40614335019.zip
+          echo '3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a  candidate/vendor/ruffle-audio-recovery-40614335019.zip' | shasum -a 256 --check
+          python3 candidate/scripts/fetch_runtime.py
+      - name: Validate exact runtime, source notices, metadata and shell
+        working-directory: candidate
+        run: |
+          set -euo pipefail
+          python3 scripts/test_static.py
+          python3 scripts/test_runtime_bundle.py
+          python3 scripts/test_package_metadata.py
+          python3 scripts/test_licenses.py
+          python3 scripts/test_localization.py
+          node --check App/Resources/Web/shell.js
+          node scripts/test_audio_warning.js
+          node scripts/test_shell.js
+          node scripts/test_shell.js zh-Hans
+      - name: Download checksum-pinned XcodeGen
+        working-directory: candidate
+        run: |
+          set -euo pipefail
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          curl --fail --location --retry 2 --max-time 120 -o "$RUNNER_TEMP/xcodegen.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip
+          echo "a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-pinned"
+          "$RUNNER_TEMP/xcodegen-pinned/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -version
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Compile unsigned device App only (no simulator acceptance claimed)
+        working-directory: candidate
+        run: |
+          set -euo pipefail
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNest -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - name: Verify and package experimental device IPA
+        working-directory: candidate
+        run: |
+          set -euo pipefail
+          bash scripts/package_unsigned.sh build/Build/Products/Release-iphoneos/FlashNest.app artifacts/FlashNest-1.5.5-build18-experimental-unsigned.ipa
+          python3 ../recipe/experiments/test-ipa-155/verify_ipa.py artifacts/FlashNest-1.5.5-build18-experimental-unsigned.ipa . artifacts/build-provenance.json
+      - name: Upload only experimental package and code-only identity
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-1.5.5-build18-experimental-unsigned
+          path: |
+            candidate/artifacts/FlashNest-1.5.5-build18-experimental-unsigned.ipa
+            candidate/artifacts/FlashNest-1.5.5-build18-experimental-unsigned.ipa.sha256
+            candidate/artifacts/build-provenance.json
+          if-no-files-found: error
+          retention-days: 7

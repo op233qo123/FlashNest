@@ -1,0 +1,61 @@
+--- a/web/src/audio.rs
++++ b/web/src/audio.rs
+@@ -108,6 +108,9 @@
+ 
+ impl Drop for WebAudioBackend {
+     fn drop(&mut self) {
++        // Detach node handlers and release their Rust closures before asking the
++        // browser to close the context. close() itself completes asynchronously.
++        self.buffers.clear();
+         let _ = self.context.close();
+     }
+ }
+@@ -144,11 +147,14 @@
+             log_subscriber: audio.log_subscriber.clone(),
+         }));
+ 
+-        // Swap in the onended handler.
+-        let buffer_handle = buffer.clone();
++        // The Buffer owns this closure, so a strong capture would retain the
++        // Buffer (and the closure) after the backend drops its buffers.
++        let buffer_handle = Rc::downgrade(&buffer);
+         buffer.borrow_mut().on_ended_handler = Closure::new(move || {
+-            // Refill and schedule the buffer for playback.
+-            let _ = buffer_handle.borrow_mut().play();
++            if let Some(buffer) = buffer_handle.upgrade() {
++                // Keep the Buffer alive only while refilling it.
++                let _ = buffer.borrow_mut().play();
++            }
+         });
+ 
+         Ok(buffer)
+@@ -156,6 +162,13 @@
+ 
+     fn play(&mut self) -> Result<(), JsError> {
+         let _subscriber = tracing::subscriber::set_default(self.log_subscriber.clone());
++
++        // This node has finished. Do not leave a reference to our handler on
++        // historical nodes when the Buffer eventually drops its closure.
++        if let Some(audio_node) = self.audio_node.take() {
++            let scheduled: &AudioScheduledSourceNode = &audio_node;
++            scheduled.set_onended(None);
++        }
+ 
+         let time_left = self.time.get() - self.context.current_time();
+         let mut buffer_timestep =
+@@ -248,9 +261,12 @@
+             .set(f64::max(self.time.get(), self.context.current_time()));
+ 
+         // Schedule this buffer for playback and advance the player time.
+-        audio_node
+-            .start_with_when(self.time.get())
+-            .into_js_result()?;
++        if let Err(error) = audio_node.start_with_when(self.time.get()).into_js_result() {
++            // This node is not stored in self.audio_node on an error path.
++            // Detach its callback before the Buffer can drop its closure.
++            scheduled.set_onended(None);
++            return Err(error.into());
++        }
+         self.time.set(self.time.get() + buffer_timestep);
+ 
+         self.audio_node = Some(audio_node);

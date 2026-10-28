@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "kind": "experimental-device-ipa-not-release-acceptance",
+  "baseCommit": "7f51087c662688bda6757df08d94c0aca7ae2e0e",
+  "version": "1.5.5",
+  "build": "18",
+  "bundleID": "com.flashnest.app",
+  "engineRun": 40614335019,
+  "engineArtifact": 12783974867,
+  "engineSource": "5d2cdcc6757d65194bd55c4a0395b76b0176d224",
+  "engineArchiveSHA256": "3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a",
+  "engineArchiveBytes": 22076102,
+  "overlay": [
+    {
+      "path": "Tests/FrameOrderRuntimeTests.swift",
+      "sha256": "750e2344cd8da6c64e1c8d2188b327cc8f3e81cbcdffeed9d9ac972604821468",
+      "bytes": 23379
+    },
+    {
+      "path": "runtime.lock.json",
+      "sha256": "ce33bd58ce5ad7ee8daa43b4dc450387ab24667099ced022944e87c2cb2ba41c",
+      "bytes": 3305
+    },
+    {
+      "path": "runtime.files.json",
+      "sha256": "25d4453b0375349e55b9f63f609bd129d6a3549e1da792e811f0e5d121247e90",
+      "bytes": 1157
+    },
+    {
+      "path": "App/Resources/Web/runtime-identity.json",
+      "sha256": "bdb97b8e97e3c1bb0213d83ea5c541891643454cea347961c60038670d0f06dd",
+      "bytes": 4275
+    },
+    {
+      "path": "App/Resources/Web/Ruffle-MODIFICATIONS.md",
+      "sha256": "73267ff97e6260191d8b0ab7fd98cfb4cf48a052078c3c2468b4122066e2047c",
+      "bytes": 5752
+    },
+    {
+      "path": "App/Resources/Web/licenses.manifest.json",
+      "sha256": "8a2e489c351c268776487c0f9b2cc79fe276b8dcaaec5cedec1c23831c0652d2",
+      "bytes": 1309
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "2782048f32853bc1dca9a48248290fb2e1554bb1eed095f8227f658bacb375fc",
+      "bytes": 5281
+    },
+    {
+      "path": "App/Resources/Web/THIRD_PARTY_NOTICES.md",
+      "sha256": "2782048f32853bc1dca9a48248290fb2e1554bb1eed095f8227f658bacb375fc",
+      "bytes": 5281
+    },
+    {
+      "path": "scripts/fetch_runtime.py",
+      "sha256": "c321822c0d130d534679901fc90d0ddea5322a39507e23e6df128a6fe4995add",
+      "bytes": 15433
+    },
+    {
+      "path": "scripts/verify_bundled_runtime.py",
+      "sha256": "feceb8c7655ecacb5f840659f012ce1f60d92f73a1a5974f0d308c3c1a986d5f",
+      "bytes": 3433
+    },
+    {
+      "path": "scripts/test_runtime_bundle.py",
+      "sha256": "fe6614e382eb91e482ace1956b72314a5a40475e8165516dc57d1cd74ca35348",
+      "bytes": 17087
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json",
+      "sha256": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4",
+      "bytes": 28950
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
+      "bytes": 659
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-source/audio-lifecycle.patch",
+      "sha256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9",
+      "bytes": 2506
+    },
+    {
+      "path": "vendor/ruffle-audio-recovery-source/audio-recovery.patch",
+      "sha256": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60",
+      "bytes": 10224
+    },
+    {
+      "path": "project.yml",
+      "sha256": "b99094fe0fec750417d4498e22e7aa8ef0814a05a20b0cde6124dd2b47f81d4d",
+      "bytes": 5579
+    },
+    {
+      "path": "App/Info-Debug.plist",
+      "sha256": "754edf5be7cd8f4065bc824844b5a29f9ac30810ab252f3dd2dc62de3a590cf2",
+      "bytes": 3903
+    },
+    {
+      "path": "Tests/LocalizationTests.swift",
+      "sha256": "dbf856f66f38ffa23aa099e9130a11e9f9f66f63444b60604f5f7c45e4dfebfb",
+      "bytes": 1408
+    },
+    {
+      "path": "scripts/package_unsigned.sh",
+      "sha256": "a223bdbfa77cf37fd5820f2f09a98b99f05f3970616960c01d522ec20b3274ff",
+      "bytes": 2159
+    },
+    {
+      "path": "scripts/test_package_metadata.py",
+      "sha256": "fc701a17c54e1300aead3ac01ef649503b8df48e1aa9de61136e7a0741519d03",
+      "bytes": 3291
+    }
+  ]
+}
