@@ -6,6 +6,13 @@ from contracts import ROOT,bind,digest,matrix,key,verify_measure,near,verify_bas
 from pixel_checks import compare,validate_warning
 from evidence_budget import write_png,write_json
 
+def capture_failure(page,result):
+ """Observe the still-live page before Playwright tears down; never alter input."""
+ try:
+  result['failureObservation']=page.evaluate('({evidence:window.evidence,canvas:window.measure?.(),pointerContext:window.pointerContext?.(),hardwareWarning:window.hardwareWarningState?.()})')
+ except Exception as exc:
+  result['failureObservationError']=type(exc).__name__+': '+str(exc)[:2000]
+
 def run(a):
  from playwright.sync_api import sync_playwright
  from PIL import Image
@@ -42,7 +49,7 @@ def run(a):
    result['preflightSHA256']=digest(ROOT/'evidence/browser-preflight.json')
    for index,row in enumerate(rows):
     assert time.monotonic()-started<1800,'Matrix exceeded30minute bound; incomplete'
-    result['active']={'index':index,**row};save()
+    result['active']={'index':index,**row};result['activePhases']=[];result.pop('activeInput',None);save()
     context=browser.new_context(viewport={'width':900,'height':900},device_scale_factor=row['dpr'])
     context.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin) else route.abort())
     page=context.new_page();wasm=[];response_errors=[]
@@ -93,9 +100,13 @@ def run(a):
      points=[(round(pw_*x),round(ph_*y)) for x,y in [(.05,.05),(.95,.05),(.05,.95),(.95,.95),(.5,.5)]]
      page.evaluate('window.pointerEvents=[]');before=page.evaluate('window.evidence.traces.filter(x=>x.startsWith("DENSITY|UP|")).length')
      for i,point in enumerate(points):
-      assert page.evaluate('(p)=>window.gameHitTarget(...p).canvasTopmost',point),'Canvas not topmost'
-      page.mouse.click(*point)
-      page.wait_for_function('(n)=>window.evidence.traces.filter(x=>x.startsWith("DENSITY|UP|")).length===n',arg=before+i+1,timeout=5000)
+      result['activeInput']={'phase':phase,'point':list(point),'clickIndex':i,'upCountBeforePhase':before,'expectedUpCount':before+i+1}
+      try:
+       assert page.evaluate('(p)=>window.gameHitTarget(...p).canvasTopmost',point),'Canvas not topmost'
+       page.mouse.click(*point)
+       page.wait_for_function('(n)=>window.evidence.traces.filter(x=>x.startsWith("DENSITY|UP|")).length===n',arg=before+i+1,timeout=5000)
+      except Exception:
+       capture_failure(page,result);save();raise
      events=page.evaluate('window.pointerEvents');assert len(events)==10
      for i,event in enumerate(events):
       assert event['trusted'] is True and event['type']==['pointerdown','pointerup'][i%2]
@@ -117,9 +128,7 @@ def run(a):
   result['passed']=True;result['elapsedSeconds']=time.monotonic()-started
  except Exception as exc:
   result['error']=str(exc);result['traceback']=traceback.format_exc()
-  if page:
-   try:result['failureObservation']=page.evaluate('({evidence:window.evidence,canvas:window.measure?.()})')
-   except Exception:pass
+  if page and 'failureObservation' not in result:capture_failure(page,result)
   raise
  finally:save();server.shutdown();server.server_close()
 if __name__=='__main__':

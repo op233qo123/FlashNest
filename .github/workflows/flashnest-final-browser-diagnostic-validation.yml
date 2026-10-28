@@ -1,0 +1,45 @@
+name: FlashNest final browser diagnostic validation (no IPA)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-final-browser-validation
+  cancel-in-progress: false
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Require final artifact and exact reviewed browser harness
+        run: python3 experiments/final-composite/scripts/validate_binding.py browser
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Install pinned browser Python dependencies, keep Chrome sandbox enabled
+        run: |
+          set -euo pipefail
+          cd experiments/final-composite
+          python3 -m venv validation-venv
+          validation-venv/bin/python -m pip install --require-virtualenv -r validation-harness/browser-runtime-validation/requirements.txt
+      - name: Run pinned artifact staging, sandboxed browser and independent verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: experiments/final-composite/validation-venv/bin/python experiments/final-composite/scripts/run_bound_lane.py browser
+      - name: Bound browser evidence
+        id: browser-budget
+        if: always()
+        run: python3 experiments/final-composite/scripts/evidence_budget.py experiments/final-composite/evidence
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.browser-budget.outputs.allowed == 'true'
+        with:
+          name: FlashNest-final-runtime-browser-evidence
+          path: experiments/final-composite/evidence/browser*
+          retention-days: 1
+          if-no-files-found: warn
