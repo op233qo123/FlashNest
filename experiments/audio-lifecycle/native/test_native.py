@@ -126,6 +126,38 @@ console.log('PASS native bounded/fail-fast polling mocks; no browser');
 """.replace('FUNCTION', function)
         subprocess.run(['node', '-'], input=program, text=True, check=True)
 
+    def test_action_deadline_separate_from_engine_and_diagnostic_errors(self):
+        source = (HERE / 'Web/native-runner.mjs').read_text()
+        wait = source[source.index('async function waitFor('):source.index('\nfunction healthy()')]
+        action = source[source.index('async function trustedClick('):source.index('\nasync function trustedAudio(')]
+        error = source[source.index('function errorDetail('):source.index('\nfunction failureContext()')]
+        program = r"""
+const assert=require('node:assert/strict');
+let now=0,delay=25000,row,kind='normal',sent=[],pendingAction=null,requestSequence=0;
+const host={deadlineMS:600000},arm='baseline',mode='normal';
+const Date={now:()=>now},setTimeout=fn=>{now+=50;fn()};
+function send(type,value){sent.push({type,...value})}
+function healthy(){if(now>=delay&&row.actions.length===0){row.actions.push({name:'remove',trusted:kind!=='untrusted'});if(kind==='duplicate')row.actions.push({name:'remove',trusted:true})}return{rows:[row]}}
+WAIT
+ACTION
+ERROR
+(async()=>{
+ row={cycle:0,actions:[]};await trustedClick('remove',0);assert.equal(now,25000);assert.equal(sent.filter(x=>x.type==='action').length,1);assert.equal(pendingAction,null);
+ now=0;delay=Infinity;row={cycle:0,actions:[]};await assert.rejects(trustedClick('remove',0),/One trusted remove/);assert.equal(now,90000);assert.equal(pendingAction.deadlineMS,90000);
+ now=0;host.deadlineMS=5000;row={cycle:0,actions:[]};await assert.rejects(trustedClick('remove',0));assert.equal(now,5000);
+ host.deadlineMS=600000;now=0;await assert.rejects(waitFor(()=>false,'engine Promise'));assert.equal(now,20000);
+ for(const value of ['untrusted','duplicate']){kind=value;now=0;delay=100;row={cycle:0,actions:[]};await assert.rejects(trustedClick('remove',0));assert.equal(now,100)}
+ kind='normal';now=0;delay=100;row={cycle:0,actions:[{name:'remove',trusted:true}]};await assert.rejects(trustedClick('remove',0));assert.equal(now,90000);
+ const d=errorDetail({message:'One trusted remove (bounded deadline)',stack:'@fixture.mjs:14:13'});assert.match(d.error,/One trusted remove/);assert.match(d.error,/@fixture/);assert.equal(d.errorMessage,'One trusted remove (bounded deadline)');
+ console.log('PASS action-only90s/global600, engine20s and exact error diagnostics mocks');
+})().catch(error=>{console.error(error);process.exitCode=1});
+""".replace('WAIT', wait).replace('ACTION', action).replace('ERROR', error)
+        subprocess.run(['node', '-'], input=program, text=True, check=True)
+        self.assertEqual(source.count(',90000)'), 1)
+        self.assertIn('timeout=20000', source)
+        self.assertIn('80000', source)  # Existing load deadlines unchanged.
+        self.assertLess(source.index('diagnosticContext=failureContext()'), source.index('try{window.dispose?.()}'))
+
     def test_archive_hash_before_extraction_and_unsafe_paths(self):
         import prepare_browser_archive
         import test_stage_native as fixtures

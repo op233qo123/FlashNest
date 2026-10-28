@@ -1,16 +1,16 @@
 {
   "files": {
     "Host/NativeAudioHost.swift": {
-      "bytes": 18936,
-      "sha256": "20632b45e7b3aede37c80dcaa6ca988531d88889fbf15b44d32c28f868ed1257"
+      "bytes": 19985,
+      "sha256": "903e7e87c23b4ab00f548f64e31aa47765c97e3630de48caddacf8c8aafc4eea"
     },
     "README.md": {
-      "bytes": 11952,
-      "sha256": "df0dba32d3e61b5b8c7158eff3d2b45d5dd2ecb7ac817db504413f5fb0f4e5b4"
+      "bytes": 15190,
+      "sha256": "c62ab2bd3013b6214da25e9fd0d51abe4fe0f38d445c356577623fcf848c95b1"
     },
     "UITests/NativeAudioLifecycleUITests.swift": {
-      "bytes": 7016,
-      "sha256": "9b2eeed56bb5cc2fc1181ff5d5835349dadcddb2c77538e061a49b57a8089c29"
+      "bytes": 7672,
+      "sha256": "c360205b93b37e169cb79280bacd31aa0e543e1ee122299722cd181098f7a43e"
     },
     "Web/assert.mjs": {
       "bytes": 846,
@@ -25,8 +25,8 @@
       "sha256": "7b58dd7bfe8ec4beb22a12d4ad1fcf279baa2d45c37550da6b5d790b2d83a160"
     },
     "Web/native-runner.mjs": {
-      "bytes": 5445,
-      "sha256": "5853a1212e33a624b45f0fced8c05a77bbeae104abc05e176a471705e02c52c4"
+      "bytes": 6608,
+      "sha256": "23d2e99aeb94d795f3cd72428abe551eb0946b5a6a32e2c50edc32e26d96e325"
     },
     "browser-approval.json": {
       "bytes": 627,
@@ -37,8 +37,8 @@
       "sha256": "941c5e35aa188be1a10eddb00eb3d95ad0d1735a35409c3d98db220b2eedede0"
     },
     "collect_native_evidence.py": {
-      "bytes": 4740,
-      "sha256": "83668446c1a3dea107b26223fccc8e019f0d64907bc3d3cd4c89acf8ccc56620"
+      "bytes": 7824,
+      "sha256": "02bf941e8536b74ca9dcd2527297594a1f17a44736035619fa64a1bae2639a3a"
     },
     "prepare_browser_archive.py": {
       "bytes": 1425,
@@ -53,12 +53,12 @@
       "sha256": "adac13e395ca332929d80d17becccf6365aa7410ca9adc03591cd295c170be09"
     },
     "test_collect_native.py": {
-      "bytes": 4783,
-      "sha256": "f3715ca4a2f0066e405180b317aeba2bb4c87c774ead7719bc064be7930d4f01"
+      "bytes": 10278,
+      "sha256": "6ed03ba0e726ab89c1ab1bf5ce4e1a48f73e15430187654dba8c6461710f3a0b"
     },
     "test_native.py": {
-      "bytes": 11141,
-      "sha256": "5e1a0c67dca7d10000e9396d1513be730e701b14f210d5b18f05139a80578ad6"
+      "bytes": 13932,
+      "sha256": "12403b58234936a1edd5c4081787951e39567736657ed44cd1505344b00c7f86"
     },
     "test_raw_replay.mjs": {
       "bytes": 5619,
@@ -82,5 +82,5 @@
     }
   },
   "schemaVersion": 1,
-  "scope": "Isolated native Canvas gate evidence-retention repair; previous native run partial failure, repaired harness not yet executed"
+  "scope": "Isolated native Canvas action scheduling and post-test evidence recovery repair; no production or runtime changes; native execution pending"
 }

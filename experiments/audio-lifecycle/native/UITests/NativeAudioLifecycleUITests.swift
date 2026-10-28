@@ -7,8 +7,15 @@ final class NativeAudioLifecycleUITests: XCTestCase {
     private var lastTappedAction: String?
     private var activeApp: XCUIApplication?
     override func tearDown() {
+        // Preserve the original XCTest issue even if secondary AX collection fails.
+        let previousContinuation = continueAfterFailure
+        continueAfterFailure = true
+        defer { continueAfterFailure = previousContinuation }
         if let app = activeApp, app.state == .runningForeground || app.state == .runningBackground {
             requestAbortAndDrain(app: app, status: app.staticTexts["audio-native-status"])
+            // Also retain terminal diagnostics when an AX exception bypasses the
+            // ordinary Swift guard/failure helper. No extra game action is sent.
+            attachTerminal("audio-native-teardown", app: app)
             app.terminate()
         }
         activeApp = nil
@@ -25,6 +32,7 @@ final class NativeAudioLifecycleUITests: XCTestCase {
         defer {
             if app.state == .runningForeground || app.state == .runningBackground {
                 requestAbortAndDrain(app: app, status: status)
+                attachTerminal("audio-native-deferred-cleanup", app: app)
                 app.terminate()
             }
         }
@@ -109,7 +117,7 @@ final class NativeAudioLifecycleUITests: XCTestCase {
         let note = XCTAttachment(string: "Native abort did not confirm awaited drain; failure-path app termination is forced, not clean teardown proof")
         note.name = "audio-native-forced-termination.txt"; note.lifetime = .keepAlways; add(note)
     }
-    private func attachScreenshot(_ name: String, app: XCUIApplication) {
+    private func attachTerminal(_ name: String, app: XCUIApplication) {
         // A second, independent retention path for the bounded exact page failure.
         // It is diagnostic evidence only; the complete raw22 disk gate is unchanged.
         let status = app.staticTexts["audio-native-status"]
@@ -118,6 +126,9 @@ final class NativeAudioLifecycleUITests: XCTestCase {
             let raw = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
             raw.name = name + "-terminal.json"; raw.lifetime = .keepAlways; add(raw)
         }
+    }
+    private func attachScreenshot(_ name: String, app: XCUIApplication) {
+        attachTerminal(name, app: app)
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }

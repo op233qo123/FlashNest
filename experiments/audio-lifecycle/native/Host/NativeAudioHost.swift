@@ -172,7 +172,20 @@ import WebKit
                 let passed = result["passed"] as? Bool == true && completedCases == (mode == "normal" ? 8 : 1)
                 // Original-fixture evidence only. Retain the exact terminal body in
                 // XCTest as well as Documents; container lookup can fail after exit.
-                if let bytes = try? JSONSerialization.data(withJSONObject: body, options: [.sortedKeys, .withoutEscapingSlashes]),
+                // The full observer snapshot can exceed AX limits. Mirror only
+                // exact result diagnostics and control geometry, with a full-body
+                // digest/size; raw Documents remains the independent acceptance gate.
+                var summary: [String: Any] = ["diagnosticOnly": true, "type": "complete",
+                    "arm": arm, "mode": mode, "completedCases": completedCases]
+                for key in ["passed", "error", "errorMessage", "errorStack", "cleanupError", "snapshotError"] {
+                    if let value = result[key] { summary[key] = value }
+                }
+                if let value = body["diagnosticContext"] { summary["diagnosticContext"] = value }
+                if let bytes = try? JSONSerialization.data(withJSONObject: body, options: [.sortedKeys, .withoutEscapingSlashes]) {
+                    summary["fullBodyBytes"] = bytes.count
+                    summary["fullBodySHA256"] = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+                }
+                if let bytes = try? JSONSerialization.data(withJSONObject: summary, options: [.sortedKeys, .withoutEscapingSlashes]),
                    bytes.count <= 131_072 {
                     status.accessibilityValue = redactDiagnosticURL(String(decoding: bytes, as: UTF8.self))
                 } else {

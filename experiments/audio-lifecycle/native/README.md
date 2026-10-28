@@ -185,3 +185,52 @@ Compilation now has a separate10-minute `build-for-testing` step; the existing
 12-minute `test-without-building` step uses the same scheme, destination and
 DerivedData. Job30-minute and native per-test deadlines are unchanged. This
 separation does not reinterpret the historical assertion failure as a timeout.
+
+
+## Native action scheduling and post-test extraction repair
+
+Run [40563016412](https://github.com/op233qo123/FlashNest/actions/runs/40563016412),
+source `44a5eaadd43c43d585c2b3aa5b10e8fa7f71f1d4`, built successfully but failed
+at the first baseline-normal Remove lookup. No candidate case ran and no
+WebKit/GPU/Metal-host crash was collected. Artifact `12760869377` is77,409,244
+bytes, SHA-256 `53cf433b5aa2542991e848824f2b417ef7f01d8a995416dd8c921c8c62f1d5ec`.
+It remains a failed run, not native audio validation.
+
+The video shows the requested Remove button visibly on-screen while the native
+status is `ACTION baseline/normal/0/4/remove`. XCTest's existence-to-hittability
+lookups alone took over10 seconds; no Remove tap was recorded. The later AX
+snapshot shows the page had already failed and its WK view had been removed.
+The stack points at the page polling deadline, but WebKit's stack-only string
+omitted the exact predicate message. This supports an action-scheduling race,
+not an audio-engine failure or an off-screen button geometry diagnosis.
+
+Only the wait for one **trusted UI action** is now90 seconds, matching the
+existing native action/status allowance and capped by the unchanged global
+600-second matrix deadline. Audio Promise, refill, heartbeat and close waits
+remain20 seconds; load waits remain80 seconds. Every action still requires
+exactly one fresh trusted event, without retries, forced coordinates, synthetic
+clicks or media-policy changes. Duplicate, untrusted and stale actions fail.
+
+Failures retain explicit error message plus stack, the pending action token,
+request/deadline timestamps and the actual control rectangles before disposal.
+The accessibility mirror now contains a bounded, explicitly diagnostic-only
+summary with full terminal-body SHA-256/byte count, rather than dropping the
+entire mirror when a full observer snapshot exceeds128KiB. Exact raw terminal
+and per-case evidence remain in Documents and are still independently required
+by the unchanged22-case replay gate. Teardown attempts this compact attachment
+even when an XCTest AX exception bypasses a Swift guard; secondary collection
+cannot replace the original failure. The overall660-second XCTest cap remains
+necessary because synchronous AX calls cannot be individually cancelled.
+
+The stricter collector established the exact post-test extraction problem:
+selected and actual simulator UUIDs matched, but `simctl get_app_container`
+returned149 with `Unable to lookup in current state: Shutdown`. Only after
+preserving test-window crash reports, recovery may boot **that same available
+Shutdown simulator** once, with30-second boot and90-second bootstatus limits,
+then repeat the exact diagnostic bundle lookup. It never launches, reinstalls,
+erases or resets any app, and never scans another device's containers. Receipt
+records original error/state, crash-collection hash, timestamps and all recovery
+exit/stderr/timeout results. Unknown/unavailable/non-Shutdown states fail closed.
+Reports produced by evidence-only boot are not relabeled as test-window crashes.
+These changes are diagnostic harness repairs only; runtime bytes and production
+App behavior are unchanged. Actual repaired native execution remains pending.

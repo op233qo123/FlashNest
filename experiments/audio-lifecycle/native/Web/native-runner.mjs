@@ -4,7 +4,7 @@ import {freshAction} from './fresh-action.mjs';
 // No synthetic click/resume, normal callback invocation, autoplay exemption,
 // mute override or retained source. Only XCUITest taps the real DOM controls.
 const params=new URLSearchParams(location.search),arm=params.get('runtime'),mode=params.get('mode');
-const host=window.__nativeAudioHost,rows=[];let finished=false,requestSequence=0;
+const host=window.__nativeAudioHost,rows=[];let finished=false,requestSequence=0,pendingAction=null;
 function send(type,payload){window.webkit.messageHandlers.audioLifecycle.postMessage({type,arm,mode,...payload})}
 function snapshot(){return window.snapshot?.()}
 function context(e,cycle){const rows=e.audio.contexts.filter(c=>c.cycle===cycle);assert.equal(rows.length,1,'Expected one actual AudioContext');return rows[0]}
@@ -17,8 +17,10 @@ function healthy(){const e=snapshot();if(e)checkHealthy(e,{mode});return e}
 async function trustedClick(name,cycle){
  const before=healthy().rows.find(x=>x.cycle===cycle).actions.length;
  const token=`${arm}/${mode}/${cycle}/${++requestSequence}/${name}`;
+ pendingAction={token,name,cycle,requestedAtMS:Date.now(),deadlineMS:Math.min(host.deadlineMS,Date.now()+90000)};
  send('action',{token,name,cycle});
- await waitFor(()=>{const row=healthy().rows.find(x=>x.cycle===cycle);if(row.actions.length===before)return false;assert.equal(row.actions.length,before+1,'Duplicated action');const action=row.actions.at(-1);assert.equal(action.name,name);assert.equal(action.trusted,true,'Untrusted DOM event');return true},'One trusted '+name);
+ await waitFor(()=>{const row=healthy().rows.find(x=>x.cycle===cycle);if(row.actions.length===before)return false;assert.equal(row.actions.length,before+1,'Duplicated action');const action=row.actions.at(-1);assert.equal(action.name,name);assert.equal(action.trusted,true,'Untrusted DOM event');return true},'One trusted '+name,90000);
+ pendingAction=null;
  send('busy',{token});
 }
 async function trustedAudio(kind,cycle){
@@ -56,11 +58,27 @@ async function run(){
  return {passed:true,rows};
 }
 // Fail-fast: any predicate exception escapes immediately, including falsy throws.
-run().then(result=>finish(result),error=>finish({passed:false,rows,error:String(error?.stack||error)}));
+function errorDetail(error){
+ const message=String(error?.message??error).slice(0,2048),stack=String(error?.stack??'').slice(0,8192);
+ return {error:String(error?.name??'Error').slice(0,128)+': '+message+(stack?'\n'+stack:''),errorMessage:message,errorStack:stack};
+}
+function failureContext(){
+ const controls={};
+ for(const name of ['resume','pause','remove']){
+  const button=document.getElementById(name),rect=button?.getBoundingClientRect();
+  controls[name]=button?{connected:button.isConnected,disabled:button.disabled,
+   rect:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null}:null;
+ }
+ return {pendingAction,observedAtMS:Date.now(),visibility:document.visibilityState,
+  viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},controls};
+}
+run().then(result=>finish(result),error=>finish({passed:false,rows,...errorDetail(error)}));
 function finish(result){
  if(finished)return;finished=true;
+ // Capture the pending predicate and real control geometry before dispose/removal.
+ let diagnosticContext;try{diagnosticContext=failureContext()}catch(error){diagnosticContext={unavailable:true,...errorDetail(error)}}
  let cleanupError=null;try{window.dispose?.()}catch(error){cleanupError=String(error)}
  if(cleanupError)result={...result,passed:false,cleanupError};
  let lastEvidence=null;try{lastEvidence=snapshot()}catch(error){result={...result,passed:false,snapshotError:String(error)}}
- send('complete',{result,lastEvidence});
+ send('complete',{result,lastEvidence,diagnosticContext});
 }
