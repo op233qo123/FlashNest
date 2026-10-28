@@ -75,9 +75,17 @@ final class RendererCompatibilityUITests: XCTestCase {
     private func requireCurrent(_ requested: String, _ app: XCUIApplication) {
         let title = app.staticTexts["Requested for this opening"].firstMatch
         reveal(title, app)
-        let group = app.descendants(matching: .any).matching(identifier: "renderer-settings-requested").firstMatch
-        XCTAssertTrue(group.exists)
-        XCTAssertTrue(group.staticTexts[requested].exists || group.label.contains(requested))
+        // SwiftUI can propagate a VStack identifier to its separate Text nodes.
+        // Preserve current-request scoping; never match the selectable mode row.
+        evidence("Current requested renderer before assertion: " + requested, app)
+        let nodes = app.descendants(matching: .any).matching(identifier: "renderer-settings-requested")
+            .allElementsBoundByIndex
+        XCTAssertFalse(nodes.isEmpty)
+        XCTAssertTrue(nodes.contains { $0.label == requested || $0.staticTexts[requested].exists },
+                      "The current-opening value must occur within the requested-value AX scope")
+        let other = requested == "Automatic (default)" ? "WebGL compatibility" : "Automatic (default)"
+        XCTAssertFalse(nodes.contains { $0.label == other || $0.staticTexts[other].exists },
+                       "Current-opening scope must not report the other renderer request")
         let unconfirmed = app.staticTexts["Not yet confirmed by the renderer"].firstMatch
         reveal(unconfirmed, app)
         XCTAssertTrue(unconfirmed.isHittable)
