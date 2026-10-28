@@ -33,7 +33,7 @@ def near(rows,expected):
    except ValueError:assert x==y,(x,y)
 try:
  with sync_playwright() as pw:
-  browser=pw.chromium.launch(chromium_sandbox=True,headless=True,args=['--enable-unsafe-swiftshader'])
+  browser=pw.chromium.launch(channel="chrome",chromium_sandbox=True,headless=True,args=['--enable-unsafe-swiftshader'])
   for dpr in [1,3]:
    context=browser.new_context(viewport={'width':900,'height':900},device_scale_factor=dpr)
    page=context.new_page();refs={};shots={}

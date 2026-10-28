@@ -22,19 +22,24 @@ jobs:
           sparse-checkout: sampling-validation
       - name: Verify exact reviewed synthetic payload before installation
         run: python3 scripts/verify_payload.py
-      - name: Install pinned Playwright and its bundled Chromium (CI only)
+      - name: Install pinned Playwright for runner-provided Chrome
         run: |
           set -euo pipefail
           python3 -c 'import sys; assert sys.version_info[:2] == (3,12)'
           python3 -m venv /tmp/sampling-venv
           /tmp/sampling-venv/bin/pip install --only-binary=:all: -r requirements.txt
-          /tmp/sampling-venv/bin/python -m playwright install --with-deps chromium
+          /tmp/sampling-venv/bin/pip check
           /tmp/sampling-venv/bin/pip freeze > evidence/python-dependencies.txt
           python3 --version > evidence/runner.txt
           uname -a >> evidence/runner.txt
           printf 'commit=%s\nrun=%s\nattempt=%s\nimage=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$ImageVersion" >> evidence/runner.txt
       - name: Run static helper and integrity checks
         run: /tmp/sampling-venv/bin/python scripts/test_static.py
+      - name: Bounded sandboxed Chrome setup preflight (not matrix evidence)
+        timeout-minutes: 2
+        run: |
+          set -o pipefail
+          timeout --kill-after=5s 75s /tmp/sampling-venv/bin/python scripts/browser_preflight.py 2>&1 | /tmp/sampling-venv/bin/python scripts/evidence_budget.py log evidence/browser-preflight.log
       - name: Run both real-browser backend matrices without retry or relaxed gates
         run: |
           set -uo pipefail
