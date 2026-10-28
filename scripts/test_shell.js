@@ -2,13 +2,14 @@
 const assert = require('node:assert/strict'), vm = require('node:vm'), fs = require('node:fs');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '../App/Resources/Web/shell.js'), 'utf8');
+const audioSource = fs.readFileSync(path.join(__dirname, '../App/Resources/Web/audio-warning.js'), 'utf8');
 const bridgeSource = fs.readFileSync(path.join(__dirname, '../App/Resources/Web/save-bridge.js'), 'utf8');
 const language = process.argv[2] || 'en';
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
 async function exercise(timing) {
   const controls = [], elements = {}, messages = [], keyEvents = [], consoleCalls = [], listeners = new Map(), windowListeners = new Map(), documentListeners = new Map(), stored = new Map();
-  let finishLoad, config, suspended = 0, resumed = 0, removed = 0, appended, fetchResponse = {ok:true}, fetchError, fetchCalls = 0, canvasFocusCalls = 0, clockTime = 0, traceCloseStart, runtimePlaying = false, overlayVisible = true, probeThrows = false;
+  let resumeHook, finishLoad, config, suspended = 0, resumed = 0, removed = 0, appended, fetchResponse = {ok:true}, fetchError, fetchCalls = 0, canvasFocusCalls = 0, clockTime = 0, traceCloseStart, runtimePlaying = false, overlayVisible = true, probeThrows = false;
   const canvasListeners = new Map();
   const canvas = {
     getBoundingClientRect:() => ({width:390,height:844}),
@@ -25,7 +26,9 @@ async function exercise(timing) {
       const entries = listeners.get(type) || [];
       entries.push({callback, once:options?.once}); listeners.set(type, entries);
     },
+    removeEventListener(type, callback) { listeners.set(type, (listeners.get(type) || []).filter(x => x.callback !== callback)); },
     dispatchEvent(event) {
+      event.target ??= player;
       if (event.type === 'keydown') assert.equal(context.document.activeElement, player, 'Focus must be restored before dispatch');
       if (event.type.startsWith('key')) keyEvents.push(event);
       for (const listener of [...(listeners.get(event.type) || [])]) {
@@ -37,6 +40,7 @@ async function exercise(timing) {
   const api = {
     load: async options => {
       config = options;
+      assert.equal(listeners.get('ruffle-audio-status')?.length, 1, 'Audio status listener must precede runtime binding/load');
       assert.equal(listeners.get('loadeddata')?.length, 1, 'Install the completion listener before load');
       if (timing === 'early') player.dispatchEvent({type:'loadeddata'});
       if (timing === 'rejected') throw new Error('fixture load failed: ' + options.url);
@@ -45,9 +49,14 @@ async function exercise(timing) {
     },
     get isPlaying() { if (probeThrows) throw new Error('unavailable instance'); return runtimePlaying; },
     suspend: () => { suspended++; runtimePlaying = false; overlayVisible = true; },
-    resume: () => { resumed++; runtimePlaying = true; overlayVisible = false; }
+    resume: () => { resumed++; runtimePlaying = true; overlayVisible = false; resumeHook?.(); }
   };
-  for (const id of ['status','start','stage']) elements[id] = {textContent:'', disabled:id === 'start', hidden:false, append:p => appended = p};
+  for (const id of ['status','start','stage','audio-warning','audio-warning-message','audio-retry']) {
+    const handlers = new Map();
+    elements[id] = {textContent:'', disabled:id === 'start', hidden:false, append:p => appended = p, handlers,
+      addEventListener:(name, callback) => handlers.set(name, callback),
+      removeEventListener:(name, callback) => { if (handlers.get(name) === callback) handlers.delete(name); }};
+  }
   const context = {
     URL, URLSearchParams, Object, Set, Error, String, TextEncoder, atob, btoa, KeyboardEvent:class { constructor(type, options) { this.type = type; Object.assign(this, options); } },
     location:{href:'http://127.0.0.1:8766/cap/web/index.html?package=11111111-1111-4111-8111-111111111111&entry=folder%2Fspace%20%23.swf&language=' + encodeURIComponent(language)}
@@ -86,6 +95,7 @@ async function exercise(timing) {
   }
   if (timing === 'invalidrestore') context.window.__FlashNestRestore = {version:99,entries:[]};
   vm.runInNewContext(bridgeSource, context);
+  vm.runInNewContext(audioSource, context);
   vm.runInNewContext(source, context);
   await settle();
 
@@ -163,6 +173,74 @@ async function exercise(timing) {
   elements.start.onclick(); assert.equal(resumed, 2); assert.equal(elements.start.hidden, true);
   context.window.FlashNest.pause(); assert.equal(suspended, 1);
   context.window.FlashNest.resume(); assert.equal(resumed, 3);
+  if (timing === 'audio-source') {
+    const {pathToFileURL} = require('node:url');
+    const {bindAudioContext,requestAudioOperation} = await import(pathToFileURL(process.env.FLASHNEST_AUDIO_OPERATION_SOURCE).href);
+    let rejection, fulfillment, calls=0;
+    const native = {state:'suspended',resume(){calls++;return new Promise((resolve,reject)=>{fulfillment=resolve;rejection=reject;});}};
+    const release = bindAudioContext(native,detail=>player.dispatchEvent({type:'ruffle-audio-status',detail}));
+    const unhandled=[];
+    const route = reason => { unhandled.push(reason);windowListeners.get('unhandledrejection')({reason}); };
+    process.on('unhandledRejection',route);
+    try {
+      requestAudioOperation(native,'resume','core-play');
+      rejection(new DOMException('Failed to start the audio device','InvalidStateError'));
+      await settle();await settle();
+      assert.equal(elements['audio-warning'].hidden,false);assert.equal(unhandled.length,0);
+      assert.equal(messages.filter(x=>x.type==='error').length,0);
+      resumeHook=()=>requestAudioOperation(native,'resume','core-play');
+      const retry=elements['audio-retry'];
+      await retry.handlers.get('click')({isTrusted:true,currentTarget:retry});
+      assert.equal(calls,2);assert.equal(retry.disabled,true);assert.equal(elements['audio-warning'].hidden,false);
+      native.state='running';fulfillment();await settle();await settle();
+      assert.equal(elements['audio-warning'].hidden,true,'Exact helper Promise fulfillment clears the captured explicit attempt');
+      assert.equal(messages.filter(x=>x.type==='error').length,0);assert.equal(removed,0);
+      native.state='suspended';requestAudioOperation(native,'resume','visibility');
+      rejection(new DOMException('Failed to start the audio device','InvalidStateError'));await settle();await settle();
+      assert.equal(elements['audio-warning'].hidden,false);
+      const unknown=new Error('original unclassified engine rejection');
+      requestAudioOperation(native,'resume','core-play');rejection(unknown);
+      await settle();await settle();await settle();
+      assert.equal(calls,4);assert.equal(unhandled.length,1);assert.equal(unhandled[0],unknown);
+      assert.equal(messages.filter(x=>x.type==='error').length,1);
+      assert(messages.filter(x=>x.type==='error')[0].message.includes(unknown.message));
+      assert.equal(elements['audio-warning'].hidden,true,'Unknown original helper rejection reaches native fatal, not recovery');
+      assert.equal(removed,0,'Fatal routing must not silently destroy/restart current game');
+    } finally { process.removeListener('unhandledRejection',route);release();resumeHook=undefined; }
+    await context.window.FlashNest.shutdownAndCapture();return;
+  }
+  if (timing === 'audio') {
+    const base = {schema:1,contextId:1,operationId:0,intentId:0,phase:'bind',operation:'none',status:'bound',state:'suspended',current:true,retryEligible:false};
+    const emit = fields => player.dispatchEvent({type:'ruffle-audio-status',detail:{...base,...fields}});
+    const op = (id,status,extra={}) => emit({operationId:id,intentId:id,phase:'core-play',operation:'resume',status,...extra});
+    const warning = elements['audio-warning'], retry = elements['audio-retry'];
+    const snapshot = {removed, stored:[...stored], loaded:messages.filter(x=>x.type==='loaded').length};
+    assert.equal(warning.hidden, true); emit({}); op(1,'pending');op(1,'rejected',{retryEligible:true});
+    assert.equal(warning.hidden,false);assert.equal(retry.disabled,false);
+    assert.equal(elements['audio-warning-message'].textContent,language==='zh-Hans'?'音频启动失败，可尝试重试；不会重启当前游戏。':'Audio could not start. Retrying will not restart the game.');
+    assert.equal(retry.textContent,language==='zh-Hans'?'重试声音':'Retry audio');
+    assert.equal(messages.filter(x=>x.type==='error').length,0,'Eligible source status never becomes native fatal');
+    await retry.handlers.get('click')({isTrusted:false,currentTarget:retry});assert.equal(resumed,3);
+    resumeHook=()=>op(2,'pending');await retry.handlers.get('click')({isTrusted:true,currentTarget:retry});
+    assert.equal(resumed,4);assert.equal(retry.disabled,true);assert.equal(warning.hidden,false);
+    await retry.handlers.get('click')({isTrusted:true,currentTarget:retry});assert.equal(resumed,4);
+    op(2,'fulfilled',{state:'running'});assert.equal(warning.hidden,true);
+    assert.deepEqual({removed,stored:[...stored],loaded:messages.filter(x=>x.type==='loaded').length},snapshot,'Retry never reloads, saves or removes the player');
+    resumeHook=undefined;op(3,'pending');op(3,'rejected',{retryEligible:true});
+    context.window.FlashNest.pause();assert.equal(retry.disabled,true);
+    context.window.FlashNest.resume();assert.equal(retry.disabled,false);
+    context.document.hidden=true;documentListeners.get('visibilitychange')();assert.equal(retry.disabled,true);
+    context.document.hidden=false;documentListeners.get('visibilitychange')();assert.equal(retry.disabled,false);
+    windowListeners.get('error')({message:'resource error'});
+    assert.equal(messages.filter(x=>x.type==='error').length,0,'window.error is still diagnostic only, not a substitute fatal route');
+    const unknown = new Error('unknown audio failure');
+    windowListeners.get('unhandledrejection')({reason:unknown});
+    assert.equal(messages.filter(x=>x.type==='error').length,1,'Unknown rejection preserves the existing native fatal route');
+    assert(messages.at(-1).message.includes(unknown.message));assert.equal(warning.hidden,true);
+    assert.equal(retry.disabled,true);assert.equal(retry.handlers.size,0,'Fatal state tears down warning only, not the game');
+    assert.equal(removed,0);await context.window.FlashNest.shutdownAndCapture();assert.equal(removed,1);
+    return;
+  }
   const playingLabel = language === 'zh-Hans' ? '运行时播放=' : 'runtimePlaying=';
   const overlayLabel = language === 'zh-Hans' ? '播放遮罩可见=' : 'playOverlayVisible=';
   assert(messages.at(-1).message.includes(playingLabel + 'true'));
@@ -327,7 +405,9 @@ async function exercise(timing) {
 }
 
 (async () => {
-  for (const timing of ['delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake','renderer:webgl','renderer:automatic','renderer:WEBGL','renderer:webgpu','renderer:','renderer:__proto__']) await exercise(timing);
+  if (process.env.FLASHNEST_AUDIO_OPERATION_SOURCE) await exercise('audio-source');
+  for (const timing of ['audio','delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake','renderer:webgl','renderer:automatic','renderer:WEBGL','renderer:webgpu','renderer:','renderer:__proto__']) await exercise(timing);
+  if (process.env.FLASHNEST_AUDIO_OPERATION_SOURCE) console.log(language + ': PASS actual source helper → warning → explicit retry fulfillment → original unknown fatal exactly once (mocked context, not native audio)');
   console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, baseline fullscreen, bounded scene/trace/runtime-console diagnostics, live written-save checkpoints, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
