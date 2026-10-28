@@ -69,8 +69,8 @@
     }
   },
   "diagnosticFiles": {
-    "Host/AudioRecoveryHost.swift": "cd23fd47f7c888c26eeb2b2839a8fe2cf653555399a042a8227f4705b169edc9",
-    "Host/StartupJournal.swift": "4ee3de87ef6bdb701af0ae0ae6cb7985ba365e5dfadda14cf5f10684cc52e1e2",
+    "Host/AudioRecoveryHost.swift": "ccedbf2f7a71d7cd68ac4d8651f7c65e2f6aeb09b76995322eb443dc2dcae8b4",
+    "Host/StartupJournal.swift": "31bbd6f61e0eaf5cfcfb3f1eaf1b9856cd65b9d5d265d8ed67a77c46146703ca",
     "README.md": "0a1517e18f5dba11642a0b935a6f8906806ac1d040302cc22d4ab82050697756",
     "UITests/AudioRecoveryUITests.swift": "6d98aa87079b042970b53626f67d302e831bad0394421ff5d1eafc97c572a419",
     "apply_injection.py": "5ad6ffc33c6a528ea94e186dba9b9f7c328bb0909f5e19ac3e731bced4f96ab2",
@@ -78,12 +78,12 @@
     "audio-recovery-injection.js": "39f91106d65dd7d1f9cfd450009625164af74acd0d68002fc6bd1653f0a8fa1c",
     "project.yml": "2ef32255bf4334e71e4c979543070a90d9eeee11bfd43b8d25470cfdb7e56d7a",
     "stage_host.py": "f2d6063713045524df528425a7c113bc0cb796bab6b933f4b5f7589ddbe30dbb",
-    "startup-journal.js": "a0a7f4c5655ef846e5052659eafa7532e3991c1e46feff2baaa5d8d1cc3309be",
+    "startup-journal.js": "701260484f4941431cac2958a227639c285dcb39b500e024bb6d9e4ad8fe01c3",
     "test_apply_injection.py": "7c86c562f547cd96208a6f7ec59dcf9d6edb7db1c6950ba09a2e1b9d9dfb385e",
     "test_injection.mjs": "8ef71a583b4d62d90c69670b6a3693108040ca13d8f908732a5db0ccb8f7c75a",
     "test_results.py": "0c8abadb12ce36cd26e44014ead1932253ce8b990c77ab4fbe37cb46bb3c9546",
     "test_staging.py": "358942e178f488190f88701369e4de28694ee255d4ae49e3322cc90e39dd1e03",
-    "test_startup.mjs": "77bf1c1c9e1011b22cae424892b8da27488fbbcb9bd3656757aa6f443e2598d7",
+    "test_startup.mjs": "9a16f9d619a5c7ae022615cbf6f1cc5adae21dbd257d9f2efb81bfffbb53120e",
     "verify_download.py": "e16d29ecb123fb82d6cf896ed3f1a95caffb70600125e518e0261f2c9047e123",
     "verify_results.py": "1ac5ab5c909d7b72b407ad57b0a700c6549963d4ec69e85e50c2c4226626d964"
   }

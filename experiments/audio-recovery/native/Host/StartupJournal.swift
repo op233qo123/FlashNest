@@ -25,9 +25,24 @@ import WebKit
         resources = [:]
         if let url = Bundle.main.url(forResource: "startup-resources", withExtension: "json"),
            let data = try? Data(contentsOf: url), let decoded = try? JSONDecoder().decode([String: String].self, from: data) { resources = decoded }
-        journalURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("startup-journal.json")
-        retain(["phase": "native-open"], critical: true)
+        if let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            let directory = documents.appendingPathComponent("StartupDiagnostics", isDirectory: true)
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let previous = ((try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey, .isRegularFileKey, .isSymbolicLinkKey])) ?? []).filter { url in
+                let name = url.deletingPathExtension().lastPathComponent
+                let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+                return url.pathExtension == "json" && UUID(uuidString: name) != nil && values?.isRegularFile == true && values?.isSymbolicLink != true
+            }.sorted { lhs, rhs in
+                ((try? lhs.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast) > ((try? rhs.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast)
+            }
+            for url in previous.dropFirst(3) { try? FileManager.default.removeItem(at: url) }
+            journalURL = directory.appendingPathComponent(UUID().uuidString + ".json")
+        }
+        let mode = ProcessInfo.processInfo.environment["AUDIO_RECOVERY_MODE"] ?? "unknown"
+        let knownMode = ["candidate-known", "candidate-unknown", "baseline-known", "startup-only"].contains(mode) ? mode : "unknown"
+        retain(["phase": "native-open", "caseMode": knownMode, "processID": ProcessInfo.processInfo.processIdentifier], critical: true)
     }
+    func nativeOpened() { retain(["phase": "native-opened"], critical: true) }
     func nativeFailure() { retain(["phase": "native-failure"], critical: true) }
     func makeHandler() -> WKScriptMessageHandler {
         generation += 1; documentStarted = false; lastSequence = 0

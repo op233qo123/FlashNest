@@ -27,6 +27,7 @@ import WebKit
             self.package = package
             await session.start(package: package, contentRoot: packages.appendingPathComponent(package.id.uuidString).appendingPathComponent("content"))
             status = "opened"
+            StartupJournal.shared.nativeOpened()
         } catch { hostError = String(describing: error) }
     }
     func key(_ code: String) { session.key(code, down: true); session.key(code, down: false) }

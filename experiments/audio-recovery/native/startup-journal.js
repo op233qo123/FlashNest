@@ -26,7 +26,7 @@
       if(raw === null)return null;
       const url = new URL(raw, location.href);
       const basename = url.pathname.split('/').pop();
-      return url.origin === location.origin && url.pathname.includes('/shell/runtime/') && allowed.has(basename) ? basename : null;
+      return url.origin === location.origin && url.pathname === new URL('./runtime/', location.href).pathname + basename && allowed.has(basename) ? basename : null;
     } catch (_) { return null; }
   }
   const logOriginal=console.log;
