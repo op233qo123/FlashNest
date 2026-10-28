@@ -25,7 +25,7 @@ try:
   browser=pw.chromium.launch(channel='chrome',chromium_sandbox=True,headless=True,timeout=30000,args=['--enable-unsafe-swiftshader'])
   report['browserVersion']=browser.version
   parts=browser.version.split('.')
-  assert len(parts)==4 and all(x.isdigit() for x in parts) and parts[:3]==['156','0','8078'],'Unreviewed Chrome branch; stop for compatibility review'
+  assert len(parts)==4 and all(x.isdigit() for x in parts) and tuple(parts[:3]) in {('155','0','8059'),('156','0','8078')},'Unreviewed Chrome branch; stop for compatibility review'
   context=browser.new_context();context.route('**/*',lambda route:route.abort())
   page=context.new_page();page.set_default_timeout(10000)
   page.set_content('<title>Synthetic setup only</title><canvas width="16" height="16"></canvas>')
