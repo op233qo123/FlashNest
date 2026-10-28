@@ -13,6 +13,17 @@ def journal(pid=42):
 def entry():
  return dict(attempt=1,explicitTermination={'returncode':0},freshPID=True,pid=42,samples=[{'pidAliveAsExpectedApp':True}],journalsBeforeTermination=[journal()],readyAtSeconds=58,observedPostReadySeconds=30,crashesCapturedDuringObservation=[])
 class ControlTests(unittest.TestCase):
+ def test_architecture_timeout_is_setup_only_and_limits_unchanged(self):
+  import ast
+  source=Path(__file__).with_name('run_one.py').read_text();tree=ast.parse(source)
+  calls=[n for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='checked' and n.args and isinstance(n.args[0],ast.List)]
+  sim=[n for n in calls if [x.value for x in n.args[0].elts if isinstance(x,ast.Constant)]==['xcrun','simctl','spawn','uname','-m']]
+  host=[n for n in calls if [x.value for x in n.args[0].elts if isinstance(x,ast.Constant)]==['uname','-m']]
+  self.assertEqual(len(sim),1);self.assertEqual(len(sim[0].args),2);self.assertEqual(ast.literal_eval(sim[0].args[1]),120)
+  self.assertEqual(len(host),1);self.assertEqual(len(host[0].args),1)
+  for exact in ["if host_arch!='arm64' or sim_arch!='arm64':",'for attempt in (1,):','readiness_deadline=started+60','ready_at+30',"'maximumWindowSeconds':90",'time.sleep(60)',"command(['xcrun','simctl','launch',udid,BUNDLE,'-FlashNest.language','en','-AppleLanguages','(en)'],30,env)"]:
+   self.assertIn(exact,source)
+  self.assertIn('def command(args,timeout=30',source)
  def test_exact_os_and_unique_device(self):
   d={'devices':{RUNTIME:[{'udid':'u','isAvailable':True}]}}
   self.assertEqual(device(json.dumps(d),'u')['udid'],'u')
@@ -148,7 +159,8 @@ class ControlTests(unittest.TestCase):
    def cmd(args,timeout=30,env=None,stdout_limit=65536):
     text='';code=0
     if args[:4]==['xcrun','simctl','list','devices']:text=json.dumps({'devices':{RUNTIME:[{'udid':'u','isAvailable':True,'state':'Booted','name':'iPhone','dataPath':str(data)}]}})
-    elif args==['uname','-m'] or args[:4]==['xcrun','simctl','spawn','u']:text='arm64'
+    elif args==['uname','-m'] or args[:4]==['xcrun','simctl','spawn','u']:
+     self.assertEqual(timeout,30 if args==['uname','-m'] else 120);text='arm64'
     elif 'get_app_container'in args:text=str(installed if args[-1]=='app' else container)
     elif 'launch'in args:launches.append(40+len(launches));text=BUNDLE+': '+str(launches[-1]);self.assertEqual(env['SIMCTL_CHILD_AUDIO_RECOVERY_MODE'],'startup-only')
     elif 'terminate'in args:terminations.append(True)

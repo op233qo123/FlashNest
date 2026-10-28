@@ -118,7 +118,7 @@ def observe(udid,app,output,arm,approval,source_manifest):
  if selected['state']!='Booted':checked(['xcrun','simctl','boot',udid],receipt_path=output/'boot-command.json')
  checked(['xcrun','simctl','bootstatus',udid,'-b'],120,receipt_path=output/'bootstatus-command.json')
  host_arch=checked(['uname','-m'],receipt_path=output/'host-architecture-command.json')
- sim_arch=checked(['xcrun','simctl','spawn',udid,'uname','-m'],receipt_path=output/'simulator-architecture-command.json')
+ sim_arch=checked(['xcrun','simctl','spawn',udid,'uname','-m'],120,receipt_path=output/'simulator-architecture-command.json')
  receipt['hostArchitecture']=host_arch if host_arch=='arm64' else 'unsupported'
  receipt['simulatorArchitecture']=sim_arch if sim_arch=='arm64' else 'unsupported';persist()
  if host_arch!='arm64' or sim_arch!='arm64':raise ValueError('Exact arm64 host and simulator required before launch')
