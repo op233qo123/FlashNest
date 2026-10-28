@@ -65,12 +65,15 @@ jobs:
       - name: Build actual extensions and MVP with JPEG-XR and wasm-opt
         timeout-minutes: 65
         run: bash "$PREP/scripts/build_engine.sh" .final-composite-source final-composite-engine
+      - name: Verify complete and safe declared artifact upload
+        id: complete-upload
+        run: python3 "$PREP/scripts/verify_engine_upload.py" final-composite-engine toolchain-evidence
       - name: Bound partial or complete engine evidence
         id: engine-budget
         if: always()
         run: python3 "$PREP/scripts/evidence_budget.py" final-composite-engine --max-bytes 268435456
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always() && steps.engine-budget.outputs.allowed == 'true'
+        if: always() && steps.complete-upload.conclusion == 'success' && steps.engine-budget.outputs.allowed == 'true'
         with:
           name: FlashNest-final-composite-engine-not-IPA
           path: |
@@ -78,3 +81,4 @@ jobs:
             toolchain-evidence
           if-no-files-found: warn
           retention-days: 1
+          include-hidden-files: true
