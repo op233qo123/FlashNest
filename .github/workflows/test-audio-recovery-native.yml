@@ -20,7 +20,7 @@ jobs:
       matrix:
         arm: [baseline, candidate]
     runs-on: ${{ inputs.simulator_os == '18.2' && 'macos-14' || 'macos-15' }}
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       TEST_OS: ${{ inputs.simulator_os || '18.5' }}
       DEVELOPER_DIR: ${{ inputs.simulator_os == '18.2' && '/Applications/Xcode_16.2.app/Contents/Developer' || '/Applications/Xcode_16.4.app/Contents/Developer' }}
@@ -48,6 +48,7 @@ jobs:
           test -f experiments/audio-recovery/native/approval.json
           python3 -m unittest discover -s experiments/audio-recovery/native -p 'test_*.py'
           node experiments/audio-recovery/native/test_injection.mjs
+          node experiments/audio-recovery/native/test_startup.mjs
           node scripts/test_audio_warning.js
       - name: Fetch only approved runtime build artifact
         timeout-minutes: 5
@@ -98,7 +99,7 @@ jobs:
           device_id=$(xcrun simctl list devices available --json | python3 scripts/select_simulator.py "$TEST_OS")
           echo "device_id=$device_id" >> "$GITHUB_OUTPUT"
       - name: Actual trusted DOM retry and native fatal controls
-        timeout-minutes: 12
+        timeout-minutes: 22
         run: |
           set -euo pipefail
           mkdir -p recovery-evidence
@@ -112,7 +113,7 @@ jobs:
         if: always()
         run: |
           mkdir -p recovery-evidence
-          cp "$RUNNER_TEMP/recovery-stage/"{source-manifest.json,overlay-manifest.json,session-injection.diff} recovery-evidence/ 2>/dev/null || true
+          cp "$RUNNER_TEMP/recovery-stage/"{source-manifest.json,overlay-manifest.json,session-injection.diff,startup-shell.diff} recovery-evidence/ 2>/dev/null || true
           if [ -d recovery-evidence/Results.xcresult ]; then
             xcrun xcresulttool get test-results summary --path recovery-evidence/Results.xcresult > recovery-evidence/summary.json || true
             xcrun xcresulttool export attachments --path recovery-evidence/Results.xcresult --output-path recovery-evidence/attachments || true

@@ -74,7 +74,9 @@ final class AudioRecoveryUITests: XCTestCase {
         app.launchArguments = ["-FlashNest.language", "en", "-AppleLanguages", "(en)"]
         app.launch()
         let play = app.webViews.buttons["Play / enable audio"].firstMatch
-        XCTAssertTrue(play.waitForExistence(timeout: 60)); XCTAssertTrue(wait { play.isEnabled && play.isHittable }); play.tap()
+        let appeared = play.waitForExistence(timeout: 60)
+        startupEvidence("Pre-gesture startup journal", app)
+        XCTAssertTrue(appeared); XCTAssertTrue(wait { play.isEnabled && play.isHittable }); play.tap()
         trace("LIFECYCLE_ROOT_READY:undefined", app)
         tap("recovery-enter", app); trace("LIFECYCLE_CHILD_READY", app)
         tap("recovery-space", app); trace("LIFECYCLE_CHILD_KEY:32:1", app)
@@ -120,7 +122,14 @@ final class AudioRecoveryUITests: XCTestCase {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
+    private func startupEvidence(_ name: String, _ app: XCUIApplication) {
+        let value = app.staticTexts["recovery-probe"].value as? String ?? "unavailable"
+        let attachment = XCTAttachment(string: value)
+        attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
+        print("AUDIO_STARTUP_NATIVE_JOURNAL " + value)
+    }
     private func evidence(_ name: String, _ app: XCUIApplication) {
+        startupEvidence(name + " native startup journal", app)
         for attachment in [XCTAttachment(string: app.debugDescription), XCTAttachment(screenshot: app.screenshot())] {
             attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
         }

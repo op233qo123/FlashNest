@@ -3,6 +3,7 @@
 import argparse, hashlib, json, shutil, subprocess, tarfile, tempfile
 from pathlib import Path
 from apply_injection import stage, SESSION
+from apply_startup import transform
 SOURCE = '5862f8dbd414d9835f11872d3ebabd1eed315ffc'
 def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
 def prepare(repo, output, arm, runtime, approval):
@@ -38,6 +39,11 @@ def prepare(repo, output, arm, runtime, approval):
         shutil.copyfile(overlay/SESSION,staged/SESSION)
         shutil.copytree(shipping/'fixtures/lifecycle',staged/'lifecycle')
         shutil.copyfile(script,staged/script.name)
+        shutil.copyfile(here/'startup-journal.js',staged/'startup-journal.js')
+        (staged/'startup-resources.json').write_text(json.dumps(inventory,sort_keys=True))
+        shell=staged/'App/Resources/Web/shell.js'
+        patched,shell_diff=transform(shell.read_bytes());shell.write_bytes(patched)
+        (output/'startup-shell.diff').write_text(shell_diff)
         shutil.rmtree(staged/'App/Resources/Web/runtime')
         shutil.copytree(runtime,staged/'App/Resources/Web/runtime')
         for name in ['Host','UITests']:shutil.copytree(here/name,output/name)

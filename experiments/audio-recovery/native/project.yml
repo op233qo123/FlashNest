@@ -31,6 +31,10 @@ targets:
         buildPhase: resources
       - path: staged/audio-recovery-injection.js
         buildPhase: resources
+      - path: staged/startup-journal.js
+        buildPhase: resources
+      - path: staged/startup-resources.json
+        buildPhase: resources
     dependencies:
       - package: ZIPFoundation
     settings:

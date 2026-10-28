@@ -10,6 +10,8 @@
   let registeredButton = null, originalClick = null, wrappedClick = null, callbackEvent = null;
   let registrationOptions = null, registrationRemoved = false;
   const contexts = [];
+  const startupListeners = [];
+  const startup = (phase, values) => { try { window.FlashNestStartupJournal?.record(phase, values); } catch (_) {} };
   let armed = null, bound = null, pending = null, injections = 0, trustedRetries = 0;
   let baseline = false, rejectedOperation = 0, fulfilledOperation = 0, failure = null;
   let saveBefore = null, page = String(Math.random()) + ':' + String(Date.now());
@@ -34,7 +36,11 @@
   const Wrapped = new Proxy(Native, {
     construct(target,args,newTarget) {
       const context = Reflect.construct(target,args,newTarget === Wrapped ? target : newTarget);
-      contexts.push(context); return context;
+      contexts.push(context);
+      startup('context-created',{contexts:contexts.length,state:context.state});
+      const listener=()=>startup('context-state',{contexts:contexts.length,state:context.state});
+      context.addEventListener?.('statechange',listener);startupListeners.push([context,listener]);
+      return context;
     }
   });
   window.AudioContext = Wrapped;
@@ -42,6 +48,7 @@
     if (event?.type === 'ruffle-audio-status' && intended(this)) {
       const d = event.detail;
       if (d?.schema === 1) {
+        startup('audio-status',{contextId:d.contextId,operationId:d.operationId,intentId:d.intentId,audioPhase:d.phase,status:d.status,state:d.state,current:d.current});
         if (events.length >= 64) fail('Audio probe event bound exceeded');
         events.push({contextId:d.contextId,operationId:d.operationId,intentId:d.intentId,
           phase:d.phase,operation:d.operation,status:d.status,state:d.state,current:d.current,retryEligible:d.retryEligible});
@@ -153,6 +160,8 @@
         last:events.length ? events[events.length-1] : null};
     },
     dispose() {
+      for(const [context,listener] of startupListeners)context.removeEventListener?.('statechange',listener);
+      startupListeners.length=0;window.FlashNestStartupJournal?.dispose();
       Native.prototype.resume = resume;
       EventTarget.prototype.dispatchEvent = dispatch;
       if (EventTarget.prototype.addEventListener === interceptAdd) EventTarget.prototype.addEventListener = addListener;

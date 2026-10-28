@@ -15,6 +15,7 @@ import WebKit
     private var package: GamePackage?
     func open() async {
         guard root == nil else { return }
+        StartupJournal.shared.reset()
         do {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             self.root = root
@@ -85,11 +86,12 @@ import WebKit
 }
 struct RecoveryHostView: View {
     @ObservedObject var model: RecoveryModel
+    @ObservedObject private var startupJournal = StartupJournal.shared
     var body: some View {
         VStack {
             SessionSurface(session: model.session)
             Text(model.status).accessibilityIdentifier("recovery-host-status")
-            Text(model.probe).font(.caption2).lineLimit(2).accessibilityIdentifier("recovery-probe")
+            Text(model.probe).font(.caption2).lineLimit(2).accessibilityIdentifier("recovery-probe").accessibilityValue(startupJournal.json)
             Text(model.hostError).accessibilityIdentifier("recovery-host-error")
             HStack {
                 Button("Enter") { model.key("Enter") }.accessibilityIdentifier("recovery-enter")
@@ -110,6 +112,8 @@ private struct SessionSurface: View {
         VStack {
             if let view = session.webView { RecoveryWebView(view: view) }
             Text(session.failure ?? "none").accessibilityIdentifier("recovery-native-failure")
+        }.onChange(of: session.failure) { value in
+            if value != nil { StartupJournal.shared.nativeFailure() }
         }
     }
 }

@@ -12,6 +12,14 @@ INSERT = '''            // CI-only fault injection: this file is not a shipping 
             guard let injectionURL = Bundle.main.url(forResource: "audio-recovery-injection", withExtension: "js") else {
                 throw PackageError.corrupt("Diagnostic audio injection resource missing")
             }
+            controller.add(StartupJournal.shared.makeHandler(), name: "flashnestStartup")
+            guard let startupURL = Bundle.main.url(forResource: "startup-journal", withExtension: "js"),
+                  let resourcesURL = Bundle.main.url(forResource: "startup-resources", withExtension: "json") else {
+                throw PackageError.corrupt("Diagnostic startup resources missing")
+            }
+            let startup = try String(contentsOf: startupURL, encoding: .utf8)
+            let resources = try String(contentsOf: resourcesURL, encoding: .utf8)
+            controller.addUserScript(WKUserScript(source: "window.__FlashNestStartupResources=" + resources + ";" + startup, injectionTime: .atDocumentStart, forMainFrameOnly: true))
             let injection = try String(contentsOf: injectionURL, encoding: .utf8)
             controller.addUserScript(WKUserScript(source: injection, injectionTime: .atDocumentStart, forMainFrameOnly: true))
 '''
