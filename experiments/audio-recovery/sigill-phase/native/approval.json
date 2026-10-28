@@ -32,7 +32,7 @@
   "diagnosticFiles": {
     "Host/AudioRecoveryHost.swift": "ccedbf2f7a71d7cd68ac4d8651f7c65e2f6aeb09b76995322eb443dc2dcae8b4",
     "Host/StartupJournal.swift": "8d1b4a9ef1c8ce4028b9a553b0cef9dfad81c199dfb6777a1e1f7509cfe51610",
-    "README.md": "9c997f6f180628860b8e659fce9db84b47878aa2d55f8ac8694aa46fd6194834",
+    "README.md": "72bcf2b6a0ee1adf65465999940c6682a3e64f56a5c7f55fcc1bc6e07b3e82d3",
     "apply_injection.py": "5ad6ffc33c6a528ea94e186dba9b9f7c328bb0909f5e19ac3e731bced4f96ab2",
     "apply_startup.py": "142d25d7700151562f49b00485f6e19f4868354bf959c800d48d700446754941",
     "audio-recovery-injection.js": "d495f538242dd49915810a33478c17da9c1e7a831a721524a9136c4f2628176b",
@@ -45,11 +45,12 @@
     "startup-journal.js": "7a5d334b01708c582f8a465e30b1726632115ebdcd239ed48dc71e86156f0dd0",
     "test_crash_signature.py": "6938330c138615538d06fcaa87680493a4934ebfdb6ca87c7e96f908d6354bf3",
     "test_engine.py": "0ba31d432fcd89d7511e060a984ddde603e3c7c63ce2346ae4024c7b94a8861d",
-    "test_one.py": "4718059d4ec052b2113c3760db596e19793c36ef5623bcc7dbee0f4192bf7572",
+    "test_one.py": "3a2f84e00c9d1de69d9c2e3a7782876f876a83c0d12d9fff2a3ac646b1b34039",
     "test_privacy_stage.py": "e3c855956bb670fdecfe5e583adf61a4290f5fbe9e9081c3563f823b338482ad",
     "verify_engine.py": "3cb2d66686bbcaf7e5d9f0dae362fa63972fe2327f3792b9293bbfbef87a2f3d",
-    "observe-sigill-phase-ios18_2.yml": "1b81799820155d8e00748dc10b60e2789610c4ae008246b817f0083bef8b8961",
-    "test_macho.py": "125ca4ed2177a4cbb7bfeb69e818bc9f9288a5afbe7692a4e7abba3098d303ee"
+    "observe-sigill-phase-ios18_2.yml": "5c67865d45d9350b52cd8dba626efb0900d815a7a449d909ef8bea4c1f1f1ffd",
+    "test_macho.py": "125ca4ed2177a4cbb7bfeb69e818bc9f9288a5afbe7692a4e7abba3098d303ee",
+    "test_build_status.py": "583c6adb32f2f8aeb0c12601c382c697abbf00fc4f2b383faca014fa1a617a54"
   },
   "note": "Distinct diagnostic engine only. Exactly one observation; no shipping promotion or crash-fix claim."
 }

@@ -24,7 +24,8 @@ class ControlTests(unittest.TestCase):
   for exact in ['for attempt in (1,):','readiness_deadline=started+60','ready_at+30',"'maximumWindowSeconds':90",'time.sleep(60)',"command(['xcrun','simctl','launch',udid,BUNDLE,'-FlashNest.language','en','-AppleLanguages','(en)'],30,env)"]:
    self.assertIn(exact,source)
   workflow=Path(__file__).with_name('observe-sigill-phase-ios18_2.yml').read_text()
-  self.assertIn("id=${{ steps.simulator.outputs.device_id }},arch=arm64'",workflow)
+  self.assertIn("id=${{ steps.simulator.outputs.device_id }}'",workflow)
+  self.assertNotIn(",arch=arm64",workflow)
   self.assertIn('ARCHS=arm64 ONLY_ACTIVE_ARCH=YES',workflow)
  def test_exact_os_and_unique_device(self):
   d={'devices':{RUNTIME:[{'udid':'u','isAvailable':True}]}}
