@@ -39,11 +39,13 @@ Every candidate low row strictly requires requested == applied tier, canvas == d
 
 The setup-only failure in run 40707702077 produced zero matrix cases. Its job setup image label (20261012.334.1) and artifact ImageVersion (20261023.334.3) differ; preserve both observations.
 
-Use runner-installed official Chrome channel on standard Ubuntu 24.04, with explicit Chromium sandbox enabled. No browser download, AppArmor/sysctl changes, sandbox relaxation or automatic alternative browser. Playwright is pinned to 1.64.1: official 1.64 release notes list testing against Chrome 155, and the tagged Python package accepts the unchanged pyee/greenlet pins. Preflight fails closed if Chrome major is not 155. The rolling runner browser is identity-recorded, not claimed binary-pinned.
+Use runner-installed official Chrome channel on standard Ubuntu 24.04, with explicit Chromium sandbox enabled. No browser download, AppArmor/sysctl changes, sandbox relaxation or automatic alternative browser. Playwright is pinned to 1.64.1: official 1.64 release notes list testing against Chrome 155, and the tagged Python package accepts the unchanged pyee/greenlet pins. The initial preflight rejected installed Chrome156.0.8078.47 before matrix execution (run40711000501). Revised preflight requires the actually installed Playwright1.64.1 package browsers.json to specify Chromium156.0.8078.4 revision1248, and installed official Chrome to share the exact156.0.8078 branch; all other branches fail closed. This bounded branch match is supported by the official v1.64.1 browsers.json and is not an assertion that branded patch47 equals bundled patch4. Actual API/WebGL and full matrix gates remain mandatory. The rolling runner browser is identity-recorded, not claimed binary-pinned.
 
 A bounded preflight records binary/profile hashes, installed versions, sandbox launch and a synthetic 16x16 WebGL buffer before either matrix. Its output is setup evidence only (zero matrix cases). No preflight success may substitute for any of the 160 geometry rows or native gates. Existing source/runtime hashes, original fixtures, four density tiers, trusted input and initial/resize/restore assertions are unchanged.
 
 Primary sources:
+- https://raw.githubusercontent.com/microsoft/playwright/v1.64.1/packages/playwright-core/browsers.json
+- https://raw.githubusercontent.com/microsoft/playwright-python/v1.64.1/DRIVER_VERSION
 - https://playwright.dev/python/docs/release-notes#version-164
 - https://pypi.org/project/playwright/1.64.1/
 - https://raw.githubusercontent.com/microsoft/playwright-python/v1.64.1/pyproject.toml

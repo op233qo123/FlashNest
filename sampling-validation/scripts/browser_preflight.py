@@ -9,6 +9,12 @@ def timeout(*_): raise TimeoutError('preflight exceeded 60 seconds')
 signal.signal(signal.SIGALRM,timeout);signal.alarm(60)
 try:
  assert report['playwright']=='1.64.1'
+ metadata_path=pathlib.Path(importlib.metadata.distribution('playwright').locate_file('playwright/driver/package/browsers.json'))
+ metadata_bytes=metadata_path.read_bytes()
+ assert len(metadata_bytes)<65536,'Unexpected browser metadata size'
+ bundled=next(b for b in json.loads(metadata_bytes)['browsers'] if b['name']=='chromium')
+ report['bundledChromium']={'version':bundled['browserVersion'],'revision':bundled['revision'],'metadataSHA256':hashlib.sha256(metadata_bytes).hexdigest()}
+ assert bundled['browserVersion']=='156.0.8078.4' and bundled['revision']=='1248','Unreviewed bundled Chromium metadata'
  report['files']={}
  for name in ['/opt/google/chrome/chrome','/opt/google/chrome/chrome-sandbox','/etc/apparmor.d/chrome']:
   path=pathlib.Path(name);digest=hashlib.sha256()
@@ -18,7 +24,8 @@ try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch(channel='chrome',chromium_sandbox=True,headless=True,timeout=30000,args=['--enable-unsafe-swiftshader'])
   report['browserVersion']=browser.version
-  assert browser.version.split('.')[0]=='155','Unreviewed Chrome major; stop for compatibility review'
+  parts=browser.version.split('.')
+  assert len(parts)==4 and all(x.isdigit() for x in parts) and parts[:3]==['156','0','8078'],'Unreviewed Chrome branch; stop for compatibility review'
   context=browser.new_context();context.route('**/*',lambda route:route.abort())
   page=context.new_page();page.set_default_timeout(10000)
   page.set_content('<title>Synthetic setup only</title><canvas width="16" height="16"></canvas>')

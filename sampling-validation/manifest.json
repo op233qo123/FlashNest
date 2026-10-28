@@ -332,8 +332,8 @@
       "bytes": 2247
     },
     "source/BUILD-AND-NOTICES.md": {
-      "sha256": "48d236d73be6409438d48b70ee0d9c00acddeb736b57ce04d7cb92e22a3620cb",
-      "bytes": 7305
+      "sha256": "25c02bee8a376bab5f0859f218bbfd080ddd78226bafe986e94ff66df2968213",
+      "bytes": 7984
     },
     "source/original-build-smoke.sh": {
       "sha256": "785e76894a8347d6dc74bfea6cc60becb3b5d309f5afc97ce64bd3e6a53d7b04",
@@ -424,8 +424,8 @@
       "bytes": 56335
     },
     "scripts/browser_preflight.py": {
-      "sha256": "a5131e9d802df68324c34c03bf39fd8f7f49ec60a75ed63353f9531df5b702a7",
-      "bytes": 2427
+      "sha256": "9c19671f3760382069e669360606092c0eaf7ae55940d4df54c782eb5e7f6ae5",
+      "bytes": 3119
     }
   }
 }
