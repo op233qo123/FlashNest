@@ -752,4 +752,3 @@ pub struct BuiltPlayer {
     pub canvas: HtmlCanvasElement,
     pub trace_observer: Rc<RefCell<JsValue>>,
 }
-

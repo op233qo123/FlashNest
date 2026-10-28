@@ -1418,4 +1418,3 @@ fn global_init() {
 
     tracing::info!("Ruffle WASM module has been initialized");
 }
-

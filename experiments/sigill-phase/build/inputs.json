@@ -64,13 +64,13 @@
     },
     {
       "path": "web/src/builder.rs",
-      "beforeSHA256": "161d7562774e28275f992fe8d27523804071d5552bd4fd859a61060cf01cfb6e",
-      "afterSHA256": "d1255e6dcd172a743d6d1a1d4759d69f6485dfdd12869027d7e67e7d63793956"
+      "beforeSHA256": "e0a49db6d32e4e209d8c299b1506d7bc881943b07e70b506ab82dfbd9e63da0d",
+      "afterSHA256": "b46b6cc5c17125b5c5f7620c8d51ce43c6bca0d23e0b8e0250db6138fa739f59"
     },
     {
       "path": "web/src/lib.rs",
-      "beforeSHA256": "aea9c76e9065f9035cdeb96b168bc93e06579c2a70f04c07eeae6bdaa78d33ae",
-      "afterSHA256": "7dedc9e329b733ae48b973515b3a69de99fa9e09667a276baca351343dd1f17f"
+      "beforeSHA256": "96a591743e2cac645c92acac8e2d93d70de4c7886fed04c93e80e51b1584049d",
+      "afterSHA256": "50090905f9099f4686b68e8b3a1f0f995c46b9e179e04f575da1032ebbc6fef6"
     },
     {
       "path": "web/src/startup_phase.rs",
