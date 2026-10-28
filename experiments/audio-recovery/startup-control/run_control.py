@@ -4,15 +4,18 @@ from pathlib import Path
 from collect import journals,crashes
 BUNDLE='com.flashnest.audio-recovery.diagnostic'
 RUNTIME='com.apple.CoreSimulator.SimRuntime.iOS-18-2'
-def command(args,timeout=30,env=None):
+def command(args,timeout=30,env=None,stdout_limit=65536):
+ if stdout_limit not in (65536,524288):raise ValueError("Unapproved command output bound")
  with tempfile.TemporaryFile() as out,tempfile.TemporaryFile() as err:
   timed_out=False
   try: result=subprocess.run(args,stdout=out,stderr=err,timeout=timeout,env=env);code=result.returncode
   except subprocess.TimeoutExpired:code=-1;timed_out=True
-  out.seek(0);err.seek(0);stdout=out.read(65537);stderr=err.read(65537)
-  return {'returncode':code,'stdout':stdout[:65536].decode(errors='replace'),'stderr':stderr[:65536].decode(errors='replace'),'timedOut':timed_out,'truncated':len(stdout)>65536 or len(stderr)>65536}
-def checked(args,timeout=30,env=None):
- r=command(args,timeout,env)
+  out.seek(0,2);stdout_bytes=out.tell();err.seek(0,2);stderr_bytes=err.tell()
+  out.seek(0);err.seek(0);stdout=out.read(stdout_limit+1);stderr=err.read(65537)
+  return {'returncode':code,'stdout':stdout[:stdout_limit].decode(errors='replace'),'stderr':stderr[:65536].decode(errors='replace'),'timedOut':timed_out,'truncated':len(stdout)>stdout_limit or len(stderr)>65536,'stdoutLimit':stdout_limit,'stdoutBytes':stdout_bytes,'stderrBytes':stderr_bytes,'stdoutTruncated':len(stdout)>stdout_limit,'stderrTruncated':len(stderr)>65536}
+def checked(args,timeout=30,env=None,receipt_path=None,inventory=False):
+ r=command(args,timeout,env,stdout_limit=524288) if inventory else command(args,timeout,env)
+ if receipt_path:Path(receipt_path).write_text(json.dumps(r,indent=2)+"\n")
  if r['returncode'] or r.get('truncated'):raise RuntimeError('Required command failed: '+args[1])
  return r['stdout'].strip()
 def device(json_text,udid):
@@ -28,6 +31,36 @@ def capture_epoch(path):
   text=Path(path).read_text();d=json.loads(text[text.index('\n')+1:]);stamp=d['captureTime']
   return datetime.datetime.strptime(stamp,'%Y-%m-%d %H:%M:%S.%f %z').timestamp()
  except (ValueError,KeyError,OSError,TypeError):return None
+
+def report_metadata(path):
+ try:
+  text=Path(path).read_text();body=json.loads(text[text.index('\n')+1:])
+  return {'captureEpoch':capture_epoch(path),
+          'pid':body.get('pid') if type(body.get('pid')) is int else None,
+          'coalitionID':body.get('coalitionID') if type(body.get('coalitionID')) is int else None,
+          'diagnosticHost':body.get('procName')=='AudioRecoveryDiagnostic'}
+ except (ValueError,KeyError,OSError,TypeError):return {'captureEpoch':None,'pid':None,'coalitionID':None,'diagnosticHost':False}
+
+def reconcile_reports(attempts,collection,directory):
+ records=[dict(c,**report_metadata(Path(directory)/(c['sha256']+'.ips'))) for c in collection['records']]
+ for entry in attempts:
+  associated=[];uncertain=[]
+  for record in records:
+   stamp=record['captureEpoch']
+   if stamp is None:uncertain.append(record['sha256']);continue
+   if entry['wallStart']<=stamp<=entry['wallBeforeTermination']:
+    if record['diagnosticHost'] and record['pid']!=entry.get('pid'):
+     uncertain.append(record['sha256']);continue
+    associated.append(dict(record,association='native-host-PID-and-time' if record['diagnosticHost'] else 'shared-process-time-only-not-proven-ownership'))
+  entry['associatedCrashRecords']=associated
+  entry['unattributedReportDigests']=uncertain
+  entry['crashesCapturedDuringObservation']=[r['sha256'] for r in associated]
+  entry['collectionIncomplete']=bool(entry.get('collectionIncomplete') or collection['omitted'] or uncertain)
+  entry['outcome']=outcome(entry);entry['completeObservation']=entry['outcome']=='complete-no-crash-observed'
+ for record in records:
+  record['associatedAttempts']=[e['attempt'] for e in attempts if any(r['sha256']==record['sha256'] for r in e['associatedCrashRecords'])]
+  record['classification']='observation-window-association' if record['associatedAttempts'] else 'unassigned-or-outside-observation-windows'
+ return records
 
 def matching_journal(records,pid):
  matched=[j for j in records if any(x.get('phase')=='native-open' and x.get('processID')==pid and x.get('caseMode')=='startup-only' for x in j['rows'])]
@@ -68,15 +101,15 @@ def observe(udid,app,output,arm,approval,source_manifest):
   if hashlib.sha256((app/'Web'/name).read_bytes()).hexdigest()!=source['files']['staged/App/Resources/Web/'+name]:raise ValueError('Built shell differs from staged source')
  for name in ['startup-journal.js','audio-recovery-injection.js','startup-resources.json']:
   if hashlib.sha256((app/name).read_bytes()).hexdigest()!=source['files']['staged/'+name]:raise ValueError('Built diagnostic asset drift')
- inventory=checked(['xcrun','simctl','list','devices','available','--json']);selected=device(inventory,udid)
+ inventory=checked(['xcrun','simctl','list','devices','available','--json'],receipt_path=output/'inventory-command.json',inventory=True);selected=device(inventory,udid)
  (output/'simulator-inventory.json').write_text(inventory)
  receipt={'schema':1,'arm':arm,'actualOS':'18.2','udid':udid,'deviceName':selected['name'],'sourceCommit':source['sourceCommit'],'runtime':source['runtime'],'appExecutableSHA256':hashlib.sha256((app/info['CFBundleExecutable']).read_bytes()).hexdigest(),'startupReadinessDeadlineSeconds':60,'postReadyObservationSeconds':30,'maximumWindowSeconds':90,'attempts':[],'cacheColdness':'unknown; fresh app PID does not imply fresh WebContent/JIT/cache','claim':'startup observation only, not recovery acceptance or crash fix'}
  def persist(): (output/'control-results.json').write_text(json.dumps(receipt,indent=2)+'\n')
  persist()
- if selected['state']!='Booted':checked(['xcrun','simctl','boot',udid])
- checked(['xcrun','simctl','bootstatus',udid,'-b'],120)
- checked(['xcrun','simctl','install',udid,str(app)],60)
- container=Path(checked(['xcrun','simctl','get_app_container',udid,BUNDLE,'data']))
+ if selected['state']!='Booted':checked(['xcrun','simctl','boot',udid],receipt_path=output/'boot-command.json')
+ checked(['xcrun','simctl','bootstatus',udid,'-b'],120,receipt_path=output/'bootstatus-command.json')
+ checked(['xcrun','simctl','install',udid,str(app)],60,receipt_path=output/'install-command.json')
+ container=Path(checked(['xcrun','simctl','get_app_container',udid,BUNDLE,'data'],receipt_path=output/'container-command.json'))
  if not container.is_absolute() or not container.is_dir():raise ValueError('Invalid simulator app container')
  reports=Path.home()/'Library/Logs/DiagnosticReports'
  all_since=time.time();prior_pids=set();prior_journals=set()
@@ -142,7 +175,18 @@ def observe(udid,app,output,arm,approval,source_manifest):
   entry['outcome']=outcome(entry)
   entry['completeObservation']=entry['outcome']=='complete-no-crash-observed'
   persist()
- receipt['allThreeComplete']=len(receipt['attempts'])==3 and all(x['completeObservation'] for x in receipt['attempts']);persist()
+ receipt['finalReportingGraceStarted']=time.time();persist()
+ time.sleep(60) # Report-spool grace only: all app observations have ended and apps are terminated.
+ try:final_reports=crashes(reports,output/'crashes',all_since)
+ except Exception as error:final_reports={'records':[],'omitted':1};receipt['finalCollectionError']=type(error).__name__
+ # Include earlier retained reports even if the OS rotates the original spool file.
+ retained={r['sha256']:r for entry in receipt['attempts'] for key in ['crashesBeforeTermination','crashesAfterTermination'] for r in entry.get(key,{'records':[]})['records']}
+ retained.update({r['sha256']:r for r in final_reports['records']});final_reports['records']=list(retained.values())
+ receipt['finalReportingGraceEnded']=time.time()
+ receipt['finalCrashReports']=reconcile_reports(receipt['attempts'],final_reports,output/'crashes')
+ receipt['finalReportOmissions']=final_reports['omitted']
+ receipt['unassignedReportDigests']=[r['sha256'] for r in receipt['finalCrashReports'] if not r['associatedAttempts']]
+ receipt['allThreeComplete']=not receipt['unassignedReportDigests'] and not receipt['finalReportOmissions'] and len(receipt['attempts'])==3 and all(x['completeObservation'] for x in receipt['attempts']);persist()
  return receipt['allThreeComplete']
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('--udid',required=True);p.add_argument('--app',required=True);p.add_argument('--output',required=True);p.add_argument('--arm',choices=['baseline','candidate'],required=True);p.add_argument('--approval',required=True);p.add_argument('--source-manifest',required=True)

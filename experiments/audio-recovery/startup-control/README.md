@@ -39,13 +39,19 @@ metadata only; the host still automatically calls its unchanged normal open.
 - Only diagnostic-host, WebContent/GPU and SimMetalHost IPS reports are retained,
   max 2 MiB each, ten reports/10 MiB total; omissions fail evidence completeness.
   Reports are collected before explicit termination and after a fixed three-second
-  grace. Embedded captureTime, not file arrival alone, classifies the observation
+  grace. A final bounded 60-second REPORT-ONLY grace after all attempts then
+  rescans retained reports and reassociates every attempt, so a report arriving
+  35 seconds after an early incident is not lost just because a later attempt is
+  current. This never extends startup observation or relaunches the app. Raw
+  report PID/coalition are retained; outside-window/unassigned reports remain in
+  the artifact and prevent overall complete-evidence success. Embedded
+  captureTime, not file arrival alone, classifies the observation
   window. Reports without parseable captureTime fail conservatively. Shared
   WebContent reports are temporal associations, not proven app ownership.
 - A bounded finally block terminates the app even if observation/collection fails.
   Cleanup failures remain separate and cannot count as a complete observation.
   External commands have bounded execution time and retained stdout/stderr 64 KiB
-  each (temporary command spool files are time-bounded, not byte-capped).
+  each, except the public simulator inventory stdout has a 512 KiB cap (temporary command spool files are time-bounded, not byte-capped).
 
 Outcomes distinguish launch-unconfirmed, process-exit-or-unconfirmed,
 startup-not-ready, native-failure, crash-observed, journal-identity-unconfirmed,
@@ -54,3 +60,17 @@ Three complete observations return success only as **no crash observed in these
 windows**. They do not prove the previous SIGILL fixed, hardware audio recovered,
 or the original trusted-retry acceptance completed. Instrumentation can perturb
 timing. Existing three-case tests and all their deadlines are unchanged.
+
+## Preflight and report retention correction
+Run40641827448 compiled both Apps but failed before any launch at simulator
+inventory preflight. Its generic checker did not retain exit/truncation evidence,
+so the original cause is unknown. This revision persists command returncode,
+timeout, actual byte counts, separate truncation flags and bounded stdout/stderr
+before checking or parsing. A future large inventory may support the cap
+hypothesis but cannot retroactively prove the earlier cause. Exact18.2/PID
+requirements and all command timeouts remain unchanged. The startup-control
+step envelope is15minutes (formerly10) solely to fit bounded simulator
+boot/install/teardown and final report retention; readiness60+postready30 and
+exactly3attempts remain unchanged. No absence claim extends beyond the final
+report-collection cutoff, and an unassigned/malformed/omitted report cannot
+produce overall complete-evidence success.

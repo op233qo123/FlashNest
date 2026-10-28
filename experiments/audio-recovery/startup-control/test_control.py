@@ -11,7 +11,7 @@ def journal(pid=42):
  rows[-1].update(resource='fixture.wasm',sha256='a'*64)
  return {'file':str(uuid.uuid4())+'.json','rows':rows}
 def entry():
- return dict(explicitTermination={'returncode':0},freshPID=True,pid=42,samples=[{'pidAliveAsExpectedApp':True}],journalsBeforeTermination=[journal()],readyAtSeconds=58,observedPostReadySeconds=30,crashesCapturedDuringObservation=[])
+ return dict(attempt=1,explicitTermination={'returncode':0},freshPID=True,pid=42,samples=[{'pidAliveAsExpectedApp':True}],journalsBeforeTermination=[journal()],readyAtSeconds=58,observedPostReadySeconds=30,crashesCapturedDuringObservation=[])
 class ControlTests(unittest.TestCase):
  def test_exact_os_and_unique_device(self):
   d={'devices':{RUNTIME:[{'udid':'u','isAvailable':True}]}}
@@ -55,10 +55,78 @@ class ControlTests(unittest.TestCase):
    (r/'com.apple.WebKit.WebContent-large.ips').write_bytes(b'x'*(2*1024*1024+1))
    got=crashes(r,t/'out',0);self.assertEqual(len(got['records']),1);self.assertEqual(got['omitted'],1)
    self.assertEqual(crashes(r,t/'out',0),got);self.assertEqual(len(list((t/'out').iterdir())),1)
+ def test_crash_global_count_and_byte_caps_are_fail_closed(self):
+  with tempfile.TemporaryDirectory() as t:
+   t=Path(t);r=t/'reports';r.mkdir()
+   for i in range(11):(r/f'AudioRecoveryDiagnostic-{i}.ips').write_text(str(i))
+   got=crashes(r,t/'out',0);self.assertEqual(len(got['records']),10);self.assertEqual(got['omitted'],1)
+  with tempfile.TemporaryDirectory() as t:
+   t=Path(t);r=t/'reports';r.mkdir()
+   for i in range(6):(r/f'AudioRecoveryDiagnostic-{i}.ips').write_bytes(bytes([i])*(2*1024*1024))
+   got=crashes(r,t/'out',0);self.assertEqual(len(got['records']),5);self.assertEqual(got['omitted'],1);self.assertEqual(sum(p.stat().st_size for p in (t/'out').iterdir()),10*1024*1024)
  def test_command_deadline_is_evidence_not_retry(self):
   import subprocess
   with patch('run_control.subprocess.run',side_effect=subprocess.TimeoutExpired(['fake'],1)) as run:
    result=command(['fake'],1);self.assertTrue(result['timedOut']);self.assertEqual(run.call_count,1)
+ def test_inventory_bound_and_preflight_failure_receipt(self):
+  from run_control import checked
+  def write_output(args,stdout,stderr,timeout,env):
+   stdout.write(b'x'*70000)
+   class Result:returncode=0
+   return Result()
+  with patch('run_control.subprocess.run',side_effect=write_output):
+   self.assertTrue(command(['synthetic'])['truncated'])
+   self.assertFalse(command(['synthetic'],stdout_limit=524288)['truncated'])
+  with tempfile.TemporaryDirectory() as t:
+   p=Path(t)/'receipt.json'
+   with patch('run_control.command',return_value={'returncode':1,'stdout':'','stderr':'actual preflight error','timedOut':False,'truncated':False}):
+    with self.assertRaises(RuntimeError):checked(['xcrun','simctl'],receipt_path=p)
+   self.assertEqual(json.loads(p.read_text())['stderr'],'actual preflight error')
+   with patch('run_control.command',return_value={'returncode':0,'stdout':'prefix','stderr':'','timedOut':False,'truncated':True}):
+    with self.assertRaises(RuntimeError):checked(['xcrun','simctl'],receipt_path=p,inventory=True)
+   self.assertTrue(json.loads(p.read_text())['truncated'])
+ def test_preflight_preserves_timeout_stderr_and_malformed_inventory(self):
+  from run_control import checked
+  with tempfile.TemporaryDirectory() as t:
+   p=Path(t)/'receipt.json'
+   for result in [{'returncode':-1,'stdout':'','stderr':'','timedOut':True,'truncated':False},{'returncode':0,'stdout':'{}','stderr':'x'*65536,'timedOut':False,'truncated':True}]:
+    with patch('run_control.command',return_value=result):
+     with self.assertRaises(RuntimeError):checked(['xcrun','simctl'],receipt_path=p,inventory=True)
+    self.assertEqual(json.loads(p.read_text()),result)
+   with patch('run_control.command',return_value={'returncode':0,'stdout':'malformed','stderr':'','timedOut':False,'truncated':False}):
+    text=checked(['xcrun','simctl'],receipt_path=p,inventory=True)
+    with self.assertRaises(ValueError):device(text,'u')
+   self.assertEqual(json.loads(p.read_text())['stdout'],'malformed')
+ def test_delayed_report_reassigned_to_original_observation(self):
+  from run_control import reconcile_reports
+  with tempfile.TemporaryDirectory() as t:
+   t=Path(t);digest='a'*64
+   body={'captureTime':'1970-01-01 00:16:45.0000 +0000','pid':77,'coalitionID':12,'procName':'com.apple.WebKit.WebContent'}
+   (t/(digest+'.ips')).write_text('{}\n'+json.dumps(body))
+   first=entry();first.update(wallStart=1000,wallBeforeTermination=1030)
+   second=entry();second.update(attempt=2,wallStart=1040,wallBeforeTermination=1070)
+   records=reconcile_reports([first,second],{'records':[{'sha256':digest}],'omitted':0},t)
+   self.assertEqual(first['outcome'],'crash-observed');self.assertEqual(second['outcome'],'complete-no-crash-observed')
+   self.assertEqual(records[0]['coalitionID'],12);self.assertIn('not-proven-ownership',first['associatedCrashRecords'][0]['association'])
+   body['procName']='AudioRecoveryDiagnostic';body['pid']=999;(t/(digest+'.ips')).write_text('{}\n'+json.dumps(body))
+   first=entry();first.update(wallStart=1000,wallBeforeTermination=1030)
+   reconcile_reports([first],{'records':[{'sha256':digest}],'omitted':0},t)
+   self.assertEqual(first['outcome'],'evidence-incomplete')
+ def test_report_boundaries_and_outside_window_remain_retained(self):
+  from run_control import reconcile_reports
+  with tempfile.TemporaryDirectory() as t:
+   t=Path(t)
+   for seconds,associated in [('40',True),('50',True),('55',False)]:
+    digest='b'*64;body={'captureTime':'1970-01-01 00:16:'+seconds+'.0000 +0000','pid':77,'procName':'com.apple.WebKit.WebContent'}
+    (t/(digest+'.ips')).write_text('{}\n'+json.dumps(body));e=entry();e.update(wallStart=1000,wallBeforeTermination=1010)
+    records=reconcile_reports([e],{'records':[{'sha256':digest}],'omitted':0},t)
+    self.assertEqual(bool(records[0]['associatedAttempts']),associated);self.assertEqual(len(records),1)
+ def test_unparseable_or_omitted_final_reports_fail_closed(self):
+  from run_control import reconcile_reports
+  with tempfile.TemporaryDirectory() as t:
+   t=Path(t);digest='a'*64;(t/(digest+'.ips')).write_text('malformed')
+   for collection in [{'records':[{'sha256':digest}],'omitted':0},{'records':[],'omitted':1}]:
+    e=entry();e.update(wallStart=1000,wallBeforeTermination=1030);reconcile_reports([e],collection,t);self.assertEqual(e['outcome'],'evidence-incomplete')
  def test_three_launches_finally_cleanup_and_window(self):
   import hashlib,plistlib
   from run_control import observe
@@ -70,7 +138,7 @@ class ControlTests(unittest.TestCase):
     path=app/'Web'/name if name=='shell.js' else app/name;path.write_bytes(b'x');files['staged/App/Resources/Web/'+name if name=='shell.js' else 'staged/'+name]=hashlib.sha256(b'x').hexdigest()
    inventory={'fixture.wasm':hashlib.sha256(b'wasm').hexdigest()};arm={'files':inventory};a=t/'approval.json';a.write_text(json.dumps({'sourceCommit':'pinned','runtimes':{'candidate':arm}}));sm=t/'source.json';sm.write_text(json.dumps({'sourceCommit':'pinned','runtime':arm,'files':files}));container=t/'container';container.mkdir()
    clock=[0.];launches=[];terminations=[]
-   def cmd(args,timeout=30,env=None):
+   def cmd(args,timeout=30,env=None,stdout_limit=65536):
     text='';code=0
     if args[:4]==['xcrun','simctl','list','devices']:text=json.dumps({'devices':{RUNTIME:[{'udid':'u','isAvailable':True,'state':'Booted','name':'iPhone'}]}})
     elif 'get_app_container'in args:text=str(container)

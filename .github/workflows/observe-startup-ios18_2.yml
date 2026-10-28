@@ -100,7 +100,7 @@ jobs:
           mkdir -p startup-evidence
           xcodebuild build -project "$RUNNER_TEMP/recovery-stage/AudioRecoveryDiagnostic.xcodeproj" -scheme AudioRecoveryDiagnostic -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.device_id }}' -derivedDataPath "$RUNNER_TEMP/recovery-build" -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee startup-evidence/build.log
       - name: Three fresh app-process startup observations without Play or injection
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
           set -euo pipefail
           python3 experiments/audio-recovery/startup-control/run_control.py --udid '${{ steps.simulator.outputs.device_id }}' --app "$RUNNER_TEMP/recovery-build/Build/Products/Debug-iphonesimulator/AudioRecoveryDiagnostic.app" --output startup-evidence/control --arm '${{ matrix.arm }}' --approval experiments/audio-recovery/native/approval.json --source-manifest "$RUNNER_TEMP/recovery-stage/source-manifest.json"
