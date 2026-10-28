@@ -15,7 +15,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
       RUFFLE_SOURCE_DIR: ${{ github.workspace }}/.sigill-phase-ruffle
-      ENGINE_EVIDENCE_DIR: ${{ runner.temp }}/sigill-build-evidence
+      ENGINE_EVIDENCE_DIR: ${{ github.workspace }}/.sigill-build-evidence
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
