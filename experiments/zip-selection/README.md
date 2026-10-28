@@ -9,7 +9,7 @@ One explicit workflow dispatch, 2 serial standard `macos-14` jobs, hard 30 minut
 Existing success precedent: `diagnose-picker-ios18.yml` and `FolderPickerUITests`; local `flashnest-diagnostics/ui15-pass/picker-test.log` has actual XCTest success (3 tests). The new ZIP journey is AUTHORED, NOT yet compiled/executed.
 
 Each arm:
-- Native existing PackageImporterTests, ImportFlowTests, ImportAliasTests, LocalImportInboxTests and ExternalImportInboxTests.
+- Native existing PackageImporterTests, ImportFlowTests, ImportAliasTests, LocalImportInboxTests ExternalImportInboxTests, DocumentPickerDelegateTests and ExternalImportCopyTests (seven classes across five source files).
 - Real system Files picker cross-container: Cancel before selection → ZIP tap/Open → Cancel preserving imported game → SWF tap/Open → repeated ZIP selection → whole-folder selection with nested asset. Require post-callback entry selector and exact visible library count.
 - Source app writes only its own Documents. Test-owned original 132-byte ZIP and 18-byte SWF, plus a generated nested asset; no private game/save/video. Distinct synthetic filenames avoid ambiguity when Files hides extensions. No test calls importer/delegate or seeds FlashNest Documents.
 - Post-journey host verifies only allowlisted synthetic source bytes, four private package contents and manifests, distinct containers, no symlink escape/no staging leftovers. Host checks are read-only; data reaches destination ONLY by actual system selection.
@@ -22,3 +22,6 @@ Local Files/AppDocuments simulator success is not affected-provider reproduction
 Existing 9 model/source checks are not native controller tests. This bounded workflow does not newly prove stale/duplicate/empty delegate callback handling, detached presenter recovery, every corruption/ratio-limit case, original deletion independence, large-archive disk pressure or unknown-provider behavior. These remain explicit coverage limits, not skipped tests relabeled passes. Tests execute unchanged importer guards; no safety limits lowered.
 
 Publication/dispatch requires parent's review and confirmation. Stop/report exact environment or authorization blockers. Do not replace exact18.2 with another OS or rerun blindly. One final IPA is parent's separate responsibility.
+
+## First-run gate correction
+Run40720433883 executed26 native tests because two existing classes share files with differently named classes. Strict31-count gate failed as intended despite passing UI/copy checks. Revision2 adds DocumentPickerDelegateTests(2) and ExternalImportCopyTests(3) selectors; does not lower count, change assertions or App source. First-run partial evidence remains retained separately.
