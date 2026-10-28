@@ -16,6 +16,7 @@ final class AudioRecoveryUITests: XCTestCase {
     }
     override func setUpWithError() throws { continueAfterFailure = false; executionTimeAllowance = 180 }
     func testKnownOwnedResumeRejectsThenTrustedRetryKeepsSceneAndSave() throws {
+        executionTimeAllowance = 360 // Measured cold launch + full continuity/reopen journey; per-operation deadlines unchanged.
         let app = try start("candidate-known")
         let before = try snapshot(app)
         tap("recovery-inject", app)
@@ -27,9 +28,11 @@ final class AudioRecoveryUITests: XCTestCase {
         XCTAssertEqual(rejected.trustedRetries, 0); XCTAssertTrue(rejected.sameSave)
         XCTAssertGreaterThan(rejected.saveEntries, 0)
         XCTAssertTrue(rejected.nativeResumeRestored); XCTAssertGreaterThan(rejected.rejectedOperation, 0)
+        screenshot("Eligible audio warning before trusted Retry", app)
         retry.tap() // Trusted DOM input, never JavaScript click or fabricated status.
         XCTAssertTrue(wait { !retry.exists })
         let recovered = try snapshot(app)
+        screenshot("Audio state immediately after trusted Retry", app)
         XCTAssertEqual(recovered.page, before.page); XCTAssertEqual(recovered.contexts, 1)
         XCTAssertEqual(recovered.injections, 1); XCTAssertEqual(recovered.trustedRetries, 1)
         XCTAssertGreaterThan(recovered.fulfilledOperation, recovered.rejectedOperation)
@@ -112,6 +115,10 @@ final class AudioRecoveryUITests: XCTestCase {
         let end = Date().addingTimeInterval(15)
         repeat { if predicate() { return true }; Thread.sleep(forTimeInterval: 0.1) } while Date() < end
         return false
+    }
+    private func screenshot(_ name: String, _ app: XCUIApplication) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
     private func evidence(_ name: String, _ app: XCUIApplication) {
         for attachment in [XCTAttachment(string: app.debugDescription), XCTAttachment(screenshot: app.screenshot())] {
