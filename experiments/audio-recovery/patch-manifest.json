@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "prerequisiteWeakPatchSHA256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9",
+  "patchSHA256": "c1f377fb941ccbfccdfbeb1685acd577061d41a5462bb428c5f2d7baebc45a6e",
+  "files": [
+    {
+      "path": "web/src/audio.rs",
+      "originalSHA256": "0cca2bc14a593060a233ec68a2ae725efc381c9068626a92a82c67a3bc732b8b",
+      "beforeRecoverySHA256": "363ef32a15617be3d1a52c306bd09478cf5dd4f1e9922316e2c56c7b079ff3ca",
+      "modifiedSHA256": "e03078285ccccc4734837f6bb79559e008a307e7acd2a0d6649c617d1dcb9dc1",
+      "bytes": 12785
+    },
+    {
+      "path": "web/packages/core/src/ruffle-imports.ts",
+      "originalSHA256": "d27cfb70999e57de053cc8caf6a5c7a925affa7a77059342319da039d0fbcb5e",
+      "beforeRecoverySHA256": "d27cfb70999e57de053cc8caf6a5c7a925affa7a77059342319da039d0fbcb5e",
+      "modifiedSHA256": "0cd19f0f895e3a3534dbb4ec29567cc569e871b8d8b4593b367fc35455f31111",
+      "bytes": 1652
+    },
+    {
+      "path": "web/packages/core/src/internal/player/inner.tsx",
+      "originalSHA256": "3161d60d8470c23cb93b99efcb4027ec53854ef6c7a304f2d7127ecaca1d8120",
+      "beforeRecoverySHA256": "3161d60d8470c23cb93b99efcb4027ec53854ef6c7a304f2d7127ecaca1d8120",
+      "modifiedSHA256": "5c16e1675992f12fcf5be7980435f8ef09a0efdbfb39e4f61e6d1b65b2f2ad72",
+      "bytes": 92822
+    },
+    {
+      "path": "web/packages/core/src/internal/audio-operation.ts",
+      "originalSHA256": null,
+      "beforeRecoverySHA256": null,
+      "modifiedSHA256": "32986bab21da5cc3417ce2b67dfd6a3f829fa2b5c5910805e4a833fb1843a2cb",
+      "bytes": 6286
+    }
+  ],
+  "status": "experimental-unbuilt-unpromoted"
+}
