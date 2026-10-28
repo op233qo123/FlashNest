@@ -3,7 +3,7 @@ import {createNativeEventWindow} from './Web/observer-window.mjs';
 let groups=0;
 function test(name,fn){fn();groups++;console.log('PASS '+name)}
 function setup(){const events=[],window=createNativeEventWindow(events);return{events,window}}
-function receipt(cycle,start,endExclusive){return{token:'case/'+cycle,cycle,start,endExclusive,count:endExclusive-start,bytes:123,sha256:'a'.repeat(64)}}
+function receipt(cycle,start,endExclusive){return{kind:'case',ordinal:cycle,token:'case/'+cycle,cycle,start,endExclusive,count:endExclusive-start,bytes:123,sha256:'a'.repeat(64)}}
 test('monotonic sequence survives exact acknowledged prefix drain',()=>{
  const {events,window}=setup();window.record('context',{context:1});window.record('attach',{context:1,node:1});
  const r=receipt(0,0,2);window.armReceipt(r);window.acceptReceipt(r);window.record('source',{context:2,node:2});
@@ -54,5 +54,28 @@ test('nonadjacent token reuse is rejected within the bounded eight-case mode',()
 test('event metadata cannot override authoritative kind or sequence',()=>{
  const {events,window}=setup();assert.throws(()=>window.record('source',{seq:9}));assert.throws(()=>window.record('source',{kind:'fake'}));
  assert.equal(events.length,0);window.record('source');assert.equal(events[0].seq,0);
+});
+test('mid-case receipts preserve the current cycle and monotonically numbered tail',()=>{
+ const {events,window}=setup();
+ const chunk=(ordinal,start)=>({kind:'chunk',ordinal,token:'chunk/'+ordinal,cycle:0,start,endExclusive:start+1024,count:1024,bytes:1,sha256:'a'.repeat(64)});
+ for(let n=0;n<6;n++){
+  for(let i=0;i<1024;i++)window.record('source',{context:1});
+  const r=chunk(n,n*1024);window.armReceipt(r);window.acceptReceipt(r);
+ }
+ assert.equal(window.status().endExclusive,6144);assert.equal(events.length,0);
+ const end={...receipt(0,6144,6144),ordinal:6};window.armReceipt(end);window.acceptReceipt(end);
+ window.record('source');const next={...receipt(1,6144,6145),ordinal:7};window.armReceipt(next);window.acceptReceipt(next);
+});
+test('chunk ordinal cycle kind highwater and fixed32chunk cap are independent',()=>{
+ const {window}=setup();
+ const chunk=(n)=>({kind:'chunk',ordinal:n,token:'c/'+n,cycle:0,start:n*1024,endExclusive:(n+1)*1024,count:1024,bytes:1,sha256:'a'.repeat(64)});
+ for(let i=0;i<1024;i++)window.record('source');
+ for(const bad of [{...chunk(0),ordinal:1},{...chunk(0),cycle:1},{...chunk(0),kind:'other'},{...chunk(0),count:1023,endExclusive:1023}])assert.throws(()=>window.armReceipt(bad));
+ for(let n=0;n<32;n++){
+  if(n)for(let i=0;i<1024;i++)window.record('source');
+  const r=chunk(n);window.armReceipt(r);window.acceptReceipt(r);
+ }
+ for(let i=0;i<1024;i++)window.record('source');assert.throws(()=>window.armReceipt(chunk(32)));
+ assert.equal(window.status().count,1024);assert.equal(window.status().receiptPending,false);
 });
 console.log(`PASS ${groups} native event-window primitive groups (not integrated/native acceptance)`);

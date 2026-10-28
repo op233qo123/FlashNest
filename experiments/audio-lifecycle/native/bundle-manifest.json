@@ -1,12 +1,12 @@
 {
   "files": {
     "Host/NativeAudioHost.swift": {
-      "bytes": 26795,
-      "sha256": "a501f6c07799c7fb7e9974154ac420252e7e7064da439e3f7a67df69fe77f10f"
+      "bytes": 27803,
+      "sha256": "d3be798885544eb019557b8a1a6ded1fb5494bfb28bd786924ffd7e5f88b9268"
     },
     "README.md": {
-      "bytes": 20837,
-      "sha256": "879646bc9a9e2d3d7d729ac3d048c38ec97972fb67d5916e3dc8deccb607b017"
+      "bytes": 25187,
+      "sha256": "94d2f37184503a4538d0cdc629a5222afd8b8ec3a8766163b14f6a356fbfa681"
     },
     "UITests/NativeAudioLifecycleUITests.swift": {
       "bytes": 7672,
@@ -25,24 +25,24 @@
       "sha256": "7b58dd7bfe8ec4beb22a12d4ad1fcf279baa2d45c37550da6b5d790b2d83a160"
     },
     "Web/native-runner.mjs": {
-      "bytes": 8724,
-      "sha256": "86877bd50f102e236d84a2a48d45df1e99cf9f407286a9fc096e46e1efa8bf4f"
+      "bytes": 10924,
+      "sha256": "96e8f7158cc7880416eadd5ddbea20caca42503c27606cfd2a35ecc45f6f08f8"
     },
     "Web/observer-window.mjs": {
-      "bytes": 3945,
-      "sha256": "dba2550eb72eaeb884c7e4800a35bb49e05f05ceb4fd356678bb0d7710acb86f"
+      "bytes": 4367,
+      "sha256": "315c7f3b69da0462bad667013e5e69901bbda1ac55ce7b58a536c65634b06673"
     },
     "browser-approval.json": {
       "bytes": 627,
       "sha256": "3daa568934953609b3e98ea5576ba504cc6bc895db342c289a95ba164a8b3bcf"
     },
     "check_native_evidence.mjs": {
-      "bytes": 7425,
-      "sha256": "1349cf8225f21344ca0e7467ba332c71ce1a9132e85fa0c34dd15364103cb6a6"
+      "bytes": 8300,
+      "sha256": "222fb5945c70820faa732966711097d360f224ffbbf75faf15e5326114c11894"
     },
     "collect_native_evidence.py": {
-      "bytes": 7824,
-      "sha256": "02bf941e8536b74ca9dcd2527297594a1f17a44736035619fa64a1bae2639a3a"
+      "bytes": 8061,
+      "sha256": "9df330cc8f66ddabfda68bf79cea9738dff488c3c8aedb797dec3b6e425c06e7"
     },
     "prepare_browser_archive.py": {
       "bytes": 1425,
@@ -61,28 +61,32 @@
       "sha256": "f8485a2b069b5d3873d2fc3365ebfd48d90a7bd888aa0fa41a92d16160d7412e"
     },
     "stage_native.py": {
-      "bytes": 26142,
-      "sha256": "998cb471180f4ba68b4e568f48d5bf2dd6dbc6fde34fbb7e9a07d66122533d33"
+      "bytes": 26168,
+      "sha256": "997b9ccbd57e81c881783956c9b0894f094de3471c68c981b8751fa4a5a79d91"
     },
     "stage_recovery.py": {
       "bytes": 3350,
       "sha256": "d4e11a4251a3c73e1a21c6f057a972f0a5329a087d2376bbbcf2d63cdfb44e97"
     },
     "test_collect_native.py": {
-      "bytes": 10278,
-      "sha256": "6ed03ba0e726ab89c1ab1bf5ce4e1a48f73e15430187654dba8c6461710f3a0b"
+      "bytes": 13154,
+      "sha256": "738b148ce619a6aea3df8826af35dba4f5d4b8315857b2c87f5313dd012c56ef"
+    },
+    "test_midcase_runner.py": {
+      "bytes": 4917,
+      "sha256": "a1c6f9a93b57e0a007c0eb746aca0864cedd6fe6155a457e6ae472f44cc5a6c8"
     },
     "test_native.py": {
-      "bytes": 13932,
-      "sha256": "12403b58234936a1edd5c4081787951e39567736657ed44cd1505344b00c7f86"
+      "bytes": 15123,
+      "sha256": "2c326a30292074d9f14f14317d5a973f88cdb54ee10c630d5ed1bd2ecaeeee21"
     },
     "test_observer_window.mjs": {
-      "bytes": 4603,
-      "sha256": "99618709b3c9ce8d601e798274bb1d1bf33be12124f42caf5cc07245021da790"
+      "bytes": 6199,
+      "sha256": "c5f0ffae7a06bcd9ae3ca2e971309f95fec89070e7b64337888b6e8a1dcd5515"
     },
     "test_raw_replay.mjs": {
-      "bytes": 8360,
-      "sha256": "7636042ff0e37a4148d6ab7ba20c827fd485cdedbc20b910b3779544ba071bfa"
+      "bytes": 12517,
+      "sha256": "03f0fc1d21fefe66bc237bd96de24096ec994c872b7c714fba8cd688bf605b03"
     },
     "test_recovery_prerequisite.py": {
       "bytes": 6190,
@@ -93,12 +97,12 @@
       "sha256": "19f01649457ae9982f41658dfd611ed33bf5cbb56ff3826a052215e1180bd9eb"
     },
     "test_staged_window.py": {
-      "bytes": 5187,
-      "sha256": "fe7d9de29161a8e7f2c22b261a2debded086b1f50ed0dfb41d5736b324b95153"
+      "bytes": 5306,
+      "sha256": "164e4f5aeb3f4471f5e1ac6162443c59dfbbcaf431e7b4092a22cbb1b1f1b554"
     },
     "test_window_replay.mjs": {
-      "bytes": 5676,
-      "sha256": "8cb3b86be5c3c98e47e340235c3495f82dff81cd2ac29234bd250ee2faa38185"
+      "bytes": 5696,
+      "sha256": "c946253c9f58603a396a067bd0e84282cd138aaa4810bf6b77e557ebd16d3abe"
     },
     "verify_project_paths.py": {
       "bytes": 2688,
@@ -109,8 +113,8 @@
       "sha256": "c594c202389c276d8e4994233daba0b99fafed649866bd498d7edaeed6416f7f"
     },
     "window-replay.mjs": {
-      "bytes": 5722,
-      "sha256": "c49c06653ed0135b7774699f3e60f85be86d749b4dfbec70089be49c9ab7fdce"
+      "bytes": 5974,
+      "sha256": "1455503b3d488e25db9ce3c626b805ed98dffdbe9cdcbb030751f65af651aa98"
     },
     "workflow-draft.yml": {
       "bytes": 10018,
@@ -118,5 +122,5 @@
     }
   },
   "schemaVersion": 1,
-  "scope": "Native-only acknowledged bounded event windows plus explicit recovery-candidate40614335019 reattestation; no production/runtime changes; native22 execution pending"
+  "scope": "Native-only protocol2 mid-case acknowledged prefixes, strict collection and compact overflow diagnostics; immutable recovery candidate40614335019 unchanged; native22 pending"
 }

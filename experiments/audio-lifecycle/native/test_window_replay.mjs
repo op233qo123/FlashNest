@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {validateWindow,validateReceipt,metadataExtends,validateFinalTail,candidateClosedContexts} from './window-replay.mjs';
 let groups=0;function test(name,body){body();groups++;console.log('PASS '+name)}
-const receipt={token:'candidate/normal/0/evidence',cycle:0,start:0,endExclusive:3,count:3,bytes:100,sha256:'a'.repeat(64)};
+const receipt={kind:'case',ordinal:0,token:'candidate/normal/0/case/0',cycle:0,start:0,endExclusive:3,count:3,bytes:100,sha256:'a'.repeat(64)};
 function audio(start=3,count=1){
  const c={id:1,cycle:0,nodes:1,sourceAttempts:1,sourceThrows:0,starts:1,resumes:0,suspends:0,resumeFulfilled:0,suspendFulfilled:0,resumeRejected:0,suspendRejected:0,closeCalls:1,closeFulfilled:1,closeRejected:0,closeSnapshots:[{attachedIds:[]}]};
  return{overflow:false,contexts:[c],nodes:[{id:1,cycle:0,context:1,attached:false,attaches:1,detaches:1,starts:1}],

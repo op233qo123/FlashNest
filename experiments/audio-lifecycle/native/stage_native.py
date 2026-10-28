@@ -27,7 +27,7 @@ OBSERVER_TRANSFORMS = (
      "  const record=(kind,data={})=>nativeWindow.record(kind,data);"),
     ("    snapshot(){return structuredClone({mode,overflow,injected,contexts:contextRows,nodes:nodeRows,events})},",
      "    nativeWindow,\n"
-     "    snapshot(){const eventWindow=nativeWindow.status();return structuredClone({mode,overflow:overflow||eventWindow.overflow,injected,contexts:contextRows,nodes:nodeRows,events,eventWindow,lastReceipt:nativeWindow.lastReceipt()})},"),
+     "    snapshot(){const eventWindow=nativeWindow.status();return structuredClone({mode,overflow:overflow||eventWindow.overflow,observerOverflow:overflow,injected,contexts:contextRows,nodes:nodeRows,events,eventWindow,lastReceipt:nativeWindow.lastReceipt()})},"),
 )
 PAGE_TRANSFORMS = (
     ("script.src='/'+runtime+'/ruffle.js'", "script.src='./'+runtime+'/ruffle.js'"),
@@ -284,7 +284,7 @@ def stage_web(stage, extracted, repo, source_build, browser_prerequisite,
         actual = inventory(web)
         # A fresh manifest must not bless input/copy-time drift after verification.
         require(actual == expected, 'Staged bytes differ from already verified input inventories')
-        manifest = {'schemaVersion': 1, 'adapterScope': 'canvas-audio-only', 'eventWindowProtocol': 1, 'files': actual, 'sourceBuild': source_build,
+        manifest = {'schemaVersion': 1, 'adapterScope': 'canvas-audio-only', 'eventWindowProtocol': 2, 'files': actual, 'sourceBuild': source_build,
                     'browserPrerequisite': browser_prerequisite, 'transformations': transformations}
         payload = json_bytes(manifest)
         (web / 'native-manifest.json').write_bytes(payload)

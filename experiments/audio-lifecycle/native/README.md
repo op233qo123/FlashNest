@@ -321,3 +321,67 @@ failure test currently inspects throwing control flow; it does **not** execute
 FileManager failure injection or establish native compilation. Native execution
 of this window repair is still pending, and the separate focused recovery gate
 must not be labeled a successful22-case ownership matrix.
+
+## Mid-case durable prefixes (protocol2; native execution pending)
+
+Run [40621531623](https://github.com/op233qo123/FlashNest/actions/runs/40621531623)
+at `38e0cb305ff736b676111e2d85f3be67c7ffdb6c` built successfully but failed
+before completing baseline-normal cycle0 or reaching the candidate. Its compact
+terminal records `Evidence overflow or unavailable` while waiting for Remove,
+with approximately69 seconds left in that action deadline. This is a diagnostic
+observer failure, not a successful native22 gate or a demonstrated audio-engine
+crash. No test-window crash report was collected. The artifact is
+`12787533054`,77,515,814 bytes, SHA-256
+`6450282cf8e02ccc5913ce076b755c74dab633b35804569c1cae4f20cdee9dcd`.
+
+The collector's same-device evidence-only boot succeeded, but its old filename
+allowlist rejected the newly produced `host-final-window.json`; it also lacked
+`case-receipt-N.json`. Thus the full terminal body was not uploaded. Its compact
+hash/size survived, but **the exact event/node counts and which overflow flag
+fired are unavailable**. Do not substitute a calculated count for measurement.
+The collector now accepts only the exact new names/ranges, rejects unknown,
+linked, nested or out-of-range files, and bounds each mode to93 files. Compact
+failure diagnostics additionally retain separate page/observer/window flags,
+event/node/context and warning/error/action/trace counts, the event interval and
+receipt ordinal. When the compact terminal attachment is captured, these counters
+no longer depend on successful Documents collection. WebContent termination or
+attachment failure can still prevent that evidence.
+
+Completed-case draining alone cannot protect a slow single case. Native-only
+protocol2 therefore checks at each existing polling iteration for a highwater
+of1024 events and persists the **whole captured snapshot**, still at most4096
+events. Keeping its events and metadata at the same capture boundary avoids
+misrepresenting close ordering. There is only one in-flight prefix, with at
+most32 mid-case chunks plus8 case receipts per mode (40 monotonic ordinals).
+A chunk does not advance the case; only the exact completed-case receipt does.
+No audio, gesture, renderer, media-policy or runtime operation is added.
+
+Every chunk undergoes the original observer checks before persistence and
+independent replay after collection. The host atomically writes and reads back
+the exact bytes before returning the sequence/token/count/size/SHA-256 receipt.
+Events appended while writing remain in the next tail. No acknowledgment is
+accepted after its20-second/global deadline or after terminal retirement.
+Missing, wrong, duplicate, reordered or late acknowledgments fail without
+clearing the pending prefix. Polling includes checkpoint I/O in the **original
+phase deadline** and rechecks it before accepting even a true predicate; an
+engine operation cannot gain extra time from logging. Native callbacks retain
+their3-second bound. Case and terminal handling cannot race a pending checkpoint.
+
+Bounds remain2MiB per file,16MiB per mode and128MiB per collected suite, with
+4096 global node metadata entries per mode. Neither node/context metadata nor
+close snapshots are reset. Overflow remains latched and fatal. The1024
+highwater leaves3072 event slots of nominal headroom, not a guaranteed callback
+rate or bridge-latency allowance. If a stalled bridge, node cap, storage cap or
+the unchanged global600-second matrix budget is exceeded, the run must fail.
+Slow native accessibility operations may still exhaust those limits.
+
+Replay consumes every chunk and case exactly once in one contiguous global
+sequence, validates original attach/detach evidence even in discarded prefixes,
+and rejects candidate post-close source/handler activity across chunks, cases
+and both terminal intervals. Baseline retained-handler controls are unchanged.
+The final writer/cutoff protocol is unchanged and remains a finite observation,
+not a claim that all future callbacks or garbage collection have completed.
+Synthetic tests exercise the actual JS poll/receipt pipeline with over6500
+records in one slow-action case, failed/missing/late mock readback, exact prefix
+and late-tail continuity, deadlines and full22 replay with intermediate chunks.
+They are not native WebAudio or Swift/FileManager failure-injection execution.

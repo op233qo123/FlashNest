@@ -20,7 +20,7 @@ class StagedWindow(unittest.TestCase):
 import assert from 'node:assert/strict';
 import {installAudioObserver} from './observer.mjs';
 ENVIRONMENT
-const receipt=(cycle,status)=>({token:'test/'+cycle,cycle,start:status.start,endExclusive:status.endExclusive,count:status.count,bytes:1,sha256:'a'.repeat(64)});
+const receipt=(cycle,status)=>({kind:'case',ordinal:cycle,token:'test/'+cycle,cycle,start:status.start,endExclusive:status.endExclusive,count:status.count,bytes:1,sha256:'a'.repeat(64)});
 {
  const e=environment(),observer=installAudioObserver(e.g);observer.setCycle(0);
  try {
@@ -47,7 +47,7 @@ const receipt=(cycle,status)=>({token:'test/'+cycle,cycle,start:status.start,end
   }
   assert.equal(observer.snapshot().nodes.length,4096);assert.equal(observer.snapshot().events.length,0);
   const returned=ctx.createBufferSource();assert(returned instanceof e.Source);
-  const s=observer.snapshot();assert.equal(s.overflow,true);assert.equal(s.nodes.length,4096);
+  const s=observer.snapshot();assert.equal(s.overflow,true);assert.equal(s.observerOverflow,true);assert.equal(s.eventWindow.overflow,false);assert.equal(s.nodes.length,4096);
   assert.equal(s.contexts[0].sourceAttempts,4097);assert.equal(s.contexts[0].nodes,4096);
  } finally {observer.restore();e.restored()}
 }
@@ -68,9 +68,9 @@ console.log('PASS staged observer late Promise, exact original callback identity
         # or Swift execution: any throwing retainBytes/readback exits the enclosing
         # do block into the existing fatal-evidence catch before the Task is made.
         host = (HERE / 'Host/NativeAudioHost.swift').read_text()
-        block = host[host.index('            case "case":'):host.index('            case "complete":')]
+        block = host[host.index('            case "case", "event-chunk":'):host.index('            case "complete":')]
         self.assertLess(block.index('try retainBytes('), block.index('caseReceiptTasks.append'))
-        self.assertLess(block.index('try retain("case-receipt-'), block.index('caseReceiptTasks.append'))
+        self.assertLess(block.index('try retain(receiptName'), block.index('caseReceiptTasks.append'))
         write = host[host.index('    private func retainBytes('):host.index('    private func verifyBundle(')]
         for source in ['options: [.atomic]', 'try handle.read(upToCount: 2 * 1024 * 1024 + 1)', 'readback == data',
                        'data.count <= 2 * 1024 * 1024', 'retainedBytes + data.count <= 16 * 1024 * 1024']:

@@ -133,6 +133,41 @@ class NativeCollectionTests(unittest.TestCase):
             file.write_text('{}'); c.copy_evidence(source, output)
             with self.assertRaises(ValueError): c.copy_evidence(source, output)
 
+    def test_exact_new_window_names_and_unsafe_or_unbounded_names(self):
+        allowed = ['identity.json','host-summary.json','host-final-snapshot.json','host-final-window.json','page-terminal.json',
+                   'case-0.json','case-start-7.json','case-receipt-7.json','event-chunk-0.json','event-receipt-39.json']
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary); source=root/'source'; mode=source/DEVICE.lower()/'baseline-normal'; mode.mkdir(parents=True)
+            for name in allowed: (mode/name).write_text('{}')
+            rows=c.copy_evidence(source,root/'out'); self.assertEqual(len(rows),len(allowed))
+        for name in ['case-receipt-8.json','event-chunk-40.json','event-chunk-00.json','event-receipt--1.json',
+                     'event-chunk-1.json.bak','unknown.json','..\\escape.json','event-chunk-1/escape.json']:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                root=Path(temporary); source=root/'source'; mode=source/DEVICE.lower()/'baseline-normal'; mode.mkdir(parents=True)
+                file=mode/name; file.parent.mkdir(exist_ok=True); file.write_text('{}')
+                with self.assertRaises(ValueError): c.copy_evidence(source,root/'out')
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary); source=root/'source'; mode=source/DEVICE.lower()/'baseline-normal'; mode.mkdir(parents=True)
+            for n in range(94): (mode/f'unknown-{n}.json').write_text('{}')
+            with self.assertRaisesRegex(ValueError,'file count'): c.copy_evidence(source,root/'out')
+
+    def test_compact_counters_are_bounded_and_generated_known_names_collect(self):
+        driver=(HERE/'Web/native-runner.mjs').read_text()
+        for field in ['pageOverflow','audioOverflow','observerOverflow','eventWindowOverflow','eventCount','nodeCount','contextCount','chunkCount','receiptOrdinal']:
+            self.assertIn(field,driver)
+        host=(HERE/'Host/NativeAudioHost.swift').read_text()
+        self.assertIn('summary["diagnosticContext"]',host)
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary); source=root/'source'; mode=source/DEVICE.lower()/'baseline-normal'; mode.mkdir(parents=True)
+            # Exact production diagnostic-host outputs, not unrestricted .json acceptance.
+            import re
+            for name in re.findall(r'(?:retain|retainBytes)\("([a-z-]+\.json)"',host): (mode/name).write_text('{}')
+            for n in range(8):
+                for prefix in ['case','case-start','case-receipt']: (mode/f'{prefix}-{n}.json').write_text('{}')
+            for n in range(32):
+                for prefix in ['event-chunk','event-receipt']: (mode/f'{prefix}-{n}.json').write_text('{}')
+            self.assertEqual(len(c.copy_evidence(source,root/'out')),93)
+
     def test_failure_mirror_bounds_and_build_test_separation(self):
         host = (HERE / 'Host/NativeAudioHost.swift').read_text()
         ui = (HERE / 'UITests/NativeAudioLifecycleUITests.swift').read_text()

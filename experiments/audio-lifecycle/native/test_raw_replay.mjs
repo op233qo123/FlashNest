@@ -12,7 +12,7 @@ try{
  for(const name of ['assert.mjs','fresh-action.mjs'])fs.copyFileSync(path.join(here,'Web',name),path.join(web,name));
  const {verifyCycle}=await import(pathToFileURL(path.join(web,'contracts.mjs')));
  const files=Object.fromEntries(fs.readdirSync(web).map(name=>{const bytes=fs.readFileSync(path.join(web,name));return[name,{bytes:bytes.length,sha256:sha(bytes)}]}));
- const manifest={schemaVersion:1,adapterScope:'canvas-audio-only',eventWindowProtocol:1,files,sourceBuild:{testOnly:true},browserPrerequisite:{testOnly:true},transformations:[]};write(path.join(web,'native-manifest.json'),manifest);const pin=sha(fs.readFileSync(path.join(web,'native-manifest.json')));
+ const manifest={schemaVersion:1,adapterScope:'canvas-audio-only',eventWindowProtocol:2,files,sourceBuild:{testOnly:true},browserPrerequisite:{testOnly:true},transformations:[]};write(path.join(web,'native-manifest.json'),manifest);const pin=sha(fs.readFileSync(path.join(web,'native-manifest.json')));
  // Reuse the pure fixture builder from the locked original contract mocks.
  const source=fs.readFileSync(path.join(root,'experiments/audio-lifecycle/browser-tests/test_contracts.mjs'),'utf8');
  const definition=source.slice(source.indexOf('function fixture('),source.indexOf('\nlet checks='));
@@ -34,7 +34,7 @@ try{
    e.audio.lastReceipt=previousReceipt;
    const checked=verifyCycle(e,config),result={arm,mode,cycle,...checked,nativeDPR:3,renderer:'canvas'};results.push(result);
    write(path.join(folder,`case-start-${cycle}.json`),{type:'case-start',arm,mode,cycle,previousReceipt});
-   const eventWindow={token:`${arm}/${mode}/${cycle}/evidence`,cycle,start:nextSequence,endExclusive,count:e.audio.events.length};
+   const eventWindow={kind:'case',ordinal:cycle,token:`${arm}/${mode}/${cycle}/case/${cycle}`,cycle,start:nextSequence,endExclusive,count:e.audio.events.length};
    const entry={type:'case',arm,mode,config:{arm,mode,cycle},result,evidence:e,actions:config.actions,playback:config.playback,preRemove:config.preRemove,synthetic:config.synthetic??null,expectedDPR:3,eventWindow};
    const bytes=Buffer.from(JSON.stringify(entry));write(path.join(folder,`case-${cycle}.json`),bytes.toString());
    previousReceipt={...eventWindow,bytes:bytes.length,sha256:sha(bytes)};write(path.join(folder,`case-receipt-${cycle}.json`),previousReceipt);
@@ -45,9 +45,9 @@ try{
   const final=structuredClone(last);final.audio.eventWindow.finalBoundary=nextSequence;
   write(path.join(folder,'host-final-snapshot.json'),{snapshotJSON:JSON.stringify(final)});
   write(path.join(folder,'host-final-window.json'),final.audio.eventWindow);
-  write(path.join(folder,'host-summary.json'),{passed:true,serverDrained:true,failures:[],completedCases:count,manifestSHA256:pin,systemVersion:'18.5',arm,mode,elapsedSeconds:10});
+  write(path.join(folder,'host-summary.json'),{passed:true,serverDrained:true,failures:[],completedCases:count,midcaseChunks:0,receiptCount:count,manifestSHA256:pin,systemVersion:'18.5',arm,mode,elapsedSeconds:10});
  }
- let index=0;function replay(ok){const result=spawnSync(process.execPath,[path.join(here,'check_native_evidence.mjs'),'--web',web,'--manifest-sha',pin,'--suite',suite,'--output',path.join(temp,`result-${index++}.json`)],{encoding:'utf8'});assert.equal(result.status===0,ok,result.stderr)}
+ let index=0;function replay(ok,pattern=null){const result=spawnSync(process.execPath,[path.join(here,'check_native_evidence.mjs'),'--web',web,'--manifest-sha',pin,'--suite',suite,'--output',path.join(temp,`result-${index++}.json`)],{encoding:'utf8'});assert.equal(result.status===0,ok,result.stderr);if(pattern)assert.match(result.stderr,pattern)}
  replay(true);
  function mutate(file,change){const before=fs.readFileSync(file);const value=JSON.parse(before);change(value);write(file,value);replay(false);fs.writeFileSync(file,before)}
  const candidate=path.join(suite,'candidate-normal','case-0.json');
@@ -66,5 +66,47 @@ try{
   wrapper.snapshotJSON=JSON.stringify(snapshot);write(finalFile,wrapper);write(statusFile,audio.eventWindow);
   replay(arm==='baseline');fs.writeFileSync(finalFile,originalFinal);fs.writeFileSync(statusFile,originalStatus);
  }
- console.log('PASS native raw22 receipt replay +11 corrupt cases +candidate late-refill rejection/baseline control on synthetic data; no native/browser/runtime execution');
+ // Insert an acknowledged mid-case window before cycle1, then rebind every
+ // later exact byte receipt and tail. This is synthetic metadata, not a player.
+ for(const arm of ['baseline','candidate']){
+  const folder=path.join(suite,`${arm}-normal`),load=name=>JSON.parse(fs.readFileSync(path.join(folder,name)));
+  const first=load('case-0.json');let previousReceipt=load('case-receipt-0.json');
+  const evidence=structuredClone(first.evidence),start=previousReceipt.endExclusive,end=start+1024;
+  evidence.audio.events=Array.from({length:1024},(_,i)=>({seq:start+i,kind:'close-fulfilled',context:1}));
+  evidence.audio.eventWindow={...evidence.audio.eventWindow,start,endExclusive:end,count:1024};evidence.audio.lastReceipt=previousReceipt;
+  const eventWindow={kind:'chunk',ordinal:1,token:`${arm}/normal/1/chunk/1`,cycle:1,start,endExclusive:end,count:1024};
+  const chunk={type:'event-chunk',arm,mode:'normal',config:{arm,mode:'normal',cycle:1},evidence,eventWindow};
+  const bytes=Buffer.from(JSON.stringify(chunk));write(path.join(folder,'event-chunk-1.json'),bytes.toString());
+  previousReceipt={...eventWindow,bytes:bytes.length,sha256:sha(bytes)};write(path.join(folder,'event-receipt-1.json'),previousReceipt);
+  for(let cycle=1;cycle<8;cycle++){
+   const entry=load(`case-${cycle}.json`);if(cycle>1){const begin=load(`case-start-${cycle}.json`);begin.previousReceipt=previousReceipt;write(path.join(folder,`case-start-${cycle}.json`),begin)}
+   for(const e of entry.evidence.audio.events)e.seq+=1024;
+   for(const key of ['start','endExclusive']){entry.evidence.audio.eventWindow[key]+=1024;entry.eventWindow[key]+=1024}
+   entry.evidence.audio.lastReceipt=previousReceipt;entry.eventWindow.ordinal=cycle+1;entry.eventWindow.token=`${arm}/normal/${cycle}/case/${cycle+1}`;
+   const data=Buffer.from(JSON.stringify(entry));write(path.join(folder,`case-${cycle}.json`),data.toString());
+   previousReceipt={...entry.eventWindow,bytes:data.length,sha256:sha(data)};write(path.join(folder,`case-receipt-${cycle}.json`),previousReceipt);
+  }
+  const terminal=load('page-terminal.json');terminal.lastReceipt=previousReceipt;terminal.lastEvidence.audio.lastReceipt=previousReceipt;
+  for(const key of ['start','endExclusive'])terminal.lastEvidence.audio.eventWindow[key]+=1024;
+  write(path.join(folder,'page-terminal.json'),terminal);
+  const final=structuredClone(terminal.lastEvidence);final.audio.eventWindow.finalBoundary=final.audio.eventWindow.endExclusive;
+  write(path.join(folder,'host-final-snapshot.json'),{snapshotJSON:JSON.stringify(final)});write(path.join(folder,'host-final-window.json'),final.audio.eventWindow);
+  const summary=load('host-summary.json');summary.midcaseChunks=1;summary.receiptCount=9;write(path.join(folder,'host-summary.json'),summary);
+ }
+ replay(true);
+ const chunkFile=path.join(suite,'candidate-normal/event-chunk-1.json'),chunkReceiptFile=path.join(suite,'candidate-normal/event-receipt-1.json');
+ const savedChunk=fs.readFileSync(chunkFile),savedReceipt=fs.readFileSync(chunkReceiptFile);
+ function corruptChunk(change,pattern){
+  const c=JSON.parse(savedChunk);change(c);write(chunkFile,c);
+  const bytes=fs.readFileSync(chunkFile),r=JSON.parse(savedReceipt);r.bytes=bytes.length;r.sha256=sha(bytes);write(chunkReceiptFile,r);
+  replay(false,pattern);fs.writeFileSync(chunkFile,savedChunk);fs.writeFileSync(chunkReceiptFile,savedReceipt);
+ }
+ corruptChunk(c=>c.evidence.audio.events[0]={...c.evidence.audio.events[0],kind:'attach',setterCategory:'function',getterCategory:'function',identityPreserved:false},/function identity changed/);
+ corruptChunk(c=>c.evidence.audio.events[0].kind='source-attempt',/Candidate source\/handler activity after close entry/);
+ corruptChunk(c=>c.evidence.audio.events[0].seq++,/Missing\/duplicate\/reordered event/);
+ corruptChunk(c=>c.config.cycle=2,/deep-equal/);
+ fs.renameSync(chunkFile,chunkFile+'.held');replay(false);fs.renameSync(chunkFile+'.held',chunkFile);
+ mutate(chunkReceiptFile,r=>r.ordinal=9);
+ replay(true);
+ console.log('PASS native raw22 receipt replay, mid-case chunk chain +17 corrupt cases +candidate late-refill rejection/baseline control on synthetic data; no native/browser/runtime execution');
 }finally{fs.rmSync(temp,{recursive:true,force:true})}

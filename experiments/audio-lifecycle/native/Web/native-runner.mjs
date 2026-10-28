@@ -4,13 +4,20 @@ import {freshAction} from './fresh-action.mjs';
 // No synthetic click/resume, normal callback invocation, autoplay exemption,
 // mute override or retained source. Only XCUITest taps the real DOM controls.
 const params=new URLSearchParams(location.search),arm=params.get('runtime'),mode=params.get('mode');
-const host=window.__nativeAudioHost,rows=[];let finished=false,requestSequence=0,pendingAction=null,pendingEvidenceReceipt=null,acceptedEvidenceReceipt=null;
+const host=window.__nativeAudioHost,rows=[];let finished=false,requestSequence=0,pendingAction=null,pendingEvidenceReceipt=null,acceptedEvidenceReceipt=null,activeCycle=null,checkpointInFlight=false,chunkCount=0;
 function send(type,payload){window.webkit.messageHandlers.audioLifecycle.postMessage({type,arm,mode,...payload})}
 function snapshot(){return window.snapshot?.()}
 function context(e,cycle){const rows=e.audio.contexts.filter(c=>c.cycle===cycle);assert.equal(rows.length,1,'Expected one actual AudioContext');return rows[0]}
-async function waitFor(predicate,message,timeout=20000){
+async function waitFor(predicate,message,timeout=20000,checkpoint=true){
  const end=Math.min(host.deadlineMS,Date.now()+timeout);
- while(Date.now()<end){if(await predicate())return;await new Promise(resolve=>setTimeout(resolve,50))}
+ while(Date.now()<end){
+  if(checkpoint)await checkpointEvents();
+  // Durable evidence I/O consumes this original phase budget; it never extends
+  // a functional predicate's deadline or accepts a late-success predicate.
+  if(Date.now()>=end)break;
+  const satisfied=await predicate();if(Date.now()>=end)break;if(satisfied)return;
+  await new Promise(resolve=>setTimeout(resolve,50));
+ }
  throw Error(message+' (bounded deadline)');
 }
 function healthy(){const e=snapshot();if(e)checkHealthy(e,{mode});return e}
@@ -31,25 +38,40 @@ async function trustedAudio(kind,cycle){
 // Exact serialized case bytes are persisted/read back by the host before it
 // acknowledges this prefix. Never drain on send, timeout or digest mismatch.
 window.__nativeAudioReceipt=receipt=>{
- assert(pendingEvidenceReceipt&&!pendingEvidenceReceipt.accepted,'Unsolicited/duplicate case receipt');
+ assert(!finished&&pendingEvidenceReceipt&&!pendingEvidenceReceipt.accepted,'Unsolicited/duplicate/retired evidence receipt');
+ assert(Date.now()<pendingEvidenceReceipt.deadlineMS,'Late evidence readback acknowledgment');
  assert.deepEqual(receipt,pendingEvidenceReceipt.expected,'Persisted case receipt differs');
  acceptedEvidenceReceipt=window.nativeAudioEvidenceWindow.acceptReceipt(receipt);
  pendingEvidenceReceipt.accepted=true;return true;
 };
-async function persistCase(record){
- const status=record.evidence.audio.eventWindow;
- const token=`${arm}/${mode}/${record.config.cycle}/evidence`;
- record.eventWindow={token,cycle:record.config.cycle,start:status.start,endExclusive:status.endExclusive,count:status.count};
+async function persistRecord(record,kind){
+ assert(!pendingEvidenceReceipt,'Evidence checkpoint already pending');
+ const status=record.evidence.audio.eventWindow,ordinal=(acceptedEvidenceReceipt?.ordinal??-1)+1;
+ const token=`${arm}/${mode}/${record.config.cycle}/${kind}/${ordinal}`;
+ record.eventWindow={kind,ordinal,token,cycle:record.config.cycle,start:status.start,endExclusive:status.endExclusive,count:status.count};
  const caseJSON=JSON.stringify(record),bytes=new TextEncoder().encode(caseJSON);
  assert(bytes.length>0&&bytes.length<=2*1024*1024,'Serialized case exceeds original file cap');
  const hash=await crypto.subtle.digest('SHA-256',bytes);
  const sha256=Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');
  const expected={...record.eventWindow,bytes:bytes.length,sha256};
  window.nativeAudioEvidenceWindow.armReceipt(expected);
- pendingEvidenceReceipt={expected,accepted:false};
- send('case',{config:record.config,caseJSON,sha256});
- await waitFor(()=>{healthy();return pendingEvidenceReceipt.accepted},'Exact persisted case readback acknowledgment');
+ pendingEvidenceReceipt={expected,accepted:false,deadlineMS:Math.min(host.deadlineMS,Date.now()+20000)};
+ send(kind==='case'?'case':'event-chunk',{config:record.config,caseJSON,sha256});
+ await waitFor(()=>{healthy();return pendingEvidenceReceipt.accepted},'Exact persisted evidence readback acknowledgment',20000,false);
  pendingEvidenceReceipt=null;
+}
+async function checkpointEvents(){
+ assert(!checkpointInFlight,'Reentrant checkpoint');
+ if(activeCycle===null)return;
+ const evidence=healthy();
+ if(evidence.audio.eventWindow.count<1024)return;
+ assert(chunkCount<32,'Mid-case chunk cap');checkpointInFlight=true;
+ try{
+  // Capture the whole immutable snapshot: truncating its events while keeping
+  // later metadata would misrepresent close ordering. The cap remains4096.
+  await persistRecord({type:'event-chunk',arm,mode,config:{arm,mode,cycle:activeCycle},evidence},'chunk');
+  chunkCount++;
+ }finally{checkpointInFlight=false}
 }
 function allObservedAudioPromisesSettled(e){
  return e.audio.contexts.every(c=>c.resumes===c.resumeFulfilled+c.resumeRejected&&
@@ -61,7 +83,7 @@ async function run(){
  assert(['baseline','candidate'].includes(arm)&&['normal','start-first','start-second','synthetic-ended'].includes(mode));
  await waitFor(()=>{healthy();return window.runtimeReady===true},'Pinned runtime ready',80000);
  for(let cycle=0;cycle<(mode==='normal'?8:1);cycle++){
-  const config={arm,mode,cycle},actions=[];send('case-start',{...config,previousReceipt:acceptedEvidenceReceipt});
+  activeCycle=cycle;const config={arm,mode,cycle},actions=[];send('case-start',{...config,previousReceipt:acceptedEvidenceReceipt});
   // Do not await an unbounded runtime load Promise: poll its settled milestone.
   Promise.resolve(window.startCycle(cycle)).catch(error=>send('page-error',{message:String(error)}));
   await waitFor(()=>healthy().rows.find(x=>x.cycle===cycle)?.loaded,'Original silent fixture loaded',80000);
@@ -80,7 +102,9 @@ async function run(){
   const synthetic=mode==='synthetic-ended'?window.dispatchSyntheticEnded():null;
   const evidence=healthy(),checked=verifyCycle(evidence,{...config,actions,playback,preRemove,synthetic,expectedDPR:host.displayScale});
   const result={...config,...checked,nativeDPR:host.displayScale,renderer:evidence.rows.find(x=>x.cycle===cycle).renderer};rows.push(result);
-  await persistCase({type:'case',arm,mode,config,result,evidence,actions,playback,preRemove,synthetic,expectedDPR:host.displayScale});
+  assert(!checkpointInFlight&&!pendingEvidenceReceipt,'Case seal races checkpoint');
+  await persistRecord({type:'case',arm,mode,config,result,evidence,actions,playback,preRemove,synthetic,expectedDPR:host.displayScale},'case');
+  activeCycle=null;
  }
  return {passed:true,rows};
 }
@@ -96,7 +120,15 @@ function failureContext(){
   controls[name]=button?{connected:button.isConnected,disabled:button.disabled,
    rect:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null}:null;
  }
- return {pendingAction,observedAtMS:Date.now(),visibility:document.visibilityState,
+ let evidenceCounters;try{const e=snapshot(),a=e?.audio; evidenceCounters={
+  pageOverflow:e?.overflow??null,audioOverflow:a?.overflow??null,
+  observerOverflow:a?.observerOverflow??null,eventWindowOverflow:a?.eventWindow?.overflow??null,
+  errorCount:e?.errors?.length??null,warningCount:e?.warnings?.length??null,
+  rowCounts:(e?.rows??[]).slice(0,8).map(r=>({cycle:r.cycle,actions:r.actions?.length??null,traces:r.traces?.length??null})),
+  eventCount:a?.events?.length??null,nodeCount:a?.nodes?.length??null,contextCount:a?.contexts?.length??null,
+  eventWindow:a?.eventWindow??null,chunkCount,receiptOrdinal:acceptedEvidenceReceipt?.ordinal??null};
+ }catch(error){evidenceCounters={unavailable:true,...errorDetail(error)}}
+ return {pendingAction,evidenceCounters,observedAtMS:Date.now(),visibility:document.visibilityState,
   viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},controls};
 }
 run().then(result=>finish(result),error=>finish({passed:false,rows,...errorDetail(error)}));
@@ -106,7 +138,7 @@ async function finish(result){
  let diagnosticContext;try{diagnosticContext=failureContext()}catch(error){diagnosticContext={unavailable:true,...errorDetail(error)}}
  let cleanupError=null;try{window.dispose?.()}catch(error){cleanupError=String(error)}
  if(cleanupError)result={...result,passed:false,cleanupError};
- try{await waitFor(()=>allObservedAudioPromisesSettled(healthy()),'Observed audio Promises settled before terminal tail')}catch(error){result={...result,passed:false,tailSettlementError:errorDetail(error)}}
+ try{await waitFor(()=>allObservedAudioPromisesSettled(healthy()),'Observed audio Promises settled before terminal tail',20000,false)}catch(error){result={...result,passed:false,tailSettlementError:errorDetail(error)}}
  let lastEvidence=null;try{lastEvidence=snapshot()}catch(error){result={...result,passed:false,snapshotError:String(error)}}
  send('complete',{result,lastEvidence,diagnosticContext,lastReceipt:acceptedEvidenceReceipt});
 }

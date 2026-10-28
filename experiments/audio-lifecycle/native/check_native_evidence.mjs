@@ -13,7 +13,7 @@ let totalEvidence=0;function read(file,bounded=true){const s=fs.lstatSync(file);
 const json=file=>JSON.parse(read(file).toString());
 function inventory(dir,prefix=''){assert(fs.lstatSync(dir).isDirectory()&&!fs.lstatSync(dir).isSymbolicLink());const result={};for(const name of fs.readdirSync(dir)){assert(!name.includes('\\')&&!name.includes(':'));const file=path.join(dir,name),relative=prefix+name,s=fs.lstatSync(file);assert(!s.isSymbolicLink());if(s.isDirectory())Object.assign(result,inventory(file,relative+'/'));else{const bytes=read(file,false);result[relative]={bytes:bytes.length,sha256:sha(bytes)}}}return result}
 const manifestBytes=read(path.join(web,'native-manifest.json'));assert.equal(sha(manifestBytes),args['--manifest-sha']);const manifest=JSON.parse(manifestBytes);
-assert.equal(manifest.adapterScope,'canvas-audio-only');assert.equal(manifest.eventWindowProtocol,1);
+assert.equal(manifest.adapterScope,'canvas-audio-only');assert.equal(manifest.eventWindowProtocol,2);
 const files=inventory(web);delete files['native-manifest.json'];assert.deepEqual(files,manifest.files,'Loaded resource inventory differs');
 // These are staged project-owned assertion helpers authenticated above, not engine code.
 const {verifyCycle,verifyMatrix,checkHealthy}=await import(pathToFileURL(path.join(web,'contracts.mjs')));
@@ -27,20 +27,36 @@ for(const arm of ['baseline','candidate'])for(const mode of ['normal','start-fir
  assert.equal(identity.mediaPolicy,'require-audio-and-video-user-action');assert(Number.isFinite(identity.displayScale)&&identity.displayScale>0);
  if(scale===null)scale=identity.displayScale;assert.equal(identity.displayScale,scale,'Baseline/candidate measured different display scale');
  assert.equal(summary.passed,true);assert.equal(summary.serverDrained,true);assert.deepEqual(summary.failures,[]);assert.equal(summary.completedCases,count);assert.equal(summary.manifestSHA256,args['--manifest-sha']);assert.equal(summary.systemVersion,'18.5');assert.equal(summary.arm,arm);assert.equal(summary.mode,mode);
- const group=[];let nextSequence=0,previousReceipt=null,previousAudio=null;const expectedFiles=['identity.json','host-summary.json','host-final-snapshot.json','host-final-window.json','page-terminal.json'];
+ const group=[];let nextSequence=0,previousReceipt=null,previousAudio=null,ordinal=0,chunks=0;const expectedFiles=['identity.json','host-summary.json','host-final-snapshot.json','host-final-window.json','page-terminal.json'];
+ function consume(entry,file,receiptFile,cycle,kind){
+  assert.equal(entry.type,kind==='chunk'?'event-chunk':'case');assert.deepEqual(entry.config,{arm,mode,cycle});
+  assert.equal(entry.arm,arm);assert.equal(entry.mode,mode);assert.equal(entry.evidence.runtime,arm);assert.equal(entry.evidence.mode,mode);
+  // Every discarded prefix gets the SAME original observer checks as case tails.
+  checkHealthy(entry.evidence,{mode});
+  const data=read(file),receipt=json(receiptFile);
+  validateReceipt(entry,receipt,{bytes:data.length,sha256:sha(data)},cycle,nextSequence,ordinal,kind);
+  const end=validateWindow(entry.evidence.audio,nextSequence,previousReceipt);metadataExtends(previousAudio,entry.evidence.audio);
+  if(arm==='candidate')candidateClosedContexts(previousAudio,entry.evidence.audio);
+  nextSequence=end;previousReceipt=receipt;previousAudio=entry.evidence.audio;ordinal++;
+  attachments.push({file:`${arm}-${mode}/${path.basename(file)}`,bytes:data.length,sha256:sha(data)});
+ }
  for(let cycle=0;cycle<count;cycle++){
   for(const name of [`case-start-${cycle}.json`,`case-${cycle}.json`,`case-receipt-${cycle}.json`])expectedFiles.push(name);
   const start=json(path.join(folder,`case-start-${cycle}.json`));assert.equal(start.type,'case-start');assert.equal(start.arm,arm);assert.equal(start.mode,mode);assert.equal(start.cycle,cycle);assert.deepEqual(start.previousReceipt,previousReceipt);
-  const file=path.join(folder,`case-${cycle}.json`),entry=json(file);assert.equal(entry.type,'case');assert.deepEqual(entry.config,{arm,mode,cycle});assert.equal(entry.arm,arm);assert.equal(entry.mode,mode);assert.equal(entry.expectedDPR,scale);assert.equal(entry.evidence.runtime,arm);assert.equal(entry.evidence.mode,mode);
+  const file=path.join(folder,`case-${cycle}.json`),entry=json(file);
+  assert(Number.isSafeInteger(entry.eventWindow.ordinal)&&entry.eventWindow.ordinal>=ordinal&&entry.eventWindow.ordinal<40);
+  while(ordinal<entry.eventWindow.ordinal){
+   assert(chunks<32,'Mid-case chunk cap');
+   const name=`event-chunk-${ordinal}.json`,receiptName=`event-receipt-${ordinal}.json`;
+   expectedFiles.push(name,receiptName);
+   const chunkFile=path.join(folder,name);consume(json(chunkFile),chunkFile,path.join(folder,receiptName),cycle,'chunk');chunks++;
+  }
+  assert.equal(entry.expectedDPR,scale);
   const checked=verifyCycle(entry.evidence,{arm,mode,cycle,synthetic:entry.synthetic,actions:entry.actions,playback:entry.playback,preRemove:entry.preRemove,expectedDPR:scale});
   const result={arm,mode,cycle,...checked,nativeDPR:scale,renderer:entry.evidence.rows.find(x=>x.cycle===cycle).renderer};assert.deepEqual(entry.result,result);rows.push(result);group.push(result);
-  const data=read(file),receipt=json(path.join(folder,`case-receipt-${cycle}.json`));
-  validateReceipt(entry,receipt,{bytes:data.length,sha256:sha(data)},cycle,nextSequence);
-  const end=validateWindow(entry.evidence.audio,nextSequence,previousReceipt);metadataExtends(previousAudio,entry.evidence.audio);
-  if(arm==='candidate')candidateClosedContexts(previousAudio,entry.evidence.audio);
-  nextSequence=end;previousReceipt=receipt;previousAudio=entry.evidence.audio;
-  attachments.push({file:`${arm}-${mode}/case-${cycle}.json`,bytes:data.length,sha256:sha(data)});
+  consume(entry,file,path.join(folder,`case-receipt-${cycle}.json`),cycle,'case');
  }
+ assert.equal(summary.midcaseChunks,chunks);assert.equal(summary.receiptCount,ordinal);
  const terminal=json(path.join(folder,'page-terminal.json'));assert.equal(terminal.type,'complete');assert.equal(terminal.result.passed,true);assert.deepEqual(terminal.result.rows,group);assert(!terminal.result.error&&!terminal.result.cleanupError&&!terminal.result.snapshotError);checkHealthy(terminal.lastEvidence,{mode});
  const last=json(path.join(folder,'host-final-snapshot.json')),finalSnapshot=JSON.parse(last.snapshotJSON),finalStatus=json(path.join(folder,'host-final-window.json'));checkHealthy(finalSnapshot,{mode});
  assert.deepEqual(terminal.lastReceipt,previousReceipt);metadataExtends(previousAudio,terminal.lastEvidence.audio);if(arm==='candidate')candidateClosedContexts(previousAudio,terminal.lastEvidence.audio);validateFinalTail(terminal.lastEvidence,finalSnapshot,finalStatus,nextSequence,previousReceipt,{arm});

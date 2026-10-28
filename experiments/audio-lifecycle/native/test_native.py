@@ -113,7 +113,7 @@ class NativeSourceTests(unittest.TestCase):
         program = """
 const assert=require('node:assert/strict');
 const host={deadlineMS:1000};let now=0;const Date={now:()=>now++};
-const setTimeout=fn=>fn();
+const setTimeout=fn=>fn();async function checkpointEvents(){};
 FUNCTION
 (async()=>{
 for(const value of [null,undefined,false,0,'',new Error('fatal')]){
@@ -136,7 +136,7 @@ const assert=require('node:assert/strict');
 let now=0,delay=25000,row,kind='normal',sent=[],pendingAction=null,requestSequence=0;
 const host={deadlineMS:600000},arm='baseline',mode='normal';
 const Date={now:()=>now},setTimeout=fn=>{now+=50;fn()};
-function send(type,value){sent.push({type,...value})}
+function send(type,value){sent.push({type,...value})}async function checkpointEvents(){}
 function healthy(){if(now>=delay&&row.actions.length===0){row.actions.push({name:'remove',trusted:kind!=='untrusted'});if(kind==='duplicate')row.actions.push({name:'remove',trusted:true})}return{rows:[row]}}
 WAIT
 ACTION
@@ -157,6 +157,23 @@ ERROR
         self.assertIn('timeout=20000', source)
         self.assertIn('80000', source)  # Existing load deadlines unchanged.
         self.assertLess(source.index('diagnosticContext=failureContext()'), source.index('try{window.dispose?.()}'))
+
+    def test_checkpoint_cannot_extend_original_functional_or_global_deadline(self):
+        source = (HERE / 'Web/native-runner.mjs').read_text()
+        wait = source[source.index('async function waitFor('):source.index('\nfunction healthy()')]
+        program = r"""
+const assert=require('node:assert/strict');let now=0,calls=0,delay=20001;
+const host={deadlineMS:600000},Date={now:()=>now},setTimeout=fn=>fn();
+async function checkpointEvents(){now+=delay}
+WAIT
+(async()=>{
+ await assert.rejects(waitFor(()=>{calls++;return true},'engine Promise'),/engine Promise/);assert.equal(calls,0);
+ now=0;delay=5001;host.deadlineMS=5000;await assert.rejects(waitFor(()=>{calls++;return true},'global'),/global/);assert.equal(calls,0);
+ now=0;host.deadlineMS=600000;await assert.rejects(waitFor(async()=>{now=20001;return true},'slow predicate',20000,false),/slow predicate/);
+ console.log('PASS unchanged functional/global deadline includes checkpoint and predicate time');
+})().catch(e=>{console.error(e);process.exitCode=1});
+""".replace('WAIT',wait)
+        subprocess.run(['node','-'],input=program,text=True,check=True)
 
     def test_archive_hash_before_extraction_and_unsafe_paths(self):
         import prepare_browser_archive

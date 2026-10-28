@@ -38,10 +38,13 @@ def copy_evidence(source, destination):
             'Invalid diagnostic suite')
     for mode in sorted(suite.iterdir()):
         require(mode.name in MODES and mode.is_dir() and not mode.is_symlink(), 'Unexpected diagnostic mode')
-        for file in sorted(mode.iterdir()):
+        mode_files = sorted(mode.iterdir())
+        require(len(mode_files) <= 93, 'Evidence file count bound')
+        for file in mode_files:
             require(file.is_file() and not file.is_symlink(), 'Non-regular evidence')
-            require(file.name in ('identity.json', 'host-summary.json', 'host-final-snapshot.json', 'page-terminal.json')
-                    or re.fullmatch(r'case-(?:start-)?[0-7]\.json', file.name), 'Unexpected evidence name')
+            require(file.name in ('identity.json', 'host-summary.json', 'host-final-snapshot.json', 'host-final-window.json', 'page-terminal.json')
+                    or re.fullmatch(r'case-(?:start-|receipt-)?[0-7]\.json', file.name)
+                    or re.fullmatch(r'event-(?:chunk|receipt)-(?:[0-9]|[1-3][0-9])\.json', file.name), 'Unexpected evidence name')
             size = file.stat().st_size
             require(0 < size <= 2 * 1024 * 1024 and total + size <= 128 * 1024 * 1024, 'Evidence size bound')
             data = file.read_bytes(); require(len(data) == size, 'Evidence changed during collection')

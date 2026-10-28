@@ -14,9 +14,12 @@ export function validateWindow(audio,start,lastReceipt,{final=false}={}){
  for(let i=0;i<audio.contexts.length;i++)assert.equal(audio.contexts[i].id,i+1,'Context metadata reset or gap');
  return w.endExclusive;
 }
-export function validateReceipt(entry,receipt,{bytes,sha256},cycle,start){
- assert.deepEqual(Object.keys(receipt).sort(),['token','cycle','start','endExclusive','count','bytes','sha256'].sort());
- assert.equal(receipt.token,`${entry.arm}/${entry.mode}/${cycle}/evidence`);assert.equal(receipt.cycle,cycle);
+export function validateReceipt(entry,receipt,{bytes,sha256},cycle,start,ordinal=cycle,kind='case'){
+ assert.deepEqual(Object.keys(receipt).sort(),['kind','ordinal','token','cycle','start','endExclusive','count','bytes','sha256'].sort());
+ assert(['case','chunk'].includes(kind));assert(integer(ordinal)&&ordinal<40);
+ assert.equal(receipt.kind,kind);assert.equal(receipt.ordinal,ordinal);
+ assert.equal(receipt.token,`${entry.arm}/${entry.mode}/${cycle}/${kind}/${ordinal}`);assert.equal(receipt.cycle,cycle);
+ if(kind==='chunk')assert(receipt.count>=1024);
  assert.equal(receipt.start,start);assert(integer(receipt.endExclusive)&&integer(receipt.count));
  assert.equal(receipt.count,receipt.endExclusive-start);assert(receipt.count<=4096);
  assert.equal(receipt.bytes,bytes);assert(bytes>0&&bytes<=2*1024*1024);assert.equal(receipt.sha256,sha256);
