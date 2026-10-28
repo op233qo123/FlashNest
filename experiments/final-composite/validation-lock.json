@@ -440,6 +440,10 @@
       "bytes": 2383,
       "sha256": "f4e570f42fc35545afbd288b82f30f46a24594188c27d2171c3cc050eb6fcda7"
     },
+    "scripts/run_native_drag_diagnostic.py": {
+      "bytes": 5111,
+      "sha256": "30d23ea781d381cfdd2a36fe5e9d2b67f568644f9f6118bd8f06d454fec361c0"
+    },
     "scripts/run_native_validation.py": {
       "bytes": 1667,
       "sha256": "510fb0b9a1d95247590db09b2952e708e91e0403d505fa760542d6f7aed62ef2"
@@ -494,7 +498,7 @@
     },
     "validation-bindings/native-binding.json": {
       "bytes": 26798,
-      "sha256": "bc309716db8e99ca451e083949b1ecb71af71dcd988813669df3b804fdb800a7"
+      "sha256": "c67790ab6afc77570e9e31c6cde1289aa6ec62057d9bc7df6bb09d3cf6ff1bf9"
     },
     "validation-bindings/sampling-baseline-approved-app.json": {
       "bytes": 30481,
@@ -762,11 +766,11 @@
     },
     "validation-harness/native-composite-runner/file-manifest.json": {
       "bytes": 894,
-      "sha256": "ffbfb5f008d71468b463c99c377243a16ecbd45c01680ce8890d710eefa7a747"
+      "sha256": "8578f54f3d04fa550a0612b00140d08f2362721db05e5eb77c8f529b230af1c2"
     },
     "validation-harness/native-composite-runner/helper-lock.json": {
       "bytes": 8354,
-      "sha256": "d0e48ea48f89dbc54bc8bdb524e33d47b8ff9957c50a451632866eeac126492a"
+      "sha256": "5a99cff4967189496f2f1e8cdb126b00d4d2880a433f8f6afc890198a568e2da"
     },
     "validation-harness/native-composite-runner/local-tests.log": {
       "bytes": 1198,
@@ -793,8 +797,8 @@
       "sha256": "2c15c8f9ddf874ff0afea844b518251060247d1af803e5b16d5969bc15aa33bd"
     },
     "validation-harness/native-sampling-validation/UITests/NativeSamplingUITests.swift": {
-      "bytes": 15987,
-      "sha256": "8c28a9e58277e20f2c3f1b0c8624c180ab75b617d05cccd256d15b289c163ae3"
+      "bytes": 17022,
+      "sha256": "2a6484b9743fa8818bf5acae6f25c371684947898bafa91245f60bfe7ffdf9e4"
     },
     "validation-harness/native-sampling-validation/approved-app-source-manifest.json": {
       "bytes": 30427,
@@ -818,7 +822,7 @@
     },
     "validation-harness/native-sampling-validation/file-manifest.json": {
       "bytes": 2599,
-      "sha256": "0e2f6dce74b236297b4de54ab4ce753d465430bd620fc96e678d8bf6af32c917"
+      "sha256": "abfe0683de42fb66ed0f73b45d27f28fffb4b99f0cf333f8a7f9e6389d5fe7d4"
     },
     "validation-harness/native-sampling-validation/fixtures/manifest.json": {
       "bytes": 501,

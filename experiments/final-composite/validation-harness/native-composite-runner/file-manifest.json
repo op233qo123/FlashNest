@@ -1,29 +1,29 @@
 {
-  "scope": "Authored native runner adapter; no actual execution",
   "files": {
     "README.md": {
-      "sha256": "da04b43f2664dfbedd6ed872a6e73d1222addd2e2a7199700d474012b5abb847",
-      "bytes": 6000
+      "bytes": 6000,
+      "sha256": "da04b43f2664dfbedd6ed872a6e73d1222addd2e2a7199700d474012b5abb847"
     },
     "binding-template.json": {
-      "sha256": "c1371a2e9797fce726cae6ca2100baece17e80ae99d9c8f74b61e3c91b1d28b4",
-      "bytes": 1018
+      "bytes": 1018,
+      "sha256": "c1371a2e9797fce726cae6ca2100baece17e80ae99d9c8f74b61e3c91b1d28b4"
     },
     "helper-lock.json": {
-      "sha256": "d0e48ea48f89dbc54bc8bdb524e33d47b8ff9957c50a451632866eeac126492a",
-      "bytes": 8354
+      "bytes": 8354,
+      "sha256": "5a99cff4967189496f2f1e8cdb126b00d4d2880a433f8f6afc890198a568e2da"
     },
     "local-tests.log": {
-      "sha256": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc",
-      "bytes": 1198
+      "bytes": 1198,
+      "sha256": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc"
     },
     "run.py": {
-      "sha256": "7b56d16300a80dd87736bc8a516617ad9c65f3a52c5899dab96af115f5a589a0",
-      "bytes": 22041
+      "bytes": 22041,
+      "sha256": "7b56d16300a80dd87736bc8a516617ad9c65f3a52c5899dab96af115f5a589a0"
     },
     "test_runner.py": {
-      "sha256": "fd44e2ca9de012e6b6794407d9ef023d9acdfb3801c75ea3a4c312aad328b871",
-      "bytes": 4573
+      "bytes": 4573,
+      "sha256": "fd44e2ca9de012e6b6794407d9ef023d9acdfb3801c75ea3a4c312aad328b871"
     }
-  }
+  },
+  "scope": "Authored native runner adapter; no actual execution"
 }

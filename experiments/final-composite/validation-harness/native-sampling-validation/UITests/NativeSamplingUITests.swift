@@ -98,7 +98,17 @@ final class NativeSamplingUITests: XCTestCase {
                 XCTAssertGreaterThan(sx, 0); XCTAssertGreaterThan(sy, 0)
                 let drag = [round(points[0][0] + (target[0] + 60 - Double(a[0])!) / sx),
                             round(points[0][1] + (target[1] + 50 - Double(a[1])!) / sy)]
-                XCTAssertTrue(drag[0] > 0 && drag[0] + 8 < width && drag[1] > 0 && drag[1] + 6 < height)
+                // Preserve observed input and target state BEFORE a bounds failure can abort the phase.
+                // This is diagnostic evidence only; calibration, target selection and assertions are unchanged.
+                try attachJSON(["schema": "flashnest-native-sampling-pre-drag-v1", "row": rowID, "phase": phase, "arm": arm,
+                    "before": before, "afterTaps": taps, "points": points, "cachedTarget": target,
+                    "lastObservedUp": trace(taps, "UP").last ?? [],
+                    "lastObservedTarget": Array((trace(taps, "UP").last ?? []).dropFirst(2).prefix(2)),
+                    "css": css, "viewport": viewport, "calibrationDowns": [a, b, c],
+                    "inverseSlopes": [sx, sy], "proposedDrag": drag, "canvasSize": [width, height]],
+                    name: rowID + "-" + phase + "-pre-drag")
+                XCTAssertTrue(drag[0] > 0 && drag[0] + 8 < width && drag[1] > 0 && drag[1] + 6 < height,
+                    "Pre-drag bounds: row=\(rowID), phase=\(phase), drag=\(drag), canvas=\([width, height]), cachedTarget=\(target), lastUp=\(trace(taps, "UP").last ?? [])")
                 let end = [drag[0] + 8, drag[1] + 6]
                 coordinate(app, viewport: viewport, css: css, point: drag).press(forDuration: 0.1,
                     thenDragTo: coordinate(app, viewport: viewport, css: css, point: end))

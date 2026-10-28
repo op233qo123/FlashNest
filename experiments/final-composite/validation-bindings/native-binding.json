@@ -256,7 +256,7 @@
     "runtimeInventorySHA256": "6aadf8b728be885b518b16f77430e128ba677c97df03598b9a50d07101dfed9a",
     "sha256": "26c1e61f0d8d1b1f4dffcd0ddfe886604098384360c6c20e1f094d9c0c2a6e4e"
   },
-  "helperLockSHA256": "d0e48ea48f89dbc54bc8bdb524e33d47b8ff9957c50a451632866eeac126492a",
+  "helperLockSHA256": "5a99cff4967189496f2f1e8cdb126b00d4d2880a433f8f6afc890198a568e2da",
   "ready": true,
   "samplingAppManifests": {
     "baseline": {
