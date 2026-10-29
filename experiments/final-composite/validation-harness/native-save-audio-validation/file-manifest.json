@@ -216,8 +216,8 @@
     "scripts/verify_results.py": {
       "baselineSHA256": null,
       "new": {
-        "bytes": 4148,
-        "sha256": "182d8685478cda416fe279adf480360aeb6427a9ac907db570c6c470f12f410e"
+        "bytes": 4752,
+        "sha256": "aaacdefbb0967059d173379ccc2d1ebbd56de34550e60267d26399bea9cb3534"
       },
       "scope": "test-only"
     },

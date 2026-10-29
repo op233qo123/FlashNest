@@ -33,9 +33,13 @@ def verify(summary, log, lane):
         require(type(config.get(k)) is int and config[k] == expected[k], 'device result mismatch: ' + k)
     # Retain the complete bounded XCTest log; do not feed truncated head/tail logs
     # to selector verification. Module names are required, not guessed from count.
+    # XCTest stdout and WebKit stderr may concatenate without a newline.
+    # Match COMPLETE XCTest tokens anywhere, not line prefixes or loose method
+    # names. Summary/device checks above remain independently mandatory.
+    token_prefix = "Test Case '-["
     patterns = {
-        'started': r"^Test Case '-\[([^\]\r\n]+)\]' started\.$",
-        'passed': r"^Test Case '-\[([^\]\r\n]+)\]' passed \([0-9.]+ seconds\)\.$"}
+        'started': r"Test Case '-\[([^\]\r\n]+)\]' started\.",
+        'passed': r"Test Case '-\[([^\]\r\n]+)\]' passed \([0-9]+(?:\.[0-9]+)? seconds\)\."}
     wanted = Counter()
     for selector in lane['selectors']:
         module, cls, method = selector.split('/')
@@ -43,7 +47,11 @@ def verify(summary, log, lane):
     require(all(v == 1 for v in wanted.values()), 'duplicate selection contract')
     for state, pattern in patterns.items():
         require(Counter(re.findall(pattern, log, re.M)) == wanted, 'wrong/missing/duplicate ' + state + ' selectors')
-    require(not re.search(r'^Test Case .*\b(failed|skipped)\b', log, re.M), 'failed/skipped selector')
+    require(not re.search(r"Test Case '-\[[^\]\r\n]+\]' (?:failed|skipped)\b", log), 'failed/skipped selector')
+    require(not re.search(r'^Test Case .*\b(failed|skipped)\b', log, re.M), 'failed/skipped selector line')
+    # Extra malformed/foreign token attempts cannot disappear merely because
+    # the strict started/passed patterns did not recognize them.
+    require(log.count(token_prefix) == 2*n, 'extra/malformed XCTest tokens')
     return {'lane': lane['name'], 'tests': n, 'osVersion': '18.2', 'semanticResultValid': True,
             'sourceRuntimeRunIdentityMustBeIndependentlyAuthenticated': True}
 

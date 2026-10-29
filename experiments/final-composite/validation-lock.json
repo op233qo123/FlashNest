@@ -498,7 +498,7 @@
     },
     "validation-bindings/native-binding.json": {
       "bytes": 26798,
-      "sha256": "090f160fa4dfe3908b604f5994272b8e71c69996eccf5884a7dfd3c0df8f499d"
+      "sha256": "15b85eae1904ef885c2493d4824c379c777ffc85a4328d2eae6febd7cd105444"
     },
     "validation-bindings/sampling-baseline-approved-app.json": {
       "bytes": 30481,
@@ -766,11 +766,11 @@
     },
     "validation-harness/native-composite-runner/file-manifest.json": {
       "bytes": 952,
-      "sha256": "441e750b31fd7d1d7a47257c2c0cec70dc6d66748eb26ac596f0e299f4addf73"
+      "sha256": "e1d3b3b6dbe4b1f414cfe04d1c8ba2a86521784be6be3ca1215ee9fd1d888bef"
     },
     "validation-harness/native-composite-runner/helper-lock.json": {
       "bytes": 9095,
-      "sha256": "a1d51890a16f93f20a47142c7bfa0f24b45042859e88abc76ec563bc045dfe23"
+      "sha256": "15c466f3954585497b1cd626a4584750b77ffb259df9fc396d846dac3561ee10"
     },
     "validation-harness/native-composite-runner/local-tests.log": {
       "bytes": 1198,
@@ -946,7 +946,7 @@
     },
     "validation-harness/native-save-audio-validation/file-manifest.json": {
       "bytes": 7316,
-      "sha256": "66f2fb67cd1cfbe80f7c30ff4f570d74746cebbca22e3a58ea5b581a632a31c2"
+      "sha256": "adad63d9969dcf9b4be785efe8bf2da41bfbd30731c5ce60d2c8aef6f3a3b8d7"
     },
     "validation-harness/native-save-audio-validation/fixture-inventory.json": {
       "bytes": 2415,
@@ -981,8 +981,8 @@
       "sha256": "daad77321d2867a09c009572df14dfc0545b6d093fa186d92ca72d7023cf7bf5"
     },
     "validation-harness/native-save-audio-validation/scripts/verify_results.py": {
-      "bytes": 4148,
-      "sha256": "182d8685478cda416fe279adf480360aeb6427a9ac907db570c6c470f12f410e"
+      "bytes": 4752,
+      "sha256": "aaacdefbb0967059d173379ccc2d1ebbd56de34550e60267d26399bea9cb3534"
     },
     "validation-harness/native-save-audio-validation/test-selection.json": {
       "bytes": 20648,
