@@ -1,4 +1,4 @@
-name: FlashNest single candidate automatic diagnostic (not acceptance)
+name: FlashNest paired context and rotation diagnostic (not acceptance)
 on:
   workflow_dispatch:
 permissions:
@@ -50,7 +50,7 @@ jobs:
           echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  pinned-tools/xcodegen.zip' | shasum -a 256 --check
           unzip -q pinned-tools/xcodegen.zip -d pinned-tools
           test -x pinned-tools/xcodegen/bin/xcodegen
-      - name: Run one candidate automatic initial-context DPR2 diagnostic, never final acceptance
+      - name: Run isolated legacy WebGL and candidate Automatic context/rotation diagnostics
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -59,7 +59,7 @@ jobs:
           validation-venv/bin/python scripts/stage_validation_runtime.py
           validation-venv/bin/python scripts/stage_validation_inputs.py
           validation-venv/bin/python scripts/validate_final_app.py --app validation-app
-          validation-venv/bin/python scripts/run_native_drag_diagnostic.py
+          validation-venv/bin/python scripts/run_native_context_pair_diagnostic.py
       - name: Bound native synthetic evidence
         id: native-budget
         if: always()
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always() && steps.native-budget.outputs.allowed == 'true'
         with:
-          name: FlashNest-single-candidate-automatic-diagnostic-not-acceptance
-          path: experiments/final-composite/evidence/native-drag-diagnostic
+          name: FlashNest-paired-context-diagnostic-not-acceptance
+          path: experiments/final-composite/evidence/native-context-pair-diagnostic
           retention-days: 1
           if-no-files-found: warn

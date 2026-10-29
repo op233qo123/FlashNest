@@ -1,0 +1,33 @@
+{
+  "files": {
+    "canvas.png": {
+      "bytes": 14709,
+      "sha256": "daebacd91d870e88bf2fced371065d6769250016da5866dea9bdd59fa18c50bf"
+    },
+    "expected-identities.json": {
+      "bytes": 3567,
+      "sha256": "9a16d0198bb84d27a50e32fc7e668ac478b802a011a1190f9fbfd0fc6d077071"
+    },
+    "snapshot.json": {
+      "bytes": 2886,
+      "sha256": "8bcc1223dab0da27c7bdf485c5790182c3102cf16d8cefb5bc9ec9cd3f944d56"
+    },
+    "staging-provenance.json": {
+      "bytes": 10948,
+      "sha256": "f154f7534a55a12fd772bb8cf24460121f8deb63e286589764c8e8bc11962188"
+    }
+  },
+  "historicalRunStatus": "failed",
+  "knownNegativeOnly": true,
+  "nativeAcceptance": false,
+  "policy": "legacy-original-automatic-omits-preferredRenderer",
+  "schema": 1,
+  "sourceRun": {
+    "artifactID": 12866198175,
+    "bytes": 249118,
+    "head": "9c67a9add1488d13af8bf928d10ebecc8880f43a",
+    "jobID": 123206854707,
+    "runID": 40800398628,
+    "sha256": "c2bbc1cf9f1d0bbdc71596ca3b99974a11baae86825933a6546b64738889a453"
+  }
+}

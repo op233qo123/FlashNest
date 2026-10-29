@@ -37,6 +37,10 @@ def check_measurement(row, snapshot, candidate_inventory, baseline_inventory, un
     identity = snapshot['identity']; expected_inventory = candidate_inventory if arm == 'candidate' else baseline_inventory
     require(identity['runtimeInventorySHA256'] == expected_inventory, 'Runtime artifact identity mismatch')
     require(identity['arm'] == arm and identity['simulatorOnly'] is True and identity['shippingDefaultQualityOmitted'] is True, 'Host arm/config mismatch')
+    require(identity['rendererPolicyContract'] == ('candidate-three-mode-v1' if arm=='candidate' else 'legacy-original-policy-v1'), 'Per-arm production policy identity differs')
+    load=m['loadObservation']
+    require(type(load['count']) is int and load['count']==1 and load['hasPreferredRenderer'] is True and load['preferredRenderer']=='webgl', 'Actual production load did not prefer DirectWebGL')
+    require(load['rendererQuery'] == (None if row['rendererPolicy']=='automatic' else 'webgl'), 'Actual production renderer query differs')
     require(snapshot['os'] == '18.2', 'OS not exact iOS18.2')
     require(snapshot['screenScale'] in (2, 3) and numeric(m['dpr'], snapshot['screenScale'], 0), 'Live DPR not 2/3 or CSS differs')
     require(not snapshot['failure'] and not snapshot['traceOverflow'] and not m['overflow'] and m['hidden'] is False, 'Runtime/observation error, overflow or hidden page')
@@ -46,8 +50,9 @@ def check_measurement(row, snapshot, candidate_inventory, baseline_inventory, un
     require(numeric(snapshot['requested'], scale, 0), 'Native request differs from row')
     require(len(m['wasm']) == 1 and m['wasm'][0] in identity['runtimeFiles'], 'Actual selected WASM branch unobserved/ambiguous')
     require(m['renderer'] in ('webgl', 'wgpu-webgl', 'webgpu', 'canvas'), 'Actual runtime renderer missing')
-    if row['rendererPolicy'] == 'webgl': require(m['renderer'] == 'webgl', 'Compatibility did not select actual WebGL')
+    require(m['renderer'] == 'webgl', 'Positive automatic/compatibility matrix did not select actual DirectWebGL')
     require(m['context'] in ('webgl', 'webgl2', 'experimental-webgl'), 'No independent GL buffer evidence; WebGPU/Canvas require a separately reviewed native probe')
+    require(load['hasQuality'] == (row['lane']!='shipping-default-quality') and numeric(load['renderScale'],scale,0), 'Actual load quality/scale differs from declared lane')
     logical = [math.floor(n * m['dpr']) for n in m['client']]
     require(pairs(m['client'], m['css'][2:], 0), 'CSS/client geometry changed or fractional viewport unsupported')
     require(pairs(snapshot['viewport'][2:], m['client'], .01), 'Native host and actual canvas logical bounds differ')
@@ -162,6 +167,50 @@ def green_bounds(image):
     require(len(xs) >= 100, 'Rendered synthetic green vector not present')
     return [min(xs), min(ys), max(xs), max(ys)]
 
+def verify_enhanced_boundary(records, boundaries, pngs, expected_identity):
+    require(len(records)==6 and len(boundaries)==2, 'Enhanced requires3 window samples and1 error boundary perDPR')
+    keyed={};outcomes=[]
+    for item in records:
+        snap=item['snapshot'];key=(snap['screenScale'],item['label'])
+        require(key not in keyed, 'Duplicate Enhanced window');keyed[key]=item
+    require(set(keyed)==set(itertools.product((2,3),('ready','after-5s','after-15s'))), 'Enhanced DPR/window selection differs')
+    for dpr in (2,3):
+        first=keyed[(dpr,'ready')];initial=first['snapshot'];last_sample=-1
+        for label,target in [('ready',0),('after-5s',5),('after-15s',15)]:
+            item=keyed[(dpr,label)];snap=item['snapshot'];m=snap['measurement'];load=m['loadObservation']
+            require(item['diagnosticOnly'] is True and item['nativeAcceptance'] is False, 'Enhanced observation must never be native acceptance')
+            require(snap['identity']==expected_identity and snap['identity']['rendererPolicyContract']=='candidate-three-mode-v1', 'Enhanced source/policy identity differs')
+            require(snap['os']=='18.2' and snap['epoch']==initial['epoch'] and m['css']==initial['measurement']['css'], 'Enhanced same-player geometry differs')
+            require(snap['gate'] is True and snap['requested']==1 and not snap['failure'], 'Enhanced must be Original candidate without hidden WebKit failure')
+            require(type(load['count']) is int and load['count']==1 and load['rendererQuery']=='enhanced' and load['hasPreferredRenderer'] is False and load['preferredRenderer'] is None and load['hasQuality'] is False and numeric(load['renderScale'],1,0), 'Enhanced production load must exactly omit preference/quality/reduction')
+            require(len(trace(snap,'READY'))==1 and trace(snap,'READY')[0][-2:]==['noScale',''] and all(not trace(snap,k) for k in ('DOWN','UP','MOTION')), 'Enhanced fixture READY/mode/input callbacks differ')
+            require(numeric(m['dpr'],dpr,0),'Enhanced actual page DPR differs')
+            require(not m['events'] and not snap['traceOverflow'] and not m['overflow'] and not m['diagnosticOverflow'], 'Enhanced fixture input/overflow changed diagnostic')
+            require(item['targetElapsedSeconds']==target and target<=item['elapsedSeconds']<=target+10 and item['anchorUptimeSeconds']==first['anchorUptimeSeconds'], 'Enhanced bounded timing differs')
+            require(numeric(item['observedUptimeSeconds']-item['anchorUptimeSeconds'],item['elapsedSeconds'],.01), 'Enhanced monotonic observation mismatch')
+            require(item['observedUptimeSeconds']<=item['captureFinishedUptimeSeconds']<=item['observedUptimeSeconds']+15, 'Enhanced crop timing differs')
+            require(m['sampledAtMs']>last_sample,'Enhanced stale page sample');last_sample=m['sampledAtMs']
+            require(m['renderer'] in ('webgl','wgpu-webgl','webgpu','canvas'), 'Enhanced actual backend unobserved')
+            require(item.get('cropSHA256') in pngs and not item.get('observationError') and not item.get('cropError'), 'Enhanced actual diagnostic crop missing')
+            vector=False
+            with Image.open(pngs[item['cropSHA256']]) as image:
+                try:green_bounds(image);vector=True
+                except AssertionError:pass
+            visible=vector and m['contextLost'] is False and m['gl'] and all(x>0 for x in m['gl'])
+            outcome='bounded-visible' if visible else ('bounded-unhealthy' if not vector or m['contextLost'] is True or m['gl']==[0,0] else 'bounded-unverified-backend')
+            outcomes.append({'dpr':dpr,'label':label,'renderer':m['renderer'],'contextLost':m['contextLost'],'gl':m['gl'],'vectorObserved':vector,
+                'observedOutcome':outcome,'nativeAcceptance':False,'platformRenderHealthCertified':False,'cropSHA256':item['cropSHA256']})
+    seen=set()
+    for item in boundaries:
+        before=item['beforeFailure'];failed=item['failed'];dpr=before['screenScale'];require(dpr not in seen,'Duplicate Enhanced failure boundary');seen.add(dpr)
+        require(item['diagnosticOnly'] is True and item['nativeAcceptance'] is False,'Enhanced boundary is not render acceptance')
+        require(before['identity']==failed['identity']==expected_identity and failed['epoch']==before['epoch']==keyed[(dpr,'ready')]['snapshot']['epoch'],'Enhanced error-boundary source/player changed')
+        require(before['measurement']['css']==keyed[(dpr,'ready')]['snapshot']['measurement']['css'] and before['measurement']['sampledAtMs']>keyed[(dpr,'after-15s')]['snapshot']['measurement']['sampledAtMs'],'Enhanced boundary is not the observed final window player')
+        require(item['beforeFailureUptimeSeconds']>=keyed[(dpr,'after-15s')]['captureFinishedUptimeSeconds'] and item['failedUptimeSeconds']>=item['beforeFailureUptimeSeconds'],'Enhanced boundary timing is not after window')
+        require(failed['failure'] and failed['status']=='unknown' and any(e in ('provisional-failure','committed-failure') for e in failed['navigationEvents']), 'Enhanced real failure visibility/status boundary missing')
+    require(seen=={2,3},'Enhanced failure boundary DPR missing')
+    return {'configurationAndErrorBoundaryVerified':True,'diagnosticOnly':True,'nativeAcceptance':False,'platformRenderHealthCertified':False,'contextLossUserErrorReportingCertified':False,'explicitNavigationFailureVisibilityVerified':True,'observations':outcomes}
+
 def verify(folder, candidate_inventory, baseline_inventory, expected_identities):
     require(set(expected_identities) == {'baseline', 'candidate'}, 'External reviewed identities for both arms are required')
     for arm, expected in expected_identities.items():
@@ -170,6 +219,7 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
             value = expected.get(field)
             require(isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value), 'Missing external provenance hash: ' + field)
     records, lifecycle, navigation, pngs = [], [], [], {}
+    enhanced_windows,enhanced_boundaries=[],[]
     files = [p for p in Path(folder).rglob('*') if p.is_file()]
     require(sum(p.stat().st_size for p in files) <= 128 * 1024 * 1024, 'Exported evidence exceeds128MiB; do not silently truncate')
     for p in files:
@@ -179,16 +229,19 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
             except (ValueError, UnicodeError): continue
             if not isinstance(record, dict): continue
             schema = record.get('schema')
-            if schema == 'flashnest-native-sampling-v2': records.append(record)
+            if schema == 'flashnest-native-sampling-v3': records.append(record)
             if schema == 'flashnest-native-sampling-lifecycle-v1': lifecycle.append(record)
             if schema == 'flashnest-native-sampling-navigation-v1': navigation.append(record)
+            if schema == 'flashnest-enhanced-policy-window-v1': enhanced_windows.append(record)
+            if schema == 'flashnest-enhanced-policy-boundary-v1': enhanced_boundaries.append(record)
     keyed = {}
     for row in records:
         key = (row['arm'], row['before']['screenScale'], row['rendererPolicy'], row['scaleMode'], row['tier'], row['lane'], row['phase'])
         require(key not in keyed, 'Duplicate matrix evidence key'); keyed[key] = row
     expected = set()
-    for arm, dpr, policy, mode, phase in itertools.product(('baseline', 'candidate'), (2, 3), POLICIES, MODES, PHASES):
-        for tier in (('original',) if arm == 'baseline' else TIERS): expected.add((arm, dpr, policy, mode, tier, 'shipping-default-quality', phase))
+    for arm in ('baseline','candidate'):
+        for dpr,policy,mode,phase in itertools.product((2,3),('webgl',) if arm=='baseline' else POLICIES,MODES,PHASES):
+            for tier in (('original',) if arm=='baseline' else TIERS):expected.add((arm,dpr,policy,mode,tier,'shipping-default-quality',phase))
     for quality in ('low', 'high'):
         for dpr, tier, phase in itertools.product((2, 3), (('original','quarter') if quality == 'low' else TIERS), PHASES):
             expected.add(('candidate', dpr, 'webgl', 'showAll', tier, 'diagnostic-launch-' + quality, phase))
@@ -206,7 +259,7 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
             require(row['before']['measurement']['css'] == portrait['before']['measurement']['css'], 'Portrait return did not restore original geometry')
         wasm_by_arm[row['arm']].add(row['before']['measurement']['wasm'][0])
         arm, dpr, policy, mode, tier, lane, phase = key
-        baseline_key = ('baseline', dpr, policy, mode, 'original', lane, phase) if lane == 'shipping-default-quality' else ('candidate', dpr, policy, mode, 'original', lane, phase)
+        baseline_key = ('baseline', dpr, 'webgl', mode, 'original', lane, phase) if lane == 'shipping-default-quality' else ('candidate', dpr, policy, mode, 'original', lane, phase)
         reference = keyed[baseline_key]
         require(row['before']['measurement']['css'] == reference['before']['measurement']['css'], 'Original CSS stage geometry changed')
         require(row['points'] == reference['points'], 'Trusted test targets changed between tiers')
@@ -246,17 +299,18 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
         require(e.index('provisional') < e.index('redirect') < e.index('commit'), 'Initial real callback order wrong')
         require(item['loaded']['status'] != 'unknown' and failed['status'] == 'unknown' and failed['failure'], 'Initial binding/failure reporting regressed')
         require(any(x in failed['navigationEvents'] for x in ('provisional-failure', 'committed-failure')), 'No actual WK failure callback')
+    enhanced=verify_enhanced_boundary(enhanced_windows,enhanced_boundaries,pngs,expected_identities['candidate'])
     policies_reduced = []
     for policy in POLICIES:
         needed = {('candidate', dpr, policy, mode, tier, 'shipping-default-quality', phase)
                   for dpr, mode, tier, phase in itertools.product((2, 3), MODES, ('threeQuarter', 'half', 'quarter'), PHASES)}
         if needed <= reduction_keys: policies_reduced.append(policy)
-    return {'contract':'flashnest-native-sampling-v2', 'historicalStaleDownNegativePhases':24,
+    return {'contract':'flashnest-native-sampling-v3', 'historicalStaleDownNegativePhases':12,
         'candidateCurrentDownUpPhases':132, 'independentMapping':'source-f32-twips-center-320x240',
-        'fixtureResetsAfterObservedUp':936, 'matrixEvidenceConsistent': True, 'matrixPassed': not unsupported, 'unsupportedControls': unsupported,
-        'shippingRows': 40, 'diagnosticRows': 12, 'phases': 156,
-        'trustedTaps': 780, 'trustedDrags': 156, 'actualShippingReductionPolicies': policies_reduced,
-        'shippingReductionRequirementMet': bool(policies_reduced), 'wasmActuallyObserved': {k: sorted(v) for k,v in wasm_by_arm.items()},
+        'fixtureResetsAfterObservedUp':864, 'matrixEvidenceConsistent': True, 'matrixPassed': not unsupported, 'unsupportedControls': unsupported,
+        'shippingRows': 36, 'diagnosticRows': 12, 'phases': 144,
+        'trustedTaps': 720, 'trustedDrags': 144, 'actualShippingReductionPolicies': policies_reduced,
+        'enhancedBoundaryDiagnostic':enhanced,'shippingReductionRequirementMet': bool(policies_reduced), 'wasmActuallyObserved': {k: sorted(v) for k,v in wasm_by_arm.items()},
         'physicalDeviceAcceptance': False, 'runtimeValidated': False,
         'limitations': ['Simulator only, not real GPU/device/memory/audio proof', 'Only naturally selected WASM branch observed',
                         'Center alignment and showAll/noScale only', 'No claim of full filters/cache/masks/context-loss matrix']}

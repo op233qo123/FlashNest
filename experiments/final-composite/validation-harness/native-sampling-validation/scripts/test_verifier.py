@@ -11,14 +11,14 @@ APP=Path(os.environ.get('FLASHNEST_REVIEWED_TEMPLATE', str(ROOT.parent / 'next-i
 def measurement(lane='shipping-default-quality', scale=.25, applied=.25):
     row = {'row':'mock', 'arm':'candidate', 'lane':lane, 'tier':'quarter', 'rendererPolicy':'webgl', 'phase':'portrait'}
     m = {'dpr':3, 'canvas':[round(1200*applied),round(1800*applied)], 'gl':[round(1200*applied),round(1800*applied)],
-        'client':[400,600], 'css':[0,0,400,600], 'wasm':['actual.wasm'], 'renderer':'webgl', 'context':'webgl2',
+        'client':[400,600], 'css':[0,0,400,600], 'wasm':['actual.wasm'], 'renderer':'webgl', 'context':'webgl2', 'loadObservation':{'count':1,'rendererQuery':'webgl','hasPreferredRenderer':True,'preferredRenderer':'webgl','hasQuality':lane!='shipping-default-quality','renderScale':scale},
         'storage':[[4,1200,1800]] if applied==1 else [], 'attributes':{'data-flashnest-render-scale':str(applied),
         'data-flashnest-render-request':str(scale), 'data-flashnest-viewport-width':'1200',
         'data-flashnest-viewport-height':'1800', 'data-flashnest-renderer':'webgl'},
         'overflow':False, 'hidden':False, 'mobileQualityBranch':True,
         'diagnosticLaunchQuality': None if lane=='shipping-default-quality' else lane.removeprefix('diagnostic-launch-')}
     snapshot = {'identity':{'runtimeInventorySHA256':'candidate', 'runtimeFiles':{'actual.wasm':'sha'}, 'arm':'candidate',
-        'simulatorOnly':True, 'shippingDefaultQualityOmitted':True}, 'os':'18.2', 'screenScale':3, 'measurement':m,
+        'simulatorOnly':True, 'shippingDefaultQualityOmitted':True, 'rendererPolicyContract':'candidate-three-mode-v1'}, 'os':'18.2', 'screenScale':3, 'measurement':m,
         'failure':'', 'traceOverflow':False, 'loaded':True, 'gate':True, 'requested':scale, 'applied':applied,
         'status':'applied' if scale==applied else 'fallback', 'viewport':[0,0,400,600]}
     return row,snapshot

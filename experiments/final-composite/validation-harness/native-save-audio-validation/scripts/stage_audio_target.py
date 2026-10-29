@@ -12,6 +12,9 @@ from pathlib import Path, PurePosixPath
 
 HERE = Path(__file__).resolve().parents[1]
 LOCK = json.loads((HERE / 'input-lock.json').read_text())
+CANDIDATE_LOCK_SHA256 = '90ac374cd76accf9c9904ebf771beb4d256ef4f30f7d54706439d350da73da81'
+assert hashlib.sha256((HERE / 'candidate-input-lock.json').read_bytes()).hexdigest() == CANDIDATE_LOCK_SHA256
+CANDIDATE_LOCK = json.loads((HERE / 'candidate-input-lock.json').read_text())
 SHELL = 'App/Resources/Web/shell.js'
 SESSION = 'App/Player/PlayerSession.swift'
 RUNTIME = 'App/Resources/Web/runtime/'
@@ -148,14 +151,15 @@ GATE_ON = b'static let runtimeValidated = true'
 
 def source_bytes(source, final_metadata=None, candidate_gate_on=False):
     result = {}
+    source_lock = CANDIDATE_LOCK if candidate_gate_on else LOCK
     actual_app = {'App/' + k: v for k, v in inventory(Path(source) / 'App').items() if not ('App/' + k).startswith(RUNTIME)}
-    expected_app = {k: v for k, v in LOCK['files'].items() if k.startswith('App/')}
+    expected_app = {k: v for k, v in source_lock['files'].items() if k.startswith('App/')}
     if set(actual_app) != set(expected_app):
         fail('App file set differs from frozen source')
     if final_metadata is not None:
         if set(final_metadata) - FINAL_METADATA:
             fail('metadata override attempted to authorize executable/source change')
-    for name, expected in LOCK['files'].items():
+    for name, expected in source_lock['files'].items():
         data = read(source, name)
         accepted = (final_metadata or {}).get(name, expected)
         checked = data

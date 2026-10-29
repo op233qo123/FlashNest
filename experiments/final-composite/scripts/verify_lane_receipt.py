@@ -19,16 +19,49 @@ if lane=='browser':
  assert lock['appSourceManifest']['files'][policy['appShellPath']]==policy['appShellSHA256']
 else:
  assert report['evidenceKind']=='iOS simulator' and report['physicalDeviceCertified'] is False
- assert report['nativeMethods']==161 and report['samplingRows']==52 and report['samplingPhases']==156
- assert sum(r['tests'] for r in report['results'])==161
+ assert report['nativeMethods']==166 and report['samplingRows']==48 and report['samplingPhases']==144
+ assert sum(r['tests'] for r in report['results'])==166
  assert report['shippingReductionRequirementMet'] is True and report['shippingPoliciesWithAllReductions']
  assert set(report['shippingPoliciesWithAllReductions']) <= {'automatic','webgl'}
  assert report['shippingDefaultAppliesAllTiers']==('automatic' in report['shippingPoliciesWithAllReductions'])
  geometry=json.loads((ROOT/'evidence/native/sampling-geometry.json').read_text())
  assert geometry['matrixPassed'] is True and geometry['shippingReductionRequirementMet'] is True
- assert report['nativeContract']=='flashnest-native-composite-v2' and report['samplingContract']=='flashnest-native-sampling-v2'
- assert geometry['contract']=='flashnest-native-sampling-v2'
- assert geometry['historicalStaleDownNegativePhases']==24 and geometry['candidateCurrentDownUpPhases']==132 and geometry['fixtureResetsAfterObservedUp']==936
+ assert report['nativeContract']=='flashnest-native-composite-v3' and report['samplingContract']=='flashnest-native-sampling-v3'
+ assert geometry['contract']=='flashnest-native-sampling-v3'
+ assert report['positiveRegressionMethods']==164 and report['enhancedBoundaryDiagnosticMethods']==2
+ assert report['enhancedRenderHealthCertified'] is False
+ assert report['rendererPolicyContract']=='candidate-three-mode-v1' and report['legacyRendererPolicyPreserved'] is True
+ selection_raw=(ROOT/'validation-harness/native-composite-runner/selection-contract-v3.json').read_bytes()
+ assert hashlib.sha256(selection_raw).hexdigest()==report['selectionContractSHA256']
+ selection=json.loads(selection_raw)
+ assert selection['contract']=='flashnest-native-composite-v3'
+ assert selection['regressionMethodExecutions']==164 and selection['enhancedBoundaryDiagnosticExecutions']==2
+ assert len(report['results'])==len(selection['runs'])
+ assert {r['runName']:(r['lane'],r['tests']) for r in report['results']}=={r['runName']:(r['lane'],r['expectedCount']) for r in selection['runs']}
+ assert all(r['semanticResultValid'] is True and r['osVersion']=='18.2' for r in report['results'])
+ authority_raw=(ROOT/'validation-harness/native-sampling-validation/approved-candidate-app-source-manifest.json').read_bytes()
+ assert hashlib.sha256(authority_raw).hexdigest()==report['candidateAppSourceAuthoritySHA256']
+ authority=json.loads(authority_raw)
+ expected_app={p:h for p,h in lock['appSourceManifest']['files'].items() if p.startswith('App/') and not p.startswith('App/Resources/Web/runtime/')}
+ assert {r['path']:r['sha256'] for r in authority['files']}==expected_app
+ negative_raw=(ROOT/'evidence/native/legacy-automatic-known-negative.json').read_bytes()
+ assert hashlib.sha256(negative_raw).hexdigest()==report['legacyAutomaticKnownNegativeSHA256']
+ negative=json.loads(negative_raw)
+ packet_raw=(ROOT/'validation-harness/native-composite-runner/legacy-automatic-negative/manifest.json').read_bytes()
+ assert negative['packetManifestSHA256']==hashlib.sha256(packet_raw).hexdigest()
+ assert negative['sourceRun']==json.loads(packet_raw)['sourceRun']
+ assert negative['knownNegativeOnly'] is True and negative['nativeAcceptance'] is False and negative['historicalRunStatus']=='failed'
+ assert negative['contextLossAndMissingVectorConfirmed'] is True and negative['legacyPolicyUnmodified'] is True
+ assert geometry['shippingRows']==36 and geometry['diagnosticRows']==12 and geometry['phases']==144
+ assert geometry['trustedTaps']==720 and geometry['trustedDrags']==144
+ enhanced=geometry['enhancedBoundaryDiagnostic'];assert enhanced==report['enhancedBoundaryDiagnostic']
+ assert enhanced['configurationAndErrorBoundaryVerified'] is True and enhanced['diagnosticOnly'] is True and enhanced['nativeAcceptance'] is False
+ assert enhanced['platformRenderHealthCertified'] is False and enhanced['contextLossUserErrorReportingCertified'] is False
+ assert enhanced['explicitNavigationFailureVisibilityVerified'] is True
+ observations=enhanced['observations'];assert len(observations)==6
+ assert {(r['dpr'],r['label']) for r in observations}=={(d,label) for d in (2,3) for label in ('ready','after-5s','after-15s')}
+ assert all(r['nativeAcceptance'] is False and r['platformRenderHealthCertified'] is False and r['observedOutcome'] in ('bounded-visible','bounded-unhealthy','bounded-unverified-backend') for r in observations)
+ assert geometry['historicalStaleDownNegativePhases']==12 and geometry['candidateCurrentDownUpPhases']==132 and geometry['fixtureResetsAfterObservedUp']==864
  assert report['candidateAudioGateOn'] is True and report['candidateAudioMatchesPostGeometryApp'] is True and report['historicalAudioGateOff'] is True
  # Independently bind the audio App build inputs/resources to the final App with only
  # the already-reviewed production gate flip, not just the runner's boolean report.

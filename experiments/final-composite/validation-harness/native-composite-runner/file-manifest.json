@@ -1,29 +1,97 @@
 {
-  "contract": "native-contract-v2-authored-not-executed",
+  "contract": "native-policy-v3-authored-not-native-executed",
   "files": {
     "README.md": {
-      "bytes": 7359,
-      "sha256": "1adfec5eb78378b64c96bb4b288f9fd87081e5f9118cbb76511f8c1442632cb5"
+      "bytes": 13084,
+      "sha256": "07f30f5161e27e2484cd050294f15f76eaa34005757589f6ed4ab3bb763b5840"
     },
     "binding-template.json": {
-      "bytes": 1018,
-      "sha256": "c1371a2e9797fce726cae6ca2100baece17e80ae99d9c8f74b61e3c91b1d28b4"
+      "bytes": 1071,
+      "sha256": "911b141c99f98cf492d78dfd848116a4f7e2b60f745a854d1d29dae491dad00d"
     },
     "helper-lock.json": {
-      "bytes": 9095,
-      "sha256": "15c466f3954585497b1cd626a4584750b77ffb259df9fc396d846dac3561ee10"
+      "bytes": 12234,
+      "sha256": "e2a3b0694e004780581dbf115223bcff1a036e3e0cb8220e838413db9e3cc8f0"
+    },
+    "legacy-automatic-negative/canvas.png": {
+      "bytes": 14709,
+      "sha256": "daebacd91d870e88bf2fced371065d6769250016da5866dea9bdd59fa18c50bf"
+    },
+    "legacy-automatic-negative/expected-identities.json": {
+      "bytes": 3567,
+      "sha256": "9a16d0198bb84d27a50e32fc7e668ac478b802a011a1190f9fbfd0fc6d077071"
+    },
+    "legacy-automatic-negative/manifest.json": {
+      "bytes": 1013,
+      "sha256": "58371d6acb221c584c94f983dc6ff3c0dc5ce4ddea18597cb39ffb06d030ec7a"
+    },
+    "legacy-automatic-negative/snapshot.json": {
+      "bytes": 2886,
+      "sha256": "8bcc1223dab0da27c7bdf485c5790182c3102cf16d8cefb5bc9ec9cd3f944d56"
+    },
+    "legacy-automatic-negative/staging-provenance.json": {
+      "bytes": 10948,
+      "sha256": "f154f7534a55a12fd772bb8cf24460121f8deb63e286589764c8e8bc11962188"
+    },
+    "legacy-source-restore/files/App/Player/RendererSettings.swift": {
+      "bytes": 2233,
+      "sha256": "7ef4c48fbbeaa394aeae03aced47065db4b20c626696f7c80ffeadd885ecfb89"
+    },
+    "legacy-source-restore/files/App/Resources/Localization/en.lproj/Localizable.strings": {
+      "bytes": 31340,
+      "sha256": "685a28d471363d9555408f6b6d3243885f021eb82aea5401c8731f3ab191c3dc"
+    },
+    "legacy-source-restore/files/App/Resources/Localization/zh-Hans.lproj/Localizable.strings": {
+      "bytes": 31262,
+      "sha256": "bfcf35a86757c64153f2be3ec7f9b92a062496ecbace5139562225e7a7acd4ff"
+    },
+    "legacy-source-restore/files/App/Resources/Web/shell.js": {
+      "bytes": 24498,
+      "sha256": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd"
+    },
+    "legacy-source-restore/files/App/Views/PlayerRendererSettingsView.swift": {
+      "bytes": 5072,
+      "sha256": "1c6d1702c452407b12d916ac8a85e45f111bd354c5d2b32e42c85d879f75a3c6"
+    },
+    "legacy-source-restore/files/Tests/RendererSessionTests.swift": {
+      "bytes": 7995,
+      "sha256": "7819b7bbc9d3f9b56e573c4ce20dd57ba4095f2f13968cd40812fbc271efe0f6"
+    },
+    "legacy-source-restore/files/Tests/RendererSettingsTests.swift": {
+      "bytes": 3642,
+      "sha256": "ee31383482cfaff725b236bb10ea7d79c07131cfe897168d8393356477885575"
+    },
+    "legacy-source-restore/files/UITests/RendererCompatibilityUITests.swift": {
+      "bytes": 6759,
+      "sha256": "53525d5987822a18e598bacd71194bf64d39480b5d9e37c544abc0051ded9913"
+    },
+    "legacy-source-restore/files/scripts/test_shell.js": {
+      "bytes": 32376,
+      "sha256": "65702fd15b6170ca60a1b9381497dad51085f2d321006223d68349413b85c830"
+    },
+    "legacy-source-restore/manifest.json": {
+      "bytes": 3088,
+      "sha256": "257cb7433d1f934c646108b8c2f021d0fb0fb38eb2d8e8271c612851dd245fe7"
     },
     "local-tests.log": {
       "bytes": 1198,
       "sha256": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc"
     },
     "run.py": {
-      "bytes": 23632,
-      "sha256": "7d56d07bea702eeb4fe5a9c3bd14d9ba22714e650b60af9366b87a936139bf12"
+      "bytes": 28126,
+      "sha256": "9424a407e868d6801429a91f1822acf03d489c0b5163b3e3f8b105f5fb5d2625"
+    },
+    "selection-contract-v3.json": {
+      "bytes": 20509,
+      "sha256": "6aeb4157f8522088c9f0cd9c98b0a609871c710bc9be8dfca1e36119a977074b"
+    },
+    "test_policy_runner_v3.py": {
+      "bytes": 1991,
+      "sha256": "aee1bb6b70df0625654374097c9df13653be3c1ed2e028acb444a19bff5dc3a2"
     },
     "test_runner.py": {
-      "bytes": 4698,
-      "sha256": "a36c7ca07810998dca1b5e8aaf61193c44c2a0fea9c7d4768e240b85a8ec4a3c"
+      "bytes": 4799,
+      "sha256": "334b50cfe5af463fdac0554fa715b222307a75ca8097c8b210e8412ed8a9f3e0"
     }
   },
   "scope": "Authored native runner adapter; no actual execution"

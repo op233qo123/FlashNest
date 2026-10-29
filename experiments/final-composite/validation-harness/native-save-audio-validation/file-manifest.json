@@ -1,12 +1,12 @@
 {
-  "contract": "native-contract-v2-authored-not-executed",
+  "contract": "native-policy-v3-authored-not-native-executed",
   "diagnosticBundleID": "com.flashnest.late-audio.diagnostic",
   "files": {
     "README.md": {
       "baselineSHA256": null,
       "new": {
-        "bytes": 10441,
-        "sha256": "1c58aaccfb43e14780a1abeeaeb5dadf35e2376120d761033b103726ec0dd8c9"
+        "bytes": 10946,
+        "sha256": "ebb5998d5ee750a0ad4b989d317b9b12491f3f0a1c4df95f8214ea4e3ffec244"
       },
       "scope": "test-only"
     },
@@ -18,6 +18,14 @@
       },
       "scope": "test-bundle-only; no App edit",
       "target": "final-app/Tests/NativeSaveSettingsPreservationTests.swift"
+    },
+    "candidate-input-lock.json": {
+      "baselineSHA256": null,
+      "new": {
+        "bytes": 13119,
+        "sha256": "90ac374cd76accf9c9904ebf771beb4d256ef4f30f7d54706439d350da73da81"
+      },
+      "scope": "test-only"
     },
     "diagnostics/Host/LateAudioHost.swift": {
       "baselineSHA256": null,
@@ -192,8 +200,8 @@
     "scripts/stage_audio_target.py": {
       "baselineSHA256": null,
       "new": {
-        "bytes": 15279,
-        "sha256": "74701f48f77d074c880d437738d9a0d467e90b0455875615ecd7c7cb4b79ace8"
+        "bytes": 15636,
+        "sha256": "f18ac526eae575c2873fdaa1938bd2c9e24c3179bf542b2aa936a334c4b58c77"
       },
       "scope": "test-only"
     },
@@ -208,8 +216,8 @@
     "scripts/test_gate_contract_v2.py": {
       "baselineSHA256": null,
       "new": {
-        "bytes": 2344,
-        "sha256": "daad77321d2867a09c009572df14dfc0545b6d093fa186d92ca72d7023cf7bf5"
+        "bytes": 2504,
+        "sha256": "5ec457d180d9c7c830866e2a29368458855735d2907365faf196b2cc451345c6"
       },
       "scope": "test-only"
     },

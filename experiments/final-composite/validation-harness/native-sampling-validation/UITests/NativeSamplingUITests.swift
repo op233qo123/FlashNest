@@ -50,6 +50,98 @@ final class NativeSamplingUITests: XCTestCase {
         XCTAssertTrue((failed["navigationEvents"] as? [String] ?? []).contains { ["provisional-failure", "committed-failure"].contains($0) })
         try attachJSON(["schema": "flashnest-native-sampling-navigation-v1", "loaded": loaded, "failed": failed], name: "actual-WK-redirect-failure")
     }
+    // v3 Enhanced configuration/error boundary ONLY, never positive render health.
+    func testEnhancedProductionPolicyAndErrorBoundary() throws {
+        guard identity["arm"] as? String == "candidate" else { throw Failure.invalid("Candidate diagnostic identity required") }
+        // Preserve evidence after observation/crop helper assertions; existing methods are unchanged.
+        continueAfterFailure = true
+        let app = XCUIApplication()
+        app.launchArguments = ["-FlashNest.language", "en", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+            "--renderer", "enhanced", "--scale", "original", "--fixture", "noScale-center.swf"]
+        app.launch(); defer { app.terminate() }
+        let launchedAt = ProcessInfo.processInfo.systemUptime
+        var records: [[String: Any]] = []
+        func capture(_ snapshot: [String: Any], label: String, target: Double, anchor: Double, error: String = "") throws {
+            let observedAt = ProcessInfo.processInfo.systemUptime
+            var record: [String: Any] = ["schema": "flashnest-enhanced-policy-window-v1", "diagnosticOnly": true,
+                "nativeAcceptance": false, "label": label, "targetElapsedSeconds": target,
+                "anchorUptimeSeconds": anchor, "observedUptimeSeconds": observedAt,
+                "elapsedSeconds": observedAt - anchor, "snapshot": snapshot, "observationError": error]
+            // Preserve raw state BEFORE invoking crop helpers that can assert or throw.
+            var raw = record; raw["schema"] = "flashnest-enhanced-policy-window-raw-v1"
+            try attachJSON(raw, name: "enhanced-policy-" + label + "-raw")
+            if let m = snapshot["measurement"] as? [String: Any], let css = m["css"] as? [Double],
+               css.count == 4, css[2] > 0, css[3] > 0,
+               (snapshot["viewport"] as? [Double])?.count == 4,
+               (snapshot["screenBounds"] as? [Double])?.count == 2 {
+                do { record["cropSHA256"] = try screenshot(app, before: snapshot, name: "enhanced-policy-" + label) }
+                catch { record["cropError"] = String(describing: error) }
+            } else { record["cropError"] = "Measurement/geometry unavailable; no invented crop" }
+            if record["cropSHA256"] == nil {
+                let full = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+                full.name = "enhanced-policy-" + label + "-full-screen"; full.lifetime = .keepAlways; add(full)
+            }
+            record["captureFinishedUptimeSeconds"] = ProcessInfo.processInfo.systemUptime
+            try attachJSON(record, name: "enhanced-policy-" + label)
+            records.append(record)
+        }
+        let play = app.webViews.buttons["Play / enable audio"].firstMatch
+        guard play.waitForExistence(timeout: 90), wait({ play.isEnabled && play.isHittable }) else {
+            try capture([:], label: "activation-unavailable", target: 0, anchor: launchedAt, error: "Play unavailable")
+            XCTFail("Diagnostic activation unavailable; evidence retained"); return
+        }
+        play.tap() // Only required user activation; no taps into the SWF fixture.
+        let readyDeadline = ProcessInfo.processInfo.systemUptime + 90
+        var first: [String: Any] = [:]
+        var firstError = ""
+        repeat {
+            do { first = try snapshot(app, allowingFailure: true) }
+            catch { firstError = String(describing: error); break }
+            if trace(first, "READY").count == 1 && first["measurement"] is [String: Any] { break }
+            Thread.sleep(forTimeInterval: 0.2)
+        } while ProcessInfo.processInfo.systemUptime < readyDeadline
+        let anchor = ProcessInfo.processInfo.systemUptime
+        guard trace(first, "READY").count == 1, first["measurement"] is [String: Any], firstError.isEmpty else {
+            try capture(first, label: "ready-unavailable", target: 0, anchor: anchor,
+                        error: firstError.isEmpty ? "Bounded READY/measurement deadline" : firstError)
+            XCTFail("Diagnostic READY unavailable; evidence retained"); return
+        }
+        try capture(first, label: "ready", target: 0, anchor: anchor)
+        for (label, target) in [("after-5s", 5.0), ("after-15s", 15.0)] {
+            while ProcessInfo.processInfo.systemUptime < anchor + target { Thread.sleep(forTimeInterval: 0.1) }
+            do { try capture(snapshot(app, allowingFailure: true), label: label, target: target, anchor: anchor) }
+            catch { try capture([:], label: label, target: target, anchor: anchor, error: String(describing: error)) }
+        }
+        // Assert only after all bounded snapshots/crops are attached. Context loss
+        // cannot stop collection of the later same-player diagnostic sample.
+        XCTAssertEqual(records.count, 3)
+        for record in records {
+            XCTAssertEqual(record["observationError"] as? String, "")
+            let state = record["snapshot"] as? [String: Any] ?? [:]
+            XCTAssertEqual(state["epoch"] as? Int, first["epoch"] as? Int)
+            XCTAssertEqual(state["failure"] as? String, "")
+            XCTAssertNotNil(state["measurement"] as? [String: Any])
+        }
+        // Existing real loopback navigation failure: prove production error/status
+        // remains visible, rather than treating a known lost renderer as healthy.
+        let beforeFailure = try snapshot(app, allowingFailure: true)
+        let beforeFailureUptime = ProcessInfo.processInfo.systemUptime
+        app.buttons["sampling-fail"].tap()
+        let deadline = ProcessInfo.processInfo.systemUptime + 30
+        var failed: [String: Any] = [:]
+        repeat {
+            failed = try snapshot(app, allowingFailure: true)
+            if !(failed["failure"] as? String ?? "").isEmpty { break }
+            Thread.sleep(forTimeInterval: 0.2)
+        } while ProcessInfo.processInfo.systemUptime < deadline
+        try attachJSON(["schema": "flashnest-enhanced-policy-boundary-v1", "diagnosticOnly": true,
+            "nativeAcceptance": false, "beforeFailure": beforeFailure, "failed": failed,
+            "beforeFailureUptimeSeconds": beforeFailureUptime, "failedUptimeSeconds": ProcessInfo.processInfo.systemUptime],
+            name: "enhanced-policy-error-boundary")
+        XCTAssertFalse((failed["failure"] as? String ?? "").isEmpty)
+        XCTAssertEqual(failed["status"] as? String, "unknown")
+        XCTAssertTrue((failed["navigationEvents"] as? [String] ?? []).contains { ["provisional-failure", "committed-failure"].contains($0) })
+    }
     private func matrix(renderer: String, mode: String, quality: String? = nil) throws {
         let arm = try XCTUnwrap(identity["arm"] as? String)
         let tiers = arm == "baseline" ? ["original"] : (quality == "low" ? ["original", "quarter"] : ["original", "threeQuarter", "half", "quarter"])
@@ -118,7 +210,7 @@ final class NativeSamplingUITests: XCTestCase {
                 XCTAssertEqual(trace(after, "RESET").count - trace(before, "RESET").count, 6)
                 XCTAssertEqual(trace(after, "RESET").last!, ["100", "70"])
                 target = [100, 70] // Fixture reset is after UP/motion evidence, never a host mutation.
-                let record: [String: Any] = ["schema": "flashnest-native-sampling-v2", "row": rowID, "arm": arm, "lane": lane,
+                let record: [String: Any] = ["schema": "flashnest-native-sampling-v3", "row": rowID, "arm": arm, "lane": lane,
                     "rendererPolicy": renderer, "scaleMode": mode, "tier": tier, "phase": phase,
                     "before": before, "after": after, "points": points, "drag": [drag, end], "cropSHA256": crop]
                 try attachJSON(record, name: rowID + "-" + phase)

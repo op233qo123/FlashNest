@@ -6,7 +6,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 APPROVED_APP_MANIFEST_SHA256 = '15a788b157e88407b7ae11b0e48c8922ed9fd2f05007b78d37a6ca9deb12d062'
-APPROVED_CANDIDATE_APP_MANIFEST_SHA256 = '2a9cdfb19440066b1fde2f72cdda89cec6740218ee92d58ed57a89bc5a182efa'
+APPROVED_CANDIDATE_APP_MANIFEST_SHA256 = '946f13ebb67e8b6d725532c2ebc42f2b4f0cbde281a2bc557d1bec1d544f19bd'
 METADATA_ONLY = {'App/Resources/Web/runtime-identity.json', 'App/Resources/Web/Ruffle-MODIFICATIONS.md',
  'App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md', 'App/Resources/Web/THIRD_PARTY_NOTICES.md', 'App/Resources/Web/licenses.manifest.json'}
 OLD_AUDIO_INVENTORY = '25d4453b0375349e55b9f63f609bd129d6a3549e1da792e811f0e5d121247e90'
@@ -127,7 +127,7 @@ def main():
         'runtimeFiles': runtime, 'gateOffAppFiles': before, 'changedAppFiles': {k: {'before': before[k], 'after': after[k]} for k in changed},
         'observerSHA256': sha(target / 'Host/sampling-probe.js'), 'simulatorOnly': True,
         'rendererPolicyContract': 'candidate-three-mode-v1' if args.arm == 'candidate' else 'legacy-original-policy-v1',
-        'shippingDefaultQualityOmitted': True, 'approvedAppManifestSHA256': effective_app_manifest_sha, 'authoredNotExecuted': True}
+        'shippingDefaultQualityOmitted': True, 'approvedAppManifestSHA256': effective_app_manifest_sha, 'appSourceAuthoritySHA256': authority_sha, 'authoredNotExecuted': True}
     # Compact runtime/source identities in all phase attachments; full map kept in staging provenance.
     (target / 'staging-provenance.json').write_text(json.dumps(identity, indent=2) + '\n')
     compact = {k: v for k, v in identity.items() if k not in ['gateOffAppFiles', 'changedAppFiles']}

@@ -10,7 +10,8 @@ BASE=Path(os.environ.get('FLASHNEST_REVIEWED_TEMPLATE',BASE))
 class GateContracts(unittest.TestCase):
     def test_exact_gate_transform_and_immutable_source(self):
         metadata={k:stage.record(stage.read(BASE,k)) for k in stage.FINAL_METADATA}
-        original=stage.source_bytes(BASE,metadata)
+        original={k:stage.read(BASE,k) for k in stage.CANDIDATE_LOCK['files']}
+        self.assertEqual({k:stage.record(v) for k,v in original.items()},stage.CANDIDATE_LOCK['files'])
         with tempfile.TemporaryDirectory() as t:
             source=Path(t)/'app';shutil.copytree(BASE,source)
             gate=source/stage.GATE;gate.write_bytes(gate.read_bytes().replace(stage.GATE_OFF,stage.GATE_ON))
@@ -22,7 +23,7 @@ class GateContracts(unittest.TestCase):
             # Exact gate allowance never permits any other byte, including a comment.
             gate.write_bytes(gate.read_bytes()+b'\n// unauthorized drift\n')
             with self.assertRaises(ValueError):stage.source_bytes(source,metadata,True)
-        self.assertEqual(stage.source_bytes(BASE,metadata),original)
+        self.assertEqual({k:stage.read(BASE,k) for k in stage.CANDIDATE_LOCK['files']},original)
     def test_metadata_cannot_authorize_gate(self):
         with self.assertRaises(ValueError):stage.source_bytes(BASE,{stage.GATE:stage.record(b'changed')},True)
     def test_candidate_historical_role_guard_is_fail_closed(self):

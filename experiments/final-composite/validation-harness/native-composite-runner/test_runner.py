@@ -15,7 +15,7 @@ class Contracts(unittest.TestCase):
 
  def test_exact_selection_counts_and_no_picker_save_overlap(self):
   lanes=r.selections(APP)
-  self.assertEqual({k:v['expectedCount'] for k,v in lanes.items()},{'sampling-gate-off':18,'sampling-gate-on':18,'picker-models':31,'picker-ui':1,'sampling-baseline':4,'sampling-candidate':7,'save-models':48,'save-webkit':19,'save-ui':1,'audio-candidate':2,'audio-baseline':1})
+  self.assertEqual({k:v['expectedCount'] for k,v in lanes.items()},{'sampling-gate-off':18,'sampling-gate-on':18,'picker-models':31,'picker-ui':1,'sampling-baseline':2,'sampling-candidate':7,'sampling-enhanced-boundary':1,'renderer-models':6,'renderer-ui':1,'save-models':48,'save-webkit':19,'save-ui':1,'audio-candidate':2,'audio-baseline':1})
   base=set(lanes['sampling-baseline']['selectors']);self.assertTrue(base < set(lanes['sampling-candidate']['selectors']))
   allsets=[set(lanes[k]['selectors']) for k in ('sampling-gate-off','picker-models','save-models','save-webkit')]
   for i,a in enumerate(allsets):
@@ -54,6 +54,6 @@ class Contracts(unittest.TestCase):
   self.assertIn("'shippingDefaultAppliesAllTiers':'automatic' in geometry['actualShippingReductionPolicies']",text)
   self.assertIn("'shippingPoliciesWithAllReductions':geometry['actualShippingReductionPolicies']",text)
  def test_expected_method_count_total(self):
-  l=r.selections(APP);total=sum(l[k]['expectedCount'] for k in ('sampling-gate-off','sampling-gate-on','picker-models','picker-ui','save-models','save-webkit','save-ui','audio-candidate','audio-baseline'))+2*(4+7)
-  self.assertEqual(total,161)
+  l=r.selections(APP);total=sum(l[k]['expectedCount'] for k in ('sampling-gate-off','sampling-gate-on','picker-models','picker-ui','save-models','save-webkit','save-ui','audio-candidate','audio-baseline','renderer-models','renderer-ui'))+2*(2+7+1)
+  self.assertEqual(total,166)
 if __name__=='__main__':unittest.main(verbosity=2)

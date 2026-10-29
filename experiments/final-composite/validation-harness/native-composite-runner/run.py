@@ -43,15 +43,37 @@ def selections(app):
  picker=methods(Path(app)/'Tests',['PackageImporterTests','ImportFlowTests','DocumentPickerDelegateTests','ImportAliasTests','LocalImportInboxTests','ExternalImportInboxTests','ExternalImportCopyTests'])
  require(len(picker)==31,'Exactly31 picker model methods required')
  saved=json.loads((SAVE/'test-selection.json').read_text())['lanes']
- base=['FlashNestSamplingUITests/NativeSamplingUITests/'+n for n in ('testShippingAutomaticShowAll','testShippingAutomaticNoScale','testShippingWebGLShowAll','testShippingWebGLNoScale')]
+ base=['FlashNestSamplingUITests/NativeSamplingUITests/'+n for n in ('testShippingWebGLShowAll','testShippingWebGLNoScale')]
+ candidate_shipping=['FlashNestSamplingUITests/NativeSamplingUITests/'+n for n in ('testShippingAutomaticShowAll','testShippingAutomaticNoScale','testShippingWebGLShowAll','testShippingWebGLNoScale')]
+ renderer=methods(Path(app)/'Tests',['RendererSettingsTests','RendererSessionTests'])
+ require(len(renderer)==6,'Exactly6 reviewed renderer policy model/session methods required')
  extra=['FlashNestSamplingUITests/NativeSamplingUITests/'+n for n in ('testDiagnosticLaunchLowWebGLShowAll','testDiagnosticLaunchHighWebGLShowAll','testActualInitialRedirectAndNavigationFailure')]
  return {'sampling-gate-off':lane('sampling-gate-off','FlashNest',sampling),
   'sampling-gate-on':lane('sampling-gate-on','FlashNest',sampling),
   'picker-models':lane('picker-models','FlashNest',picker),
   'picker-ui':lane('picker-ui','FlashNestUI',['FlashNestUITests/ZIPSelectionUITests/testRealFilesCancelZIPSWFRepeatAndWholeFolder'],480),
   'sampling-baseline':lane('sampling-baseline','FlashNestSamplingUI',base,900),
-  'sampling-candidate':lane('sampling-candidate','FlashNestSamplingUI',base+extra,900),
+  'sampling-candidate':lane('sampling-candidate','FlashNestSamplingUI',candidate_shipping+extra,900),
+  'sampling-enhanced-boundary':lane('sampling-enhanced-boundary','FlashNestSamplingUI',['FlashNestSamplingUITests/NativeSamplingUITests/testEnhancedProductionPolicyAndErrorBoundary'],300),
+  'renderer-models':lane('renderer-models','FlashNest',renderer),
+  'renderer-ui':lane('renderer-ui','FlashNestUI',['FlashNestUITests/RendererCompatibilityUITests/testPerGameChoiceDefersUntilExplicitRestartAndPreservesLiveScene'],480),
   **{x['name']:x for x in saved}}
+
+def restore_legacy_source(app):
+ packet=ROOT/'legacy-source-restore';manifest=json.loads((packet/'manifest.json').read_text())
+ expected={'App/Player/RendererSettings.swift','App/Resources/Localization/en.lproj/Localizable.strings','App/Resources/Localization/zh-Hans.lproj/Localizable.strings','App/Resources/Web/shell.js','App/Views/PlayerRendererSettingsView.swift','Tests/RendererSessionTests.swift','Tests/RendererSettingsTests.swift','UITests/RendererCompatibilityUITests.swift','scripts/test_shell.js'}
+ require(set(manifest['files'])==expected,'Exact9 legacy source inverse paths required')
+ # Validate all candidate bytes and all legacy replacements before mutating copy.
+ contents={}
+ for rel,info in manifest['files'].items():
+  current=Path(app)/rel;old=packet/'files'/rel
+  require(not current.is_symlink() and not old.is_symlink(),'Linked inverse input forbidden')
+  require(sha(current)==info['candidate']['sha256'] and current.stat().st_size==info['candidate']['bytes'],'Candidate source inverse anchor differs: '+rel)
+  require(sha(old)==info['legacy']['sha256'] and old.stat().st_size==info['legacy']['bytes'],'Legacy source inverse bytes differ: '+rel)
+  contents[rel]=old.read_bytes()
+ for rel,data in contents.items():(Path(app)/rel).write_bytes(data)
+ require(all(sha(Path(app)/rel)==info['legacy']['sha256'] for rel,info in manifest['files'].items()),'Legacy source restoration incomplete')
+ return {'manifestSHA256':sha(packet/'manifest.json'),'sourceChangeManifestSHA256':manifest['sourceChangeManifestSHA256'],'files':manifest['files'],'exactLegacySourceRestored':True}
 
 def gate_on_overlay(app):
  paths=['App/Player/RenderSamplingSettings.swift','Tests/RenderSamplingSettingsTests.swift']
@@ -86,6 +108,7 @@ class Runner:
  def capture(self,argv,name,cwd=None,timeout=120):return self.command(argv,name,cwd,timeout).read_text()
  def preflight(self):
   b=self.binding;require(b.get('ready') is True,'Review/freeze binding before execution')
+  require(b.get('nativeContract')=='flashnest-native-composite-v3','Explicit reviewed v3 binding required')
   require(platform.system()=='Darwin','Actual macOS Xcode runner required')
   require(os.environ.get('DEVELOPER_DIR')=='/Applications/Xcode_16.2.app/Contents/Developer','Exact Xcode directory required')
   require('Xcode 16.2\n' in self.capture(['xcodebuild','-version'],'xcode-version'),'Exact Xcode16.2 required')
@@ -123,6 +146,10 @@ class Runner:
   require('2.42.0' in self.capture([self.xcodegen,'--version'],'xcodegen-version'),'XcodeGen2.42 required')
   dump(self.out/'tool-receipt.json',{'archiveSHA256':expected_archive,'archiveMember':member,'executableSHA256':binary_hash,'version':'2.42.0'})
   dump(self.out/'binding.json',b);self.lanes=selections(self.args.app);dump(self.out/'test-selection.json',self.lanes)
+  self.selection_contract=json.loads((ROOT/'selection-contract-v3.json').read_text())
+  require(self.selection_contract['contract']=='flashnest-native-composite-v3','Frozen selector contract differs')
+  for run in self.selection_contract['runs']:
+   require(self.lanes[run['lane']]['selectors']==run['selectors'] and self.lanes[run['lane']]['expectedCount']==run['expectedCount'],'Source selectors differ from reviewed v3 contract')
  def check_runtime(self,root,declared):
   require(inventory(root)=={p:r['sha256'] for p,r in declared.items()},'Runtime map differs')
   require(all((root/p).stat().st_size==r['bytes'] for p,r in declared.items()),'Runtime size differs')
@@ -180,7 +207,9 @@ class Runner:
   self.command(['xcodebuild','-project',project,'-scheme','FlashNestFixtureSource','-configuration','Debug','-sdk','iphonesimulator','-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',str(app/'build-source'),'-disableAutomaticPackageResolution','CODE_SIGNING_ALLOWED=NO','CODE_SIGNING_REQUIRED=NO','build'],name+'-source-build',app,600)
   self.command(['xcrun','simctl','install',device,app/'build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app'],name+'-source-install')
  def execute(self):
-  self.preflight();b=self.binding;device=self.devices['3'];self.reset(device,'main-gate-off')
+  self.preflight();b=self.binding;device=self.devices['3']
+  self.command([sys.executable,SAMPLING/'scripts/verify_legacy_negative.py','--packet',ROOT/'legacy-automatic-negative','--output',self.out/'legacy-automatic-known-negative.json'],'legacy-automatic-known-negative',timeout=120)
+  self.reset(device,'main-gate-off')
   main=self.copy_app('main-gate-off');project=self.project(main,'main-gate-off')
   self.test(main,project,device,'sampling-gate-off')
   # Same approved App source, two exact runtime baselines and isolated sampling hooks.
@@ -192,7 +221,9 @@ class Runner:
    if arm=='baseline':shutil.copyfile(self.args.baseline/'sampling/runtime.files.json',app/'runtime.files.json')
    dump(app/'NATIVE_VALIDATION_COPY.json',{'disposable':True,'sdk':'iphonesimulator'})
    repin=b['samplingAppManifests'][arm]; repin_path=(self.args.binding.parent/repin['path']).resolve();require(sha(repin_path)==repin['sha256'],'Per-arm App manifest differs')
-   if arm=='baseline': self.metadata_overlay(app,self.args.baseline/'sampling/app-metadata',b['samplingBaselineMetadata'])
+   if arm=='baseline':
+    dump(self.out/'sampling-legacy-source-restore.json',restore_legacy_source(app))
+    self.metadata_overlay(app,self.args.baseline/'sampling/app-metadata',b['samplingBaselineMetadata'])
    invhash=sha(app/'runtime.files.json');proof={'frozen':True,'releaseEquivalent':True,'runtimeInventorySHA256':invhash,'approvedAppManifestSHA256':repin['sha256']}
    dump(self.stage/'sampling-candidate-freeze.json',proof)
    args=[sys.executable,SAMPLING/'scripts/prepare_overlay.py','--app',app,'--arm',arm,'--runtime-inventory-sha256',invhash,'--approved-app-manifest',repin_path,'--approved-app-manifest-sha256',repin['sha256']]
@@ -209,22 +240,26 @@ class Runner:
     self.test(app,project,device,'sampling-'+arm,name)
     # Reject absent vectors immediately after each lane, before later matrix runs.
     # This is NOT acceptance: full baseline pixels/geometry still run below.
-    self.command([sys.executable,SAMPLING/'scripts/check_early_visibility.py','--attachments',self.out/'attachments'/name,'--expected-phases','12' if arm=='baseline' else '66','--output',self.out/(name+'-early-visibility.json')],name+'-early-visibility',timeout=180)
+    self.command([sys.executable,SAMPLING/'scripts/check_early_visibility.py','--attachments',self.out/'attachments'/name,'--expected-phases','6' if arm=='baseline' else '66','--output',self.out/(name+'-early-visibility.json')],name+'-early-visibility',timeout=180)
+    if arm=='candidate':
+     enhanced_name='enhanced-boundary-dpr'+dpr;self.reset(device,enhanced_name)
+     self.test(app,project,device,'sampling-enhanced-boundary',enhanced_name)
   self.command([sys.executable,SAMPLING/'scripts/verify_results.py','--attachments',self.out/'attachments','--candidate-inventory-sha256',identities['candidate']['runtimeInventorySHA256'],'--baseline-inventory-sha256',identities['baseline']['runtimeInventorySHA256'],'--expected-identities',self.out/'sampling-expected-identities.json','--output',self.out/'sampling-geometry.json'],'sampling-geometry-verifier',timeout=180)
   geometry=json.loads((self.out/'sampling-geometry.json').read_text())
-  require(geometry.get('contract')=='flashnest-native-sampling-v2' and geometry.get('historicalStaleDownNegativePhases')==24 and geometry.get('candidateCurrentDownUpPhases')==132 and geometry.get('fixtureResetsAfterObservedUp')==936,'Reviewed v2 input contract evidence required')
+  require(geometry.get('contract')=='flashnest-native-sampling-v3' and geometry.get('historicalStaleDownNegativePhases')==12 and geometry.get('candidateCurrentDownUpPhases')==132 and geometry.get('fixtureResetsAfterObservedUp')==864,'Reviewed v3 input/policy contract evidence required')
   require(geometry['matrixPassed'] is True and geometry['shippingReductionRequirementMet'] is True,'Native geometry not accepted; do not run gate-on copy')
   # No shipping mutation: new main copy, only gate and exact hardcoded test expectation change.
   main=self.copy_app('main-gate-on');overlay=gate_on_overlay(main);dump(self.out/'gate-on-overlay.json',overlay)
   shutil.copyfile(SAVE/'Tests/NativeSaveSettingsPreservationTests.swift',main/'Tests/NativeSaveSettingsPreservationTests.swift')
   device=self.devices['3'];self.reset(device,'main-gate-on');project=self.project(main,'main-gate-on')
-  for key in ('sampling-gate-on','save-models','save-webkit','picker-models'):self.test(main,project,device,key)
+  for key in ('sampling-gate-on','renderer-models','save-models','save-webkit','picker-models'):self.test(main,project,device,key)
   # Fresh application data before each real Files-based scenario.
   picker=self.copy_app('picker-gate-on');dump(self.out/'picker-gate-on-overlay.json',gate_on_overlay(picker))
   for source,dest in [('FixtureSourceApp.swift','UITestSupport/FixtureSource/FixtureSourceApp.swift'),('ZIPSelectionUITests.swift','UITests/ZIPSelectionUITests.swift')]:shutil.copyfile(ZIP/'overlay'/source,picker/dest)
   picker_project=self.project(picker,'picker-gate-on')
   self.reset(device,'picker-ui');self.install_source(picker,picker_project,device,'picker-ui');self.test(picker,picker_project,device,'picker-ui')
   self.command([sys.executable,ZIP/'verify_containers.py',device,self.out/'picker-copy-verification.json'],'picker-private-copy-verifier')
+  self.reset(device,'renderer-ui');self.install_source(main,project,device,'renderer-ui');self.test(main,project,device,'renderer-ui')
   self.reset(device,'save-ui');self.install_source(main,project,device,'save-ui');self.test(main,project,device,'save-ui')
   # Candidate audio consumes the same post-geometry gate-on production App bytes.
   # Historical audio-negative remains the unchanged gate-off App/runtime.
@@ -242,6 +277,7 @@ class Runner:
     gate_args=['--candidate-gate-on']
    if key=='audio-baseline':
     audio_source=self.copy_app('audio-historical-source')
+    dump(self.out/'audio-historical-source-restore.json',restore_legacy_source(audio_source))
     self.metadata_overlay(audio_source,self.args.baseline/'historical/app-metadata',b['audioFinalMetadata'][role])
    metadata=self.stage/(key+'-metadata.json');dump(metadata,b['audioFinalMetadata'][role])
    self.command([sys.executable,SAVE/'scripts/stage_audio_target.py','stage','--source',audio_source,'--runtime',runtime/'runtime','--runtime-inventory',full,'--runtime-inventory-sha256',sha(full),'--role',role,'--output',app,'--final-metadata',metadata]+gate_args,key+'-stage',timeout=120)
@@ -250,15 +286,23 @@ class Runner:
   require(inventory(self.args.app)==b['appFiles'],'Immutable final App input changed during tests')
   self.check_runtime(self.args.candidate_engine/'runtime',self.candidate_map)
   observed=geometry['wasmActuallyObserved']['candidate'];require(len(observed)==1,'Native selected multiple/unknown runtime branches')
-  require(sum(x['tests'] for x in self.results)==161,'Exact161 native method executions required')
+  require({x['runName']:x['tests'] for x in self.results}=={x['runName']:x['expectedCount'] for x in self.selection_contract['runs']},'Exact v3 run-name/method contract differs')
+  require(len(self.results)==len(self.selection_contract['runs']),'Duplicate result run')
+  require(sum(x['tests'] for x in self.results)==166,'Exact166 executions:164 regression plus2 Enhanced boundary diagnostics required')
   receipt={'passed':True,'skipped':0,'evidenceKind':'iOS simulator','physicalDeviceCertified':False,'shippingDefaultAppliesAllTiers':'automatic' in geometry['actualShippingReductionPolicies'],
    'shippingReductionRequirementMet':geometry['shippingReductionRequirementMet'],
    'shippingPoliciesWithAllReductions':geometry['actualShippingReductionPolicies'],
    'engineSHA256':b['engine']['sha256'],'selectedWasmSHA256':self.candidate_map[observed[0]]['sha256'],
-   'nativeContract':'flashnest-native-composite-v2','samplingContract':'flashnest-native-sampling-v2',
+   'nativeContract':'flashnest-native-composite-v3','samplingContract':'flashnest-native-sampling-v3',
+   'selectionContractSHA256':sha(ROOT/'selection-contract-v3.json'),
+   'candidateAppSourceAuthoritySHA256':sha(SAMPLING/'approved-candidate-app-source-manifest.json'),
+   'positiveRegressionMethods':164,'enhancedBoundaryDiagnosticMethods':2,'enhancedRenderHealthCertified':False,
+   'rendererPolicyContract':'candidate-three-mode-v1','legacyRendererPolicyPreserved':True,
+   'legacyAutomaticKnownNegativeSHA256':sha(self.out/'legacy-automatic-known-negative.json'),
+   'enhancedBoundaryDiagnostic':geometry['enhancedBoundaryDiagnostic'],
    'candidateAudioGateOn':True,'candidateAudioMatchesPostGeometryApp':True,'historicalAudioGateOff':True,
    'candidateAudioAppManifestSHA256':sha(self.out/'audio-candidate-post-geometry-app-map.json'),
-   'samplingRows':52,'samplingPhases':156,'nativeMethods':sum(x['tests'] for x in self.results),'results':self.results,
+   'samplingRows':48,'samplingPhases':144,'nativeMethods':sum(x['tests'] for x in self.results),'results':self.results,
    'audibleOutputProven':False,'privateProviderReproduced':False,'ipaBuilt':False}
   dump(self.out/'native-acceptance.json',receipt);self.budget();return receipt
 

@@ -1,21 +1,21 @@
 {
-  "contract": "native-policy-diagnostic-staging-only-not-full-matrix",
+  "contract": "native-policy-v3-authored-not-native-executed",
   "files": {
     "Host/SamplingHost.swift": {
       "bytes": 13629,
       "sha256": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4"
     },
     "Host/sampling-probe.js": {
-      "bytes": 8040,
-      "sha256": "da4a93c5e8beb23f52f27cd9d1b7fe405ca583fbd6e3a8e1f1fb618e00770be4"
+      "bytes": 14003,
+      "sha256": "4c551bfd2b2a2a92e8141f14724d1264e196aa8e9cceb4a0fa06ee2a27bae1d8"
     },
     "README.md": {
-      "bytes": 12000,
-      "sha256": "c5efd58adb3b01872b049eec85b879d26f63ebd09553faecf8ee5a06e3fab279"
+      "bytes": 17725,
+      "sha256": "65d929c394d91ed13c105c9c10fd8e7d4b74e1f0fe23c7801ed9827e744fee4f"
     },
     "UITests/NativeSamplingUITests.swift": {
-      "bytes": 17118,
-      "sha256": "dd890916f50fd12e3c9c71559d36128f1ee7bf68084e7c5f1293176a42a60fe8"
+      "bytes": 23674,
+      "sha256": "88955576a294fd56701ef2673b01a62cb631a25f4da6675785be859362765923"
     },
     "approved-app-source-manifest.json": {
       "bytes": 30427,
@@ -23,7 +23,7 @@
     },
     "approved-candidate-app-source-manifest.json": {
       "bytes": 9676,
-      "sha256": "2a9cdfb19440066b1fde2f72cdda89cec6740218ee92d58ed57a89bc5a182efa"
+      "sha256": "946f13ebb67e8b6d725532c2ebc42f2b4f0cbde281a2bc557d1bec1d544f19bd"
     },
     "evidence/baseline-staging-check.json": {
       "bytes": 817,
@@ -54,8 +54,8 @@
       "sha256": "77a4dc364eee57944bc469085c6bd8a54d0ecfa3873f1f5eba0184f51dbedfe2"
     },
     "scripts/check_early_visibility.py": {
-      "bytes": 2218,
-      "sha256": "3d2523378851b6e43f586d8fcf87bd32a3886cd231aacf5710ad5ee7a3a09072"
+      "bytes": 2217,
+      "sha256": "00c4b3af80656da47bc465bc9eb235e22bf92508449b08aff17886985278f60e"
     },
     "scripts/independent_mouse_mapping.py": {
       "bytes": 2425,
@@ -66,8 +66,8 @@
       "sha256": "f915f6cf18d8a6f7bc8b0a86fde5d2c3d8ece962e49324a85077cd95daf9e59f"
     },
     "scripts/prepare_overlay.py": {
-      "bytes": 13227,
-      "sha256": "489402e26882ae94addae90e8535d25a8e93e844a68c10096c62541977b263f7"
+      "bytes": 13270,
+      "sha256": "6ff068632700ee746e0c87cbc466338c833c6e463b5aa3d9b5f061ee1185aa9b"
     },
     "scripts/test_early_visibility.py": {
       "bytes": 1621,
@@ -77,17 +77,25 @@
       "bytes": 5841,
       "sha256": "afc6c9ea8ce0b97d62ce445f75c36c1f52d7f350bb5df34beef430e329626c07"
     },
+    "scripts/test_policy_v3.py": {
+      "bytes": 5355,
+      "sha256": "84bb42a9c999ee19bc9dd8e7b5d1633ee05e4104831161e8c95b345787995dcf"
+    },
     "scripts/test_probe.cjs": {
       "bytes": 5029,
       "sha256": "d82f7cd8ac2f3848fc0ed492554a4dfcb2b1b285794dbb23e967dee6b740529f"
     },
     "scripts/test_verifier.py": {
-      "bytes": 7193,
-      "sha256": "eab946b07a5e21840f943d6a8424879e9f421b650ade78003f3679b49232d3f6"
+      "bytes": 7422,
+      "sha256": "76f3cfe8ed1e938874e3de6726ecc7c10e3f7adcf5c3ca4624a5bc18467bd808"
+    },
+    "scripts/verify_legacy_negative.py": {
+      "bytes": 2839,
+      "sha256": "b96c910230d46f86aa65832034a8a590d2a9adbb281ef21d4c07162dc7255445"
     },
     "scripts/verify_results.py": {
-      "bytes": 23053,
-      "sha256": "d9113fc36df90cd9591fe10d3399c8482a9c0766405efbf6b28c489580905204"
+      "bytes": 29659,
+      "sha256": "3b8c35cc6dbf8c97f947b18856ec04e720c26ea2724706d76df38d48b7a3b0dd"
     }
   },
   "scope": "Authored simulator-only harness, no native execution"

@@ -94,3 +94,12 @@ hash and byte count. The composite runner first requires its App map to equal
 the post-geometry gate-on final App, including final metadata. Baseline historical
 App and audio controls are unchanged. Source-manifest schema2 records the gate
 state. This does not establish active reduced sampling or audible output.
+
+## v3 explicit candidate source authority
+
+Candidate now uses candidate-input-lock.json, independently pinned to the
+approved three-policy App source. Original input-lock.json remains historical
+authority. Metadata-only exceptions remain exact5 paths, not executable waivers.
+Before staging historical audio, runner inverses ALL9 reviewed source changes
+(App/test/script) with exact hashes; candidate audio remains the same gate-on
+production App as post-geometry main. Runtime/WASM bytes are unchanged.

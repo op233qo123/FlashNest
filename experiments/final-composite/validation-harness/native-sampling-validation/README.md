@@ -1,3 +1,117 @@
+# Native v3 — authoritative current contract
+
+# Native v3 three-policy contract — authored, actual acceptance pending
+
+Root-approved scope: candidate44rows132phases unchanged; historical DirectWebGL
+4rows12phases as healthy reference. Matrix48rows144phases =36 shipping rows and12
+explicit-quality diagnostics;720 real taps144 real drags864 post-UP RESETs.
+Candidate132 phases require current touch coordinates/independent target deltas;
+legacy12 phases preserve source-derived stale touch negative expectations.
+
+## Exact native methods and role accounting
+
+| lane/run | executions |
+|---|---:|
+| sampling-gate-off |18|
+| sampling-gate-on |18|
+| renderer-models |6|
+| picker-models |31|
+| save-models |48|
+| save-webkit |19|
+| picker-ui |1|
+| renderer-ui |1|
+| save-ui |1|
+| audio-candidate |2|
+| audio-baseline |1|
+| sampling-baseline-dpr2 / dpr3 |2 each|
+| sampling-candidate-dpr2 / dpr3 |7 each|
+| enhanced-boundary-dpr2 / dpr3 |1 each|
+
+166 total =164 regression executions (including explicit legacy negative
+controls) +2 Enhanced configuration/error-boundary diagnostics. NOT166 rendering
+health passes. No skipped/failed XCTest cases are accepted. Enhanced screenshot
+health is reported separately and cannot enter the positive matrix.
+
+## Real policy/source binding
+
+Candidate Automatic and existing WebGL must pass the actual load argument
+preferredRenderer='webgl', exact production query identity, and actual backend
+webgl. No test forces this preference: it comes from the product shell. Passive
+observeLoad forwards the identical config object/receiver/result/exception;
+duplicates mark overflow, never suppress a call. Candidate Enhanced must forward
+query enhanced and OMIT preferredRenderer/quality/reduction, preserving original
+upstream renderer ordering. This is constructor preference, not recovery.
+
+Candidate Automatic and WebGL Original/fallback exact pixels compare against
+historical DirectWebGL sameDPR/mode/phase; reduced vector bounds/backing checks
+unchanged. All input, quality/MSAA, lifecycle, real redirect/failure and native
+status checks remain mandatory. Candidate original-tier input parity remains
+per-policy; cross-arm tap coordinates/metadata remain checked independently of
+known legacy target deltas.
+
+Candidate63-App source authority is separately pinned; original baseline source
+authority and exact5 metadata-only exceptions stay unchanged. The explicit
+reviewed9-file product delta is inverted in FULL (App5 and4 tests/scripts) for
+legacy sampling and historical fatal audio. Validate all candidate and inverse
+hashes before modifying the disposable copy. Local test proves complete restored
+tree equals accepted-before-app. No broad executable allowlist.
+
+Candidate audio uses new candidate-input-lock.json plus the sole exact inverse
+runtimeValidated gate line. Entire source App equals post-geometry gate-on main
+App. Historical audio keeps original source lock/gate/runtime after9-file inverse.
+
+## Enhanced boundaries and historical negative
+
+Enhanced native method captures ready/5s/15s sameplayer automatic-order outcome
+without gameplay input or rotation, then an existing real loopback navigation
+failure. Actual production forwarding, sameepoch/CSS/times, one noScale READY,
+noSWF pointer callbacks and real error/status visibility are asserted. Separate
+Renderer UI test asserts visible limitation text, deferred Enhanced selection,
+WebGL selection and explicit restart while preserving live synthetic state.
+
+Enhanced observation reports bounded-visible, bounded-unhealthy or an unverified
+backend. Always nativeAcceptance=false and platformRenderHealthCertified=false.
+The explicit navigation-error check is NOT a claim that context loss itself
+produces a user-facing error; that remains uncertified. No GPU/shader repair or
+user-game compatibility investigation is included.
+
+Historical baseline Automatic run40800398628 remains FAILED. Its exact snapshot,
+zeroGL/context-loss, missing-vector crop, external identity and source provenance
+are pinned in legacy-automatic-negative/. The old shell hash proves original
+Automatic behavior was not rewritten. A verified known-negative report is not a
+successful historical run and never substitutes candidate positive checks.
+
+## Receipt/schema
+
+nativeContract=flashnest-native-composite-v3; samplingContract=v3;
+samplingRows48/samplingPhases144/nativeMethods166;
+positiveRegressionMethods164/enhancedBoundaryDiagnosticMethods2;
+enhancedRenderHealthCertified=false;
+rendererPolicyContract=candidate-three-mode-v1;
+legacyRendererPolicyPreserved=true;
+legacyAutomaticKnownNegativeSHA256 hashes native output
+legacy-automatic-known-negative.json (packet manifest is58371d6a…30ec7a).
+Enhanced nested evidence is geometry.enhancedBoundaryDiagnostic: config/error
+boundary verified, diagnosticOnly=true/nativeAcceptance=false, six independently
+classified observed outcomes. Existing exact candidate-audio gate-on/source-map
+fields remain mandatory.
+
+Geometry contract=flashnest-native-sampling-v3;
+historicalStaleDownNegativePhases12/candidateCurrentDownUpPhases132;
+fixtureResetsAfterObservedUp864/shippingRows36/diagnosticRows12/phases144;
+trustedTaps720/trustedDrags144.
+
+Native binding must explicitly say nativeContract v3 and remain ready=false until
+source/tool/runtime/candidate maps and helpers receive final review. Shipping
+runtimeValidated remains false; nothing here builds an IPA or certifies a phone.
+WASM bytes unchanged. Production browser policy must be rebound and all290 rows
+rerun. Native must actually execute the new166 selection and complete matrix;
+old161 or one-off healthy diagnostics are not substitutes.
+
+
+---
+## Superseded v1/v2 history (NOT the current selection or acceptance contract)
+
 # Native sampling validation — authored, not executed
 
 This isolated simulator harness is ready for source review and integration. Linux cannot compile Swift/Xcode or supply real WKWebView evidence. It does not enable the shipping gate or produce an IPA.

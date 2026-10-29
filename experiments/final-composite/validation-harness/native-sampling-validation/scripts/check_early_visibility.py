@@ -27,7 +27,7 @@ def check(folder, expected):
     return {'earlyVisibilityOnly':True,'nativeAcceptance':False,'observedPhases':len(records),'observations':observations}
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--attachments',required=True);p.add_argument('--expected-phases',type=int,choices=(12,66),required=True);p.add_argument('--output',required=True);a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--attachments',required=True);p.add_argument('--expected-phases',type=int,choices=(6,66),required=True);p.add_argument('--output',required=True);a=p.parse_args()
     try:report=check(a.attachments,a.expected_phases);code=0
     except Exception as e:report={'earlyVisibilityOnly':True,'nativeAcceptance':False,'error':str(e)};code=1
     Path(a.output).write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report));raise SystemExit(code)
