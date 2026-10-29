@@ -400,7 +400,7 @@
     "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
     "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4"
   },
-  "diagnosticOnly": false,
+  "diagnosticOnly": true,
   "dispatchAllowed": true,
   "engine": {
     "artifactID": 12862634818,
@@ -465,6 +465,10 @@
       "bytes": 7814,
       "sha256": "cb35dbf4bcf8b7a60e38390aff9d3d004a5d8f3bdf50ed6de270ce5f4c7506eb"
     },
+    "scripts/run_native_navigation_diagnostic.py": {
+      "bytes": 9274,
+      "sha256": "e3d044e3e5f3305b7d979ceb7c2d04d7394e80369b075ea263c7645e44aa4fcc"
+    },
     "scripts/run_native_validation.py": {
       "bytes": 1788,
       "sha256": "baeedca7c2c34adddce6888e96925fe1c6ef20b36e0230b31d458fc41c6ee02f"
@@ -519,7 +523,7 @@
     },
     "validation-bindings/native-binding.json": {
       "bytes": 26851,
-      "sha256": "12fa5e43967600c98c4ee034b4160d5a22e37b2bdff5273cdce49fc19249853a"
+      "sha256": "fd45b5193d34a3e5e9f86a6e771432b915c3d240c3b2b2573447379c8dd06529"
     },
     "validation-bindings/sampling-baseline-approved-app.json": {
       "bytes": 30481,
@@ -794,12 +798,12 @@
       "sha256": "911b141c99f98cf492d78dfd848116a4f7e2b60f745a854d1d29dae491dad00d"
     },
     "validation-harness/native-composite-runner/file-manifest.json": {
-      "bytes": 3917,
-      "sha256": "98a6a6201c979cc33181819b842992195a1613062bf2ca36bce548bb83400403"
+      "bytes": 4067,
+      "sha256": "2c7db85edb73dc400401217b4fa99d9754c107fb9ccb45b570ec7e23b5f1b6a1"
     },
     "validation-harness/native-composite-runner/helper-lock.json": {
-      "bytes": 12376,
-      "sha256": "c1752a8b23b385adcdaf7038b8877f368d87d0da9977dd95b90d71cfc7b7c54b"
+      "bytes": 12505,
+      "sha256": "95b1b567e6dd2af5d40b36bee7e2c7ca1247cb708cf8d1286dca394dca38c4f7"
     },
     "validation-harness/native-composite-runner/legacy-automatic-negative/canvas.png": {
       "bytes": 14709,
@@ -866,12 +870,16 @@
       "sha256": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc"
     },
     "validation-harness/native-composite-runner/run.py": {
-      "bytes": 28126,
-      "sha256": "9424a407e868d6801429a91f1822acf03d489c0b5163b3e3f8b105f5fb5d2625"
+      "bytes": 29204,
+      "sha256": "94e711e2a9603a0201eebc8fffc9f5f61044bc7b365c11d56598d9e81153d638"
     },
     "validation-harness/native-composite-runner/selection-contract-v3.json": {
       "bytes": 20509,
       "sha256": "6aeb4157f8522088c9f0cd9c98b0a609871c710bc9be8dfca1e36119a977074b"
+    },
+    "validation-harness/native-composite-runner/test_evidence_preservation.py": {
+      "bytes": 4405,
+      "sha256": "7c63a7650b95ba892f7245c5705cf17583804a1d32f56ae74576eaf1eabacf8c"
     },
     "validation-harness/native-composite-runner/test_policy_runner_v3.py": {
       "bytes": 1991,
@@ -1350,6 +1358,6 @@
       ]
     }
   },
-  "reason": "Reviewed complete native v3 eligible for execution after bounded paired geometry/context diagnostic; historical intermittent loss remains unresolved and any observed loss rejects positive regression. No IPA acceptance.",
+  "reason": "Only exact existing navigation method diagnostic eligible; full166 remains incomplete and navigation unknown-status failure requires actual retained evidence.",
   "schemaVersion": 1
 }

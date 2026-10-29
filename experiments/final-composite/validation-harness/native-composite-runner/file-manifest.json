@@ -10,8 +10,8 @@
       "sha256": "911b141c99f98cf492d78dfd848116a4f7e2b60f745a854d1d29dae491dad00d"
     },
     "helper-lock.json": {
-      "bytes": 12376,
-      "sha256": "c1752a8b23b385adcdaf7038b8877f368d87d0da9977dd95b90d71cfc7b7c54b"
+      "bytes": 12505,
+      "sha256": "95b1b567e6dd2af5d40b36bee7e2c7ca1247cb708cf8d1286dca394dca38c4f7"
     },
     "legacy-automatic-negative/canvas.png": {
       "bytes": 14709,
@@ -78,12 +78,16 @@
       "sha256": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc"
     },
     "run.py": {
-      "bytes": 28126,
-      "sha256": "9424a407e868d6801429a91f1822acf03d489c0b5163b3e3f8b105f5fb5d2625"
+      "bytes": 29204,
+      "sha256": "94e711e2a9603a0201eebc8fffc9f5f61044bc7b365c11d56598d9e81153d638"
     },
     "selection-contract-v3.json": {
       "bytes": 20509,
       "sha256": "6aeb4157f8522088c9f0cd9c98b0a609871c710bc9be8dfca1e36119a977074b"
+    },
+    "test_evidence_preservation.py": {
+      "bytes": 4405,
+      "sha256": "7c63a7650b95ba892f7245c5705cf17583804a1d32f56ae74576eaf1eabacf8c"
     },
     "test_policy_runner_v3.py": {
       "bytes": 1991,

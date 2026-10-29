@@ -184,25 +184,38 @@ class Runner:
   cfg=self.lanes[key];name=name or key;result=self.stage/(name+'.xcresult');seconds=cfg['maximumTestExecutionSeconds']
   argv=['xcodebuild','test','-project',project,'-scheme',cfg['scheme'],'-configuration','Debug','-sdk','iphonesimulator','-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',str(app/'build'),'-resultBundlePath',str(result),'-disableAutomaticPackageResolution','-parallel-testing-enabled','NO','-maximum-concurrent-test-simulator-destinations','1','-test-timeouts-enabled','YES','-default-test-execution-time-allowance',str(seconds),'-maximum-test-execution-time-allowance',str(seconds)]
   argv += ['-only-testing:'+s for s in cfg['selectors']]+['CODE_SIGNING_ALLOWED=NO','CODE_SIGNING_REQUIRED=NO']
-  error=None
+  error=None;extraction_errors=[];summary=None
   try:log=self.command(argv,name,app,timeout=min(2400,seconds*cfg['expectedCount']+300))
-  except Exception as e:error=e;log=self.out/(name+'.log')
+  except Exception as e:
+   error=e;log=self.out/(name+'.log')
+   # Persist before any xcresulttool work: extraction may itself be terminated.
+   dump(self.out/(name+'-primary-error.json'),{'runName':name,'error':str(e),'errorType':type(e).__name__,'nativeAcceptance':False})
   if result.exists():
-   summary=json.loads(self.capture(['xcrun','xcresulttool','get','test-results','summary','--path',result],name+'-summary'))
-   dump(self.out/(name+'-summary.json'),summary)
+   # Independent attempts: a summary failure must not suppress attachment export.
+   try:
+    summary=json.loads(self.capture(['xcrun','xcresulttool','get','test-results','summary','--path',result],name+'-summary'))
+    dump(self.out/(name+'-summary.json'),summary)
+   except Exception as e:extraction_errors.append({'phase':'summary','error':str(e)})
    export=self.stage/(name+'-attachments')
-   self.command(['xcrun','xcresulttool','export','attachments','--path',result,'--output-path',export],name+'-export',timeout=180)
-   for p in sorted(export.rglob('*')):
-    require(not p.is_symlink(),'Linked attachment rejected')
-    if p.is_file() and p.suffix.lower() in ('.png','.jpg','.jpeg','.txt','.json'):
-     require(p.stat().st_size<=8*1024*1024,'Oversized attachment rejected, not truncated')
-     dest=self.out/'attachments'/name/p.relative_to(export);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,dest);self.budget()
-   if error is None:
-    report=self.verifier.verify(summary,log.read_text(),cfg)
-    if key.startswith('audio-'):report['audio']=self.verifier.verify_audio_records(log.read_text(),cfg)
-    report['runName']=name;self.results.append(report);dump(self.out/(name+'-verification.json'),report)
-  require(result.exists(), 'xcodebuild produced no xcresult: '+name)
-  if error:raise error
+   try:self.command(['xcrun','xcresulttool','export','attachments','--path',result,'--output-path',export],name+'-export',timeout=180)
+   except Exception as e:extraction_errors.append({'phase':'export','error':str(e)})
+   # Preserve any bounded files already exported, even when xcresulttool failed.
+   try:
+    for p in sorted(export.rglob('*')):
+     require(not p.is_symlink(),'Linked attachment rejected')
+     if p.is_file() and p.suffix.lower() in ('.png','.jpg','.jpeg','.txt','.json'):
+      require(p.stat().st_size<=8*1024*1024,'Oversized attachment rejected, not truncated')
+      dest=self.out/'attachments'/name/p.relative_to(export);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,dest);self.budget()
+   except Exception as e:extraction_errors.append({'phase':'copy','error':str(e)})
+  else:extraction_errors.append({'phase':'result','error':'xcodebuild produced no xcresult: '+name})
+  evidence={'runName':name,'primaryError':str(error) if error else None,'extractionErrors':extraction_errors,
+            'xcresultExists':result.exists(),'summaryAvailable':summary is not None,'accepted':False}
+  dump(self.out/(name+'-execution-evidence.json'),evidence)
+  if error is not None:raise error
+  require(not extraction_errors,'Evidence extraction failed: '+json.dumps(extraction_errors))
+  report=self.verifier.verify(summary,log.read_text(),cfg)
+  if key.startswith('audio-'):report['audio']=self.verifier.verify_audio_records(log.read_text(),cfg)
+  report['runName']=name;self.results.append(report);dump(self.out/(name+'-verification.json'),report)
  def install_source(self,app,project,device,name):
   self.command(['xcodebuild','-project',project,'-scheme','FlashNestFixtureSource','-configuration','Debug','-sdk','iphonesimulator','-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',str(app/'build-source'),'-disableAutomaticPackageResolution','CODE_SIGNING_ALLOWED=NO','CODE_SIGNING_REQUIRED=NO','build'],name+'-source-build',app,600)
   self.command(['xcrun','simctl','install',device,app/'build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app'],name+'-source-install')
