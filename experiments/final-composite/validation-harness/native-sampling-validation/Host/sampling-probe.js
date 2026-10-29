@@ -6,6 +6,7 @@
   const quality = new URLSearchParams(location.search).get('nativeSamplingQuality');
   if (quality !== null && !['low', 'high'].includes(quality)) throw Error('Invalid diagnostic quality');
   Object.defineProperty(window, '__samplingNativeDiagnosticQuality', {value: quality, writable: false});
+  let loadObservation = null;
   const contexts = new WeakMap(), events = [], contextEvents = [], consoleMessages = [];
   let renderer = null, overflow = false, diagnosticOverflow = false, allocations = 0;
   const observedCanvases = new WeakSet();
@@ -120,9 +121,18 @@
       canvasConnected: canvas.isConnected, visibilityState: document.visibilityState, diagnosticOverflow,
       sampledAtMs: typeof performance.now === 'function' ? performance.now() : null,
       mobileQualityBranch: typeof window.orientation !== 'undefined', diagnosticLaunchQuality: quality,
-      renderer, attributes, events: events.slice(), overflow,
+      loadObservation, renderer, attributes, events: events.slice(), overflow,
       wasm: performance.getEntriesByType('resource').map(r => new URL(r.name).pathname.split('/').pop()).filter(n => /^[a-zA-Z0-9._-]+\.wasm$/.test(n)),
       hidden: document.hidden, focused: document.activeElement === player};
   };
-  Object.defineProperty(window, '__samplingNativeProbe', {value: Object.freeze({measure}), writable: false});
+  const observeLoad = (api, config) => {
+    if (loadObservation !== null) { loadObservation.count++; overflow = true; }
+    else loadObservation = {count: 1, rendererQuery: new URLSearchParams(location.search).get('renderer'),
+      hasPreferredRenderer: Object.prototype.hasOwnProperty.call(config, 'preferredRenderer'),
+      preferredRenderer: config.preferredRenderer ?? null,
+      hasQuality: Object.prototype.hasOwnProperty.call(config, 'quality'),
+      renderScale: config.renderScale ?? 1};
+    return Reflect.apply(api.load, api, [config]);
+  };
+  Object.defineProperty(window, '__samplingNativeProbe', {value: Object.freeze({measure, observeLoad}), writable: false});
 })();

@@ -40,6 +40,12 @@ def check(folder,geometry,expected_identity):
         demand(len(ready)==1 and ready[0].endswith('|noScale|'),label+': fixture READY/mode differs')
         demand(not any('DENSITY|DOWN|' in t or 'DENSITY|UP|' in t for t in state.get('traces',[])),label+': unexpected fixture callbacks')
         demand(state.get('gate') is True and state.get('requested')==1,label+': not candidate Original')
+        load=m.get('loadObservation')
+        demand(isinstance(load,dict) and type(load.get('count')) is int and load.get('count')==1
+               and load.get('rendererQuery') is None and load.get('hasPreferredRenderer') is True
+               and load.get('preferredRenderer')=='webgl' and load.get('hasQuality') is False
+               and load.get('renderScale')==1,label+': actual Automatic load configuration differs')
+        demand(m.get('renderer') == 'webgl',label+': actual GL renderer unconfirmed')
         demand(not state.get('failure') and not state.get('probeError'),label+': web/probe failure')
         demand(not state.get('traceOverflow') and not m.get('overflow') and not m.get('diagnosticOverflow'),label+': evidence overflow')
         demand(m.get('contextLost') is False and m.get('canvasConnected') is True and m.get('hidden') is False,label+': lost/disconnected/hidden context')

@@ -38,13 +38,23 @@ final class RendererCompatibilityUITests: XCTestCase {
         let warning = app.staticTexts["WebGL compatibility may change the picture"].firstMatch
         reveal(warning, app, upwards: false)
         XCTAssertTrue(warning.isHittable)
+        let enhancedWarningText = "Enhanced rendering may show a blank screen or stop unexpectedly on some devices. Neither policy is a general crash fix, and WebGL compatibility is not guaranteed to work with every game."
+        let enhancedWarning = app.staticTexts[enhancedWarningText].firstMatch
+        reveal(enhancedWarning, app)
+        XCTAssertTrue(enhancedWarning.isHittable)
+        XCTAssertEqual(enhancedWarning.label, enhancedWarningText)
+        tap("renderer-mode-enhanced", app)
+        XCTAssertEqual(app.buttons["renderer-mode-enhanced"].firstMatch.value as? String,
+                       "Selected for next opening or reload")
+        requireCurrent("Automatic (compatibility first)", app)
+        evidence("Enhanced is saved for a later opening; live Automatic page unchanged", app)
         tap("renderer-mode-webgl", app)
         XCTAssertEqual(app.buttons["renderer-mode-webgl"].firstMatch.value as? String,
                        "Selected for next opening or reload")
         let pending = app.staticTexts["renderer-settings-pending"].firstMatch
         reveal(pending, app)
         XCTAssertEqual(pending.label, "Change pending. The current scene is unchanged.")
-        requireCurrent("Automatic (default)", app)
+        requireCurrent("Automatic (compatibility first)", app)
         evidence("Selected WebGL without changing current Automatic page", app)
         back(app)
         reveal(app.buttons["player-resume"].firstMatch, app, upwards: false)
@@ -83,9 +93,10 @@ final class RendererCompatibilityUITests: XCTestCase {
         XCTAssertFalse(nodes.isEmpty)
         XCTAssertTrue(nodes.contains { $0.label == requested || $0.staticTexts[requested].exists },
                       "The current-opening value must occur within the requested-value AX scope")
-        let other = requested == "Automatic (default)" ? "WebGL compatibility" : "Automatic (default)"
-        XCTAssertFalse(nodes.contains { $0.label == other || $0.staticTexts[other].exists },
-                       "Current-opening scope must not report the other renderer request")
+        for other in ["Automatic (compatibility first)", "WebGL compatibility", "Enhanced rendering (original automatic path)"] where other != requested {
+            XCTAssertFalse(nodes.contains { $0.label == other || $0.staticTexts[other].exists },
+                           "Current-opening scope must not report another renderer request")
+        }
         let unconfirmed = app.staticTexts["Not yet confirmed by the renderer"].firstMatch
         reveal(unconfirmed, app)
         XCTAssertTrue(unconfirmed.isHittable)

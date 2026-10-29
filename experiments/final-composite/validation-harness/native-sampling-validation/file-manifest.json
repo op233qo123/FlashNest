@@ -1,13 +1,13 @@
 {
-  "contract": "native-contract-v2-authored-not-executed",
+  "contract": "native-policy-diagnostic-staging-only-not-full-matrix",
   "files": {
     "Host/SamplingHost.swift": {
       "bytes": 13629,
       "sha256": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4"
     },
     "Host/sampling-probe.js": {
-      "bytes": 7422,
-      "sha256": "4aabeafbc190e3db23951aced9719c8ad4a2b4056149ae43d631b61ddd3841ec"
+      "bytes": 8040,
+      "sha256": "da4a93c5e8beb23f52f27cd9d1b7fe405ca583fbd6e3a8e1f1fb618e00770be4"
     },
     "README.md": {
       "bytes": 12000,
@@ -20,6 +20,10 @@
     "approved-app-source-manifest.json": {
       "bytes": 30427,
       "sha256": "15a788b157e88407b7ae11b0e48c8922ed9fd2f05007b78d37a6ca9deb12d062"
+    },
+    "approved-candidate-app-source-manifest.json": {
+      "bytes": 9676,
+      "sha256": "2a9cdfb19440066b1fde2f72cdda89cec6740218ee92d58ed57a89bc5a182efa"
     },
     "evidence/baseline-staging-check.json": {
       "bytes": 817,
@@ -62,8 +66,8 @@
       "sha256": "f915f6cf18d8a6f7bc8b0a86fde5d2c3d8ece962e49324a85077cd95daf9e59f"
     },
     "scripts/prepare_overlay.py": {
-      "bytes": 12429,
-      "sha256": "b9fa875e757bdf3736cc5ff0fa73bffb6040275bf43dc0beb42e1f00e7ff0bab"
+      "bytes": 13227,
+      "sha256": "489402e26882ae94addae90e8535d25a8e93e844a68c10096c62541977b263f7"
     },
     "scripts/test_early_visibility.py": {
       "bytes": 1621,
@@ -74,8 +78,8 @@
       "sha256": "afc6c9ea8ce0b97d62ce445f75c36c1f52d7f350bb5df34beef430e329626c07"
     },
     "scripts/test_probe.cjs": {
-      "bytes": 3862,
-      "sha256": "d0b7a7a88218b430236ed540ceb508c615341f54f856a3dca2996c4d3b5e1113"
+      "bytes": 5029,
+      "sha256": "d82f7cd8ac2f3848fc0ed492554a4dfcb2b1b285794dbb23e967dee6b740529f"
     },
     "scripts/test_verifier.py": {
       "bytes": 7193,

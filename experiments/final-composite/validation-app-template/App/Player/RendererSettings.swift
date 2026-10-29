@@ -1,14 +1,22 @@
 import Foundation
 
-/// Per-game opt-in only. A session copies this preference when creating a new
+/// Per-game renderer policy. A session copies this preference when creating a new
 /// player page; selecting it never changes or restarts an existing page.
 /// Separate from resolution experiments, touch controls and game save data.
 struct RendererSettings: Codable, Equatable {
     enum Mode: String, Codable, CaseIterable, Identifiable {
-        case automatic, webgl
+        case automatic, webgl, enhanced
         var id: String { rawValue }
-        // Automatic keeps the production launch URL/configuration unchanged.
-        var queryValue: String? { self == .automatic ? nil : "webgl" }
+        // Automatic omits the URL override; the shell applies compatibility-first policy.
+        // Enhanced is a shell policy token, NOT a runtime backend identifier: the
+        // shell omits preferredRenderer to restore the original automatic order.
+        var queryValue: String? {
+            switch self {
+            case .automatic: return nil
+            case .webgl: return "webgl"
+            case .enhanced: return "enhanced"
+            }
+        }
     }
 
     static let maximumBytes = 1_024

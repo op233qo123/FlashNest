@@ -6,6 +6,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 APPROVED_APP_MANIFEST_SHA256 = '15a788b157e88407b7ae11b0e48c8922ed9fd2f05007b78d37a6ca9deb12d062'
+APPROVED_CANDIDATE_APP_MANIFEST_SHA256 = '2a9cdfb19440066b1fde2f72cdda89cec6740218ee92d58ed57a89bc5a182efa'
 METADATA_ONLY = {'App/Resources/Web/runtime-identity.json', 'App/Resources/Web/Ruffle-MODIFICATIONS.md',
  'App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md', 'App/Resources/Web/THIRD_PARTY_NOTICES.md', 'App/Resources/Web/licenses.manifest.json'}
 OLD_AUDIO_INVENTORY = '25d4453b0375349e55b9f63f609bd129d6a3549e1da792e811f0e5d121247e90'
@@ -51,11 +52,15 @@ def server_overlay(text):
 
 def shell_overlay(text):
     anchor = "      ...(requestedRenderer ? {preferredRenderer:requestedRenderer} : {}),"
-    return replace_once(text, anchor, "      ...(window.__samplingNativeDiagnosticQuality ? {quality:window.__samplingNativeDiagnosticQuality} : {}), // simulator diagnostic only\n" + anchor)
+    text = replace_once(text, anchor, "      ...(window.__samplingNativeDiagnosticQuality ? {quality:window.__samplingNativeDiagnosticQuality} : {}), // simulator diagnostic only\n" + anchor)
+    # Transparent observation of the REAL load argument, forwarding the same
+    # object, receiver, result and exception. No guessed requested-renderer echo.
+    return replace_once(text, 'await player.ruffle().load({url:url.href,',
+                        'await window.__samplingNativeProbe.observeLoad(player.ruffle(), {url:url.href,')
 
-def resolve_app_manifest(approved, external_path=None, external_sha=None):
+def resolve_app_manifest(approved, external_path=None, external_sha=None, authority_sha=APPROVED_APP_MANIFEST_SHA256):
     assert bool(external_path) == bool(external_sha), 'Manifest path/hash pair required'
-    if not external_path: return approved, APPROVED_APP_MANIFEST_SHA256
+    if not external_path: return approved, authority_sha
     assert sha(external_path) == external_sha, 'External reviewed manifest hash differs'
     rows = json.loads(Path(external_path).read_text())['files']
     assert len({r['path'] for r in rows}) == len(rows), 'Duplicate manifest paths rejected'
@@ -90,11 +95,12 @@ def main():
         assert args.runtime_inventory_sha256 != OLD_AUDIO_INVENTORY, 'Old audio-only runtime is ineligible'
     else:
         assert args.runtime_inventory_sha256 == OLD_AUDIO_INVENTORY, 'Baseline must be the approved delivered155 audio runtime'
-    approved_path = ROOT / 'approved-app-source-manifest.json'
-    assert sha(approved_path) == APPROVED_APP_MANIFEST_SHA256, 'Approved App manifest changed without reviewed freeze'
+    authority_sha = APPROVED_CANDIDATE_APP_MANIFEST_SHA256 if args.arm == 'candidate' else APPROVED_APP_MANIFEST_SHA256
+    approved_path = ROOT / ('approved-candidate-app-source-manifest.json' if args.arm == 'candidate' else 'approved-app-source-manifest.json')
+    assert sha(approved_path) == authority_sha, 'Approved App manifest changed without reviewed freeze'
     approved = {row['path']: row['sha256'] for row in json.loads(approved_path.read_text())['files']
                 if row['path'].startswith('App/') and not row['path'].startswith('App/Resources/Web/runtime/')}
-    approved, effective_app_manifest_sha = resolve_app_manifest(approved, args.approved_app_manifest, args.approved_app_manifest_sha256)
+    approved, effective_app_manifest_sha = resolve_app_manifest(approved, args.approved_app_manifest, args.approved_app_manifest_sha256, authority_sha)
     actual_app = {str(p.relative_to(app)): sha(p) for p in (app / 'App').rglob('*')
                   if p.is_file() and not str(p.relative_to(app)).startswith('App/Resources/Web/runtime/')}
     assert actual_app == approved, 'Gate-off App/shell/status/navigation source differs from approved source map'
@@ -120,6 +126,7 @@ def main():
     identity = {'schema': 1, 'arm': args.arm, 'runtimeInventorySHA256': args.runtime_inventory_sha256,
         'runtimeFiles': runtime, 'gateOffAppFiles': before, 'changedAppFiles': {k: {'before': before[k], 'after': after[k]} for k in changed},
         'observerSHA256': sha(target / 'Host/sampling-probe.js'), 'simulatorOnly': True,
+        'rendererPolicyContract': 'candidate-three-mode-v1' if args.arm == 'candidate' else 'legacy-original-policy-v1',
         'shippingDefaultQualityOmitted': True, 'approvedAppManifestSHA256': effective_app_manifest_sha, 'authoredNotExecuted': True}
     # Compact runtime/source identities in all phase attachments; full map kept in staging provenance.
     (target / 'staging-provenance.json').write_text(json.dumps(identity, indent=2) + '\n')

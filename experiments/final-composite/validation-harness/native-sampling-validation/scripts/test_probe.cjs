@@ -48,3 +48,19 @@ assert.equal(setup('high').box.__samplingNativeDiagnosticQuality, 'high');
 assert.equal(setup('low').box.__samplingNativeDiagnosticQuality, 'low');
 assert.throws(() => setup('arbitrary'), /Invalid diagnostic quality/);
 console.log('PASS observer mock contracts: transparent calls, allocation evidence, bounded passive touch, privacy, explicit diagnostic identity; NOT native execution');
+
+// v3 passive actual-load forwarding: exact receiver/object/result/throw, not an echo.
+{
+ const x=setup();x.canvas.getContext('webgl2');const config={preferredRenderer:'webgl'}, result={exact:true};
+ const api={load(c){assert.strictEqual(this,api);assert.strictEqual(c,config);return result;}};
+ assert.strictEqual(x.box.__samplingNativeProbe.observeLoad(api,config),result);
+ const seen=x.box.__samplingNativeProbe.measure().loadObservation;
+ assert.equal(seen.preferredRenderer,'webgl');assert.equal(seen.hasPreferredRenderer,true);assert.equal(seen.rendererQuery,null);
+}
+{
+ const x=setup();x.canvas.getContext('webgl2');x.box.location.search='?renderer=enhanced';
+ const config={};const failure=new Error('original load failure');const api={load(c){assert.strictEqual(c,config);throw failure;}};
+ assert.throws(()=>x.box.__samplingNativeProbe.observeLoad(api,config),e=>e===failure);
+ const seen=x.box.__samplingNativeProbe.measure().loadObservation;assert.equal(seen.rendererQuery,'enhanced');assert.equal(seen.hasPreferredRenderer,false);assert.equal(seen.preferredRenderer,null);
+}
+console.log('PASS actual load forwarding models; NOT native backend proof');

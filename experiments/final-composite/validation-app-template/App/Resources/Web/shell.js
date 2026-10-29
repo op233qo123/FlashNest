@@ -3,21 +3,25 @@
   'use strict';
   const status = document.getElementById('status');
   const requestedLanguage = new URLSearchParams(location.search).get('language');
-  // Automatic intentionally leaves Ruffle's existing backend order unchanged.
-  // This opt-in preference is not proof of which backend ultimately initialized.
-  // Exact string allowlist: do not coerce arbitrary input or alter DPR/CSS/input.
+  // Exact sampling allowlist: do not coerce arbitrary input or alter DPR/CSS/input.
   const samplingQuery = new URLSearchParams(location.search).get('renderScale');
   const requestedRenderScale = ['0.75', '0.5', '0.25'].includes(samplingQuery) ? Number(samplingQuery) : null;
-  const requestedRenderer = new URLSearchParams(location.search).get('renderer') === 'webgl' ? 'webgl' : null;
+  // New pages only: compatibility-first Automatic and explicit WebGL prefer the
+  // existing DirectWebGL backend. Public preferredRenderer reorders construction
+  // fallback; it is not actual-backend evidence or a context-loss recovery loop.
+  // Enhanced deliberately omits the preference to retain the original ordering.
+  const rendererToken = new URLSearchParams(location.search).get('renderer');
+  const rendererPolicy = ['webgl', 'enhanced'].includes(rendererToken) ? rendererToken : 'automatic';
+  const requestedRenderer = rendererPolicy === 'enhanced' ? null : 'webgl';
   const language = (requestedLanguage || window.navigator?.language || 'en').toLowerCase().startsWith('zh') ? 'zh-Hans' : 'en';
   const strings = {
     en: {
-      samplingState:'Onscreen sampling: requested={0}; renderer-applied={1}; canvas pixels={2}; total memory not measured', samplingUnconfirmed:'unconfirmed',
+      rendererPreference:'Graphics policy: {0}; preferred renderer: {1}; actual renderer is not inferred from this preference', samplingState:'Onscreen sampling: requested={0}; renderer-applied={1}; canvas pixels={2}; total memory not measured', samplingUnconfirmed:'unconfirmed',
       audioWarning:'Audio could not start. Retrying will not restart the game.', audioRetry:'Retry audio', audioRetrying:'Retrying audio…', audioWaiting:'Waiting for audio. You can still open the game menu.', title:'FlashNest Player', preparing:'Preparing offline runtime…', play:'Play / enable audio', pause:'Pause', resume:'Resume', action:'Action', enter:'Enter', stage:'Flash player', controls:'Game controls',
       offline:'Offline policy blocked {0}. Remote servers are unavailable; include local assets in the package.', jsError:'JavaScript/resource error: {0}', unknown:'unknown', runtimeError:'Runtime error: {0}', wasmStart:'Runtime WASM fetch started: {0}', wasmResponse:'Runtime WASM response: {0}; bytes={1}', assetFailed:'Asset request failed ({0}): {1}', assetBlocked:'Asset request blocked or unavailable: {0}', invalid:'Invalid package or entry SWF.', unsafe:'Unsafe entry path.', missing:'Bundled runtime missing or blocked.', ready:'Offline runtime ready.', initializing:'Initializing bundled WASM and renderer…', pending:'Runtime initialization still pending after 20 seconds; download progress={0}; visible={1}', unavailable:'unavailable', initialized:'Bundled WASM and renderer initialized; main SWF request started.', loaded:'Movie loaded. Tap Play to start audio.', saveReady:'Local save storage ready.', saveTimeout:'Native save preparation timed out.', swfRequest:'SWF request #{0}: {1}', swfResponse:'SWF response headers #{0}: status={1}; bytes={2}; {3}', swfFailure:'SWF fetch failed #{0}: {1}', swfLimit:'Further SWF request diagnostics omitted (limit reached).', traceSuppressed:'SWF trace limit: {0} message(s) suppressed in this interval.', graphicsEvent:'Renderer event: {0}', consoleEvent:'Runtime {0}: {1}', consoleLimit:'Further runtime {0} diagnostics omitted (limit reached).', playerState:'Player state ({0}): started={1}; shellPaused={2}; hidden={3}; focused={4}; canvasCSS={5}; canvasPixels={6}; DPR={7}; canvasVisual={8}; runtimePlaying={9}; playOverlayVisible={10}', loadError:'Unable to load movie: {0}'
     },
     'zh-Hans': {
-      samplingState:'屏幕采样：请求={0}；渲染器报告={1}；画布像素={2}；未测量总内存', samplingUnconfirmed:'未确认',
+      rendererPreference:'图形策略：{0}；首选渲染器：{1}；不以请求偏好推断实际渲染器', samplingState:'屏幕采样：请求={0}；渲染器报告={1}；画布像素={2}；未测量总内存', samplingUnconfirmed:'未确认',
       audioWarning:'音频启动失败，可尝试重试；不会重启当前游戏。', audioRetry:'重试声音', audioRetrying:'正在重试声音…', audioWaiting:'正在等待音频响应，你仍可打开游戏菜单。', title:'FlashNest 播放器', preparing:'正在准备离线运行环境…', play:'播放 / 开启声音', pause:'暂停', resume:'继续', action:'动作', enter:'确认', stage:'Flash 播放区域', controls:'游戏按键',
       offline:'离线策略已拦截 {0}。无法连接远程服务器，请将资源一并导入。', jsError:'脚本或资源错误：{0}', unknown:'未知', runtimeError:'运行错误：{0}', wasmStart:'正在加载 WASM：{0}', wasmResponse:'WASM 响应：{0}；字节数={1}', assetFailed:'资源请求失败（{0}）：{1}', assetBlocked:'资源被拦截或不可用：{0}', invalid:'游戏包或入口 SWF 无效。', unsafe:'入口路径不安全。', missing:'内置运行环境缺失或被拦截。', ready:'离线运行环境已就绪。', initializing:'正在初始化 WASM 和渲染器…', pending:'初始化已超过 20 秒；下载进度={0}；页面可见={1}', unavailable:'不可用', initialized:'WASM 和渲染器已初始化，正在加载主 SWF。', loaded:'文件已加载。点击“播放”开启声音。', saveReady:'本地存档已准备就绪。', saveTimeout:'原生存档准备超时。', swfRequest:'SWF 请求 #{0}：{1}', swfResponse:'SWF 响应头 #{0}：状态={1}；字节数={2}；{3}', swfFailure:'SWF 请求失败 #{0}：{1}', swfLimit:'后续 SWF 请求诊断已省略（达到数量上限）。', traceSuppressed:'SWF 跟踪限流：本时段已省略 {0} 条消息。', graphicsEvent:'渲染器事件：{0}', consoleEvent:'运行环境 {0}：{1}', consoleLimit:'后续运行环境 {0} 诊断已省略（达到数量上限）。', playerState:'播放器状态（{0}）：已开始={1}；外壳暂停={2}；隐藏={3}；焦点={4}；画布CSS={5}；画布像素={6}；DPR={7}；画布显示={8}；运行时播放={9}；播放遮罩可见={10}', loadError:'无法加载文件：{0}'
     }
@@ -314,6 +318,7 @@
     }, {once:true});
     document.getElementById('stage').append(player);
     report('ready', t('ready'));
+    report('diagnostic', t('rendererPreference', rendererPolicy, requestedRenderer ?? 'original automatic order'), false);
     report('diagnostic', t('initializing'));
     const loadWatchdog = window.setTimeout?.(() => {
       const progress = player.shadowRoot?.querySelector('.loadbar-inner')?.style.width || t('unavailable');

@@ -45,7 +45,7 @@ def execute_one(runner, module):
     module.dump(runner.out/'diagnostic-test-overlay.json',{'diagnosticOnly':True,'extraDiagnosticOverlayAppChanged':False,
         'target':'NativeSamplingValidation/UITests/NativeSamplingUITests.swift',
         'originalSHA256':module.hashlib.sha256(original).hexdigest(),'fragmentSHA256':module.sha(fragment_path),
-        'diagnosticSHA256':module.sha(target),'exactInverseVerified':True,'original161ContractUnchanged':True})
+        'diagnosticSHA256':module.sha(target),'exactInverseVerified':True,'fullMatrixAcceptance':False})
     shutil.copyfile(app/'NativeSamplingValidation/SamplingIdentity.json',runner.out/'diagnostic-expected-identity.json')
     project=runner.project(app,'sampling-candidate-diagnostic','FlashNestSamplingUI')
     device=runner.devices['2'];runner.reset(device,'sampling-candidate-dpr2-diagnostic')

@@ -22,15 +22,15 @@
       "App/Player/PackageWebKitProfiles.swift": "a02b15af8ac09cfab6ba93e47fc829f387154210238acc201823d22f98a23234",
       "App/Player/PlayerSession.swift": "6225d8143031c56531e7f2499a14146ea94b0bd26c1e71c18070104f142a6316",
       "App/Player/RenderSamplingSettings.swift": "a823949c9b531a49251416b6acd12c789b522bdff62bd379b70401642e926e32",
-      "App/Player/RendererSettings.swift": "7ef4c48fbbeaa394aeae03aced47065db4b20c626696f7c80ffeadd885ecfb89",
+      "App/Player/RendererSettings.swift": "c95f1123deb2a2687c852109cdcaecf2b6f181b0d7e2451345b358f678348457",
       "App/Player/SamplingAppliedStatus.swift": "f6811ed78e642097fde19b75956f7f43a23a37cf306f04a0ebc5c072545cdf62",
       "App/Player/SaveManagementEntryPolicy.swift": "76d51e310f3a800ea2d4e2b1c2f613fbf67b32d04fcd36623016d6c81eb28498",
       "App/Player/Touch/TouchControlSettings.swift": "4018f22370a70b5a82146cf4b56fd61316d4cdb1da32c41c9f73fe7b7237c14a",
       "App/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png": "910122c9200caa5a47e14ce27ad8911d03b27583c2485c9086f2102a6d47016a",
       "App/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json": "3c6addf3f20972a12a0c33e6f6fe9e0857a0bdb512dce5d59f4bd007b236c157",
       "App/Resources/Assets.xcassets/Contents.json": "f5fb0e1f3a8142892ed092efb5955c1c2cc537003a89ad7bbdb9dade7fe8985f",
-      "App/Resources/Localization/en.lproj/Localizable.strings": "685a28d471363d9555408f6b6d3243885f021eb82aea5401c8731f3ab191c3dc",
-      "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "bfcf35a86757c64153f2be3ec7f9b92a062496ecbace5139562225e7a7acd4ff",
+      "App/Resources/Localization/en.lproj/Localizable.strings": "c19bcd2a87880c704976481b92b1defeb6be2d115663045852c85731c4d0c623",
+      "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "90f275cfe64d9dc180f3edf579b7a8f4bfe070b5499a2767e0c2687b5c4f54c3",
       "App/Resources/Web/FlashNest-LICENSE.txt": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
       "App/Resources/Web/Ruffle-MODIFICATIONS.md": "79845ed0eb8a2f05433dadd2db3724d6aa21b59f5685d4686f28300477cd50b9",
       "App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71",
@@ -62,7 +62,7 @@
       "App/Resources/Web/sampling-status.js": "b9491c617606c8b9bd69da0808107e87b79a1cc4eef03497488884f0dea79a7a",
       "App/Resources/Web/save-bridge.js": "50de61bc2d2aeb13671d51094aca5c902080ef66b017c63489181cc511d96d4c",
       "App/Resources/Web/shell.css": "4b359ebc5dd677a94f0b1d1ea65a41405008b323ca1cb0b0c7e8dcbf01c62773",
-      "App/Resources/Web/shell.js": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd",
+      "App/Resources/Web/shell.js": "d67042567a28376d6555a7e97a3a3b63885e15c625f618b38dfec96887638b12",
       "App/Server/HTTPProtocol.swift": "3e5c8806a10ad1de4fceee5bc8157d6f94aa1e79f3559bb96db9539eb2c5f0b4",
       "App/Server/LoopbackServer.swift": "d196a07aad788aa74658e4c656d87263b9d42394f2c7935d86e8751e7d4c11e1",
       "App/Views/EntrySelectionView.swift": "55a22fd154dface9ab87367c6a303eda50b01cd296c1c0c14aa691d12b933b4a",
@@ -70,7 +70,7 @@
       "App/Views/LibrarySettingsView.swift": "cda71cf25ccc47160358df3ec30f2f3c41ba1be107370f5a5bc85cccd480cdd9",
       "App/Views/LibraryView.swift": "c762a9186e4adeda48908af9610c22ea66b9ae59d506b055a4f645e720165900",
       "App/Views/LocalImportInboxView.swift": "dd56b7a0e5857f03afe18474b65d9c3d79d372f26ecfe75070638ccea7bca902",
-      "App/Views/PlayerRendererSettingsView.swift": "1c6d1702c452407b12d916ac8a85e45f111bd354c5d2b32e42c85d879f75a3c6",
+      "App/Views/PlayerRendererSettingsView.swift": "b493d911ba163f8d7dff64e2d0efe1418f8868a588be1d3f26015f7ac79fb380",
       "App/Views/PlayerSamplingSettingsView.swift": "08985f9b458bee0bf52734f9c3dd52cc527475a484db5c2cb35589085d93dc2a",
       "App/Views/PlayerView.swift": "5a47e35af1161cba3bfaa11affb9ecb736ccdd249a1ed15194906dbec9547ba2",
       "App/Views/RawSOLImportPreviewView.swift": "76ff710bfdf784eb3d7a4e4b0c6ac73ead3755f5afadb4e55a8da03ff703bd5a",
@@ -107,8 +107,8 @@
       "Tests/RawSOLImportTests.swift": "9de352c6fcd49abb7ac70e190f11f462e4c451b6e6033b50ad0e70f72e8526d1",
       "Tests/RawSOLWebKitTests.swift": "aef374878ad70920779cad38f970c108c25bb737e79c7f72937134a8a7352090",
       "Tests/RenderSamplingSettingsTests.swift": "776bbc35ee7e8c182eefcd169f40dcbb29e49c861bd4298b9dce11497f3218c6",
-      "Tests/RendererSessionTests.swift": "7819b7bbc9d3f9b56e573c4ce20dd57ba4095f2f13968cd40812fbc271efe0f6",
-      "Tests/RendererSettingsTests.swift": "ee31383482cfaff725b236bb10ea7d79c07131cfe897168d8393356477885575",
+      "Tests/RendererSessionTests.swift": "de6ec7214b69d05ff447cda0e4af251826e7e6742ef2aace663b2bfc277fd1a4",
+      "Tests/RendererSettingsTests.swift": "4e3bf9b97c01302612330f74807f20f6def429a74a91e65fb30d81d1958e4808",
       "Tests/RuffleRuntimeTests.swift": "8a8364cee19f6b53490b6e8706a3e35b34c9eb4e191fa1f013591992d376e192",
       "Tests/SamplingAppliedStatusTests.swift": "f0daaa980a392bbbd27dd0a1d932ec1270f352e1a3b6abd1f50b1273a92080fe",
       "Tests/SamplingSessionTests.swift": "b92ffde221369178b1f8eddd6694a7941776a06333ec3b6e983455a4686c3214",
@@ -130,7 +130,7 @@
       "UITests/LibraryNavigation.swift": "481c5a5822ef96fca610ab4da5287b7c47bafe108d7c00f4905678b7201dc140",
       "UITests/LibraryToolbarDiagnosticsUITests.swift": "2eb3e026d5c82035fb854ad9ef1f3746bf0ccdf984a06e3e32549da997fff8ea",
       "UITests/LifecyclePlayerUITests.swift": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
-      "UITests/RendererCompatibilityUITests.swift": "53525d5987822a18e598bacd71194bf64d39480b5d9e37c544abc0051ded9913",
+      "UITests/RendererCompatibilityUITests.swift": "9f24bd17efb0698c2b6ad5e3f58b7a0c818fbb8305d41f3dff35d70712ffd3d6",
       "experiments/frame-order/FrameOrderRuntimeTests.swift": "5beb4b3205cf5b7b8fe09a8b5cc0b946a235612501d2072a50ab255c7db92308",
       "experiments/frame-order/candidate-native/FrameOrderCandidateRuntimeTests.swift": "cc21f16dbd9341d9f1256baf72384fe41e3a786d14235f5153e974ca3d730645",
       "experiments/frame-order/engine-patch/expectations/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
@@ -196,7 +196,7 @@
       "scripts/test_sampling_status.js": "d1837ad38b14b438a754acb355d3876b1c1a1de3004275fcb2849528094e13ac",
       "scripts/test_save_bridge.js": "43bce2e8d20e6177c40f9d49cfb7e34c586476aef72d80a6e7c696591521e579",
       "scripts/test_saves_browser.py": "c55c8142e23f405c55284725793f68a8c683896649015167f084d1f5cc07f7c2",
-      "scripts/test_shell.js": "65702fd15b6170ca60a1b9381497dad51085f2d321006223d68349413b85c830",
+      "scripts/test_shell.js": "5466d9bd01e77585085e32c95223df17a36890130bdf0b29ea31898f00855f53",
       "scripts/test_static.py": "6ff7ae2fedb4bf94346a7e7826cdebfb679e7e0b3552dc37cffa293e1445a341",
       "scripts/verify_bundled_runtime.py": "feceb8c7655ecacb5f840659f012ce1f60d92f73a1a5974f0d308c3c1a986d5f",
       "vendor/ruffle-audio-recovery-40614335019.zip": "3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a",
@@ -229,15 +229,15 @@
     "App/Player/PackageWebKitProfiles.swift": "a02b15af8ac09cfab6ba93e47fc829f387154210238acc201823d22f98a23234",
     "App/Player/PlayerSession.swift": "6225d8143031c56531e7f2499a14146ea94b0bd26c1e71c18070104f142a6316",
     "App/Player/RenderSamplingSettings.swift": "a823949c9b531a49251416b6acd12c789b522bdff62bd379b70401642e926e32",
-    "App/Player/RendererSettings.swift": "7ef4c48fbbeaa394aeae03aced47065db4b20c626696f7c80ffeadd885ecfb89",
+    "App/Player/RendererSettings.swift": "c95f1123deb2a2687c852109cdcaecf2b6f181b0d7e2451345b358f678348457",
     "App/Player/SamplingAppliedStatus.swift": "f6811ed78e642097fde19b75956f7f43a23a37cf306f04a0ebc5c072545cdf62",
     "App/Player/SaveManagementEntryPolicy.swift": "76d51e310f3a800ea2d4e2b1c2f613fbf67b32d04fcd36623016d6c81eb28498",
     "App/Player/Touch/TouchControlSettings.swift": "4018f22370a70b5a82146cf4b56fd61316d4cdb1da32c41c9f73fe7b7237c14a",
     "App/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png": "910122c9200caa5a47e14ce27ad8911d03b27583c2485c9086f2102a6d47016a",
     "App/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json": "3c6addf3f20972a12a0c33e6f6fe9e0857a0bdb512dce5d59f4bd007b236c157",
     "App/Resources/Assets.xcassets/Contents.json": "f5fb0e1f3a8142892ed092efb5955c1c2cc537003a89ad7bbdb9dade7fe8985f",
-    "App/Resources/Localization/en.lproj/Localizable.strings": "685a28d471363d9555408f6b6d3243885f021eb82aea5401c8731f3ab191c3dc",
-    "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "bfcf35a86757c64153f2be3ec7f9b92a062496ecbace5139562225e7a7acd4ff",
+    "App/Resources/Localization/en.lproj/Localizable.strings": "c19bcd2a87880c704976481b92b1defeb6be2d115663045852c85731c4d0c623",
+    "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "90f275cfe64d9dc180f3edf579b7a8f4bfe070b5499a2767e0c2687b5c4f54c3",
     "App/Resources/Web/FlashNest-LICENSE.txt": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
     "App/Resources/Web/Ruffle-MODIFICATIONS.md": "79845ed0eb8a2f05433dadd2db3724d6aa21b59f5685d4686f28300477cd50b9",
     "App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71",
@@ -259,7 +259,7 @@
     "App/Resources/Web/sampling-status.js": "b9491c617606c8b9bd69da0808107e87b79a1cc4eef03497488884f0dea79a7a",
     "App/Resources/Web/save-bridge.js": "50de61bc2d2aeb13671d51094aca5c902080ef66b017c63489181cc511d96d4c",
     "App/Resources/Web/shell.css": "4b359ebc5dd677a94f0b1d1ea65a41405008b323ca1cb0b0c7e8dcbf01c62773",
-    "App/Resources/Web/shell.js": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd",
+    "App/Resources/Web/shell.js": "d67042567a28376d6555a7e97a3a3b63885e15c625f618b38dfec96887638b12",
     "App/Server/HTTPProtocol.swift": "3e5c8806a10ad1de4fceee5bc8157d6f94aa1e79f3559bb96db9539eb2c5f0b4",
     "App/Server/LoopbackServer.swift": "d196a07aad788aa74658e4c656d87263b9d42394f2c7935d86e8751e7d4c11e1",
     "App/Views/EntrySelectionView.swift": "55a22fd154dface9ab87367c6a303eda50b01cd296c1c0c14aa691d12b933b4a",
@@ -267,7 +267,7 @@
     "App/Views/LibrarySettingsView.swift": "cda71cf25ccc47160358df3ec30f2f3c41ba1be107370f5a5bc85cccd480cdd9",
     "App/Views/LibraryView.swift": "c762a9186e4adeda48908af9610c22ea66b9ae59d506b055a4f645e720165900",
     "App/Views/LocalImportInboxView.swift": "dd56b7a0e5857f03afe18474b65d9c3d79d372f26ecfe75070638ccea7bca902",
-    "App/Views/PlayerRendererSettingsView.swift": "1c6d1702c452407b12d916ac8a85e45f111bd354c5d2b32e42c85d879f75a3c6",
+    "App/Views/PlayerRendererSettingsView.swift": "b493d911ba163f8d7dff64e2d0efe1418f8868a588be1d3f26015f7ac79fb380",
     "App/Views/PlayerSamplingSettingsView.swift": "08985f9b458bee0bf52734f9c3dd52cc527475a484db5c2cb35589085d93dc2a",
     "App/Views/PlayerView.swift": "5a47e35af1161cba3bfaa11affb9ecb736ccdd249a1ed15194906dbec9547ba2",
     "App/Views/RawSOLImportPreviewView.swift": "76ff710bfdf784eb3d7a4e4b0c6ac73ead3755f5afadb4e55a8da03ff703bd5a",
@@ -303,8 +303,8 @@
     "Tests/RawSOLImportTests.swift": "9de352c6fcd49abb7ac70e190f11f462e4c451b6e6033b50ad0e70f72e8526d1",
     "Tests/RawSOLWebKitTests.swift": "aef374878ad70920779cad38f970c108c25bb737e79c7f72937134a8a7352090",
     "Tests/RenderSamplingSettingsTests.swift": "776bbc35ee7e8c182eefcd169f40dcbb29e49c861bd4298b9dce11497f3218c6",
-    "Tests/RendererSessionTests.swift": "7819b7bbc9d3f9b56e573c4ce20dd57ba4095f2f13968cd40812fbc271efe0f6",
-    "Tests/RendererSettingsTests.swift": "ee31383482cfaff725b236bb10ea7d79c07131cfe897168d8393356477885575",
+    "Tests/RendererSessionTests.swift": "de6ec7214b69d05ff447cda0e4af251826e7e6742ef2aace663b2bfc277fd1a4",
+    "Tests/RendererSettingsTests.swift": "4e3bf9b97c01302612330f74807f20f6def429a74a91e65fb30d81d1958e4808",
     "Tests/RuffleRuntimeTests.swift": "8a8364cee19f6b53490b6e8706a3e35b34c9eb4e191fa1f013591992d376e192",
     "Tests/SamplingAppliedStatusTests.swift": "f0daaa980a392bbbd27dd0a1d932ec1270f352e1a3b6abd1f50b1273a92080fe",
     "Tests/SamplingSessionTests.swift": "b92ffde221369178b1f8eddd6694a7941776a06333ec3b6e983455a4686c3214",
@@ -326,7 +326,7 @@
     "UITests/LibraryNavigation.swift": "481c5a5822ef96fca610ab4da5287b7c47bafe108d7c00f4905678b7201dc140",
     "UITests/LibraryToolbarDiagnosticsUITests.swift": "2eb3e026d5c82035fb854ad9ef1f3746bf0ccdf984a06e3e32549da997fff8ea",
     "UITests/LifecyclePlayerUITests.swift": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
-    "UITests/RendererCompatibilityUITests.swift": "53525d5987822a18e598bacd71194bf64d39480b5d9e37c544abc0051ded9913",
+    "UITests/RendererCompatibilityUITests.swift": "9f24bd17efb0698c2b6ad5e3f58b7a0c818fbb8305d41f3dff35d70712ffd3d6",
     "experiments/frame-order/FrameOrderRuntimeTests.swift": "5beb4b3205cf5b7b8fe09a8b5cc0b946a235612501d2072a50ab255c7db92308",
     "experiments/frame-order/candidate-native/FrameOrderCandidateRuntimeTests.swift": "cc21f16dbd9341d9f1256baf72384fe41e3a786d14235f5153e974ca3d730645",
     "experiments/frame-order/engine-patch/expectations/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
@@ -392,7 +392,7 @@
     "scripts/test_sampling_status.js": "d1837ad38b14b438a754acb355d3876b1c1a1de3004275fcb2849528094e13ac",
     "scripts/test_save_bridge.js": "43bce2e8d20e6177c40f9d49cfb7e34c586476aef72d80a6e7c696591521e579",
     "scripts/test_saves_browser.py": "c55c8142e23f405c55284725793f68a8c683896649015167f084d1f5cc07f7c2",
-    "scripts/test_shell.js": "65702fd15b6170ca60a1b9381497dad51085f2d321006223d68349413b85c830",
+    "scripts/test_shell.js": "5466d9bd01e77585085e32c95223df17a36890130bdf0b29ea31898f00855f53",
     "scripts/test_static.py": "6ff7ae2fedb4bf94346a7e7826cdebfb679e7e0b3552dc37cffa293e1445a341",
     "scripts/verify_bundled_runtime.py": "feceb8c7655ecacb5f840659f012ce1f60d92f73a1a5974f0d308c3c1a986d5f",
     "vendor/ruffle-audio-recovery-source/audio-lifecycle.patch": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9",
@@ -400,6 +400,7 @@
     "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
     "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4"
   },
+  "diagnosticOnly": true,
   "dispatchAllowed": true,
   "engine": {
     "artifactID": 12862634818,
@@ -425,8 +426,8 @@
       "sha256": "4c2875484c8eef7e25b6e7c7e40503a978cb702fb40b8b889af7633648e80c0e"
     },
     "diagnostics/native-candidate-context/verify_context_window.py": {
-      "bytes": 8419,
-      "sha256": "33a1bff66e391a1bba285d2b69179a4884cacffc5845369eb0cac0efb92fb573"
+      "bytes": 8933,
+      "sha256": "aa5fd291a5b2418bc8f8dfef28b71b32ab1ac671f3957942b13e78621e79716a"
     },
     "runtime-consumer/composite_runtime.py": {
       "bytes": 9444,
@@ -449,12 +450,12 @@
       "sha256": "f4e570f42fc35545afbd288b82f30f46a24594188c27d2171c3cc050eb6fcda7"
     },
     "scripts/run_native_drag_diagnostic.py": {
-      "bytes": 7821,
-      "sha256": "9ac6ea269df2a0a83a58e918ae6447b964bbe968a1bdc086c2febbad24554bfb"
+      "bytes": 7814,
+      "sha256": "cb35dbf4bcf8b7a60e38390aff9d3d004a5d8f3bdf50ed6de270ce5f4c7506eb"
     },
     "scripts/run_native_validation.py": {
-      "bytes": 1667,
-      "sha256": "510fb0b9a1d95247590db09b2952e708e91e0403d505fa760542d6f7aed62ef2"
+      "bytes": 1788,
+      "sha256": "baeedca7c2c34adddce6888e96925fe1c6ef20b36e0230b31d458fc41c6ee02f"
     },
     "scripts/stage_validation_inputs.py": {
       "bytes": 3367,
@@ -506,7 +507,7 @@
     },
     "validation-bindings/native-binding.json": {
       "bytes": 26798,
-      "sha256": "15b85eae1904ef885c2493d4824c379c777ffc85a4328d2eae6febd7cd105444"
+      "sha256": "dcdfd59e77b8eef32d6dd414ab196a76349c335c890660d7086ba5e73080c53c"
     },
     "validation-bindings/sampling-baseline-approved-app.json": {
       "bytes": 30481,
@@ -517,8 +518,8 @@
       "sha256": "25d4453b0375349e55b9f63f609bd129d6a3549e1da792e811f0e5d121247e90"
     },
     "validation-bindings/sampling-candidate-approved-app.json": {
-      "bytes": 9675,
-      "sha256": "6490e9d472d36c3142677c4acae9739a9b0af4eba198b66d9c3413253436643d"
+      "bytes": 9722,
+      "sha256": "ceec20b891a68071e50df83cfc1c408e3348152840f15a1b163450ad575a8119"
     },
     "validation-bindings/sampling/app-metadata/App/Resources/Web/Ruffle-MODIFICATIONS.md": {
       "bytes": 5752,
@@ -777,8 +778,8 @@
       "sha256": "e1d3b3b6dbe4b1f414cfe04d1c8ba2a86521784be6be3ca1215ee9fd1d888bef"
     },
     "validation-harness/native-composite-runner/helper-lock.json": {
-      "bytes": 9095,
-      "sha256": "15c466f3954585497b1cd626a4584750b77ffb259df9fc396d846dac3561ee10"
+      "bytes": 9254,
+      "sha256": "86467927e7ef4b44b66b3a03fe33daea8710efefea44ce020c92b57014833e5b"
     },
     "validation-harness/native-composite-runner/local-tests.log": {
       "bytes": 1198,
@@ -797,8 +798,8 @@
       "sha256": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4"
     },
     "validation-harness/native-sampling-validation/Host/sampling-probe.js": {
-      "bytes": 7422,
-      "sha256": "4aabeafbc190e3db23951aced9719c8ad4a2b4056149ae43d631b61ddd3841ec"
+      "bytes": 8040,
+      "sha256": "da4a93c5e8beb23f52f27cd9d1b7fe405ca583fbd6e3a8e1f1fb618e00770be4"
     },
     "validation-harness/native-sampling-validation/README.md": {
       "bytes": 12000,
@@ -811,6 +812,10 @@
     "validation-harness/native-sampling-validation/approved-app-source-manifest.json": {
       "bytes": 30427,
       "sha256": "15a788b157e88407b7ae11b0e48c8922ed9fd2f05007b78d37a6ca9deb12d062"
+    },
+    "validation-harness/native-sampling-validation/approved-candidate-app-source-manifest.json": {
+      "bytes": 9676,
+      "sha256": "2a9cdfb19440066b1fde2f72cdda89cec6740218ee92d58ed57a89bc5a182efa"
     },
     "validation-harness/native-sampling-validation/evidence/baseline-staging-check.json": {
       "bytes": 817,
@@ -829,8 +834,8 @@
       "sha256": "03a30b0b1ed75b8e75c8aa5367a6d1619db75b17a50194b7b32aa603d2856f52"
     },
     "validation-harness/native-sampling-validation/file-manifest.json": {
-      "bytes": 3276,
-      "sha256": "b540507051e490ed435e603f5ae14642082c0ccf906c32e5b808d84142c0848e"
+      "bytes": 3453,
+      "sha256": "dbd78a38899d257a55f0f25d9af9d99f429a8ed622f44d41c73d9a493a777c5a"
     },
     "validation-harness/native-sampling-validation/fixtures/manifest.json": {
       "bytes": 576,
@@ -857,8 +862,8 @@
       "sha256": "f915f6cf18d8a6f7bc8b0a86fde5d2c3d8ece962e49324a85077cd95daf9e59f"
     },
     "validation-harness/native-sampling-validation/scripts/prepare_overlay.py": {
-      "bytes": 12429,
-      "sha256": "b9fa875e757bdf3736cc5ff0fa73bffb6040275bf43dc0beb42e1f00e7ff0bab"
+      "bytes": 13227,
+      "sha256": "489402e26882ae94addae90e8535d25a8e93e844a68c10096c62541977b263f7"
     },
     "validation-harness/native-sampling-validation/scripts/test_early_visibility.py": {
       "bytes": 1621,
@@ -869,8 +874,8 @@
       "sha256": "afc6c9ea8ce0b97d62ce445f75c36c1f52d7f350bb5df34beef430e329626c07"
     },
     "validation-harness/native-sampling-validation/scripts/test_probe.cjs": {
-      "bytes": 3862,
-      "sha256": "d0b7a7a88218b430236ed540ceb508c615341f54f856a3dca2996c4d3b5e1113"
+      "bytes": 5029,
+      "sha256": "d82f7cd8ac2f3848fc0ed492554a4dfcb2b1b285794dbb23e967dee6b740529f"
     },
     "validation-harness/native-sampling-validation/scripts/test_verifier.py": {
       "bytes": 7193,
@@ -1226,6 +1231,6 @@
       ]
     }
   },
-  "reason": "Native-only reviewed v2 validation authorized; new runtime browser execution is separately bound to run40796744945/head80dbfabd0d0e9c6344e7063b71047dc73d6ebd5c. No IPA. Exact notice-only metadata equivalence recorded in reviews/notice-identity-overlay.json.",
+  "reason": "Reviewed three-mode App; only same-player Automatic context diagnostic eligible. Full native v3 and new browser remain pending.",
   "schemaVersion": 1
 }

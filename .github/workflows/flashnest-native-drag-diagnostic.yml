@@ -39,7 +39,8 @@ jobs:
           set -euo pipefail
           cd experiments/final-composite
           python3 -m venv validation-venv
-          validation-venv/bin/python -m pip install --require-virtualenv PyYAML==6.0.3
+          validation-venv/bin/python -m pip install --require-virtualenv PyYAML==6.0.3 pillow==12.1.0
+          validation-venv/bin/python -c 'from PIL import Image; import PIL, yaml; assert PIL.__version__ == "12.1.0"; assert yaml.__version__ == "6.0.3"'
       - name: Install exact authenticated XcodeGen tool without global changes
         run: |
           set -euo pipefail

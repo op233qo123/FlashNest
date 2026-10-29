@@ -345,15 +345,17 @@
 "Game save preparation did not finish." = "游戏存档准备未完成。";
 "Diagnostic code: %@" = "诊断代码：%@";
 
-// Per-game opt-in renderer compatibility; separate from resolution experiments.
+// Per-game renderer policy; separate from resolution experiments.
 "Graphics compatibility" = "图形兼容性";
 "WebGL compatibility may change the picture" = "WebGL 兼容模式可能影响画面";
 "Filters, offscreen bitmap effects, Stage3D, PixelBender shaders and some blend modes are not supported by this WebGL renderer. Pictures or effects may be missing or incorrect." = "此 WebGL 渲染器不支持滤镜、离屏位图效果、Stage3D、PixelBender 着色器及部分混合模式，可能导致画面或特效缺失、显示不正确。";
-"Try this only for a game that has problems with Automatic. It is not a general crash fix. Choose Automatic again if the picture is wrong." = "仅在某个游戏使用自动模式出现问题时尝试，不能保证解决崩溃。如果画面异常，请改回自动模式。";
+"Automatic prefers WebGL compatibility for new openings. Enhanced rendering keeps the original automatic renderer order for games that need advanced effects. Renderer initialization may still fall back." = "自动模式在下次打开时优先使用 WebGL 兼容渲染。增强渲染保留原自动渲染器顺序，供需要高级效果的游戏选择。渲染器初始化失败时仍可能回退。";
+"Enhanced rendering may show a blank screen or stop unexpectedly on some devices. Neither policy is a general crash fix, and WebGL compatibility is not guaranteed to work with every game." = "增强渲染在部分设备上可能出现白屏或意外停止。两种策略都不是通用的崩溃修复，WebGL 兼容模式也不保证适用于所有游戏。";
 "Current player" = "当前播放器";
 "Actual renderer" = "实际渲染器";
-"This Ruffle build does not report its actual renderer. The requested mode is not confirmation that it was selected." = "此 Ruffle 版本不报告实际渲染器。请求的模式不代表已经生效。";
-"Automatic (default)" = "自动（默认）";
+"No actual renderer report has been confirmed for this player. The requested mode does not prove which backend was selected." = "尚未确认此播放器的实际渲染器报告。请求的模式不能证明已选用了哪个渲染后端。";
+"Automatic (compatibility first)" = "自动（兼容优先）";
+"Enhanced rendering (original automatic path)" = "增强渲染（原自动路径）";
 "WebGL compatibility" = "WebGL 兼容模式";
 "The renderer preference could not be saved. The current game was not changed." = "无法保存渲染器偏好，当前游戏未发生改变。";
 

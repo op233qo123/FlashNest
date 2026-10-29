@@ -140,7 +140,7 @@ async function exercise(timing) {
   assert.equal(config.url, 'http://127.0.0.1:8766/cap/games/11111111-1111-4111-8111-111111111111/folder/space%20%23.swf');
   assert.equal(config.base, 'http://127.0.0.1:8766/cap/games/11111111-1111-4111-8111-111111111111/folder/');
   assert.equal(config.publicPath, 'http://127.0.0.1:8766/cap/web/runtime/');
-  const optInWebGL = timing === 'renderer:webgl' || timing.startsWith('sampling:');
+  const enhanced = timing === 'renderer:enhanced';
   const sample = timing.startsWith('sampling:') ? timing.slice(9) : '';
   const validSample = ['0.75', '0.5', '0.25'].includes(sample);
   assert.equal(config.renderScale, validSample ? Number(sample) : undefined);
@@ -148,8 +148,8 @@ async function exercise(timing) {
   assert.equal(canvas.width, 1170, 'Shell must never resize the runtime canvas');
   assert.equal(canvas.height, 2532);
   assert.equal(context.window.devicePixelRatio, 3, 'Shell must not override DPR');
-  assert.equal(config.preferredRenderer, optInWebGL ? 'webgl' : undefined);
-  assert.equal(Object.hasOwn(config, 'preferredRenderer'), optInWebGL, 'Automatic/invalid values omit the preference entirely');
+  assert.equal(config.preferredRenderer, enhanced ? undefined : 'webgl');
+  assert.equal(Object.hasOwn(config, 'preferredRenderer'), !enhanced, 'Only exact Enhanced restores the original omitted preference; Automatic/invalid values are compatibility-first');
   assert.equal(config.allowNetworking, 'internal'); assert.equal(config.allowScriptAccess, false);
   assert.equal(appended, player, 'Fullscreen stage must directly contain the Ruffle player');
   assert.equal(context.document.documentElement.lang, language);
@@ -417,7 +417,7 @@ async function exercise(timing) {
 
 (async () => {
   if (process.env.FLASHNEST_AUDIO_OPERATION_SOURCE) await exercise('audio-source');
-  for (const timing of ['audio','delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake','renderer:webgl','renderer:automatic','renderer:WEBGL','renderer:webgpu','renderer:','renderer:__proto__']) await exercise(timing);
+  for (const timing of ['audio','delayed','early','rejected','storageonly','invalidrestore','closewhileloading','livewins','replace','handshake','renderer:webgl','renderer:enhanced','renderer:ENHANCED','renderer:wgpu-webgl','renderer:automatic','renderer:WEBGL','renderer:webgpu','renderer:','renderer:__proto__']) await exercise(timing);
   for (const value of ['1','0.75','0.5','0.25','0','-1','0.3','NaN','Infinity','0.50','true','', '__proto__']) await exercise('sampling:' + value);
   if (process.env.FLASHNEST_AUDIO_OPERATION_SOURCE) console.log(language + ': PASS actual source helper → warning → explicit retry fulfillment → original unknown fatal exactly once (mocked context, not native audio)');
   console.log(language + ': PASS shell URL/base, offline config, key focus/lifecycle, baseline fullscreen, bounded scene/trace/runtime-console diagnostics, live written-save checkpoints, loadeddata timing, redaction, restore ordering, storage-only and close-race (mock unit test only)');

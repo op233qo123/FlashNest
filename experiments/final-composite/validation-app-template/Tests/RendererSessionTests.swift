@@ -34,7 +34,7 @@ import WebKit
             try require(session.requestedRendererSettings == RendererSettings(), "Initial request is not Automatic")
             try require(rendererQuery(first) == nil, "Automatic changed launch query")
             let firstConfiguration = try await requestedBackend(first)
-            try require(firstConfiguration == "null", "Automatic unexpectedly forced a runtime backend")
+            try require(firstConfiguration == "\"webgl\"", "Automatic did not request compatibility-first WebGL")
             try require(session.activeRendererBackend == nil, "Requested mode was misreported as actual backend")
 
             try require(RendererSettings(mode: .webgl).save(for: package.id), "Preference save failed")
@@ -47,7 +47,7 @@ import WebKit
             try require(session.requestedRendererSettings == RendererSettings(), "Preference changed the current request")
             try require(rendererQuery(first) == nil, "Preference mutated the current page URL")
             let retainedConfiguration = try await requestedBackend(first)
-            try require(retainedConfiguration == "null", "Preference reconfigured a retained runtime")
+            try require(retainedConfiguration == "\"webgl\"", "Preference reconfigured a retained runtime")
             // The control fixture deliberately writes no SOL; an empty checkpoint
             // must not fabricate an archive or be mistaken for a renderer failure.
             try require(session.checkpointFailure == L10n.text("No game-written save is available yet. Existing backups were kept."),
@@ -66,6 +66,21 @@ import WebKit
             let newConfiguration = try await requestedBackend(second)
             try require(newConfiguration == "\"webgl\"", "Public loadedConfig omitted requested WebGL")
             try require(session.activeRendererBackend == nil, "Public requested config is not actual backend attestation")
+
+            try require(RendererSettings(mode: .enhanced).save(for: package.id), "Enhanced preference save failed")
+            try require(session.requestedRendererSettings == RendererSettings(mode: .webgl), "Enhanced choice changed the current request")
+            try require(rendererQuery(second) == "webgl", "Enhanced choice mutated the current page URL")
+            let stillWebGL = try await requestedBackend(second)
+            try require(stillWebGL == "\"webgl\"", "Enhanced choice changed the retained runtime")
+            try await session.closeWithoutSaving()
+            second.removeFromSuperview()
+            let third = try await open(session, package: package, content: content, controller: controller, deadline: deadline)
+            try require(third !== second, "Enhanced opening reused the old page")
+            try require(session.requestedRendererSettings == RendererSettings(mode: .enhanced), "New page did not load Enhanced preference")
+            try require(rendererQuery(third) == "enhanced", "Enhanced policy token missing")
+            let enhancedConfiguration = try await requestedBackend(third)
+            try require(enhancedConfiguration == "null", "Enhanced must restore the exact original automatic ordering")
+            try require(session.activeRendererBackend == nil, "Enhanced request was misreported as actual renderer")
         } catch { originalError = error }
         // Await real port drainage on every path; retain the first failure.
         var cleanupError: String?

@@ -345,15 +345,17 @@
 "Game save preparation did not finish." = "Game save preparation did not finish.";
 "Diagnostic code: %@" = "Diagnostic code: %@";
 
-// Per-game opt-in renderer compatibility; separate from resolution experiments.
+// Per-game renderer policy; separate from resolution experiments.
 "Graphics compatibility" = "Graphics compatibility";
 "WebGL compatibility may change the picture" = "WebGL compatibility may change the picture";
 "Filters, offscreen bitmap effects, Stage3D, PixelBender shaders and some blend modes are not supported by this WebGL renderer. Pictures or effects may be missing or incorrect." = "Filters, offscreen bitmap effects, Stage3D, PixelBender shaders and some blend modes are not supported by this WebGL renderer. Pictures or effects may be missing or incorrect.";
-"Try this only for a game that has problems with Automatic. It is not a general crash fix. Choose Automatic again if the picture is wrong." = "Try this only for a game that has problems with Automatic. It is not a general crash fix. Choose Automatic again if the picture is wrong.";
+"Automatic prefers WebGL compatibility for new openings. Enhanced rendering keeps the original automatic renderer order for games that need advanced effects. Renderer initialization may still fall back." = "Automatic prefers WebGL compatibility for new openings. Enhanced rendering keeps the original automatic renderer order for games that need advanced effects. Renderer initialization may still fall back.";
+"Enhanced rendering may show a blank screen or stop unexpectedly on some devices. Neither policy is a general crash fix, and WebGL compatibility is not guaranteed to work with every game." = "Enhanced rendering may show a blank screen or stop unexpectedly on some devices. Neither policy is a general crash fix, and WebGL compatibility is not guaranteed to work with every game.";
 "Current player" = "Current player";
 "Actual renderer" = "Actual renderer";
-"This Ruffle build does not report its actual renderer. The requested mode is not confirmation that it was selected." = "This Ruffle build does not report its actual renderer. The requested mode is not confirmation that it was selected.";
-"Automatic (default)" = "Automatic (default)";
+"No actual renderer report has been confirmed for this player. The requested mode does not prove which backend was selected." = "No actual renderer report has been confirmed for this player. The requested mode does not prove which backend was selected.";
+"Automatic (compatibility first)" = "Automatic (compatibility first)";
+"Enhanced rendering (original automatic path)" = "Enhanced rendering (original automatic path)";
 "WebGL compatibility" = "WebGL compatibility";
 "The renderer preference could not be saved. The current game was not changed." = "The renderer preference could not be saved. The current game was not changed.";
 

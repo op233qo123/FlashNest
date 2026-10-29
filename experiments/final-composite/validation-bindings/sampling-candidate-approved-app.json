@@ -86,7 +86,7 @@
     },
     {
       "path": "App/Player/RendererSettings.swift",
-      "sha256": "7ef4c48fbbeaa394aeae03aced47065db4b20c626696f7c80ffeadd885ecfb89"
+      "sha256": "c95f1123deb2a2687c852109cdcaecf2b6f181b0d7e2451345b358f678348457"
     },
     {
       "path": "App/Player/SamplingAppliedStatus.swift",
@@ -114,11 +114,11 @@
     },
     {
       "path": "App/Resources/Localization/en.lproj/Localizable.strings",
-      "sha256": "685a28d471363d9555408f6b6d3243885f021eb82aea5401c8731f3ab191c3dc"
+      "sha256": "c19bcd2a87880c704976481b92b1defeb6be2d115663045852c85731c4d0c623"
     },
     {
       "path": "App/Resources/Localization/zh-Hans.lproj/Localizable.strings",
-      "sha256": "bfcf35a86757c64153f2be3ec7f9b92a062496ecbace5139562225e7a7acd4ff"
+      "sha256": "90f275cfe64d9dc180f3edf579b7a8f4bfe070b5499a2767e0c2687b5c4f54c3"
     },
     {
       "path": "App/Resources/Web/FlashNest-LICENSE.txt",
@@ -198,7 +198,7 @@
     },
     {
       "path": "App/Resources/Web/shell.js",
-      "sha256": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd"
+      "sha256": "d67042567a28376d6555a7e97a3a3b63885e15c625f618b38dfec96887638b12"
     },
     {
       "path": "App/Server/HTTPProtocol.swift",
@@ -230,7 +230,7 @@
     },
     {
       "path": "App/Views/PlayerRendererSettingsView.swift",
-      "sha256": "1c6d1702c452407b12d916ac8a85e45f111bd354c5d2b32e42c85d879f75a3c6"
+      "sha256": "b493d911ba163f8d7dff64e2d0efe1418f8868a588be1d3f26015f7ac79fb380"
     },
     {
       "path": "App/Views/PlayerSamplingSettingsView.swift",
@@ -253,5 +253,5 @@
       "sha256": "372ecaae7b940b0439ec4d59ecfd48feae59861d1d7556e650f8e73e1a6c7ca4"
     }
   ],
-  "scope": "Actual touch-contact engine with reviewed exact notice correction; native execution remains pending"
+  "scope": "Reviewed compatibility-first Automatic, explicit WebGL and Enhanced original renderer order; same accepted touch engine. Native execution pending."
 }

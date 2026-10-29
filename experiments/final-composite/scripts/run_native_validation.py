@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 def main():
  lock=json.loads((ROOT/'validation-lock.json').read_text());assert lock.get('dispatchAllowed') is True
+ assert lock.get('diagnosticOnly') is not True,'Only bounded policy diagnostic is authorized; full native v3 not frozen'
  out=ROOT/'native-execution/results';final=ROOT/'evidence/native'
  assert not out.exists() and not final.exists(),'Inspect existing uncertain run before retry'
  command=[sys.executable,str(ROOT/'validation-harness/native-composite-runner/run.py'),'--app',str(ROOT/'validation-app'),'--candidate-engine',str(ROOT/'staged-engine'),'--baseline',str(ROOT/'baseline-bundle'),'--binding',str(ROOT/'validation-bindings/native-binding.json'),'--output',str(out)]

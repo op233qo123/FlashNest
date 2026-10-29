@@ -32,7 +32,10 @@ struct PlayerRendererSettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text(L10n.text("Filters, offscreen bitmap effects, Stage3D, PixelBender shaders and some blend modes are not supported by this WebGL renderer. Pictures or effects may be missing or incorrect."))
                 .fixedSize(horizontal: false, vertical: true)
-            Text(L10n.text("Try this only for a game that has problems with Automatic. It is not a general crash fix. Choose Automatic again if the picture is wrong."))
+            Text(L10n.text("Automatic prefers WebGL compatibility for new openings. Enhanced rendering keeps the original automatic renderer order for games that need advanced effects. Renderer initialization may still fall back."))
+                .font(.footnote).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(L10n.text("Enhanced rendering may show a blank screen or stop unexpectedly on some devices. Neither policy is a general crash fix, and WebGL compatibility is not guaranteed to work with every game."))
                 .font(.footnote).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }.accessibilityIdentifier("renderer-compatibility-warning")
@@ -79,7 +82,7 @@ struct PlayerRendererSettingsView: View {
             }.fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("renderer-settings-active")
             if confirmedBackend == nil {
-                Text(L10n.text("This Ruffle build does not report its actual renderer. The requested mode is not confirmation that it was selected."))
+                Text(L10n.text("No actual renderer report has been confirmed for this player. The requested mode does not prove which backend was selected."))
                     .font(.footnote).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -93,8 +96,9 @@ struct PlayerRendererSettingsView: View {
 
     static func title(for mode: RendererSettings.Mode) -> String {
         switch mode {
-        case .automatic: return L10n.text("Automatic (default)")
+        case .automatic: return L10n.text("Automatic (compatibility first)")
         case .webgl: return L10n.text("WebGL compatibility")
+        case .enhanced: return L10n.text("Enhanced rendering (original automatic path)")
         }
     }
 }
