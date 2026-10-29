@@ -1,35 +1,29 @@
 {
-  "artifactID": 12844754314,
-  "runID": 40753314834,
-  "sourceCommit": "29b344137313b81a6cf53c662efb4edd8a452d61",
-  "bytes": 13328842,
-  "sha256": "26c1e61f0d8d1b1f4dffcd0ddfe886604098384360c6c20e1f094d9c0c2a6e4e",
-  "provenanceSHA256": "2002ff3558a6593b6f7b8a0d892945b73b8c4a9fa1638c8407573c40ad74f8b7",
-  "sourceSetSHA256": "0434fe9a2a3d2e4637938f6b0f67fe7eff17dd777ea940f02b29febc8b6d70aa",
-  "runtimeInventorySHA256": "6aadf8b728be885b518b16f77430e128ba677c97df03598b9a50d07101dfed9a",
+  "artifactID": 12862634818,
+  "runID": 40794075613,
+  "sourceCommit": "aaac9ee3dc162fb038dfd0c8595a5c0580f039e0",
+  "bytes": 13365799,
+  "sha256": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a",
+  "provenanceSHA256": "6fa95c80d75bdb7073576f6833b1e85c61c91227d232fa91e70ad9be57806a6f",
+  "sourceSetSHA256": "097ceee6431e9c7737814bf488b2747b794ce1cbe2ae03dbec474ba88efbb9a4",
+  "runtimeInventorySHA256": "572ed90d2fc90a892d2f2d6bcd2dc693b35d593bb7decf3e1276f5481989a078",
   "wasmSHA256": [
-    "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b",
-    "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263"
+    "bfac1872d0320b7529ef2edc3a6ce5bdb245c7635da54c9c0d33c4ddc183e94a",
+    "6c999b09a43da7f83086ccd331753de65523b6640a39255fb10212e10087bb4a"
   ],
   "engineAccepted": true,
-  "reviewScope": "Actual release-equivalent engine artifact only; browser/native/IPA/device gates remain pending",
-  "sourceLockSHA256": "95d65b7b023a58d5dc059fac7eaed2215c1a75ce3adceac5efaa370c9e048dc8",
-  "fullSourceManifestSHA256": "f6ff53247b252b9490ece92f5ecc36d36558a39c101e6bc63cceba41762a917a",
+  "reviewScope": "Actual dual-WASM engine/source artifact only; browser/native/IPA/device remain pending",
+  "sourceLockSHA256": "98a0fae33b42a94ea037742e7458ff119facd8f5e4ad4f62ef9c9434cbfef97b",
+  "fullSourceManifestSHA256": "8677a41016f609ca4f14138565e5aec06d5d1c586dc4d6f0a33d87507a2aafde",
   "verifiedFullSourceFiles": 25921,
-  "localTestOnlyDifferences": [
-    "core/src/backend/audio.rs",
-    "core/src/backend/audio/mixer.rs",
-    "core/src/player.rs",
-    "tests/framework/src/backends/log.rs"
-  ],
-  "zipFilesVerified": 127,
+  "zipFilesVerified": 136,
   "runtimeFilesVerified": 12,
-  "correspondenceFilesVerified": 106,
+  "correspondenceFilesVerified": 115,
   "coreJSTestsPassed": 63,
   "nativeAccepted": false,
   "browserAccepted": false,
   "ipaAccepted": false,
   "physicalDeviceAccepted": false,
   "peakMemoryImprovementEstablished": false,
-  "reviewedAtUTC": "2026-10-28T19:43:00Z"
+  "flavorCorrespondenceSHA256": "26a51067fb224c6a8a5e11618e96b65a1d14f8dbb4db6b27316f1616cc5270b9"
 }

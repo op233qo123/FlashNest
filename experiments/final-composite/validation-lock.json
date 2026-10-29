@@ -32,13 +32,13 @@
       "App/Resources/Localization/en.lproj/Localizable.strings": "685a28d471363d9555408f6b6d3243885f021eb82aea5401c8731f3ab191c3dc",
       "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "bfcf35a86757c64153f2be3ec7f9b92a062496ecbace5139562225e7a7acd4ff",
       "App/Resources/Web/FlashNest-LICENSE.txt": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
-      "App/Resources/Web/Ruffle-MODIFICATIONS.md": "ae805d1fd39bc73c5e8c03cbf7be2599bfabfe81b817f0f5c066bf40061a3f9d",
+      "App/Resources/Web/Ruffle-MODIFICATIONS.md": "79845ed0eb8a2f05433dadd2db3724d6aa21b59f5685d4686f28300477cd50b9",
       "App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71",
       "App/Resources/Web/THIRD_PARTY_NOTICES.md": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
       "App/Resources/Web/ZIPFoundation-LICENSE.txt": "93a5b6f4c4fcfbca71aaf17f5758d249cf205d5d1c237becc37f14e43af09f6b",
       "App/Resources/Web/audio-warning.js": "b3285f7ece398349740242bfc84e78a9389ed2152c635b8a0a654e10014fa282",
       "App/Resources/Web/index.html": "dc644cc31bdfd20428af68b5343b223f1573dc4c360bd34162bc52a046f8ece4",
-      "App/Resources/Web/licenses.manifest.json": "62a4c30099db9dbcb1db91f8ec939d32a6680e26c0dcec229b28c85166528e0d",
+      "App/Resources/Web/licenses.manifest.json": "9cefd54f26737f5e26bb3d5db8c3fa922cde3897564315bb61e723b9064ccd1d",
       "App/Resources/Web/licenses/fluent-bundle-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
       "App/Resources/Web/licenses/fluent-bundle-NOTICE": "edae6bb683e0187423baa8adeedd31ec3e5778aa56be1f4c1269663e260adbaf",
       "App/Resources/Web/licenses/fluent-langneg-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
@@ -46,19 +46,19 @@
       "App/Resources/Web/licenses/tsx-dom-LICENSE": "a1b4fcc0102c5dca085eb9e3b7395bb9262be7390f3c90109c03b7ff3c2b4aa8",
       "App/Resources/Web/licenses/wasm-feature-detect-LICENSE": "bcf29b4fd3ec2cb5f9d40a0866da446f6da62170d2ccedf4aeca9cf9406dd20c",
       "App/Resources/Web/licenses/webpack-LICENSE": "9068a8782d2fb4c6e432cfa25334efa56f722822180570802bf86e71b6003b1e",
-      "App/Resources/Web/runtime-identity.json": "14c4855750ce5843383a5f71074f263beb54e414d0f9ed8d6038ce1d320fe34a",
-      "App/Resources/Web/runtime/90bbf4885cbe4b972b5d.wasm": "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b",
+      "App/Resources/Web/runtime-identity.json": "14919df4fc039bcb1cd9e47d04b194e122a2cba525211851aa729566744238f9",
+      "App/Resources/Web/runtime/6999e9964888d1066f5c.wasm": "bfac1872d0320b7529ef2edc3a6ce5bdb245c7635da54c9c0d33c4ddc183e94a",
       "App/Resources/Web/runtime/LICENSE_APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
       "App/Resources/Web/runtime/LICENSE_MIT": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c",
       "App/Resources/Web/runtime/README.md": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde",
-      "App/Resources/Web/runtime/ba4cc242c45ddd367372.wasm": "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263",
-      "App/Resources/Web/runtime/core.ruffle.3ce933515526b167bacd.js": "9a8dc73ddea707c7af9222e3957b54923afe7a428fc2a74d84fff16a48159edd",
-      "App/Resources/Web/runtime/core.ruffle.3ce933515526b167bacd.js.map": "c96f0502a89087090a56b3036cf5ddffc6624d328a5371f8d4738c9813d73fa5",
-      "App/Resources/Web/runtime/core.ruffle.b000fdd7bd51db350c2e.js": "b28727c844c608de48b6c649719c0fa3b53bf4a6e37ce624301382a630e4890a",
-      "App/Resources/Web/runtime/core.ruffle.b000fdd7bd51db350c2e.js.map": "2de27d962c84f9f98ed37aab8ab0e8dcaadd669ff9ba0fd67b85b0e8c4989c9d",
+      "App/Resources/Web/runtime/c81520c6cee1cb13e3a2.wasm": "6c999b09a43da7f83086ccd331753de65523b6640a39255fb10212e10087bb4a",
+      "App/Resources/Web/runtime/core.ruffle.b37b03400c42af4f2df8.js": "1643fa872c336e5a920a5ab5f0e89d8d0f19f6fe3af9dbd6812e94832d7c6c70",
+      "App/Resources/Web/runtime/core.ruffle.b37b03400c42af4f2df8.js.map": "6a771064d7804849fbd52ff1334d4d2c9d663df075f195c425f68d7ec827eb65",
+      "App/Resources/Web/runtime/core.ruffle.b66cd8f7f9bc4f6102a5.js": "97583a8ea68de971dde69fd12c8aa86a3ac2c5e4556b29d675dec292cb840d1c",
+      "App/Resources/Web/runtime/core.ruffle.b66cd8f7f9bc4f6102a5.js.map": "0a78842decc2cc610fa78cb163f3414c31bd7a1433d971cc21e4e91f3151b323",
       "App/Resources/Web/runtime/package.json": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89",
-      "App/Resources/Web/runtime/ruffle.js": "07b1a097dc3a446470b530ebc1cfaf7612454b19cd392a31b2b6922e47f40711",
-      "App/Resources/Web/runtime/ruffle.js.map": "7ba876032a1d34aafc8ee8f6f5ac03287400c2106567d333a70130cd6e44cdaf",
+      "App/Resources/Web/runtime/ruffle.js": "a8c607577e3fc3d17b7bc15dd2b3ab59663febdf15bcd54bd1e75330b9e73c8b",
+      "App/Resources/Web/runtime/ruffle.js.map": "88185e9127251109e6b77fe1062e3a1313434f3a96a8e44d5ee9573c6062e8e0",
       "App/Resources/Web/sampling-status.js": "b9491c617606c8b9bd69da0808107e87b79a1cc4eef03497488884f0dea79a7a",
       "App/Resources/Web/save-bridge.js": "50de61bc2d2aeb13671d51094aca5c902080ef66b017c63489181cc511d96d4c",
       "App/Resources/Web/shell.css": "4b359ebc5dd677a94f0b1d1ea65a41405008b323ca1cb0b0c7e8dcbf01c62773",
@@ -76,7 +76,7 @@
       "App/Views/RawSOLImportPreviewView.swift": "76ff710bfdf784eb3d7a4e4b0c6ac73ead3755f5afadb4e55a8da03ff703bd5a",
       "App/Views/SaveAreaView.swift": "aa3101faccfc1636bd63f5d24dea84a83fe4ce2c7b03c3924461d2f9195661b4",
       "App/Views/TouchControlsView.swift": "372ecaae7b940b0439ec4d59ecfd48feae59861d1d7556e650f8e73e1a6c7ca4",
-      "FINAL_ENGINE_STAGING.json": "bd0575269068dbb26b3fa341918da0fdf76b9ffc8bc91d67f3340dfa1fec829f",
+      "FINAL_ENGINE_STAGING.json": "ffd1e341f41447211201d363c247d308e807cde0348206e115129a3a9ff41d3c",
       "LICENSE": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
       "Package.resolved": "8e1a1d7de570f9bacd587f56f70f41fa0da6d077505047bdf26ed31437e9dfc1",
       "THIRD_PARTY_NOTICES.md": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
@@ -85,7 +85,7 @@
       "Tests/CacheCleanupPresentationTests.swift": "ec86c95272280ad9492573938e255379fb3168fd666980deee7aba02f707a813",
       "Tests/CacheCleanupTests.swift": "707eedf5dc7a36607f088cc386f39ae647d62a409fedc83070f5868db5028347",
       "Tests/ExternalImportInboxTests.swift": "3595349aaba6d6e8a9ceefcec7549755744da656b128b45936fb39b5f0639403",
-      "Tests/FrameOrderRuntimeTests.swift": "f437be6e9d50eb29c041b52d5471c4f89969feb00051243d66f1199bfc7bfc30",
+      "Tests/FrameOrderRuntimeTests.swift": "48be33058711935d0b0be31229c3ef6aa4560fec8caac2e25128517f2af981c9",
       "Tests/HTTPServerTests.swift": "cca67f9bbd0b214f4ebeb1b6d36e07d3aa1cd5216b9cab1ab1f973d1508990e5",
       "Tests/ImportAliasTests.swift": "d8539494b606925bb7ce03ad4a3fa152fc87c902c411d771a98deca630d7adb3",
       "Tests/ImportFlowTests.swift": "1d7e26449fb39a1c2968ce88127e1f5ac0b87320940aba16ef4f29b0f3bcd6bb",
@@ -171,8 +171,8 @@
       "fixtures/shared-object/explicit-flush.swf": "19325f1da4afce8c3f32a0ff92aaa151e5736517893d3fb9b24d98efa45db472",
       "fixtures/shared-object/read-only.swf": "92daf5242e633e520216b469b98fee34436c77cbaf0c8a811c88c3511ebac941",
       "project.yml": "0613646031133b46d6f4b5d4f56de5efbc1361dfa611d4e1ba8ebf67bdad0ae7",
-      "runtime.files.json": "b62aff962835ac18438ea30f77b24aeab406b92c139845980fa1a0fc8f4bee72",
-      "runtime.lock.json": "788f545d8fc20daa5f6b620fd342453465b53703947f940fe11bec64b06198d7",
+      "runtime.files.json": "dcb8e7008e332eafd49524f89c65bd4f1fef0661b03f4352cd3c9c799a554c32",
+      "runtime.lock.json": "15617b1804d60ee90ee9ccdc93252abd00d7c52c1cab9396931b0b54c52078c9",
       "scripts/README.md": "827d35df82858af3582c82049480a2326e22c936a29ed43288044301e2436c1d",
       "scripts/collect_preservation_diagnostics.py": "a5bf869ea629554a15b8194355ece81fc1666a2c7d57fe243c096747e49da5c2",
       "scripts/collect_test_webkit_crashes.py": "fcba44fe0cb1290b272291d956cddf4e2759fbca45463e4d8fbeb9d2756f9bdb",
@@ -204,7 +204,7 @@
       "vendor/ruffle-audio-recovery-source/audio-recovery.patch": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60",
       "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
       "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4",
-      "vendor/ruffle-composite-40753314834.zip": "26c1e61f0d8d1b1f4dffcd0ddfe886604098384360c6c20e1f094d9c0c2a6e4e"
+      "vendor/ruffle-composite-40794075613.zip": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a"
     }
   },
   "appTemplateFiles": {
@@ -239,13 +239,13 @@
     "App/Resources/Localization/en.lproj/Localizable.strings": "685a28d471363d9555408f6b6d3243885f021eb82aea5401c8731f3ab191c3dc",
     "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "bfcf35a86757c64153f2be3ec7f9b92a062496ecbace5139562225e7a7acd4ff",
     "App/Resources/Web/FlashNest-LICENSE.txt": "c7180604fe28e7abbc3c1d15fcb217848c5b2e0d511ebccef8bf87f115dd114e",
-    "App/Resources/Web/Ruffle-MODIFICATIONS.md": "ae805d1fd39bc73c5e8c03cbf7be2599bfabfe81b817f0f5c066bf40061a3f9d",
+    "App/Resources/Web/Ruffle-MODIFICATIONS.md": "79845ed0eb8a2f05433dadd2db3724d6aa21b59f5685d4686f28300477cd50b9",
     "App/Resources/Web/Ruffle-THIRD-PARTY-LICENSES.md": "e39a2fa3dfd7238f0924f568fabb659ee1a9d95ea6460dbae4bc9b67017a1c71",
     "App/Resources/Web/THIRD_PARTY_NOTICES.md": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
     "App/Resources/Web/ZIPFoundation-LICENSE.txt": "93a5b6f4c4fcfbca71aaf17f5758d249cf205d5d1c237becc37f14e43af09f6b",
     "App/Resources/Web/audio-warning.js": "b3285f7ece398349740242bfc84e78a9389ed2152c635b8a0a654e10014fa282",
     "App/Resources/Web/index.html": "dc644cc31bdfd20428af68b5343b223f1573dc4c360bd34162bc52a046f8ece4",
-    "App/Resources/Web/licenses.manifest.json": "62a4c30099db9dbcb1db91f8ec939d32a6680e26c0dcec229b28c85166528e0d",
+    "App/Resources/Web/licenses.manifest.json": "9cefd54f26737f5e26bb3d5db8c3fa922cde3897564315bb61e723b9064ccd1d",
     "App/Resources/Web/licenses/fluent-bundle-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
     "App/Resources/Web/licenses/fluent-bundle-NOTICE": "edae6bb683e0187423baa8adeedd31ec3e5778aa56be1f4c1269663e260adbaf",
     "App/Resources/Web/licenses/fluent-langneg-LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
@@ -402,21 +402,21 @@
   },
   "dispatchAllowed": true,
   "engine": {
-    "artifactID": 12844754314,
-    "bytes": 13328842,
-    "provenanceSHA256": "2002ff3558a6593b6f7b8a0d892945b73b8c4a9fa1638c8407573c40ad74f8b7",
-    "runID": 40753314834,
-    "runtimeInventorySHA256": "6aadf8b728be885b518b16f77430e128ba677c97df03598b9a50d07101dfed9a",
-    "sha256": "26c1e61f0d8d1b1f4dffcd0ddfe886604098384360c6c20e1f094d9c0c2a6e4e",
-    "sourceCommit": "29b344137313b81a6cf53c662efb4edd8a452d61",
-    "sourceSetSHA256": "0434fe9a2a3d2e4637938f6b0f67fe7eff17dd777ea940f02b29febc8b6d70aa",
+    "artifactID": 12862634818,
+    "bytes": 13365799,
+    "provenanceSHA256": "6fa95c80d75bdb7073576f6833b1e85c61c91227d232fa91e70ad9be57806a6f",
+    "runID": 40794075613,
+    "runtimeInventorySHA256": "572ed90d2fc90a892d2f2d6bcd2dc693b35d593bb7decf3e1276f5481989a078",
+    "sha256": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a",
+    "sourceCommit": "aaac9ee3dc162fb038dfd0c8595a5c0580f039e0",
+    "sourceSetSHA256": "097ceee6431e9c7737814bf488b2747b794ce1cbe2ae03dbec474ba88efbb9a4",
     "wasmFlavorBySHA256": {
-      "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263": "mvp",
-      "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b": "extensions"
+      "6c999b09a43da7f83086ccd331753de65523b6640a39255fb10212e10087bb4a": "extensions",
+      "bfac1872d0320b7529ef2edc3a6ce5bdb245c7635da54c9c0d33c4ddc183e94a": "mvp"
     },
     "wasmSHA256": [
-      "efc59fd94dd7be060a67057c3b3a43fe7245be88560611d23ee6811253a6980b",
-      "0f90c17fc66dc8927bdc5b41198d7428ec9253b48bbf89644afd6340cecea263"
+      "bfac1872d0320b7529ef2edc3a6ce5bdb245c7635da54c9c0d33c4ddc183e94a",
+      "6c999b09a43da7f83086ccd331753de65523b6640a39255fb10212e10087bb4a"
     ]
   },
   "harnessFiles": {
@@ -457,8 +457,8 @@
       "sha256": "49a7fd3cb77227f170c62db54b6d6ae3529b235726005f16090d81ce0ba5988c"
     },
     "scripts/validate_binding.py": {
-      "bytes": 1233,
-      "sha256": "28438ce1db549b89fcbfe6abf07dc175731fd6dcfe3c77b4f3bb8d920e667a1d"
+      "bytes": 1327,
+      "sha256": "1a18bd65e0020bb6ba16cf11ee89a7929d42af141f52871da0cadb018a5d9495"
     },
     "scripts/validate_final_app.py": {
       "bytes": 3530,
@@ -469,12 +469,12 @@
       "sha256": "1f79fba4e4eea5e201f8ebb2c8f684e36f14d1595c546aedf41fd5e20f0e1913"
     },
     "validation-bindings/engine-acceptance.json": {
-      "bytes": 1526,
-      "sha256": "71d8e3e282d8d2b4a3abc5c1233a3eb280038bfbeec697708f9658ebca219016"
+      "bytes": 1398,
+      "sha256": "b9eb3f70e6bfe93c844f7cc0e1fe895f761b7fe8eef9e97e50bccd58955e3ae4"
     },
     "validation-bindings/engine-flavor-correspondence.json": {
       "bytes": 3445,
-      "sha256": "9ea8348fc4bd59a2fd248604aa7d9901fa63527922b2defc599de25977cbed7d"
+      "sha256": "26a51067fb224c6a8a5e11618e96b65a1d14f8dbb4db6b27316f1616cc5270b9"
     },
     "validation-bindings/historical/app-metadata/App/Resources/Web/Ruffle-MODIFICATIONS.md": {
       "bytes": 4105,
@@ -497,8 +497,8 @@
       "sha256": "022c9939e113904bf83bbf245285025904f3cb9bd093e67ec592a01b478208a9"
     },
     "validation-bindings/native-binding.json": {
-      "bytes": 26798,
-      "sha256": "c67790ab6afc77570e9e31c6cde1289aa6ec62057d9bc7df6bb09d3cf6ff1bf9"
+      "bytes": 26799,
+      "sha256": "67db3343be6100f7025c2db9663052206c00695270b2cfd664c128159613c719"
     },
     "validation-bindings/sampling-baseline-approved-app.json": {
       "bytes": 30481,
@@ -1152,6 +1152,7 @@
           "validation-harness/browser-runtime-validation"
         ]
       ],
+      "dispatchAllowed": true,
       "expectedRowsPerExecutedPath": 290,
       "harnessManifestSHA256": "607a37bcc1fd2c5104bdb626989b0a33fa1f0318b663f69d5aa6877a921b5936",
       "mvpSelectionOptionalWhenNoSupportedRoute": true,
@@ -1185,6 +1186,7 @@
           "scripts/run_native_validation.py"
         ]
       ],
+      "dispatchAllowed": false,
       "evidenceKind": "iOS simulator",
       "perCommandTimeoutSeconds": 8100,
       "physicalDeviceCertified": false,
@@ -1196,6 +1198,6 @@
       ]
     }
   },
-  "reason": "Exact corrected engine and independently reviewed final App/native binding; actual validation still required",
+  "reason": "Exact new touch-contact engine and App bound for browser only; native v2 historical target oracle and complete binding remain pending.",
   "schemaVersion": 1
 }

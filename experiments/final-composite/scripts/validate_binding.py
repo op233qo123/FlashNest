@@ -11,6 +11,7 @@ for rel,row in lock['harnessFiles'].items():
  f=a.root/safe(rel)
  if f.is_symlink() or hashlib.sha256(f.read_bytes()).hexdigest()!=row['sha256']:raise SystemExit('Harness changed: '+rel)
 lane=lock['lanes'][a.lane]
+if lane.get('dispatchAllowed') is not True:raise SystemExit('Lane dispatch blocked: '+a.lane)
 if not lane['commands'] or not lane['verifier']:raise SystemExit('Missing explicit reviewed commands/verifier')
 for command in lane['commands']+[lane['verifier']]:
  if not isinstance(command,list) or not command or not all(isinstance(arg,str) and arg for arg in command):raise SystemExit('Command must be nonempty argv array')
