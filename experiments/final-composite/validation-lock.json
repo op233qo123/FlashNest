@@ -130,7 +130,7 @@
       "UITests/LibraryNavigation.swift": "481c5a5822ef96fca610ab4da5287b7c47bafe108d7c00f4905678b7201dc140",
       "UITests/LibraryToolbarDiagnosticsUITests.swift": "2eb3e026d5c82035fb854ad9ef1f3746bf0ccdf984a06e3e32549da997fff8ea",
       "UITests/LifecyclePlayerUITests.swift": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
-      "UITests/RendererCompatibilityUITests.swift": "9f24bd17efb0698c2b6ad5e3f58b7a0c818fbb8305d41f3dff35d70712ffd3d6",
+      "UITests/RendererCompatibilityUITests.swift": "c4e9c82ef5cd75ecdbc8af98f2c1f1d44b83fcc8df63d2c129b675df8201bc2e",
       "experiments/frame-order/FrameOrderRuntimeTests.swift": "5beb4b3205cf5b7b8fe09a8b5cc0b946a235612501d2072a50ab255c7db92308",
       "experiments/frame-order/candidate-native/FrameOrderCandidateRuntimeTests.swift": "cc21f16dbd9341d9f1256baf72384fe41e3a786d14235f5153e974ca3d730645",
       "experiments/frame-order/engine-patch/expectations/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
@@ -326,7 +326,7 @@
     "UITests/LibraryNavigation.swift": "481c5a5822ef96fca610ab4da5287b7c47bafe108d7c00f4905678b7201dc140",
     "UITests/LibraryToolbarDiagnosticsUITests.swift": "2eb3e026d5c82035fb854ad9ef1f3746bf0ccdf984a06e3e32549da997fff8ea",
     "UITests/LifecyclePlayerUITests.swift": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
-    "UITests/RendererCompatibilityUITests.swift": "9f24bd17efb0698c2b6ad5e3f58b7a0c818fbb8305d41f3dff35d70712ffd3d6",
+    "UITests/RendererCompatibilityUITests.swift": "c4e9c82ef5cd75ecdbc8af98f2c1f1d44b83fcc8df63d2c129b675df8201bc2e",
     "experiments/frame-order/FrameOrderRuntimeTests.swift": "5beb4b3205cf5b7b8fe09a8b5cc0b946a235612501d2072a50ab255c7db92308",
     "experiments/frame-order/candidate-native/FrameOrderCandidateRuntimeTests.swift": "cc21f16dbd9341d9f1256baf72384fe41e3a786d14235f5153e974ca3d730645",
     "experiments/frame-order/engine-patch/expectations/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
@@ -474,8 +474,8 @@
       "sha256": "ca0b9cbde4f1ea890cb4d6e612c1657d77bd4368a3993ca71085bf6d54918633"
     },
     "scripts/verify_lane_receipt.py": {
-      "bytes": 3455,
-      "sha256": "4fee40f62662d7a0002472d8f40ed4fceab23112e61a35c820738da0a5b14d4c"
+      "bytes": 3758,
+      "sha256": "6822d0b8a9ae99c0bbca6072a37ba6adb960d0130f90b5f23174ec34f5ee5c74"
     },
     "validation-bindings/engine-acceptance.json": {
       "bytes": 1398,
@@ -506,8 +506,8 @@
       "sha256": "022c9939e113904bf83bbf245285025904f3cb9bd093e67ec592a01b478208a9"
     },
     "validation-bindings/native-binding.json": {
-      "bytes": 26798,
-      "sha256": "dcdfd59e77b8eef32d6dd414ab196a76349c335c890660d7086ba5e73080c53c"
+      "bytes": 26799,
+      "sha256": "eef497f110f3ebb0fcf5766af54072691c8414ded10863252a73532b6bdd6fb7"
     },
     "validation-bindings/sampling-baseline-approved-app.json": {
       "bytes": 30481,
@@ -542,24 +542,24 @@
       "sha256": "bdb97b8e97e3c1bb0213d83ea5c541891643454cea347961c60038670d0f06dd"
     },
     "validation-harness/browser-runtime-validation-ci/README.md": {
-      "bytes": 4209,
-      "sha256": "f2ff83b499f490244e0fa4cd8bab045bf3cb3973d5edbaa9cb1c2fb603d89f20"
+      "bytes": 4833,
+      "sha256": "46c27ea6b0383a3c9e3d81cf537e30109307534ec6318cb5ef663d6eefadd94e"
     },
     "validation-harness/browser-runtime-validation-ci/file-manifest.json": {
       "bytes": 593,
-      "sha256": "428e273589d52e94501940e434dee7a4036817221a8d88602d08afe9f3993775"
+      "sha256": "cd649b76862bdc512cb7a513cdf26361ffdf6b5150d632ff8d2860eea4276313"
     },
     "validation-harness/browser-runtime-validation-ci/run.py": {
-      "bytes": 8835,
-      "sha256": "64fa7054c78f79d5277bdc5b28f44816cad82a66563bd74201d057cc0ef83650"
+      "bytes": 9335,
+      "sha256": "925f0ec9c793f56a308f237c44fc7720fa46defa3590f7ac647e8bb62a6d68d7"
     },
     "validation-harness/browser-runtime-validation-ci/test_runner.py": {
       "bytes": 3825,
-      "sha256": "7e16dec72800c0872e31d00c01b369667dca4227c6e830de4aa6698e6d1ba58b"
+      "sha256": "f8c1ae10fbf15edf1edf01342881d12aec34002b700f4d13866084d5674bb72d"
     },
     "validation-harness/browser-runtime-validation/README.md": {
-      "bytes": 5063,
-      "sha256": "3985178ab769d49f6a3995b3924e7693c045582ad3aab7ac41cce6f2785fc386"
+      "bytes": 5684,
+      "sha256": "ee485709c70882e2f93c6b1ea08f986f76e35ce1dcdc6615a286f7078fa81ca1"
     },
     "validation-harness/browser-runtime-validation/fixtures/exactFit-B.swf": {
       "bytes": 1879,
@@ -710,16 +710,24 @@
       "sha256": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac"
     },
     "validation-harness/browser-runtime-validation/manifest.json": {
-      "bytes": 7932,
-      "sha256": "607a37bcc1fd2c5104bdb626989b0a33fa1f0318b663f69d5aa6877a921b5936"
+      "bytes": 8236,
+      "sha256": "6e544655adacf631deb98a9bdf46811e6cf877aba2db98953c71a66123599bf4"
     },
     "validation-harness/browser-runtime-validation/matrix-plan.json": {
       "bytes": 163192,
       "sha256": "0979986409d8d34d76dbbe8ba83f8a68d9e79d376a830413b8cf35ceb7541061"
     },
     "validation-harness/browser-runtime-validation/page.html": {
-      "bytes": 9555,
-      "sha256": "670b6f691cde740f66b9fd0edd08e5466abda9645da43f31a2369f4ff6208f03"
+      "bytes": 9646,
+      "sha256": "8f13a30c93f4f5780dd5bc9a5538f4c0902139bd1dc9d2ce268ca228fdc9e301"
+    },
+    "validation-harness/browser-runtime-validation/provenance/app-renderer-policy.json": {
+      "bytes": 588,
+      "sha256": "6f02ef9a09f3d0caced793e3387819b98c2b9315d1dd1cea0a82025cf423e98a"
+    },
+    "validation-harness/browser-runtime-validation/provenance/app-shell.js": {
+      "bytes": 25162,
+      "sha256": "d67042567a28376d6555a7e97a3a3b63885e15c625f618b38dfec96887638b12"
     },
     "validation-harness/browser-runtime-validation/provenance/delivered-155-runtime.json": {
       "bytes": 6551,
@@ -730,16 +738,16 @@
       "sha256": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574"
     },
     "validation-harness/browser-runtime-validation/scripts/browser_matrix.py": {
-      "bytes": 11002,
-      "sha256": "10ed09b213cc9dd41abf413d97f868772d3bcf3599b4ff41ed373abed248abeb"
+      "bytes": 11065,
+      "sha256": "8f3772cfcd74aa2020ccb22aa44b4712d9e52e579e8a42db8f853d11a47af2e6"
     },
     "validation-harness/browser-runtime-validation/scripts/browser_preflight.py": {
       "bytes": 3149,
       "sha256": "dc4b67b7a7b70ce1674840f613147828c10a68e2b65716dbe1c60ebea80c88ec"
     },
     "validation-harness/browser-runtime-validation/scripts/contracts.py": {
-      "bytes": 5471,
-      "sha256": "3899231e759b1e3972984f572d9e5a897bffaacf3dc91f71d576a7f973eb9266"
+      "bytes": 5814,
+      "sha256": "60c16d864c235c9ed7cc467e658f4a293786a9370de2ab5282ed25dd8f41b6a0"
     },
     "validation-harness/browser-runtime-validation/scripts/evidence_budget.py": {
       "bytes": 1819,
@@ -750,20 +758,20 @@
       "sha256": "4725bf77716ebf38b327034f97888e9156f61505ac94f579219d6d2d46373147"
     },
     "validation-harness/browser-runtime-validation/scripts/prepare_contract.py": {
-      "bytes": 1580,
-      "sha256": "2cfc55b8cf68ed27d69730da3b7abeb02ff6ffedad5d3d9f0b71d7967d3dacff"
+      "bytes": 1624,
+      "sha256": "358a8c03ca4839a4c1812d24b03bb413b52e384db7426370bc0c824cdf56a5d8"
     },
     "validation-harness/browser-runtime-validation/scripts/test_contracts.py": {
-      "bytes": 6148,
-      "sha256": "0798e8a2591df2b61ddfb25b75c4063ab5ec3a792c91f13407afc78bc53c9858"
+      "bytes": 6722,
+      "sha256": "629538cae989053b16ef61ed9469012050282d1d1db892ce34e7ec887431c97a"
     },
     "validation-harness/browser-runtime-validation/scripts/test_page.cjs": {
-      "bytes": 3014,
-      "sha256": "6935081a2d048a94473c0198c35768a5d3e5ff316e7314149fe2cd0de98770ef"
+      "bytes": 4354,
+      "sha256": "afb8495446e5f721e1a13af9662bfd2effe00ef4301c47114e6de19c58e5575f"
     },
     "validation-harness/browser-runtime-validation/scripts/verify_results.py": {
-      "bytes": 3754,
-      "sha256": "52d64cfb5ab7593a6f1a00d80950b4aff0acc3c1bd1031b321f751030b1ec73f"
+      "bytes": 3817,
+      "sha256": "5a5fa9e72c3dfec2ff521e04c8c6b579f905a69f598d6d48158d81fe5c3cc127"
     },
     "validation-harness/native-composite-runner/README.md": {
       "bytes": 7359,
@@ -1161,6 +1169,21 @@
   },
   "lanes": {
     "browser": {
+      "appRendererPolicy": {
+        "appShellPath": "App/Resources/Web/shell.js",
+        "appShellSHA256": "d67042567a28376d6555a7e97a3a3b63885e15c625f618b38dfec96887638b12",
+        "automatic": {
+          "preferredRenderer": "webgl"
+        },
+        "baselineMeaning": "Exact delivered 1.5.5 runtime under current controlled App renderer policy; not historical old App Automatic behavior",
+        "enhanced": {},
+        "enhancedEvidence": "Exact source and JS forwarding control only; not a healthy renderer matrix or native/device proof",
+        "oldBrowserReceiptReusable": false,
+        "schemaVersion": 1,
+        "webgl": {
+          "preferredRenderer": "webgl"
+        }
+      },
       "commands": [
         [
           "validation-venv/bin/python",
@@ -1185,9 +1208,9 @@
           "validation-harness/browser-runtime-validation"
         ]
       ],
-      "dispatchAllowed": false,
+      "dispatchAllowed": true,
       "expectedRowsPerExecutedPath": 290,
-      "harnessManifestSHA256": "607a37bcc1fd2c5104bdb626989b0a33fa1f0318b663f69d5aa6877a921b5936",
+      "harnessManifestSHA256": "6e544655adacf631deb98a9bdf46811e6cf877aba2db98953c71a66123599bf4",
       "mvpSelectionOptionalWhenNoSupportedRoute": true,
       "perCommandTimeoutSeconds": 2400,
       "requiredShippingSelectionProof": true,
@@ -1219,7 +1242,7 @@
           "scripts/run_native_validation.py"
         ]
       ],
-      "dispatchAllowed": true,
+      "dispatchAllowed": false,
       "evidenceKind": "iOS simulator",
       "perCommandTimeoutSeconds": 8100,
       "physicalDeviceCertified": false,
@@ -1231,6 +1254,6 @@
       ]
     }
   },
-  "reason": "Reviewed three-mode App; only same-player Automatic context diagnostic eligible. Full native v3 and new browser remain pending.",
+  "reason": "Reviewed compatibility-first current App policy browser290 only; actual browser/native positive results pending, old native matrix blocked.",
   "schemaVersion": 1
 }

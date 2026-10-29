@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "appShellPath": "App/Resources/Web/shell.js",
+  "appShellSHA256": "d67042567a28376d6555a7e97a3a3b63885e15c625f618b38dfec96887638b12",
+  "automatic": {
+    "preferredRenderer": "webgl"
+  },
+  "webgl": {
+    "preferredRenderer": "webgl"
+  },
+  "enhanced": {},
+  "baselineMeaning": "Exact delivered 1.5.5 runtime under current controlled App renderer policy; not historical old App Automatic behavior",
+  "enhancedEvidence": "Exact source and JS forwarding control only; not a healthy renderer matrix or native/device proof",
+  "oldBrowserReceiptReusable": false
+}

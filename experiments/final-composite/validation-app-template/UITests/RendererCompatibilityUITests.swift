@@ -48,6 +48,8 @@ final class RendererCompatibilityUITests: XCTestCase {
                        "Selected for next opening or reload")
         requireCurrent("Automatic (compatibility first)", app)
         evidence("Enhanced is saved for a later opening; live Automatic page unchanged", app)
+        // Current-player details are below the choices; return upward before selecting.
+        reveal(app.buttons["renderer-mode-webgl"].firstMatch, app, upwards: false)
         tap("renderer-mode-webgl", app)
         XCTAssertEqual(app.buttons["renderer-mode-webgl"].firstMatch.value as? String,
                        "Selected for next opening or reload")

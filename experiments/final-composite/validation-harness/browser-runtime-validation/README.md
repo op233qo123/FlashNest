@@ -76,3 +76,6 @@ GPU, memory, audible audio or crash-resolution claims follow from desktop result
 complete runtime bindings, null-quality semantics, MSAA evidence rejection, fallback,
 physical mappings, stale status, pointer mutations and noncenter clipped visual oracle.
 JavaScript observer tests run separately in Node and are mocked, not GPU evidence.
+
+## Current three-mode App policy overlay
+Automatic production rows forward preferredRenderer=webgl for both arms. Baseline is exact delivered 1.5.5 runtime under CURRENT controlled App policy, NOT its historical Automatic behavior. Explicit wgpu-webgl, WebGL, Canvas and all pixel/input/MSAA/fallback/noncenter oracles remain unchanged. Enhanced omission is exact frozen App source + executed JS forwarding control only, not a healthy rendering claim. Old native Automatic context-loss negatives remain valid independently. Earlier browser run40796744945 does not certify this new policy. New browser execution pending.

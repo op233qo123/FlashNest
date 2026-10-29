@@ -55,7 +55,7 @@ def expected_scale(row,m):
  if row['renderer']!='auto':assert renderer==row['renderer'],(row,renderer)
  if row['quality'] is None:assert 'quality' not in m['launchConfig'],'Default quality was overwritten'
  else:assert m['launchConfig']['quality']==row['quality']
- if row['renderer']=='auto':assert 'preferredRenderer' not in m['launchConfig']
+ if row['renderer']=='auto':assert m['launchConfig'].get('preferredRenderer')=='webgl','Current App Automatic preference not forwarded'
  assert not m['allocationOverflow'],'Allocator observation overflow'
  # Custom allocator samples—not gl.SAMPLES—prove the direct WebGL2 MSAA path.
  if row['group']=='production-controls' and renderer=='webgl' and resolved_quality(row,m) in ['high','medium']:
@@ -86,3 +86,9 @@ def near(rows,expected):
   for x,y in zip(row,ref):
    try:assert abs(float(x)-float(y))<=.1,(x,y)
    except ValueError:assert x==y,(x,y)
+
+def app_policy():
+ policy=json.loads((ROOT/'provenance/app-renderer-policy.json').read_text())
+ assert digest(ROOT/'provenance/app-shell.js')==policy['appShellSHA256']
+ assert policy['automatic']==policy['webgl']=={'preferredRenderer':'webgl'} and policy['enhanced']=={}
+ return policy

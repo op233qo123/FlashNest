@@ -13,6 +13,10 @@ if lane=='browser':
  assert report['realLoaderPaths']==[engine['wasmFlavorBySHA256'][report['selectedWasmSHA256']]]
  assert report['verification']['rows']==290 and report['verification']['phases']==870 and report['verification']['trustedClicks']==4350
  assert report['physicalDeviceCertified'] is False
+ assert report['harnessManifestSHA256']==lock['lanes']['browser']['harnessManifestSHA256']
+ assert report['appRendererPolicy']==lock['lanes']['browser']['appRendererPolicy']
+ policy=report['appRendererPolicy']
+ assert lock['appSourceManifest']['files'][policy['appShellPath']]==policy['appShellSHA256']
 else:
  assert report['evidenceKind']=='iOS simulator' and report['physicalDeviceCertified'] is False
  assert report['nativeMethods']==161 and report['samplingRows']==52 and report['samplingPhases']==156

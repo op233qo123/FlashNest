@@ -129,7 +129,7 @@
     "UITests/LibraryNavigation.swift": "481c5a5822ef96fca610ab4da5287b7c47bafe108d7c00f4905678b7201dc140",
     "UITests/LibraryToolbarDiagnosticsUITests.swift": "2eb3e026d5c82035fb854ad9ef1f3746bf0ccdf984a06e3e32549da997fff8ea",
     "UITests/LifecyclePlayerUITests.swift": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
-    "UITests/RendererCompatibilityUITests.swift": "9f24bd17efb0698c2b6ad5e3f58b7a0c818fbb8305d41f3dff35d70712ffd3d6",
+    "UITests/RendererCompatibilityUITests.swift": "c4e9c82ef5cd75ecdbc8af98f2c1f1d44b83fcc8df63d2c129b675df8201bc2e",
     "experiments/frame-order/FrameOrderRuntimeTests.swift": "5beb4b3205cf5b7b8fe09a8b5cc0b946a235612501d2072a50ab255c7db92308",
     "experiments/frame-order/candidate-native/FrameOrderCandidateRuntimeTests.swift": "cc21f16dbd9341d9f1256baf72384fe41e3a786d14235f5153e974ca3d730645",
     "experiments/frame-order/engine-patch/expectations/control.txt": "cb1f8c5a8f0770d7ed9c92fd3219dc11294746258fa9a4ec8558c82eda9626c0",
@@ -257,7 +257,7 @@
     "sha256": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a"
   },
   "helperLockSHA256": "86467927e7ef4b44b66b3a03fe33daea8710efefea44ce020c92b57014833e5b",
-  "ready": true,
+  "ready": false,
   "samplingAppManifests": {
     "baseline": {
       "path": "sampling-baseline-approved-app.json",

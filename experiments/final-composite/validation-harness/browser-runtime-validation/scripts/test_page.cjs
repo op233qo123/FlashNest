@@ -22,9 +22,23 @@ new Device().createTexture({size:[111,72],sampleCount:4});assert.equal(JSON.stri
 const api={load:async config=>{loadConfig=config},resume(){}};sandbox.RufflePlayer.newest=()=>({createPlayer:()=>({ruffle:()=>api,addEventListener(){},remove(){}})});
 (async()=>{
  await sandbox.startCase('/fixtures/showAll-center.swf',.25,443,287,'auto',null);
- assert.equal('quality' in loadConfig,false);assert.equal('preferredRenderer' in loadConfig,false);assert.equal(loadConfig.renderScale,.25);
+ assert.equal('quality' in loadConfig,false);assert.equal(loadConfig.preferredRenderer,'webgl');assert.equal(loadConfig.renderScale,.25);
  await sandbox.startCase('/fixtures/showAll-center.swf',.25,443,287,'webgl','high');
  assert.equal(loadConfig.quality,'high');assert.equal(loadConfig.preferredRenderer,'webgl');
+ // Execute exact declarations AND exact load-object spread from the frozen real App shell.
+ const app=fs.readFileSync(require('node:path').join(__dirname,'../provenance/app-shell.js'),'utf8');
+ const policy=JSON.parse(fs.readFileSync(require('node:path').join(__dirname,'../provenance/app-renderer-policy.json'),'utf8'));
+ assert.equal(require('node:crypto').createHash('sha256').update(app).digest('hex'),policy.appShellSHA256);
+ const declarations=app.match(/  const rendererToken =[^\n]+\n  const rendererPolicy =[^\n]+\n  const requestedRenderer =[^\n]+/)[0];
+ const spread=app.match(/\.\.\.\(requestedRenderer \? \{preferredRenderer:requestedRenderer\} : \{\}\)/)[0];
+ for(const token of [null,'automatic','webgl','enhanced','invalid']) {
+   const actual=vm.runInNewContext(declarations+'; JSON.stringify({'+spread+'})',{URLSearchParams,location:{search:token===null?'':'?renderer='+token}});
+   const mode=token==='enhanced'?'enhanced':token==='webgl'?'webgl':'automatic';
+   assert.deepEqual(JSON.parse(actual),policy[mode]);
+   await sandbox.startCase('/fixtures/showAll-center.swf',.25,443,287,mode==='automatic'?'auto':mode,null);
+   assert.equal('quality' in loadConfig,false);
+   assert.deepEqual(JSON.parse(JSON.stringify(loadConfig.preferredRenderer?{preferredRenderer:loadConfig.preferredRenderer}:{})),JSON.parse(actual));
+ }
  assert.equal(sandbox.allocationOverflow,false);
  console.log('PASS transparent allocator, dedup, WebGPU texture, omitted/default and explicit launch config (mocked only)');
 })().catch(e=>{console.error(e);process.exitCode=1});

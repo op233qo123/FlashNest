@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "status": "AUTHORED_LOCAL_TESTED_NO_BROWSER_EXECUTION",
-  "frozenHarnessManifestSHA256": "c688a37a6b1938f05ca6a5308e26852e4d5271a5098931f90c4be136362bd1f6",
+  "frozenHarnessManifestSHA256": "6e544655adacf631deb98a9bdf46811e6cf877aba2db98953c71a66123599bf4",
   "files": {
     "README.md": {
-      "sha256": "f2ff83b499f490244e0fa4cd8bab045bf3cb3973d5edbaa9cb1c2fb603d89f20",
-      "bytes": 4209
+      "sha256": "46c27ea6b0383a3c9e3d81cf537e30109307534ec6318cb5ef663d6eefadd94e",
+      "bytes": 4833
     },
     "run.py": {
-      "sha256": "64fa7054c78f79d5277bdc5b28f44816cad82a66563bd74201d057cc0ef83650",
-      "bytes": 8835
+      "sha256": "925f0ec9c793f56a308f237c44fc7720fa46defa3590f7ac647e8bb62a6d68d7",
+      "bytes": 9335
     },
     "test_runner.py": {
-      "sha256": "7e16dec72800c0872e31d00c01b369667dca4227c6e830de4aa6698e6d1ba58b",
+      "sha256": "f8c1ae10fbf15edf1edf01342881d12aec34002b700f4d13866084d5674bb72d",
       "bytes": 3825
     }
   }

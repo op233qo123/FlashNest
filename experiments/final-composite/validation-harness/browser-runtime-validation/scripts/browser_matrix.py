@@ -2,7 +2,7 @@
 """290 final-runtime rows on the actual unmodified shipping loader selection."""
 import argparse,hashlib,http.server,io,json,math,pathlib,threading,time,traceback
 from urllib.parse import unquote,urlparse
-from contracts import ROOT,bind,digest,matrix,key,verify_measure,near,verify_baseline_entry
+from contracts import app_policy,ROOT,bind,digest,matrix,key,verify_measure,near,verify_baseline_entry
 from pixel_checks import compare,validate_warning
 from evidence_budget import write_png,write_json
 
@@ -42,6 +42,7 @@ def run(a):
  assert preflight['playwright']=='1.64.1'
  assert contract['finalComposite'] is True and contract['baselineRunID']==40614335019
  verify_baseline_entry(contract['baseline'])
+ assert contract['appRendererPolicy']==app_policy()
  routes={'baseline':a.baseline.resolve(),'candidate':a.candidate.resolve(),'fixtures':ROOT/'fixtures'}
  pins={arm:bind(routes[arm],contract[arm]) for arm in ['baseline','candidate']}
  assert contract['fixtureManifestSHA256']==digest(ROOT/'fixtures/manifest.json')

@@ -14,7 +14,7 @@ def sha(path):
 def dump(path,obj):P(path).parent.mkdir(parents=True,exist_ok=True);P(path).write_text(json.dumps(obj,indent=2,sort_keys=True)+'\n')
 def verify_harness(root,expected):
  root=P(root);manifest=root/'manifest.json';need(sha(manifest)==expected,'Reviewed browser harness manifest differs')
- files=json.loads(manifest.read_text())['files'];need(len(files)==51,'Corrected full51-file harness required')
+ files=json.loads(manifest.read_text())['files'];need(len(files)==53,'Source-bound full53-file harness required')
  for rel,row in files.items():
   p=root/rel;need(not p.is_symlink() and p.is_file() and p.resolve().is_relative_to(root.resolve()),'Unsafe harness member')
   need(sha(p)==row['sha256'] and p.stat().st_size==row['bytes'],'Harness bytes changed: '+rel)
@@ -73,6 +73,9 @@ class Runner:
   need(prov['run']['GITHUB_SHA']==e['sourceCommit'] and prov['run']['GITHUB_RUN_ID']==str(e['runID']),'Final engine run/source differs')
   need(prov['sourceSetSHA256']==e['sourceSetSHA256'],'Final engine source set differs')
   files=verify_harness(self.harness,self.cfg['harnessManifestSHA256'])
+  policy=json.loads((self.harness/'provenance/app-renderer-policy.json').read_text())
+  need(self.cfg.get('appRendererPolicy')==policy,'Final App renderer policy binding missing or stale')
+  need(self.lock['appSourceManifest']['files'].get(policy['appShellPath'])==policy['appShellSHA256'],'Final actual App shell differs from browser policy source')
   self.work.mkdir()
   for rel in ['manifest.json',*files]:
    target=self.work/rel;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(self.harness/rel,target)
@@ -98,6 +101,7 @@ class Runner:
  def execute(self):
   try:
    self.prepare()
+   self.command(['node','scripts/test_page.cjs'],'app-policy-forwarding-control',30)
    self.command([sys.executable,'scripts/browser_preflight.py'],'browser-preflight',90)
    self.command([sys.executable,'scripts/browser_matrix.py','--candidate',self.root/'staged-engine/runtime',
     '--baseline',self.root/'baseline-bundle/sampling/runtime','--contract',self.binding],'browser-matrix',2100)
@@ -107,6 +111,7 @@ class Runner:
    report=receipt_from_result(result,verified,self.lock['engine'],sha(self.binding))
    verify_harness(self.work,self.cfg['harnessManifestSHA256']);verify_harness(self.harness,self.cfg['harnessManifestSHA256'])
    self.collect();report['matrixResultSHA256']=sha(self.out/'matrix/result.json')
+   report['appRendererPolicy']=self.cfg['appRendererPolicy']
    report['independentVerifierSHA256']=sha(verified_log);report['harnessManifestSHA256']=self.cfg['harnessManifestSHA256']
    dump(self.root/'evidence/browser-acceptance.json',report);print('PASS exact290-row real shipping browser path; no native or IPA claim')
   except BaseException as exc:

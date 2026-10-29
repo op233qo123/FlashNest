@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Recheck complete raw results; no authored checks count as runtime evidence."""
 import argparse,json,pathlib,hashlib,io
-from contracts import ROOT,matrix,key,verify_measure,near,digest,verify_baseline_entry
+from contracts import app_policy,ROOT,matrix,key,verify_measure,near,digest,verify_baseline_entry
 from pixel_checks import compare
 
 def verify(path,contract_path):
  from PIL import Image
  result=json.loads(path.read_text());contract=json.loads(contract_path.read_text());verify_baseline_entry(contract['baseline'])
+ assert contract['appRendererPolicy']==app_policy()
  assert result['passed'] is True and result['runtimeBindingSHA256']==digest(contract_path)
  preflight=json.loads((path.parent/'browser-preflight.json').read_text())
  assert preflight['passed'] is True and result['preflightSHA256']==digest(path.parent/'browser-preflight.json')

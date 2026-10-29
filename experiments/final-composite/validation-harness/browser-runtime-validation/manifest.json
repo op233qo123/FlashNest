@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "AUTHORED_LOCAL_TESTED_NATIVE_AND_BROWSER_EXECUTION_PENDING",
+  "status": "AUTHORED_LOCAL_TESTED_NEW_APP_POLICY_BROWSER_EXECUTION_PENDING",
   "expectedRows": 290,
   "expectedPhases": 870,
   "expectedTrustedClicks": 4350,
@@ -9,8 +9,8 @@
   "mvpSelectionNotEstablished": true,
   "files": {
     "README.md": {
-      "sha256": "3985178ab769d49f6a3995b3924e7693c045582ad3aab7ac41cce6f2785fc386",
-      "bytes": 5063
+      "sha256": "ee485709c70882e2f93c6b1ea08f986f76e35ce1dcdc6615a286f7078fa81ca1",
+      "bytes": 5684
     },
     "fixtures/exactFit-B.swf": {
       "sha256": "f923ee1b6e4e0bb3fdd752e58dd352b5c04953aaf66273bc29f8205eddae534d",
@@ -165,8 +165,16 @@
       "bytes": 163192
     },
     "page.html": {
-      "sha256": "670b6f691cde740f66b9fd0edd08e5466abda9645da43f31a2369f4ff6208f03",
-      "bytes": 9555
+      "sha256": "8f13a30c93f4f5780dd5bc9a5538f4c0902139bd1dc9d2ce268ca228fdc9e301",
+      "bytes": 9646
+    },
+    "provenance/app-renderer-policy.json": {
+      "sha256": "6f02ef9a09f3d0caced793e3387819b98c2b9315d1dd1cea0a82025cf423e98a",
+      "bytes": 588
+    },
+    "provenance/app-shell.js": {
+      "sha256": "d67042567a28376d6555a7e97a3a3b63885e15c625f618b38dfec96887638b12",
+      "bytes": 25162
     },
     "provenance/delivered-155-runtime.json": {
       "sha256": "4f6c0ce66c2287ecaf64246e92b9b72b4e5d354fdaafdbe2b4c48243eaf5d3b4",
@@ -177,16 +185,16 @@
       "bytes": 89
     },
     "scripts/browser_matrix.py": {
-      "sha256": "10ed09b213cc9dd41abf413d97f868772d3bcf3599b4ff41ed373abed248abeb",
-      "bytes": 11002
+      "sha256": "8f3772cfcd74aa2020ccb22aa44b4712d9e52e579e8a42db8f853d11a47af2e6",
+      "bytes": 11065
     },
     "scripts/browser_preflight.py": {
       "sha256": "dc4b67b7a7b70ce1674840f613147828c10a68e2b65716dbe1c60ebea80c88ec",
       "bytes": 3149
     },
     "scripts/contracts.py": {
-      "sha256": "3899231e759b1e3972984f572d9e5a897bffaacf3dc91f71d576a7f973eb9266",
-      "bytes": 5471
+      "sha256": "60c16d864c235c9ed7cc467e658f4a293786a9370de2ab5282ed25dd8f41b6a0",
+      "bytes": 5814
     },
     "scripts/evidence_budget.py": {
       "sha256": "2f2f5c9735e014819917532f9158f91d9af3ab7e7db10a40abece5a4ff2a6445",
@@ -197,20 +205,20 @@
       "bytes": 1592
     },
     "scripts/prepare_contract.py": {
-      "sha256": "2cfc55b8cf68ed27d69730da3b7abeb02ff6ffedad5d3d9f0b71d7967d3dacff",
-      "bytes": 1580
+      "sha256": "358a8c03ca4839a4c1812d24b03bb413b52e384db7426370bc0c824cdf56a5d8",
+      "bytes": 1624
     },
     "scripts/test_contracts.py": {
-      "sha256": "0798e8a2591df2b61ddfb25b75c4063ab5ec3a792c91f13407afc78bc53c9858",
-      "bytes": 6148
+      "sha256": "629538cae989053b16ef61ed9469012050282d1d1db892ce34e7ec887431c97a",
+      "bytes": 6722
     },
     "scripts/test_page.cjs": {
-      "sha256": "6935081a2d048a94473c0198c35768a5d3e5ff316e7314149fe2cd0de98770ef",
-      "bytes": 3014
+      "sha256": "afb8495446e5f721e1a13af9662bfd2effe00ef4301c47114e6de19c58e5575f",
+      "bytes": 4354
     },
     "scripts/verify_results.py": {
-      "sha256": "52d64cfb5ab7593a6f1a00d80950b4aff0acc3c1bd1031b321f751030b1ec73f",
-      "bytes": 3754
+      "sha256": "5a5fa9e72c3dfec2ff521e04c8c6b579f905a69f598d6d48158d81fe5c3cc127",
+      "bytes": 3817
     }
   },
   "baselineRole": "actual-delivered-1.5.5-build18-audio-recovery-candidate",

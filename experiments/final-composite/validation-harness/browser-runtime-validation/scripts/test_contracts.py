@@ -25,6 +25,15 @@ class Tests(unittest.TestCase):
   m['mobileQualityBranch']=True;m['storage']=[[1,443,287]];self.assertEqual(resolved_quality(r,m),'low');self.assertEqual(expected_scale(r,m)[0],.25)
   m['launchConfig']['quality']='low'
   with self.assertRaises(AssertionError):expected_scale(r,m)
+ def test_current_auto_preference_not_actual_backend(self):
+  r,m=self.example(renderer='wgpu-webgl',quality='low');r['renderer']='auto';m['launchConfig']['preferredRenderer']='webgl'
+  self.assertEqual(expected_scale(r,m),(.25,1)) # observed constructor fallback is not mislabeled webgl
+  for wrong in [{}, {'preferredRenderer':'wgpu-webgl'}]:
+   m['launchConfig']={**wrong,'quality':'low'}
+   with self.assertRaises(AssertionError):expected_scale(r,m)
+ def test_policy_source_bound(self):
+  from contracts import app_policy
+  self.assertEqual(app_policy()['enhanced'],{})
  def test_real_custom_msaa_required(self):
   r,m=self.example(quality='high');
   with self.assertRaises(AssertionError):expected_scale(r,m)

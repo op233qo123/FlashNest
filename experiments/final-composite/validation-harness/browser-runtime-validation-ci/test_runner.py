@@ -33,7 +33,7 @@ class Tests(unittest.TestCase):
  def test_wrong_binding_rejected(self):
   with self.assertRaises(ValueError):m.receipt_from_result(self.result(),self.verified(),self.engine(),'f'*64)
  def test_frozen_harness(self):
-  self.assertEqual(len(m.verify_harness(H,'c688a37a6b1938f05ca6a5308e26852e4d5271a5098931f90c4be136362bd1f6')),51)
+  self.assertEqual(len(m.verify_harness(H,'6e544655adacf631deb98a9bdf46811e6cf877aba2db98953c71a66123599bf4')),53)
  def test_wrong_harness_pin_rejected(self):
   with self.assertRaises(ValueError):m.verify_harness(H,'0'*64)
  def test_fresh_outputs_only(self):

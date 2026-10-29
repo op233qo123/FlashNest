@@ -67,10 +67,10 @@ window.startCase=async function(fixture,scale,width,height,renderer,quality){
  };
  p.addEventListener('loadeddata',()=>{e.loaded=true},{once:true});
  document.getElementById('play').onclick=()=>api.resume();
- // Diagnostic-only explicit backend selection; production shell is unchanged.
+ // Controlled backend selection; this page does not mutate the shipping shell.
  try {
   const config={url:fixture,renderScale:scale,autoplay:'off',unmuteOverlay:'hidden',allowScriptAccess:false};
-  if(renderer!=='auto')config.preferredRenderer=renderer;
+  if(renderer!=='enhanced')config.preferredRenderer=renderer==='auto'?'webgl':renderer; // Current App Automatic, for BOTH controlled runtime arms.
   if(quality!==null)config.quality=quality; // null means OMIT, never default to Low.
   e.launchConfig=JSON.parse(JSON.stringify(config));
   await api.load(config);

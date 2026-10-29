@@ -1,7 +1,7 @@
 # Final browser lane CI adapter
 
 Authored only. No CI, browser, engine rebuild or IPA dispatch performed here.
-Consumes the frozen corrected51-file browser harness without modifying it.
+Consumes the frozen source-bound53-file browser harness without modifying it.
 
 Invocation from an already reviewed/pinned workflow:
 
@@ -23,7 +23,7 @@ Historical audio is a different baseline-bundle role and is never used here.
   Integrator must prove this from actual flavor outputs/source-map+asset correspondence,
   not size, filename order or guessed hashes. Missing/ambiguous map fails before browser.
 - `lanes.browser.harnessManifestSHA256` is the corrected reviewed browser manifest
-  `c688a37a6b1938f05ca6a5308e26852e4d5271a5098931f90c4be136362bd1f6`.
+  `6e544655adacf631deb98a9bdf46811e6cf877aba2db98953c71a66123599bf4`.
 - `lanes.browser.expectedRowsPerExecutedPath=290`; commands and all wrapper/harness
   files externally pinned by the existing `validate_binding.py` harnessFiles map.
 
@@ -67,3 +67,6 @@ Full command logs capped16MiB, aggregate browser evidence128MiB, matrix original
 The matrix has its own30minute deadline; wrapper allows35minutes for subprocess
 startup/cleanup but cannot relax the matrix deadline. No native, device, audio,
 memory or user-game crash-resolution claim follows from this desktop evidence.
+
+## Current three-mode App policy overlay
+Automatic production rows forward preferredRenderer=webgl for both arms. Baseline is exact delivered 1.5.5 runtime under CURRENT controlled App policy, NOT its historical Automatic behavior. Explicit wgpu-webgl, WebGL, Canvas and all pixel/input/MSAA/fallback/noncenter oracles remain unchanged. Enhanced omission is exact frozen App source + executed JS forwarding control only, not a healthy rendering claim. Old native Automatic context-loss negatives remain valid independently. Earlier browser run40796744945 does not certify this new policy. New browser execution pending.
