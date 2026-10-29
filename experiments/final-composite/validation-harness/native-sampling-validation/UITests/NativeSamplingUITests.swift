@@ -13,18 +13,30 @@ final class NativeSamplingUITests: XCTestCase {
         identity = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         XCUIDevice.shared.orientation = .portrait
     }
-    func testShippingAutomaticShowAll() throws { try matrix(renderer: "automatic", mode: "showAll") }
-    func testShippingAutomaticNoScale() throws { try matrix(renderer: "automatic", mode: "noScale") }
-    func testShippingWebGLShowAll() throws { try matrix(renderer: "webgl", mode: "showAll") }
-    func testShippingWebGLNoScale() throws { try matrix(renderer: "webgl", mode: "noScale") }
-    func testDiagnosticLaunchLowWebGLShowAll() throws {
-        guard identity["arm"] as? String == "candidate" else { throw XCTSkip("Explicit quality diagnostic is candidate-only, not a shipping lane") }
-        try matrix(renderer: "webgl", mode: "showAll", quality: "low")
-    }
-    func testDiagnosticLaunchHighWebGLShowAll() throws {
-        guard identity["arm"] as? String == "candidate" else { throw XCTSkip("Explicit High diagnostic is candidate-only") }
-        try matrix(renderer: "webgl", mode: "showAll", quality: "high")
-    }
+    func testShippingWebGLShowAll() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["original"], method: "testShippingWebGLShowAll") }
+    func testShippingWebGLNoScale() throws { try matrix(renderer: "webgl", mode: "noScale", tiers: ["original"], method: "testShippingWebGLNoScale") }
+    func testShippingAutomaticShowAllOriginal() throws { try matrix(renderer: "automatic", mode: "showAll", tiers: ["original"], method: "testShippingAutomaticShowAllOriginal") }
+    func testShippingAutomaticShowAllThreeQuarter() throws { try matrix(renderer: "automatic", mode: "showAll", tiers: ["threeQuarter"], method: "testShippingAutomaticShowAllThreeQuarter") }
+    func testShippingAutomaticShowAllHalf() throws { try matrix(renderer: "automatic", mode: "showAll", tiers: ["half"], method: "testShippingAutomaticShowAllHalf") }
+    func testShippingAutomaticShowAllQuarter() throws { try matrix(renderer: "automatic", mode: "showAll", tiers: ["quarter"], method: "testShippingAutomaticShowAllQuarter") }
+    func testShippingAutomaticNoScaleOriginal() throws { try matrix(renderer: "automatic", mode: "noScale", tiers: ["original"], method: "testShippingAutomaticNoScaleOriginal") }
+    func testShippingAutomaticNoScaleThreeQuarter() throws { try matrix(renderer: "automatic", mode: "noScale", tiers: ["threeQuarter"], method: "testShippingAutomaticNoScaleThreeQuarter") }
+    func testShippingAutomaticNoScaleHalf() throws { try matrix(renderer: "automatic", mode: "noScale", tiers: ["half"], method: "testShippingAutomaticNoScaleHalf") }
+    func testShippingAutomaticNoScaleQuarter() throws { try matrix(renderer: "automatic", mode: "noScale", tiers: ["quarter"], method: "testShippingAutomaticNoScaleQuarter") }
+    func testShippingWebGLShowAllOriginal() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["original"], method: "testShippingWebGLShowAllOriginal") }
+    func testShippingWebGLShowAllThreeQuarter() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["threeQuarter"], method: "testShippingWebGLShowAllThreeQuarter") }
+    func testShippingWebGLShowAllHalf() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["half"], method: "testShippingWebGLShowAllHalf") }
+    func testShippingWebGLShowAllQuarter() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["quarter"], method: "testShippingWebGLShowAllQuarter") }
+    func testShippingWebGLNoScaleOriginal() throws { try matrix(renderer: "webgl", mode: "noScale", tiers: ["original"], method: "testShippingWebGLNoScaleOriginal") }
+    func testShippingWebGLNoScaleThreeQuarter() throws { try matrix(renderer: "webgl", mode: "noScale", tiers: ["threeQuarter"], method: "testShippingWebGLNoScaleThreeQuarter") }
+    func testShippingWebGLNoScaleHalf() throws { try matrix(renderer: "webgl", mode: "noScale", tiers: ["half"], method: "testShippingWebGLNoScaleHalf") }
+    func testShippingWebGLNoScaleQuarter() throws { try matrix(renderer: "webgl", mode: "noScale", tiers: ["quarter"], method: "testShippingWebGLNoScaleQuarter") }
+    func testDiagnosticLaunchLowWebGLShowAllOriginal() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["original"], method: "testDiagnosticLaunchLowWebGLShowAllOriginal", quality: "low") }
+    func testDiagnosticLaunchLowWebGLShowAllQuarter() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["quarter"], method: "testDiagnosticLaunchLowWebGLShowAllQuarter", quality: "low") }
+    func testDiagnosticLaunchHighWebGLShowAllOriginal() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["original"], method: "testDiagnosticLaunchHighWebGLShowAllOriginal", quality: "high") }
+    func testDiagnosticLaunchHighWebGLShowAllThreeQuarter() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["threeQuarter"], method: "testDiagnosticLaunchHighWebGLShowAllThreeQuarter", quality: "high") }
+    func testDiagnosticLaunchHighWebGLShowAllHalf() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["half"], method: "testDiagnosticLaunchHighWebGLShowAllHalf", quality: "high") }
+    func testDiagnosticLaunchHighWebGLShowAllQuarter() throws { try matrix(renderer: "webgl", mode: "showAll", tiers: ["quarter"], method: "testDiagnosticLaunchHighWebGLShowAllQuarter", quality: "high") }
     func testActualInitialRedirectAndNavigationFailure() throws {
         guard identity["arm"] as? String == "candidate" else { throw XCTSkip("Candidate status lifecycle only") }
         let app = XCUIApplication()
@@ -142,9 +154,14 @@ final class NativeSamplingUITests: XCTestCase {
         XCTAssertEqual(failed["status"] as? String, "unknown")
         XCTAssertTrue((failed["navigationEvents"] as? [String] ?? []).contains { ["provisional-failure", "committed-failure"].contains($0) })
     }
-    private func matrix(renderer: String, mode: String, quality: String? = nil) throws {
+    private func matrix(renderer: String, mode: String, tiers: [String], method: String, quality: String? = nil) throws {
         let arm = try XCTUnwrap(identity["arm"] as? String)
-        let tiers = arm == "baseline" ? ["original"] : (quality == "low" ? ["original", "quarter"] : ["original", "threeQuarter", "half", "quarter"])
+        let allowed = arm == "baseline" ? ["original"] : (quality == "low" ? ["original", "quarter"] : ["original", "threeQuarter", "half", "quarter"])
+        guard tiers.count == 1, let selectedTier = tiers.first, allowed.contains(selectedTier),
+              (arm == "candidate" || (arm == "baseline" && renderer == "webgl" && quality == nil)),
+              (arm == "baseline" ? ["testShippingWebGLShowAll", "testShippingWebGLNoScale"].contains(method) : !["testShippingWebGLShowAll", "testShippingWebGLNoScale"].contains(method)) else {
+            throw Failure.invalid("Exact single-tier/arm method contract required")
+        }
         for tier in tiers {
             XCUIDevice.shared.orientation = .portrait
             let app = XCUIApplication()
@@ -210,7 +227,7 @@ final class NativeSamplingUITests: XCTestCase {
                 XCTAssertEqual(trace(after, "RESET").count - trace(before, "RESET").count, 6)
                 XCTAssertEqual(trace(after, "RESET").last!, ["100", "70"])
                 target = [100, 70] // Fixture reset is after UP/motion evidence, never a host mutation.
-                let record: [String: Any] = ["schema": "flashnest-native-sampling-v3", "row": rowID, "arm": arm, "lane": lane,
+                let record: [String: Any] = ["schema": "flashnest-native-sampling-v4", "row": rowID, "arm": arm, "lane": lane, "method": method,
                     "rendererPolicy": renderer, "scaleMode": mode, "tier": tier, "phase": phase,
                     "before": before, "after": after, "points": points, "drag": [drag, end], "cropSHA256": crop]
                 try attachJSON(record, name: rowID + "-" + phase)

@@ -1,0 +1,365 @@
+{
+  "baselineMatrixMethodsPerDPR": 2,
+  "candidateMatrixMethodsPerDPR": 22,
+  "candidateNavigationMethodsPerDPR": 1,
+  "contract": "flashnest-native-sampling-v4",
+  "cropSidecars": 150,
+  "enhancedBoundaryDiagnosticExecutions": 2,
+  "enhancedDiagnosticMethodsPerDPR": 1,
+  "fixtureResets": 864,
+  "matrixPhases": 144,
+  "matrixRows": 48,
+  "methods": {
+    "testActualInitialRedirectAndNavigationFailure": {
+      "arm": "candidate",
+      "kind": "navigation"
+    },
+    "testDiagnosticLaunchHighWebGLShowAllHalf": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "diagnostic-launch-high",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "half"
+    },
+    "testDiagnosticLaunchHighWebGLShowAllOriginal": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "diagnostic-launch-high",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "original"
+    },
+    "testDiagnosticLaunchHighWebGLShowAllQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "diagnostic-launch-high",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "quarter"
+    },
+    "testDiagnosticLaunchHighWebGLShowAllThreeQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "diagnostic-launch-high",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "threeQuarter"
+    },
+    "testDiagnosticLaunchLowWebGLShowAllOriginal": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "diagnostic-launch-low",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "original"
+    },
+    "testDiagnosticLaunchLowWebGLShowAllQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "diagnostic-launch-low",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "quarter"
+    },
+    "testEnhancedProductionPolicyAndErrorBoundary": {
+      "arm": "candidate",
+      "kind": "enhanced-diagnostic",
+      "nativeAcceptance": false
+    },
+    "testShippingAutomaticNoScaleHalf": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "automatic",
+      "scaleMode": "noScale",
+      "tier": "half"
+    },
+    "testShippingAutomaticNoScaleOriginal": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "automatic",
+      "scaleMode": "noScale",
+      "tier": "original"
+    },
+    "testShippingAutomaticNoScaleQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "automatic",
+      "scaleMode": "noScale",
+      "tier": "quarter"
+    },
+    "testShippingAutomaticNoScaleThreeQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "automatic",
+      "scaleMode": "noScale",
+      "tier": "threeQuarter"
+    },
+    "testShippingAutomaticShowAllHalf": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "automatic",
+      "scaleMode": "showAll",
+      "tier": "half"
+    },
+    "testShippingAutomaticShowAllOriginal": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "automatic",
+      "scaleMode": "showAll",
+      "tier": "original"
+    },
+    "testShippingAutomaticShowAllQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": true,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "automatic",
+      "scaleMode": "showAll",
+      "tier": "quarter"
+    },
+    "testShippingAutomaticShowAllThreeQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "automatic",
+      "scaleMode": "showAll",
+      "tier": "threeQuarter"
+    },
+    "testShippingWebGLNoScale": {
+      "arm": "baseline",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "noScale",
+      "tier": "original"
+    },
+    "testShippingWebGLNoScaleHalf": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "noScale",
+      "tier": "half"
+    },
+    "testShippingWebGLNoScaleOriginal": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "noScale",
+      "tier": "original"
+    },
+    "testShippingWebGLNoScaleQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "noScale",
+      "tier": "quarter"
+    },
+    "testShippingWebGLNoScaleThreeQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "noScale",
+      "tier": "threeQuarter"
+    },
+    "testShippingWebGLShowAll": {
+      "arm": "baseline",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "original"
+    },
+    "testShippingWebGLShowAllHalf": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "half"
+    },
+    "testShippingWebGLShowAllOriginal": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "original"
+    },
+    "testShippingWebGLShowAllQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": true,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "quarter"
+    },
+    "testShippingWebGLShowAllThreeQuarter": {
+      "arm": "candidate",
+      "kind": "matrix",
+      "lane": "shipping-default-quality",
+      "lifecycle": false,
+      "phases": [
+        "portrait",
+        "landscape",
+        "portrait-return"
+      ],
+      "rendererPolicy": "webgl",
+      "scaleMode": "showAll",
+      "tier": "threeQuarter"
+    }
+  },
+  "partition": "single-tier-v1",
+  "regressionMethodExecutions": 196,
+  "schema": 1,
+  "totalNativeMethodExecutions": 198,
+  "trustedDrags": 144,
+  "trustedTaps": 720
+}

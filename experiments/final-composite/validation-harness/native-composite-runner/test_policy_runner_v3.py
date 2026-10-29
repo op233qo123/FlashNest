@@ -19,8 +19,8 @@ class PolicyRunner(unittest.TestCase):
     def test_exact_count_and_roles(self):
         lanes=r.selections(APP)
         total=sum(v['expectedCount']*(2 if k in ('sampling-baseline','sampling-candidate','sampling-enhanced-boundary') else 1) for k,v in lanes.items())
-        self.assertEqual(total,166);self.assertEqual(total-2*lanes['sampling-enhanced-boundary']['expectedCount'],164)
+        self.assertEqual(total,198);self.assertEqual(total-2*lanes['sampling-enhanced-boundary']['expectedCount'],196)
         self.assertTrue(all('Automatic' not in s for s in lanes['sampling-baseline']['selectors']))
-        self.assertEqual(lanes['sampling-candidate']['expectedCount'],7)
+        self.assertEqual(lanes['sampling-candidate']['expectedCount'],23)
         self.assertEqual(lanes['renderer-models']['expectedCount'],6);self.assertEqual(lanes['renderer-ui']['expectedCount'],1)
 if __name__=='__main__':unittest.main(verbosity=2)

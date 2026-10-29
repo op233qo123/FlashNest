@@ -1,0 +1,345 @@
+{
+  "contract": "flashnest-native-composite-v4",
+  "enhancedBoundaryDiagnosticExecutions": 2,
+  "regressionMethodExecutions": 196,
+  "runs": [
+    {
+      "expectedCount": 18,
+      "lane": "sampling-gate-off",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "sampling-gate-off",
+      "selectors": [
+        "FlashNestTests/RenderSamplingSettingsTests/testOriginalDefaultAndStrictQueryContract",
+        "FlashNestTests/RenderSamplingSettingsTests/testIsolatedPerGameRoundTripAndCopiedRequest",
+        "FlashNestTests/RenderSamplingSettingsTests/testEveryTierRoundTripsWithoutChangingRenderer",
+        "FlashNestTests/RenderSamplingSettingsTests/testInvalidAndOversizedPreferencesFailClosedWithoutDestructiveMigration",
+        "FlashNestTests/RenderSamplingSettingsTests/testArchivedCSSExperimentsNeverOptIntoDensity",
+        "FlashNestTests/SamplingAppliedStatusTests/testMatchingEvidenceReportsApplied",
+        "FlashNestTests/SamplingAppliedStatusTests/testOriginalFallbackIsDistinctFromSupportedLow",
+        "FlashNestTests/SamplingAppliedStatusTests/testUnknownOrMissingEvidenceDoesNotEchoPreference",
+        "FlashNestTests/SamplingAppliedStatusTests/testInvalidCurrentEvidenceBecomesUnknown",
+        "FlashNestTests/SamplingAppliedStatusTests/testWrongSessionAndOldSequenceCannotOverwrite",
+        "FlashNestTests/SamplingAppliedStatusTests/testInvalidBoundsTypesAndClaimsFailClosed",
+        "FlashNestTests/SamplingAppliedStatusTests/testInvalidSequenceClearsCurrentConfirmation",
+        "FlashNestTests/SamplingAppliedStatusTests/testCanvasFallbackAndOriginalAreNotReportedAsLow",
+        "FlashNestTests/SamplingDocumentBindingTests/testInitialProvisionalAndRedirectPhaseRequiresCommit",
+        "FlashNestTests/SamplingDocumentBindingTests/testReloadPermanentlyDisablesOldAndReplacementReports",
+        "FlashNestTests/SamplingDocumentBindingTests/testUnexpectedSecondCommitCannotRebind",
+        "FlashNestTests/SamplingDocumentBindingTests/testFailureCannotRebindButFreshViewResetCan",
+        "FlashNestTests/SamplingSessionTests/testRequestedSamplingChangesOnlyOnNewPlayerPage"
+      ]
+    },
+    {
+      "expectedCount": 2,
+      "lane": "sampling-baseline",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "sampling-baseline-dpr2",
+      "selectors": [
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAll",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScale"
+      ]
+    },
+    {
+      "expectedCount": 23,
+      "lane": "sampling-candidate",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "sampling-candidate-dpr2",
+      "selectors": [
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticShowAllOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticShowAllThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticShowAllHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticShowAllQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticNoScaleOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticNoScaleThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticNoScaleHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticNoScaleQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAllOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAllThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAllHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAllQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScaleOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScaleThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScaleHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScaleQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchLowWebGLShowAllOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchLowWebGLShowAllQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchHighWebGLShowAllOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchHighWebGLShowAllThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchHighWebGLShowAllHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchHighWebGLShowAllQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testActualInitialRedirectAndNavigationFailure"
+      ]
+    },
+    {
+      "expectedCount": 1,
+      "lane": "sampling-enhanced-boundary",
+      "role": "enhanced-configuration-error-boundary-not-render-health",
+      "runName": "enhanced-boundary-dpr2",
+      "selectors": [
+        "FlashNestSamplingUITests/NativeSamplingUITests/testEnhancedProductionPolicyAndErrorBoundary"
+      ]
+    },
+    {
+      "expectedCount": 2,
+      "lane": "sampling-baseline",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "sampling-baseline-dpr3",
+      "selectors": [
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAll",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScale"
+      ]
+    },
+    {
+      "expectedCount": 23,
+      "lane": "sampling-candidate",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "sampling-candidate-dpr3",
+      "selectors": [
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticShowAllOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticShowAllThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticShowAllHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticShowAllQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticNoScaleOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticNoScaleThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticNoScaleHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingAutomaticNoScaleQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAllOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAllThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAllHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAllQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScaleOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScaleThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScaleHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLNoScaleQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchLowWebGLShowAllOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchLowWebGLShowAllQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchHighWebGLShowAllOriginal",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchHighWebGLShowAllThreeQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchHighWebGLShowAllHalf",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticLaunchHighWebGLShowAllQuarter",
+        "FlashNestSamplingUITests/NativeSamplingUITests/testActualInitialRedirectAndNavigationFailure"
+      ]
+    },
+    {
+      "expectedCount": 1,
+      "lane": "sampling-enhanced-boundary",
+      "role": "enhanced-configuration-error-boundary-not-render-health",
+      "runName": "enhanced-boundary-dpr3",
+      "selectors": [
+        "FlashNestSamplingUITests/NativeSamplingUITests/testEnhancedProductionPolicyAndErrorBoundary"
+      ]
+    },
+    {
+      "expectedCount": 18,
+      "lane": "sampling-gate-on",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "sampling-gate-on",
+      "selectors": [
+        "FlashNestTests/RenderSamplingSettingsTests/testOriginalDefaultAndStrictQueryContract",
+        "FlashNestTests/RenderSamplingSettingsTests/testIsolatedPerGameRoundTripAndCopiedRequest",
+        "FlashNestTests/RenderSamplingSettingsTests/testEveryTierRoundTripsWithoutChangingRenderer",
+        "FlashNestTests/RenderSamplingSettingsTests/testInvalidAndOversizedPreferencesFailClosedWithoutDestructiveMigration",
+        "FlashNestTests/RenderSamplingSettingsTests/testArchivedCSSExperimentsNeverOptIntoDensity",
+        "FlashNestTests/SamplingAppliedStatusTests/testMatchingEvidenceReportsApplied",
+        "FlashNestTests/SamplingAppliedStatusTests/testOriginalFallbackIsDistinctFromSupportedLow",
+        "FlashNestTests/SamplingAppliedStatusTests/testUnknownOrMissingEvidenceDoesNotEchoPreference",
+        "FlashNestTests/SamplingAppliedStatusTests/testInvalidCurrentEvidenceBecomesUnknown",
+        "FlashNestTests/SamplingAppliedStatusTests/testWrongSessionAndOldSequenceCannotOverwrite",
+        "FlashNestTests/SamplingAppliedStatusTests/testInvalidBoundsTypesAndClaimsFailClosed",
+        "FlashNestTests/SamplingAppliedStatusTests/testInvalidSequenceClearsCurrentConfirmation",
+        "FlashNestTests/SamplingAppliedStatusTests/testCanvasFallbackAndOriginalAreNotReportedAsLow",
+        "FlashNestTests/SamplingDocumentBindingTests/testInitialProvisionalAndRedirectPhaseRequiresCommit",
+        "FlashNestTests/SamplingDocumentBindingTests/testReloadPermanentlyDisablesOldAndReplacementReports",
+        "FlashNestTests/SamplingDocumentBindingTests/testUnexpectedSecondCommitCannotRebind",
+        "FlashNestTests/SamplingDocumentBindingTests/testFailureCannotRebindButFreshViewResetCan",
+        "FlashNestTests/SamplingSessionTests/testRequestedSamplingChangesOnlyOnNewPlayerPage"
+      ]
+    },
+    {
+      "expectedCount": 6,
+      "lane": "renderer-models",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "renderer-models",
+      "selectors": [
+        "FlashNestTests/RendererSessionTests/testRequestedRendererChangesOnlyOnNewPlayerPage",
+        "FlashNestTests/RendererSettingsTests/testAutomaticDefaultAndStrictQueryContract",
+        "FlashNestTests/RendererSettingsTests/testIsolatedPerGameRoundTripAndCopiedRequest",
+        "FlashNestTests/RendererSettingsTests/testInvalidAndOversizedPreferencesFailClosedWithoutDestructiveMigration",
+        "FlashNestTests/RendererSettingsTests/testVersionOneModesRoundTripWithoutRewritingExistingPreferences",
+        "FlashNestTests/RendererSettingsTests/testResolutionExperimentsNeverOptIntoCompatibility"
+      ]
+    },
+    {
+      "expectedCount": 48,
+      "lane": "save-models",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "save-models",
+      "selectors": [
+        "FlashNestTests/SaveStoreTests/testAtomicCaptureReloadAndPackageFilter",
+        "FlashNestTests/SaveStoreTests/testEmptyCaptureIsExplicitlyEmpty",
+        "FlashNestTests/SaveStoreTests/testValidationDoesNotCreateBackupDirectory",
+        "FlashNestTests/SaveStoreTests/testObjectAndAggregateByteLimits",
+        "FlashNestTests/SaveStoreTests/testHashAndIdentityTamperingIsRejected",
+        "FlashNestTests/SaveStoreTests/testWriteFailureDoesNotReportBackupSuccess",
+        "FlashNestTests/SaveStoreTests/testSymlinkBackupIsRejected",
+        "FlashNestTests/SaveStoreTests/testLatestAtomicUpdateAndInvalidCapturePreservesCurrent",
+        "FlashNestTests/SaveStoreTests/testImportMapsOnlyToSelectedPackageAndBacksUpPreviousCurrent",
+        "FlashNestTests/SaveStoreTests/testDecodeImportRejectsTamperedAndOversizedArchives",
+        "FlashNestTests/SaveStoreTests/testRootPackageAndCurrentSymlinksAreRejected",
+        "FlashNestTests/SaveStoreTests/testLogicalKeyGrammarPreservesOpaqueNames",
+        "FlashNestTests/SaveStoreTests/testSavedPackageSummariesIncludeCurrentOnlyAndArchivedBackups",
+        "FlashNestTests/SaveStoreTests/testRestoreAcknowledgmentIsImmediateAtomicAndIdentityGuarded",
+        "FlashNestTests/SaveStoreTests/testCorruptCurrentDoesNotHideValidArchivedBackups",
+        "FlashNestTests/SaveStoreTests/testCorruptImmutableBackupDoesNotSuppressOtherGroupsOrValidExports",
+        "FlashNestTests/SaveImportReaderTests/testCoordinatedJSONAndCustomExtensionValidateWithoutSelectingOrWritingTarget",
+        "FlashNestTests/SaveImportReaderTests/testRawSOLMatchesExistingNamespaceWithoutChangingCurrentOrOriginal",
+        "FlashNestTests/SaveImportReaderTests/testUnknownJSONMissingProviderSymlinkAndOversizedSOLFailWithoutMutation",
+        "FlashNestTests/RawSOLImportTests/testAMF0AndAMF3PreserveExactOriginalBytes",
+        "FlashNestTests/RawSOLImportTests/testMalformedTruncatedOversizedAndUnsupportedPayloadsFail",
+        "FlashNestTests/RawSOLImportTests/testNestedValuesAndComplexityLimits",
+        "FlashNestTests/RawSOLImportTests/testAMF0ComplexReferencesDoNotCountDatesOrXMLAndUnsupportedIsDefined",
+        "FlashNestTests/RawSOLImportTests/testPreviewDoesNotWriteAndRequiresExistingMatchingIdentity",
+        "FlashNestTests/RawSOLImportTests/testAmbiguousScopesRequireExplicitExistingSelectionWithoutFanout",
+        "FlashNestTests/RawSOLImportTests/testCanonicalUnicodeEquivalenceDoesNotGuessRawNameOrTargetIdentity",
+        "FlashNestTests/RawSOLImportTests/testAtomicImportPreservesOtherObjectsAndBacksUpPreimage",
+        "FlashNestTests/RawSOLImportTests/testStalePreviewCannotOverwriteNewerCurrentOrAnotherGame",
+        "FlashNestTests/LegacySavePreservationDiagnosticsTests/testColdHandshakeDeadlineClassificationDoesNotTreatNotReadyAsSuccess",
+        "FlashNestTests/LegacySavePreservationDiagnosticsTests/testFailureAndTerminationAreNotMislabelledAsColdStart",
+        "FlashNestTests/LegacySavePreservationDiagnosticsTests/testDiagnosticContainsOnlyFixedCodesAndNumericEvidence",
+        "FlashNestTests/SaveManagementEntryPolicyTests/testRequestOnlyPresentsWarningAndCancelReturnsToMenu",
+        "FlashNestTests/SaveManagementEntryPolicyTests/testOnlyExplicitConfirmationMayCloseAndManageSaves",
+        "FlashNestTests/SaveManagementEntryPolicyTests/testSaveAndRestartIsSeparateFromOpeningBackupManagement",
+        "FlashNestTests/PlayerSessionTests/testStopBeforeStartAndRepeatedStopAreSafe",
+        "FlashNestTests/LegacySaveDiagnosticLocalizationTests/testPreparationFailureShowsLocalizedNeutralTextAndFixedCodeOnly",
+        "FlashNestTests/PreviousSessionDiagnosticsLocalizationTests/testPreviousSessionSectionAndClearActionAreBilingual",
+        "FlashNestTests/LocalizationTests/testBothLocalizedResourceBundlesArePackagedAndSwitchable",
+        "FlashNestTests/LocalizationTests/testAppVersionIsExplicitAndIconIsConfigured",
+        "FlashNestTests/SaveStoreSummaryTests/testSummariesMatchValidatedCurrentAndBackupMetadataAndOrdering",
+        "FlashNestTests/SaveStoreSummaryTests/testCorruptNeighborIsIsolatedAndStrictOldAPIUnchanged",
+        "FlashNestTests/SaveStoreSummaryTests/testExportRejectsCorruptMissingAndReplacedNamedArchiveAfterListing",
+        "FlashNestTests/SaveStoreSummaryTests/testExportRejectsWrongPackageAndChangedCurrentWithoutFallingBackToBackup",
+        "FlashNestTests/SaveStoreSummaryTests/testExportRejectsSymlinkReplacementAndWrongIdentityOnListing",
+        "FlashNestTests/SaveStoreSummaryTests/testEmptyAndCombiningCharacterNamesHaveBoundedDisplayMetadata",
+        "FlashNestTests/SaveStoreSummaryTests/testOversizedArchiveIsSkippedWithoutHidingValidMetadata",
+        "FlashNestTests/SaveStoreSummaryTests/testDirectoryEntryBudgetStillRejectsOversizedListing",
+        "FlashNestTests/SaveStoreSummaryTests/testNamedExportPreservesListedFilenameCaseAndRejectsForgedPath"
+      ]
+    },
+    {
+      "expectedCount": 19,
+      "lane": "save-webkit",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "save-webkit",
+      "selectors": [
+        "FlashNestTests/SharedObjectWebKitTests/testDestroyFlushCaptureRestoreAndPackageStorageIsolation",
+        "FlashNestTests/SharedObjectWebKitTests/testExplicitSharedObjectFlushIsCapturedWithoutChangingItsBytes",
+        "FlashNestTests/SharedObjectPersistenceTests/testLiveCheckpointCopiesExplicitlyFlushedSaveWithoutRestartingScene",
+        "FlashNestTests/SharedObjectPersistenceTests/testLiveCheckpointDoesNotPretendToFlushRAMOnlySave",
+        "FlashNestTests/SharedObjectPersistenceTests/testExplicitSaveAndRestartUsesNewPageAndPreservesSaveAndGameFiles",
+        "FlashNestTests/SharedObjectPersistenceTests/testDestroyFlushPersistsAndRestartReadsActualSharedObject",
+        "FlashNestTests/SharedObjectPersistenceTests/testExportImportMapsToSelectedNewPackageAndDoesNotLeakToAnotherGame",
+        "FlashNestTests/SharedObjectPersistenceTests/testUpgradePreservesExistingWebKitSaveBeforeFirstNativeArchive",
+        "FlashNestTests/SharedObjectPersistenceTests/testConfirmedImportAppliesOnceAndNewerLiveFlushSurvivesMissedNativeCapture",
+        "FlashNestTests/SharedObjectPersistenceTests/testUnconfirmedFlushBlocksSameProfileAcrossSessionsWithoutReplacingCurrent",
+        "FlashNestTests/SharedObjectPersistenceTests/testProcessTerminationKeepsNativeArchiveAndAllowsCleanReopen",
+        "FlashNestTests/SharedObjectPersistenceTests/testCloseWaitsForCheckpointThenStillClosesPlayer",
+        "FlashNestTests/RawSOLWebKitTests/testRawAMF3ImportIsReadThenWrittenAndReadAfterReopenWithoutCrossGameLeak",
+        "FlashNestTests/LegacySavePreservationWebKitTests/testActualStorageOnlyPreservationCapturesVerifiedEmptyProfileWithoutMovie",
+        "FlashNestTests/PlayerCallbackIdentityTests/testPriorPageMessagesCannotMutateReplacementAtSameShellURL",
+        "FlashNestTests/PlayerCallbackIdentityTests/testNilForeignFrameAndStoppedPageMessagesAreRejected",
+        "FlashNestTests/PlayerCallbackIdentityTests/testStaleNavigationFailuresCannotOverwriteActiveOrTerminatedPageState",
+        "FlashNestTests/InputFocusRuntimeTests/testVirtualKeyRefocusesPlayerAfterChildSceneAndExternalBlur",
+        "FlashNestTests/NativeSaveSettingsPreservationTests/testNonemptySOLBytesSurviveSamplingRendererChangesPauseBackgroundAndReopen"
+      ]
+    },
+    {
+      "expectedCount": 31,
+      "lane": "picker-models",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "picker-models",
+      "selectors": [
+        "FlashNestTests/DocumentPickerDelegateTests/testNativeServiceStartsWithoutAnActivePresentation",
+        "FlashNestTests/DocumentPickerDelegateTests/testCallbacksFromAnUnownedPickerCannotChangeServiceState",
+        "FlashNestTests/ExternalImportCopyTests/testCoordinatedNestedZIPPreservesUnicodeAssetsAndSource",
+        "FlashNestTests/ExternalImportCopyTests/testMissingProviderItemFailsWithoutCommit",
+        "FlashNestTests/ExternalImportCopyTests/testCoordinatedFolderImportCopiesNestedAssetsAndPreservesOriginal",
+        "FlashNestTests/ExternalImportInboxTests/testColdThenWarmURLsRemainQueuedUntilLibraryIsAvailable",
+        "FlashNestTests/ExternalImportInboxTests/testDuplicateActiveAndPendingURLsDoNotImportTwiceAndCanBeResharedAfterFinish",
+        "FlashNestTests/ExternalImportInboxTests/testDismissAndOverflowAreBoundedAndNeverDeleteSource",
+        "FlashNestTests/ExternalImportInboxTests/testBundleDeclaresOnlySupportedOpenInDocumentKinds",
+        "FlashNestTests/ExternalImportInboxTests/testSaveHandoffsAreSeparatedFromGameImportAndRetainedUntilDismissal",
+        "FlashNestTests/ExternalImportInboxTests/testRemoteURLDoesNotAcquireARequest",
+        "FlashNestTests/ImportAliasTests/testCanonicalAndAliasRootsProduceIdenticalRelativeInventory",
+        "FlashNestTests/ImportAliasTests/testImportedSymlinkStillRejectedThroughRootAlias",
+        "FlashNestTests/ImportAliasTests/testEightCharacterAliasMismatchExplainsOldContentArtifact",
+        "FlashNestTests/ImportFlowTests/testFolderAndFileSelectionUseSeparateContentTypes",
+        "FlashNestTests/ImportFlowTests/testRecursiveFolderInventoryAndLargeMovieArePreserved",
+        "FlashNestTests/ImportFlowTests/testCancelledImportDoesNotCommitOrDeleteSource",
+        "FlashNestTests/LocalImportInboxTests/testPreparationCreatesInstructionsAndNeverOverwritesExistingFile",
+        "FlashNestTests/LocalImportInboxTests/testListsOnlySupportedTopLevelItemsWithoutFollowingLinks",
+        "FlashNestTests/LocalImportInboxTests/testSymlinkInboxRootIsRejectedWithoutWritingThroughIt",
+        "FlashNestTests/LocalImportInboxTests/testTopLevelLimitCountsUnsupportedItemsToo",
+        "FlashNestTests/LocalImportInboxTests/testSelectedInboxFolderImportsAllNestedAssetsAndKeepsOriginals",
+        "FlashNestTests/PackageImporterTests/testNestedUnicodeFolderPreservesAssetsAndManifest",
+        "FlashNestTests/PackageImporterTests/testMissingMovieRollsBack",
+        "FlashNestTests/PackageImporterTests/testSymlinkRollsBack",
+        "FlashNestTests/PackageImporterTests/testByteLimitRollsBack",
+        "FlashNestTests/PackageImporterTests/testTraversalAndCaseCollisionsAreRejected",
+        "FlashNestTests/PackageImporterTests/testZIPTraversalRollsBack",
+        "FlashNestTests/PackageImporterTests/testMalformedLaterZIPHeaderCannotCommitPartialGame",
+        "FlashNestTests/PackageImporterTests/testZIPDirectoryCountMismatchRejected",
+        "FlashNestTests/PackageImporterTests/testZIPRoundtripAndCRC"
+      ]
+    },
+    {
+      "expectedCount": 1,
+      "lane": "picker-ui",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "picker-ui",
+      "selectors": [
+        "FlashNestUITests/ZIPSelectionUITests/testRealFilesCancelZIPSWFRepeatAndWholeFolder"
+      ]
+    },
+    {
+      "expectedCount": 1,
+      "lane": "renderer-ui",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "renderer-ui",
+      "selectors": [
+        "FlashNestUITests/RendererCompatibilityUITests/testPerGameChoiceDefersUntilExplicitRestartAndPreservesLiveScene"
+      ]
+    },
+    {
+      "expectedCount": 1,
+      "lane": "save-ui",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "save-ui",
+      "selectors": [
+        "FlashNestUITests/LifecyclePlayerUITests/testBackgroundDirectSaveCancelManagementAndRestartSameGame"
+      ]
+    },
+    {
+      "expectedCount": 2,
+      "lane": "audio-candidate",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "audio-candidate",
+      "selectors": [
+        "LateAudioUITests/LateAudioUITests/testLateKnownRecoveryKeepsLiveChildAndRealSOL",
+        "LateAudioUITests/LateAudioUITests/testLateUnknownRemainsProductionFatal"
+      ]
+    },
+    {
+      "expectedCount": 1,
+      "lane": "audio-baseline",
+      "role": "regression-including-explicit-legacy-negative-controls",
+      "runName": "audio-baseline",
+      "selectors": [
+        "LateAudioUITests/LateAudioUITests/testLateBaselineKnownRemainsProductionFatal"
+      ]
+    }
+  ],
+  "samplingMethodMapSHA256": "154165415a5a09ff306a8721a70bfc3729615efdfecc38bdce5fedfb2f58e22b",
+  "samplingMethodPartition": "single-tier-v1",
+  "schema": 4,
+  "totalMethodExecutions": 198
+}

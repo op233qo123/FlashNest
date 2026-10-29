@@ -1,3 +1,11 @@
+# Current execution contract: v4 isolated DPR jobs
+
+The active runner uses `selection-contract-v4.json`: 198 method executions (196 regression + 2 Enhanced boundary diagnostics), not the historical 166 described below. Two isolated macOS jobs each execute 2 baseline, 23 candidate and 1 Enhanced method; the dependent functional job verifies both immutable same-run/head/attempt leaf inventories and all 144 sampling phases before its 146 functional methods. Gate-off controls still precede gate-on tests. The original 48 rows, 720 taps, 144 drags, 864 resets and 150 capture sidecars remain required. Quarter/showAll lifecycle assertions remain in the same player after that tier's three orientations.
+
+Each runner remains bounded by 7,800 seconds and each hosted job by 150 minutes. Splitting does not waive a failed, missing or timed-out method. Leaf success is never native acceptance. Per-arm builds, generated Info.plist, tool receipts and child results retain their own DPR job identity; compiled products need not be byte-identical across hosts. Only the exact independently pinned XcodeGen-generated App/Info.plist may be excluded from the audio source comparison. START/DONE/FAIL stage messages are flushed without private content.
+
+The following sections preserve prior design/evidence history; v4 selection and actual new receipts govern current acceptance. No v4 native execution or IPA success is asserted by this source document.
+
 # Native v3 — authoritative current contract
 
 # Native v3 three-policy contract — authored, actual acceptance pending

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Serial, synthetic-only final native regression adapter. No dispatch or IPA."""
+"""Isolated DPR sampling jobs and dependent functional regression adapter. No dispatch or IPA."""
 import plistlib
 import argparse, hashlib, importlib.util, json, os, platform, re, shutil, signal, subprocess, sys, time, zipfile
 from pathlib import Path
@@ -45,16 +45,22 @@ def selections(app):
  require(len(picker)==31,'Exactly31 picker model methods required')
  saved=json.loads((SAVE/'test-selection.json').read_text())['lanes']
  base=['FlashNestSamplingUITests/NativeSamplingUITests/'+n for n in ('testShippingWebGLShowAll','testShippingWebGLNoScale')]
- candidate_shipping=['FlashNestSamplingUITests/NativeSamplingUITests/'+n for n in ('testShippingAutomaticShowAll','testShippingAutomaticNoScale','testShippingWebGLShowAll','testShippingWebGLNoScale')]
+ mapping=json.loads((SAMPLING/'method-map-v4.json').read_text())
+ candidate_set={'FlashNestSamplingUITests/NativeSamplingUITests/'+name for name,row in mapping['methods'].items() if row['arm']=='candidate' and row['kind'] in ('matrix','navigation')}
+ contract=json.loads((ROOT/'selection-contract-v4.json').read_text())
+ candidate_tiers=next(row['selectors'] for row in contract['runs'] if row['runName']=='sampling-candidate-dpr2')
+ require(len(candidate_tiers)==len(set(candidate_tiers))==23 and set(candidate_tiers)==candidate_set,'Exactly22 tiers plus navigation required')
+ swift=(SAMPLING/'UITests/NativeSamplingUITests.swift').read_text()
+ actual=re.findall(r'\bfunc (test\w+)\s*\(',swift)
+ require(len(actual)==len(set(actual))==26 and set(actual)==set(mapping['methods']),'Exact actual sampling source methods differ')
  renderer=methods(Path(app)/'Tests',['RendererSettingsTests','RendererSessionTests'])
  require(len(renderer)==6,'Exactly6 reviewed renderer policy model/session methods required')
- extra=['FlashNestSamplingUITests/NativeSamplingUITests/'+n for n in ('testDiagnosticLaunchLowWebGLShowAll','testDiagnosticLaunchHighWebGLShowAll','testActualInitialRedirectAndNavigationFailure')]
  return {'sampling-gate-off':lane('sampling-gate-off','FlashNest',sampling),
   'sampling-gate-on':lane('sampling-gate-on','FlashNest',sampling),
   'picker-models':lane('picker-models','FlashNest',picker),
   'picker-ui':lane('picker-ui','FlashNestUI',['FlashNestUITests/ZIPSelectionUITests/testRealFilesCancelZIPSWFRepeatAndWholeFolder'],480),
   'sampling-baseline':lane('sampling-baseline','FlashNestSamplingUI',base,900),
-  'sampling-candidate':lane('sampling-candidate','FlashNestSamplingUI',candidate_shipping+extra,900),
+  'sampling-candidate':lane('sampling-candidate','FlashNestSamplingUI',candidate_tiers,900),
   'sampling-enhanced-boundary':lane('sampling-enhanced-boundary','FlashNestSamplingUI',['FlashNestSamplingUITests/NativeSamplingUITests/testEnhancedProductionPolicyAndErrorBoundary'],300),
   'renderer-models':lane('renderer-models','FlashNest',renderer),
   'renderer-ui':lane('renderer-ui','FlashNestUI',['FlashNestUITests/RendererCompatibilityUITests/testPerGameChoiceDefersUntilExplicitRestartAndPreservesLiveScene'],480),
@@ -86,6 +92,16 @@ def gate_on_overlay(app):
   f=Path(app)/p;s=f.read_text();require(s.count(old)==1,'Exact gate/test anchor drift');f.write_text(s.replace(old,new))
  return {p:{'before':before[p],'after':sha(Path(app)/p)} for p in paths}
 
+def gate_on_source_app_map(app,out):
+ # Compare authored App bytes, separately bind the sole generated build plist.
+ app=Path(app);out=Path(out);files=inventory(app/'App')
+ generated=json.loads((out/'main-gate-on-generated-app-files.json').read_text())
+ expected='b71b74d803b9a68e58a77e1043cbdcb07888606b513fecb8000651d73990085f'
+ require(generated['files']=={'App/Info.plist':expected} and generated['artifact']=='main-gate-on-generated-Info.plist','Only exact generated plist allowed')
+ require(generated['projectSpecificationPath']=='project.yml' and generated['projectSpecificationSHA256']==sha(app/'project.yml') and generated['toolReceiptSHA256']==sha(out/'tool-receipt.json'),'Generated plist source/tool differs')
+ require(files.pop('Info.plist',None)==expected and sha(out/generated['artifact'])==expected,'Generated raw plist differs')
+ return files
+
 class Runner:
  def __init__(self,args):
   self.args=args;self.binding=json.loads(args.binding.read_text());self.out=args.output.resolve();self.stage=self.out.parent/(self.out.name+'-staging')
@@ -94,6 +110,7 @@ class Runner:
  def budget(self):
   n=sum(p.stat().st_size for p in self.out.rglob('*') if p.is_file());require(n<=CAP,'Evidence budget exceeded; no truncation or partial pass')
  def command(self,argv,name,cwd=None,timeout=1200,allowed=(0,)):
+  print('START '+name,flush=True)
   log=self.out/(name+'.log');start=time.monotonic()
   with log.open('xb') as f:
    proc=subprocess.Popen([str(x) for x in argv],cwd=cwd,stdout=f,stderr=subprocess.STDOUT,start_new_session=True,env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'})
@@ -104,12 +121,13 @@ class Runner:
      self.budget();time.sleep(.5)
     code=proc.returncode
    except BaseException:
-    os.killpg(proc.pid,signal.SIGKILL);proc.wait();raise
+    os.killpg(proc.pid,signal.SIGKILL);proc.wait();print('FAIL '+name,flush=True);raise
+  print(('DONE ' if code in allowed else 'FAIL ')+name,flush=True)
   self.budget();require(code in allowed,'Command failed '+name+' exit='+str(code));return log
  def capture(self,argv,name,cwd=None,timeout=120):return self.command(argv,name,cwd,timeout).read_text()
  def preflight(self):
   b=self.binding;require(b.get('ready') is True,'Review/freeze binding before execution')
-  require(b.get('nativeContract')=='flashnest-native-composite-v3','Explicit reviewed v3 binding required')
+  require(b.get('nativeContract')=='flashnest-native-composite-v4','Explicit reviewed v4 binding required')
   require(platform.system()=='Darwin','Actual macOS Xcode runner required')
   require(os.environ.get('DEVELOPER_DIR')=='/Applications/Xcode_16.2.app/Contents/Developer','Exact Xcode directory required')
   require('Xcode 16.2\n' in self.capture(['xcodebuild','-version'],'xcode-version'),'Exact Xcode16.2 required')
@@ -147,10 +165,12 @@ class Runner:
   require('2.42.0' in self.capture([self.xcodegen,'--version'],'xcodegen-version'),'XcodeGen2.42 required')
   dump(self.out/'tool-receipt.json',{'archiveSHA256':expected_archive,'archiveMember':member,'executableSHA256':binary_hash,'version':'2.42.0'})
   dump(self.out/'binding.json',b);self.lanes=selections(self.args.app);dump(self.out/'test-selection.json',self.lanes)
-  self.selection_contract=json.loads((ROOT/'selection-contract-v3.json').read_text())
-  require(self.selection_contract['contract']=='flashnest-native-composite-v3','Frozen selector contract differs')
+  self.selection_contract=json.loads((ROOT/'selection-contract-v4.json').read_text())
+  require(self.selection_contract['contract']=='flashnest-native-composite-v4','Frozen selector contract differs')
+  rows=self.selection_contract['runs'];require(len(rows)==len({r['runName'] for r in rows})==17 and sum(r['expectedCount'] for r in rows)==198,'Exact198 execution graph required')
   for run in self.selection_contract['runs']:
-   require(self.lanes[run['lane']]['selectors']==run['selectors'] and self.lanes[run['lane']]['expectedCount']==run['expectedCount'],'Source selectors differ from reviewed v3 contract')
+   require(len(run['selectors'])==len(set(run['selectors']))==run['expectedCount'],'Duplicate/missing selectors')
+   require(self.lanes[run['lane']]['selectors']==run['selectors'] and self.lanes[run['lane']]['expectedCount']==run['expectedCount'],'Source selectors differ from reviewed v4 contract')
  def check_runtime(self,root,declared):
   require(inventory(root)=={p:r['sha256'] for p,r in declared.items()},'Runtime map differs')
   require(all((root/p).stat().st_size==r['bytes'] for p,r in declared.items()),'Runtime size differs')
@@ -167,7 +187,15 @@ class Runner:
    (p/'runtime.files.json').write_text(json.dumps(string_map,indent=2,sort_keys=True)+'\n')
   return p
  def project(self,app,name,scheme='FlashNest'):
+  spec=app/'project.yml';spec_hash=sha(spec)
   self.command([self.xcodegen,'generate'],name+'-xcodegen',app,120)
+  if name in ('sampling-baseline','sampling-candidate','main-gate-on'):
+   generated=app/'App/Info.plist'
+   require(sha(generated)=='b71b74d803b9a68e58a77e1043cbdcb07888606b513fecb8000651d73990085f','Unexpected generated sampling Info.plist')
+   plistlib.loads(generated.read_bytes())
+   target_name=name+'-generated-Info.plist';shutil.copyfile(generated,self.out/target_name)
+   record={'files':{'App/Info.plist':sha(generated)},'artifact':target_name,'projectSpecificationSHA256':spec_hash,'projectSpecificationPath':'project.yml','toolReceiptSHA256':sha(self.out/'tool-receipt.json')}
+   dump(self.out/(name+'-generated-app-files.json'),record)
   target=app/(('LateAudioDiagnostic' if scheme=='LateAudioDiagnostic' else 'FlashNest')+'.xcodeproj')
   pin=target/'project.xcworkspace/xcshareddata/swiftpm/Package.resolved';pin.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(app/'Package.resolved',pin)
   self.command(['xcodebuild','-resolvePackageDependencies','-project',target.name,'-scheme',scheme,'-disableAutomaticPackageResolution'],name+'-resolve',app,300)
@@ -232,6 +260,7 @@ class Runner:
     if field=='TestHostPath':host=resolved
     references.append({'field':field,'raw':raw,'resolved':str(resolved)})
   proof={'app':str(app.resolve()),'project':project,'config':config,'sourceFiles':source,'sourceExcludedPaths':['build/'],'preflightReceiptSHA256':{name:sha(self.out/name) for name in ('xcode-version.log','available-devices.log','tool-receipt.json','binding.json')},'approvedDestinations':self.devices.copy(),'buildCommand':[str(x) for x in argv],'buildLogSHA256':sha(self.out/(name+'.log')),'products':str(products),'productFiles':product_map,'xctestrun':str(xctestrun),'xctestrunSHA256':sha(xctestrun),'references':references,'nativeAcceptance':False}
+  generated_path=self.out/(key+'-generated-app-files.json');proof['generatedAppFiles']=json.loads(generated_path.read_text());proof['generatedAppFilesSHA256']=sha(generated_path)
   proof_path=self.out/(name+'-proof.json');dump(proof_path,proof);proof['proofSHA256']=sha(proof_path)
   cache[cache_key]=proof;return proof
  def test(self,app,project,device,key,name=None):
@@ -316,12 +345,8 @@ class Runner:
  def install_source(self,app,project,device,name):
   self.command(['xcodebuild','-project',project,'-scheme','FlashNestFixtureSource','-configuration','Debug','-sdk','iphonesimulator','-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',str(app/'build-source'),'-disableAutomaticPackageResolution','CODE_SIGNING_ALLOWED=NO','CODE_SIGNING_REQUIRED=NO','build'],name+'-source-build',app,600)
   self.command(['xcrun','simctl','install',device,app/'build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app'],name+'-source-install')
- def execute(self):
-  self.preflight();b=self.binding;device=self.devices['3']
-  self.command([sys.executable,SAMPLING/'scripts/verify_legacy_negative.py','--packet',ROOT/'legacy-automatic-negative','--output',self.out/'legacy-automatic-known-negative.json'],'legacy-automatic-known-negative',timeout=120)
-  self.reset(device,'main-gate-off')
-  main=self.copy_app('main-gate-off');project=self.project(main,'main-gate-off')
-  self.test(main,project,device,'sampling-gate-off')
+ def stage_sampling(self):
+  b=self.binding
   # Same approved App source, two exact runtime baselines and isolated sampling hooks.
   identities={};sampling_apps={};candidate_string={p:r['sha256'] for p,r in self.candidate_map.items()}
   for arm in ('baseline','candidate'):
@@ -344,7 +369,13 @@ class Runner:
    sampling_apps[arm]=(app,self.project(app,'sampling-'+arm,'FlashNestSamplingUI'))
   # Frozen externally from source staging BEFORE any sampling launch, never inferred from results.
   dump(self.out/'sampling-expected-identities.json',identities)
-  for dpr,device in self.devices.items():
+  return identities,sampling_apps
+ def execute_sampling(self,dpr):
+  self.preflight();require(dpr in ('2','3'),'Exact DPR slice required')
+  transport=load_module('native_job_evidence',WORK.parent/'scripts/job_evidence.py')
+  job=transport.job_identity('dpr'+dpr)
+  identities,sampling_apps=self.stage_sampling()
+  for dpr,device in [(dpr,self.devices[dpr])]:
    for arm,(app,project) in sampling_apps.items():
     name='sampling-'+arm+'-dpr'+dpr;self.reset(device,name)
     self.test(app,project,device,'sampling-'+arm,name)
@@ -354,10 +385,53 @@ class Runner:
     if arm=='candidate':
      enhanced_name='enhanced-boundary-dpr'+dpr;self.reset(device,enhanced_name)
      self.test(app,project,device,'sampling-enhanced-boundary',enhanced_name)
-  self.command([sys.executable,SAMPLING/'scripts/verify_results.py','--attachments',self.out/'attachments','--candidate-inventory-sha256',identities['candidate']['runtimeInventorySHA256'],'--baseline-inventory-sha256',identities['baseline']['runtimeInventorySHA256'],'--expected-identities',self.out/'sampling-expected-identities.json','--output',self.out/'sampling-geometry.json'],'sampling-geometry-verifier',timeout=180)
+  expected=[r for r in self.selection_contract['runs'] if r['runName'] in ('sampling-baseline-dpr'+dpr,'sampling-candidate-dpr'+dpr,'enhanced-boundary-dpr'+dpr)]
+  require(len(expected)==3 and {r['runName']:r['tests'] for r in self.results}=={r['runName']:r['expectedCount'] for r in expected} and len(self.results)==3,'Incomplete DPR method set')
+  require(sum(r['tests'] for r in self.results)==26,'Exact26 executions per DPR required')
+  require(inventory(self.args.app)==self.binding['appFiles'],'Immutable App changed')
+  self.check_runtime(self.args.candidate_engine/'runtime',self.candidate_map)
+  receipt={'schema':1,'samplingJobPassed':True,'nativeAcceptance':False,'dpr':int(dpr),'job':job,'bindingSHA256':sha(self.args.binding),'selectionContractSHA256':sha(ROOT/'selection-contract-v4.json'),'methodMapSHA256':sha(SAMPLING/'method-map-v4.json'),'helperLockSHA256':sha(ROOT/'helper-lock.json'),'engineSHA256':self.binding['engine']['sha256'],'appFiles':self.binding['appFiles'],'results':self.results,'expectedIdentitiesSHA256':sha(self.out/'sampling-expected-identities.json'),'fullGeometryPending':True}
+  transport.freeze_leaf(self.out,receipt);self.budget();return receipt
+ def import_sampling_jobs(self):
+  transport=load_module('native_job_evidence',WORK.parent/'scripts/job_evidence.py')
+  self.functional_job=transport.job_identity('functional')
+  incoming=self.args.sampling_input;require(incoming is not None,'Two downloaded sampling jobs required')
+  downloads=json.loads((incoming/'download-receipt.json').read_text());require(set(downloads)=={'dpr2','dpr3'},'Both exact DPR dependencies required')
+  identities=None;self.sampling_job_receipts={}
+  for role in ('dpr2','dpr3'):
+   entry=downloads[role];require(entry['job']==transport.job_identity(role,completed=True),'Dependency job no longer matches')
+   source=incoming/role;receipt=transport.verify_leaf(source,entry['job'])
+   require(sha(source/'sampling-job-manifest.json')==entry['manifestSHA256'] and sha(source/'sampling-job-receipt.json')==entry['receiptSHA256'],'Downloaded dependency digest differs')
+   require(receipt['dpr']==int(role[-1]) and receipt['bindingSHA256']==sha(self.args.binding) and receipt['helperLockSHA256']==sha(ROOT/'helper-lock.json') and receipt['selectionContractSHA256']==sha(ROOT/'selection-contract-v4.json') and receipt['methodMapSHA256']==sha(SAMPLING/'method-map-v4.json'),'Dependency source/role binding differs')
+   require(receipt['engineSHA256']==self.binding['engine']['sha256'] and receipt['appFiles']==self.binding['appFiles'],'Dependency engine/App differs')
+   expected=[r for r in self.selection_contract['runs'] if r['runName'] in ('sampling-baseline-'+role,'sampling-candidate-'+role,'enhanced-boundary-'+role)]
+   require(len(receipt['results'])==3 and {r['runName']:r['tests'] for r in receipt['results']}=={r['runName']:r['expectedCount'] for r in expected} and sum(r['tests'] for r in receipt['results'])==26,'Incomplete sampling dependency')
+   current=json.loads((source/'sampling-expected-identities.json').read_text());require(sha(source/'sampling-expected-identities.json')==receipt['expectedIdentitiesSHA256'],'External identities digest differs')
+   if identities is None:identities=current
+   else:require(identities==current,'External arm identities differ across DPR jobs')
+   prefix='sampling-jobs/'+role;target=self.out/prefix;target.parent.mkdir(exist_ok=True);shutil.copytree(source,target)
+   # Original leaf attachments remain under their manifest-bound prefix.
+   # The full geometry verifier recursively reads both leaf trees without duplication.
+   for result in receipt['results']:
+    require('evidencePrefix' not in result,'Unexpected nested evidence prefix');self.results.append({**result,'evidencePrefix':prefix})
+   self.sampling_job_receipts[role]={**entry,'evidencePrefix':prefix}
+  dump(self.out/'sampling-expected-identities.json',identities)
+  dump(self.out/'sampling-job-download-receipt.json',downloads)
+  return identities
+ def execute(self):
+  if self.args.role in ('dpr2','dpr3'):return self.execute_sampling(self.args.role[-1])
+  require(self.args.role=='functional','Explicit native job role required')
+  self.preflight();b=self.binding
+  identities=self.import_sampling_jobs()
+  self.command([sys.executable,SAMPLING/'scripts/verify_legacy_negative.py','--packet',ROOT/'legacy-automatic-negative','--output',self.out/'legacy-automatic-known-negative.json'],'legacy-automatic-known-negative',timeout=120)
+  self.command([sys.executable,SAMPLING/'scripts/verify_results.py','--attachments',self.out/'sampling-jobs','--candidate-inventory-sha256',identities['candidate']['runtimeInventorySHA256'],'--baseline-inventory-sha256',identities['baseline']['runtimeInventorySHA256'],'--expected-identities',self.out/'sampling-expected-identities.json','--output',self.out/'sampling-geometry.json'],'sampling-geometry-verifier',timeout=180)
   geometry=json.loads((self.out/'sampling-geometry.json').read_text())
-  require(geometry.get('contract')=='flashnest-native-sampling-v3' and geometry.get('historicalStaleDownNegativePhases')==12 and geometry.get('candidateCurrentDownUpPhases')==132 and geometry.get('fixtureResetsAfterObservedUp')==864,'Reviewed v3 input/policy contract evidence required')
+  require(geometry.get('contract')=='flashnest-native-sampling-v4' and geometry.get('historicalStaleDownNegativePhases')==12 and geometry.get('candidateCurrentDownUpPhases')==132 and geometry.get('fixtureResetsAfterObservedUp')==864,'Reviewed v4 input/policy contract evidence required')
   require(geometry['matrixPassed'] is True and geometry['shippingReductionRequirementMet'] is True,'Native geometry not accepted; do not run gate-on copy')
+  # Functional gate-off control remains before gate-on; neither runs on partial geometry.
+  device=self.devices['3'];self.reset(device,'main-gate-off')
+  main=self.copy_app('main-gate-off');project=self.project(main,'main-gate-off')
+  self.test(main,project,device,'sampling-gate-off')
   # No shipping mutation: new main copy, only gate and exact hardcoded test expectation change.
   main=self.copy_app('main-gate-on');overlay=gate_on_overlay(main);dump(self.out/'gate-on-overlay.json',overlay)
   shutil.copyfile(SAVE/'Tests/NativeSaveSettingsPreservationTests.swift',main/'Tests/NativeSaveSettingsPreservationTests.swift')
@@ -381,7 +455,7 @@ class Runner:
    if key=='audio-candidate':
     audio_source=self.copy_app('audio-candidate-gate-on-source')
     audio_gate=gate_on_overlay(audio_source)
-    require(inventory(audio_source/'App') == inventory(main/'App'),'Candidate audio App differs from post-geometry gate-on final App')
+    require(inventory(audio_source/'App') == gate_on_source_app_map(main,self.out),'Candidate audio App differs from post-geometry gate-on final App')
     dump(self.out/'audio-candidate-gate-on-overlay.json',audio_gate)
     dump(self.out/'audio-candidate-post-geometry-app-map.json',inventory(audio_source/'App'))
     gate_args=['--candidate-gate-on']
@@ -396,17 +470,17 @@ class Runner:
   require(inventory(self.args.app)==b['appFiles'],'Immutable final App input changed during tests')
   self.check_runtime(self.args.candidate_engine/'runtime',self.candidate_map)
   observed=geometry['wasmActuallyObserved']['candidate'];require(len(observed)==1,'Native selected multiple/unknown runtime branches')
-  require({x['runName']:x['tests'] for x in self.results}=={x['runName']:x['expectedCount'] for x in self.selection_contract['runs']},'Exact v3 run-name/method contract differs')
+  require({x['runName']:x['tests'] for x in self.results}=={x['runName']:x['expectedCount'] for x in self.selection_contract['runs']},'Exact v4 run-name/method contract differs')
   require(len(self.results)==len(self.selection_contract['runs']),'Duplicate result run')
-  require(sum(x['tests'] for x in self.results)==166,'Exact166 executions:164 regression plus2 Enhanced boundary diagnostics required')
+  require(sum(x['tests'] for x in self.results)==198,'Exact198 executions:196 regression plus2 Enhanced boundary diagnostics required')
   receipt={'passed':True,'skipped':0,'evidenceKind':'iOS simulator','physicalDeviceCertified':False,'shippingDefaultAppliesAllTiers':'automatic' in geometry['actualShippingReductionPolicies'],
    'shippingReductionRequirementMet':geometry['shippingReductionRequirementMet'],
    'shippingPoliciesWithAllReductions':geometry['actualShippingReductionPolicies'],
    'engineSHA256':b['engine']['sha256'],'selectedWasmSHA256':self.candidate_map[observed[0]]['sha256'],
-   'nativeContract':'flashnest-native-composite-v3','samplingContract':'flashnest-native-sampling-v3',
-   'selectionContractSHA256':sha(ROOT/'selection-contract-v3.json'),
+   'nativeContract':'flashnest-native-composite-v4','samplingContract':'flashnest-native-sampling-v4',
+   'selectionContractSHA256':sha(ROOT/'selection-contract-v4.json'),
    'candidateAppSourceAuthoritySHA256':sha(SAMPLING/'approved-candidate-app-source-manifest.json'),
-   'positiveRegressionMethods':164,'enhancedBoundaryDiagnosticMethods':2,'enhancedRenderHealthCertified':False,
+   'positiveRegressionMethods':196,'enhancedBoundaryDiagnosticMethods':2,'enhancedRenderHealthCertified':False,
    'rendererPolicyContract':'candidate-three-mode-v1','legacyRendererPolicyPreserved':True,
    'legacyAutomaticKnownNegativeSHA256':sha(self.out/'legacy-automatic-known-negative.json'),
    'enhancedBoundaryDiagnostic':geometry['enhancedBoundaryDiagnostic'],
@@ -414,11 +488,13 @@ class Runner:
    'candidateAudioAppManifestSHA256':sha(self.out/'audio-candidate-post-geometry-app-map.json'),
    'samplingRows':48,'samplingPhases':144,'nativeMethods':sum(x['tests'] for x in self.results),'results':self.results,
    'audibleOutputProven':False,'privateProviderReproduced':False,'ipaBuilt':False}
+  receipt['job']=self.functional_job;receipt['samplingJobReceipts']=self.sampling_job_receipts
   dump(self.out/'native-acceptance.json',receipt);self.budget();return receipt
 
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  for k in ('app','candidate-engine','baseline','binding','output'):p.add_argument('--'+k,required=True,type=Path)
+ p.add_argument('--role',required=True,choices=('dpr2','dpr3','functional'));p.add_argument('--sampling-input',type=Path)
  a=p.parse_args();runner=Runner(a)
  try: print(json.dumps(runner.execute()))
  except Exception as e:

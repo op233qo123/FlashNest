@@ -2,16 +2,16 @@
   "contract": "native-policy-v3-authored-not-native-executed",
   "files": {
     "README.md": {
-      "bytes": 15997,
-      "sha256": "380ebadeb82bb22d6558add1f6dbdf6533587d8d78355a5f50ddd340d7385f03"
+      "bytes": 17443,
+      "sha256": "997136ab3753c29401369b73b5727ede3abc4dd5dcdb2e158840c08cf154169d"
     },
     "binding-template.json": {
       "bytes": 1071,
       "sha256": "911b141c99f98cf492d78dfd848116a4f7e2b60f745a854d1d29dae491dad00d"
     },
     "helper-lock.json": {
-      "bytes": 12627,
-      "sha256": "b3dbb0b7e63015795f50051aa060e1b696d87137ed15a77d387596db29034b7d"
+      "bytes": 13130,
+      "sha256": "8abc0f32b113d8b937a6547e3f2dc66db26adad28b75bf64dc41591c9d53a1d5"
     },
     "legacy-automatic-negative/canvas.png": {
       "bytes": 14709,
@@ -78,28 +78,36 @@
       "sha256": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc"
     },
     "run.py": {
-      "bytes": 37746,
-      "sha256": "7e368bd5e044ae355c796f181eeca46d06a56f6bd323f76af17997d15d0a8d99"
+      "bytes": 45224,
+      "sha256": "5fb76801996a114c1a1d940c6756a2bdeb00317aef8aee5481d06389382795c1"
     },
     "selection-contract-v3.json": {
       "bytes": 20509,
       "sha256": "6aeb4157f8522088c9f0cd9c98b0a609871c710bc9be8dfca1e36119a977074b"
     },
+    "selection-contract-v4.json": {
+      "bytes": 23793,
+      "sha256": "df308b0d2d9c7b30fbcd1f9345fd3aa045b3558f537c7f1aec91cf1814ac2028"
+    },
     "test_evidence_preservation.py": {
       "bytes": 5269,
       "sha256": "b0a9184f983a0987bc588b2ac9584a91c1ecc81eb9f92b6ff7c77e641a9432fc"
     },
+    "test_multijob.py": {
+      "bytes": 13914,
+      "sha256": "033e46bb555f78bbf898d0c1c57e4fc6b81345e5ca2f581cb36f8a4ffb8d1003"
+    },
     "test_policy_runner_v3.py": {
-      "bytes": 1991,
-      "sha256": "aee1bb6b70df0625654374097c9df13653be3c1ed2e028acb444a19bff5dc3a2"
+      "bytes": 1992,
+      "sha256": "092005da5c37495be95ada3a15ce421e37051cbbb22d5bcb895e3fc8eb8a8352"
     },
     "test_runner.py": {
-      "bytes": 4799,
-      "sha256": "334b50cfe5af463fdac0554fa715b222307a75ca8097c8b210e8412ed8a9f3e0"
+      "bytes": 4875,
+      "sha256": "98164ad5636f7097ce4c7e089b5cc8175e7725f511b4656d06859acd994419ae"
     },
     "test_sampling_split.py": {
-      "bytes": 7497,
-      "sha256": "fc751c447787497d8fa15faf8a7d90380480e68a3e1a030794fae4ca08617107"
+      "bytes": 7768,
+      "sha256": "749ee2b6800280c518d95b011c3aeb061556051e8581d95a025d844d1c87e049"
     }
   },
   "scope": "Authored native runner adapter; no actual execution"

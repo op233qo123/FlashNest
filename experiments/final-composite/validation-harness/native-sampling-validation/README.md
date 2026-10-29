@@ -1,4 +1,28 @@
-# Native v3 — authoritative current contract
+# Native v4 single-tier method contract — current authority
+
+This explicitly replaces v3's166-method execution partition. It does not weaken matrix, input, pixel, source identity, no-loss, sidecar, or lifecycle requirements. No production App/runtime/probe/fixture change is part of this delta. The runner/workflow owner separately supplies per-DPR jobs and exact product-bound execution; this directory does not change run.py or workflow.
+
+## Exact executions and unchanged observations
+
+Per DPR: baseline2 Original/WebGL methods; candidate22 single-tier matrix methods plus original navigation1; Enhanced original diagnostic1. Across DPR2/3 this is52 sampling/navigation/Enhanced executions, plus unchanged146 functional executions: **198 total =196 regression +2 Enhanced diagnostics**. This is not198 rendering-health passes. Legacy stale-input negative controls and known failed Automatic evidence retain their distinct roles; Enhanced remains diagnostic-only and never certifies platform health.
+
+Candidate22 matrix methods =16 shipping (2 policies ×2 scaleModes ×4 tiers) +Low2 (Original/quarter) +High4. Each method owns exactly one existing tier's portrait→landscape→portrait-return sequence on the same player. Baseline remains2 single-Original methods. No tier/phase is repeated or removed:48 rows/144 phases,720 taps/144 drags/864RESET,150 crop sidecars (144 matrix+6 Enhanced windows).
+
+The complete original inner tier body, physical input, status checks and wait bounds are byte-preserved except row schema/method provenance. Both candidate shipping quarter/showAll policies still run the original stale-message/background/reload/restart lifecycle immediately after their third phase on that same app/player; no new independent lifecycle player or duplicate sampling is introduced. Lifecycle's explicit restart semantics remain original. Per-case executionTimeAllowance remains900; no original wait increased.
+
+## Binding and evidence
+
+- `method-map-v4.json` is SHA-pinned by verifier. It maps each method to arm/policy/scaleMode/tier/lane/phases/lifecycle, plus the existing navigation and Enhanced roles.
+- `selection-contract-v4.json` is explicit `flashnest-native-composite-v4`, schema4, total198/regression196/Enhanced2; original parent-run structure remains17 records.
+- Matrix rows use `flashnest-native-sampling-v4` and add `method`; verifier rejects missing/unknown or mismatched method versus observed arm/policy/mode/tier/lane/phase.
+- Geometry receipt uses `flashnest-native-sampling-v4`, `methodPartition=single-tier-v1`, pinned `methodMapSHA256`, candidateMatrixMethodsPerDPR22 and baselineMatrixMethodsPerDPR2.
+- Lifecycle/navigation/Enhanced/before-input/crop-sidecar schemas and actual evidence requirements remain unchanged. Original v3 selection files are historical and cannot authorize v4 acceptance.
+
+33 local Python controls (including7 new partition controls) plus the existing JS suites validate source/contract models only. The exact old tier-body and lifecycle hashes are independently pinned in tests. Actual native v4 execution remains required; prior successful selectors/diagnostics do not replace it, and earlier failed runs remain failed.
+
+---
+
+# Historical v3/v2 material — superseded; not current selection
 
 # Native v3 three-policy contract — authored, actual acceptance pending
 

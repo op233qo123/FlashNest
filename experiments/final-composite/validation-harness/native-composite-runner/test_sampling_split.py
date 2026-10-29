@@ -6,6 +6,7 @@ class Fake(r.Runner):
  def __init__(self,p,fail=None):
   self.out=p/'out';self.stage=p/'stage';self.out.mkdir();self.stage.mkdir();self.results=[];self.commands=[];self.children=[];self.fail=fail;self.devices={'2':'dpr2','3':'dpr3'};self.config_mutation=None
   for name in ('xcode-version.log','available-devices.log','tool-receipt.json','binding.json'):(self.out/name).write_text('verified preflight evidence')
+  for arm in ('baseline','candidate'):r.dump(self.out/('sampling-'+arm+'-generated-app-files.json'),{'files':{'App/Info.plist':'fixture-only-generated-hash'},'artifact':'fixture-only.plist','projectSpecificationSHA256':'fixture-only','toolReceiptSHA256':'fixture-only'})
   self.lanes={'sampling-candidate':r.lane('sampling-candidate','FlashNestSamplingUI',['M/C/testB','M/C/testA'],900),'sampling-enhanced-boundary':r.lane('sampling-enhanced-boundary','FlashNestSamplingUI',['M/C/testEnhanced'],300),'sampling-baseline':r.lane('sampling-baseline','FlashNestSamplingUI',['M/C/testA'],900)}
  def command(self,argv,name,cwd=None,timeout=1200,allowed=(0,)):
   self.commands.append((list(map(str,argv)),name,timeout));products=Path(cwd)/'build/Build/Products';products.mkdir(parents=True)

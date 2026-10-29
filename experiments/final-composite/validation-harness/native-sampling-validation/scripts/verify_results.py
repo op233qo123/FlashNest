@@ -32,6 +32,21 @@ def trace_equal(a, b):
             except ValueError: ok = value == expected
             require(ok, f'Original SWF logical/input geometry changed: {value!r} != {expected!r}')
 
+METHOD_MAP_SHA256 = '154165415a5a09ff306a8721a70bfc3729615efdfecc38bdce5fedfb2f58e22b'
+def load_method_map():
+    path=Path(__file__).resolve().parents[1]/'method-map-v4.json'
+    raw=path.read_bytes()
+    require(hashlib.sha256(raw).hexdigest()==METHOD_MAP_SHA256,'Reviewed single-tier method map differs')
+    contract=json.loads(raw)
+    require(contract['contract']=='flashnest-native-sampling-v4' and contract['totalNativeMethodExecutions']==198,'Wrong method partition contract')
+    return contract
+
+def check_method_row(row, contract):
+    method=row.get('method');entry=contract['methods'].get(method)
+    require(entry is not None and entry['kind']=='matrix','Missing/unknown matrix method provenance')
+    require(all(row[field]==entry[field] for field in ('arm','rendererPolicy','scaleMode','tier','lane')),'Tier method and actual row differ')
+    require(row['phase'] in entry['phases'],'Unexpected method phase')
+
 def check_measurement(row, snapshot, candidate_inventory, baseline_inventory, unsupported=None):
     m = snapshot['measurement']; arm = row['arm']; scale = TIERS[row['tier']]
     identity = snapshot['identity']; expected_inventory = candidate_inventory if arm == 'candidate' else baseline_inventory
@@ -236,6 +251,7 @@ def verify_enhanced_boundary(records, boundaries, pngs, expected_identity, crops
     return {'configurationAndErrorBoundaryVerified':True,'diagnosticOnly':True,'nativeAcceptance':False,'platformRenderHealthCertified':False,'contextLossUserErrorReportingCertified':False,'explicitNavigationFailureVisibilityVerified':True,'observations':outcomes}
 
 def verify(folder, candidate_inventory, baseline_inventory, expected_identities):
+    method_contract=load_method_map()
     require(set(expected_identities) == {'baseline', 'candidate'}, 'External reviewed identities for both arms are required')
     for arm, expected in expected_identities.items():
         require(expected.get('arm') == arm and expected.get('simulatorOnly') is True, 'Invalid external arm identity')
@@ -257,13 +273,14 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
             if schema == 'flashnest-oriented-crop-v1':
                 crop_key=(record['identity']['arm'],record['screenScale'],record['captureName'])
                 require(crop_key not in crops, 'Duplicate oriented crop capture key');crops[crop_key]=record
-            if schema == 'flashnest-native-sampling-v3': records.append(record)
+            if schema == 'flashnest-native-sampling-v4': records.append(record)
             if schema == 'flashnest-native-sampling-lifecycle-v1': lifecycle.append(record)
             if schema == 'flashnest-native-sampling-navigation-v1': navigation.append(record)
             if schema == 'flashnest-enhanced-policy-window-v1': enhanced_windows.append(record)
             if schema == 'flashnest-enhanced-policy-boundary-v1': enhanced_boundaries.append(record)
     keyed = {}
     for row in records:
+        check_method_row(row,method_contract)
         key = (row['arm'], row['before']['screenScale'], row['rendererPolicy'], row['scaleMode'], row['tier'], row['lane'], row['phase'])
         require(key not in keyed, 'Duplicate matrix evidence key'); keyed[key] = row
     expected = set()
@@ -335,7 +352,7 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
         needed = {('candidate', dpr, policy, mode, tier, 'shipping-default-quality', phase)
                   for dpr, mode, tier, phase in itertools.product((2, 3), MODES, ('threeQuarter', 'half', 'quarter'), PHASES)}
         if needed <= reduction_keys: policies_reduced.append(policy)
-    return {'contract':'flashnest-native-sampling-v3', 'historicalStaleDownNegativePhases':12,
+    return {'contract':'flashnest-native-sampling-v4', 'methodPartition':'single-tier-v1', 'methodMapSHA256':METHOD_MAP_SHA256, 'candidateMatrixMethodsPerDPR':22, 'baselineMatrixMethodsPerDPR':2, 'historicalStaleDownNegativePhases':12,
         'candidateCurrentDownUpPhases':132, 'independentMapping':'source-f32-twips-center-320x240',
         'fixtureResetsAfterObservedUp':864, 'matrixEvidenceConsistent': True, 'matrixPassed': not unsupported, 'unsupportedControls': unsupported,
         'shippingRows': 36, 'diagnosticRows': 12, 'phases': 144,
