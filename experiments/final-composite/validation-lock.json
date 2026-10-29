@@ -400,7 +400,7 @@
     "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
     "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4"
   },
-  "diagnosticOnly": false,
+  "diagnosticOnly": true,
   "dispatchAllowed": true,
   "engine": {
     "artifactID": 12862634818,
@@ -476,6 +476,10 @@
     "scripts/run_native_navigation_diagnostic.py": {
       "bytes": 9274,
       "sha256": "e3d044e3e5f3305b7d979ceb7c2d04d7394e80369b075ea263c7645e44aa4fcc"
+    },
+    "scripts/run_native_ownership_diagnostic.py": {
+      "bytes": 12977,
+      "sha256": "f3903310520009c9e53f2a571b49c6da1f1eb9f855cd747f9e77ca86bc88e211"
     },
     "scripts/run_native_restart_diagnostic.py": {
       "bytes": 9349,
@@ -916,6 +920,34 @@
     "validation-harness/native-composite-runner/test_sampling_split.py": {
       "bytes": 7768,
       "sha256": "749ee2b6800280c518d95b011c3aeb061556051e8581d95a025d844d1c87e049"
+    },
+    "validation-harness/native-ownership-diagnostic/README.md": {
+      "bytes": 2595,
+      "sha256": "294d79d759b90f540ea1a905f7a328aa3e1e47bdbb9c58f0ea8887a4afecb007"
+    },
+    "validation-harness/native-ownership-diagnostic/RestartOwnershipDiagnosticTests.swift": {
+      "bytes": 8118,
+      "sha256": "47bd30273e5a644bc05a7f2e6467a367a5449eb4ce568444b65471370ad14a0a"
+    },
+    "validation-harness/native-ownership-diagnostic/selection.json": {
+      "bytes": 458,
+      "sha256": "1555a7525ccf0b11448fa72ad25c9b82890268a56ed93fef9941db421a692f05"
+    },
+    "validation-harness/native-ownership-diagnostic/source-pins.json": {
+      "bytes": 937,
+      "sha256": "c42158f285a3a6bc198c8a2b5ba3b6e5f455bde691058210420c3fbbba3f1856"
+    },
+    "validation-harness/native-ownership-diagnostic/stage_controls.py": {
+      "bytes": 1699,
+      "sha256": "899eae47b5421bd6ead08a49b2d8d3736e7bdf94d9db0d2a6ff76c657fc9e1ad"
+    },
+    "validation-harness/native-ownership-diagnostic/tests/test_controls.py": {
+      "bytes": 3477,
+      "sha256": "bfaf4c95e4c27097c5f4344ac55ac1de150e99aa2d93cca3f6d7eb43883dc054"
+    },
+    "validation-harness/native-ownership-diagnostic/verify_observations.py": {
+      "bytes": 2629,
+      "sha256": "b85ed4b04d785de8e5c16ddd3c06e8807f1be14a9f20c0c0a1f64cf5d70d5f31"
     },
     "validation-harness/native-restart-diagnostic/README.md": {
       "bytes": 3024,
@@ -1435,6 +1467,6 @@
       ]
     }
   },
-  "reason": "Complete198 v4 native eligible with explicit one-pixel outer-raster evidence and passive restart observations. Prior intermittent restart/context failures remain unexplained; all original regression assertions required, no native or IPA acceptance.",
+  "reason": "Only bounded blank WK ownership and exact source-copy representable identity observations eligible. No product change, no game, no native/full198/render acceptance. Formal validation remains incomplete after current new-WebContent termination.",
   "schemaVersion": 1
 }

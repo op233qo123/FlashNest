@@ -1,0 +1,12 @@
+{
+  "schema": "flashnest-ownership-selection-v1",
+  "selectors": [
+    "FlashNestTests/RestartOwnershipDiagnosticTests/testBlankWebViewOwnersAndWeakRelease",
+    "FlashNestTests/RestartOwnershipDiagnosticTests/testSourceCopySameTurnReplacementIdentity",
+    "FlashNestTests/RestartOwnershipDiagnosticTests/testSourceCopyRenderedNilReplacementIdentity"
+  ],
+  "count": 3,
+  "methodDeadlineSeconds": 30,
+  "diagnosticOnly": true,
+  "nativeAcceptance": false
+}

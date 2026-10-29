@@ -1,0 +1,8 @@
+{
+  "playerViewSHA256": "5a47e35af1161cba3bfaa11affb9ecb736ccdd249a1ed15194906dbec9547ba2",
+  "testSHA256": "47bd30273e5a644bc05a7f2e6467a367a5449eb4ce568444b65471370ad14a0a",
+  "exactSourceBlocks": [
+    "private struct PlayerWebView: UIViewRepresentable {\n    let webView: WKWebView\n    func makeUIView(context: Context) -> WKWebView { webView }\n    func updateUIView(_ uiView: WKWebView, context: Context) {}\n}",
+    "        if let webView = session.webView {\n            PlayerWebView(webView: webView)\n                .accessibilityIdentifier(\"player-stage\")\n        } else if session.failure == nil {\n            ProgressView {\n                Text(stageProgressMessage).fixedSize(horizontal: false, vertical: true)\n                    .multilineTextAlignment(.center)\n            }.tint(.white).foregroundStyle(.white).padding(24)\n                .frame(maxWidth: .infinity, maxHeight: .infinity)\n        }"
+  ]
+}
