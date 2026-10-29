@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""One explicitly diagnostic native baseline case; never writes acceptance."""
+"""One explicitly diagnostic native candidate automatic case; never writes acceptance."""
 import importlib.util, json, shutil, signal, sys, time
 from pathlib import Path
 from types import SimpleNamespace
 ROOT=Path(__file__).resolve().parents[1]
-SELECTOR='FlashNestSamplingUITests/NativeSamplingUITests/testShippingWebGLShowAll'
+SELECTOR='FlashNestSamplingUITests/NativeSamplingUITests/testDiagnosticCandidateAutomaticContextWindow'
 MAX_SECONDS=1800
 
 def load_runner():
@@ -14,21 +14,42 @@ def load_runner():
 
 def execute_one(runner, module):
     runner.preflight() # Original full source/runtime/helper/tool checks; no test execution here.
-    b=runner.binding;baseline=runner.args.baseline/'sampling';runtime=baseline/'runtime'
-    app=runner.copy_app('sampling-baseline-drag-diagnostic',runtime,runner.sampling_map)
-    shutil.copyfile(baseline/'runtime.files.json',app/'runtime.files.json')
+    b=runner.binding
+    app=runner.copy_app('sampling-candidate-automatic-diagnostic')
     module.dump(app/'NATIVE_VALIDATION_COPY.json',{'disposable':True,'sdk':'iphonesimulator'})
-    runner.metadata_overlay(app,baseline/'app-metadata',b['samplingBaselineMetadata'])
-    repin=b['samplingAppManifests']['baseline'];repin_path=(runner.args.binding.parent/repin['path']).resolve()
-    module.require(module.sha(repin_path)==repin['sha256'],'Baseline App manifest differs')
+    repin=b['samplingAppManifests']['candidate'];repin_path=(runner.args.binding.parent/repin['path']).resolve()
+    module.require(module.sha(repin_path)==repin['sha256'],'Candidate App manifest differs')
     inventory_hash=module.sha(app/'runtime.files.json')
-    runner.command([sys.executable,module.SAMPLING/'scripts/prepare_overlay.py','--app',app,'--arm','baseline',
+    freeze=runner.stage/'sampling-candidate-freeze.json'
+    module.dump(freeze,{'frozen':True,'releaseEquivalent':True,'runtimeInventorySHA256':inventory_hash,
+        'approvedAppManifestSHA256':repin['sha256']})
+    runner.command([sys.executable,module.SAMPLING/'scripts/prepare_overlay.py','--app',app,'--arm','candidate',
         '--runtime-inventory-sha256',inventory_hash,'--approved-app-manifest',repin_path,
-        '--approved-app-manifest-sha256',repin['sha256']],'sampling-baseline-diagnostic-stage',timeout=120)
-    shutil.copyfile(app/'NativeSamplingValidation/staging-provenance.json',runner.out/'sampling-baseline-staging-provenance.json')
-    project=runner.project(app,'sampling-baseline-diagnostic','FlashNestSamplingUI')
-    device=runner.devices['2'];runner.reset(device,'sampling-baseline-dpr2-diagnostic')
-    key='single-baseline-drag-diagnostic'
+        '--approved-app-manifest-sha256',repin['sha256'],'--candidate-freeze',freeze],
+        'sampling-candidate-diagnostic-stage',timeout=120)
+    shutil.copyfile(app/'NativeSamplingValidation/staging-provenance.json',runner.out/'sampling-candidate-staging-provenance.json')
+    # One extra diagnostic method exists only in this disposable staged UITest copy.
+    target=app/'NativeSamplingValidation/UITests/NativeSamplingUITests.swift'
+    original=target.read_bytes()
+    staged_app_before=module.inventory(app/'App')
+    module.require(original==(module.SAMPLING/'UITests/NativeSamplingUITests.swift').read_bytes(),
+        'Diagnostic starts from exact frozen original UITest source')
+    fragment_path=ROOT/'diagnostics/native-candidate-context/method.swift'
+    fragment=fragment_path.read_bytes()
+    anchor=b'    private func matrix('
+    module.require(original.count(anchor)==1 and fragment not in original,'Exact diagnostic insertion anchor required')
+    changed=original.replace(anchor,fragment+anchor,1)
+    module.require(changed.replace(fragment,b'',1)==original,'Diagnostic inverse must restore every original byte')
+    target.write_bytes(changed)
+    module.require(module.inventory(app/'App')==staged_app_before,'Extra diagnostic overlay changed staged App')
+    module.dump(runner.out/'diagnostic-test-overlay.json',{'diagnosticOnly':True,'extraDiagnosticOverlayAppChanged':False,
+        'target':'NativeSamplingValidation/UITests/NativeSamplingUITests.swift',
+        'originalSHA256':module.hashlib.sha256(original).hexdigest(),'fragmentSHA256':module.sha(fragment_path),
+        'diagnosticSHA256':module.sha(target),'exactInverseVerified':True,'original161ContractUnchanged':True})
+    shutil.copyfile(app/'NativeSamplingValidation/SamplingIdentity.json',runner.out/'diagnostic-expected-identity.json')
+    project=runner.project(app,'sampling-candidate-diagnostic','FlashNestSamplingUI')
+    device=runner.devices['2'];runner.reset(device,'sampling-candidate-dpr2-diagnostic')
+    key='single-candidate-automatic-diagnostic'
     runner.lanes[key]=module.lane(key,'FlashNestSamplingUI',[SELECTOR],900)
     module.require(runner.lanes[key]['expectedCount']==1 and runner.lanes[key]['selectors']==[SELECTOR],'Exactly one diagnostic method required')
     module.dump(runner.out/'diagnostic-selection.json',runner.lanes[key])
@@ -57,12 +78,24 @@ def main():
     except Exception as exc:error=exc
     finally:
         signal.alarm(0);signal.signal(signal.SIGALRM,old)
-        module.dump(out/'native-drag-diagnostic.json',{'diagnosticOnly':True,'finalAcceptance':False,'ipaBuilt':False,
-            'selector':SELECTOR,'expectedMethods':1,'arm':'delivered155-baseline','requestedDPR':2,
-            'methodPassed':error is None,'error':str(error) if error else None,'completedLanes':runner.results,
-            'limitation':'No candidate sampling, full native matrix, product fix or final acceptance is established'})
+        verification_error=None;observation=None
+        try:
+            verifier=module.load_module('candidate_context_verifier',ROOT/'diagnostics/native-candidate-context/verify_context_window.py')
+            observation=verifier.verify(out/'attachments/single-candidate-automatic-diagnostic',module.SAMPLING/'scripts/verify_results.py',out/'diagnostic-expected-identity.json')
+            module.dump(out/'diagnostic-observation-verification.json',observation)
+            module.require(observation.get('diagnosticHealthy') is True,'Candidate context/pixel diagnostic unhealthy; full report preserved')
+        except Exception as exc:
+            verification_error=str(exc)
+            if observation is None:
+                module.dump(out/'diagnostic-observation-verification.json',{'diagnosticOnly':True,
+                    'nativeAcceptance':False,'diagnosticHealthy':False,'error':verification_error})
+            if error is None:error=exc
+        module.dump(out/'native-drag-diagnostic.json' ,{'diagnosticOnly':True,'finalAcceptance':False,'ipaBuilt':False,
+            'selector':SELECTOR,'expectedMethods':1,'arm':'candidate-touch-contact-engine','requestedDPR':2,
+            'observationPassed':error is None,'error':str(error) if error else None,'observationVerificationError':verification_error,'completedLanes':runner.results,
+            'limitation':'Only candidate Automatic/noScale/Original initial same-player observation window; no fixture input, rotation, full matrix, product fix or final acceptance is established'})
         module.require(not (out/'native-acceptance.json').exists(),'Diagnostic must not emit native acceptance')
         runner.budget();final.parent.mkdir(exist_ok=True);shutil.copytree(out,final) # Full xcresult remains outside evidence.
-    if error:raise SystemExit('Single diagnostic failed; preserved bounded pre-drag evidence: '+str(error))
+    if error:raise SystemExit('Single diagnostic failed; preserved bounded automatic renderer evidence: '+str(error))
     print('Single diagnostic method passed; NOT final native acceptance')
 if __name__=='__main__':main()

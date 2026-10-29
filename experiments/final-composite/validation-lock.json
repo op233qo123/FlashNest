@@ -420,6 +420,14 @@
     ]
   },
   "harnessFiles": {
+    "diagnostics/native-candidate-context/method.swift": {
+      "bytes": 5212,
+      "sha256": "4c2875484c8eef7e25b6e7c7e40503a978cb702fb40b8b889af7633648e80c0e"
+    },
+    "diagnostics/native-candidate-context/verify_context_window.py": {
+      "bytes": 8419,
+      "sha256": "33a1bff66e391a1bba285d2b69179a4884cacffc5845369eb0cac0efb92fb573"
+    },
     "runtime-consumer/composite_runtime.py": {
       "bytes": 9444,
       "sha256": "1293c8100260831fc0a26c3740bc1d0a17d9d1e0cd8414872f828df40f4401d7"
@@ -441,8 +449,8 @@
       "sha256": "f4e570f42fc35545afbd288b82f30f46a24594188c27d2171c3cc050eb6fcda7"
     },
     "scripts/run_native_drag_diagnostic.py": {
-      "bytes": 5111,
-      "sha256": "30d23ea781d381cfdd2a36fe5e9d2b67f568644f9f6118bd8f06d454fec361c0"
+      "bytes": 7821,
+      "sha256": "9ac6ea269df2a0a83a58e918ae6447b964bbe968a1bdc086c2febbad24554bfb"
     },
     "scripts/run_native_validation.py": {
       "bytes": 1667,

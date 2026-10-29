@@ -1,4 +1,4 @@
-name: FlashNest single baseline drag diagnostic (not acceptance)
+name: FlashNest single candidate automatic diagnostic (not acceptance)
 on:
   workflow_dispatch:
 permissions:
@@ -49,7 +49,7 @@ jobs:
           echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  pinned-tools/xcodegen.zip' | shasum -a 256 --check
           unzip -q pinned-tools/xcodegen.zip -d pinned-tools
           test -x pinned-tools/xcodegen/bin/xcodegen
-      - name: Run exactly one baseline DPR2 diagnostic, never final acceptance
+      - name: Run one candidate automatic initial-context DPR2 diagnostic, never final acceptance
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -66,7 +66,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always() && steps.native-budget.outputs.allowed == 'true'
         with:
-          name: FlashNest-single-baseline-drag-diagnostic-not-acceptance
+          name: FlashNest-single-candidate-automatic-diagnostic-not-acceptance
           path: experiments/final-composite/evidence/native-drag-diagnostic
           retention-days: 1
           if-no-files-found: warn
