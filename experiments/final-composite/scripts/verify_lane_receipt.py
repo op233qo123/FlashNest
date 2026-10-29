@@ -39,6 +39,40 @@ else:
  assert len(report['results'])==len(selection['runs'])
  assert {r['runName']:(r['lane'],r['tests']) for r in report['results']}=={r['runName']:(r['lane'],r['expectedCount']) for r in selection['runs']}
  assert all(r['semanticResultValid'] is True and r['osVersion']=='18.2' for r in report['results'])
+ # Four sampling lane totals are backed by exact independent one-selector results.
+ for expected_run in selection['runs']:
+  if expected_run['lane'] not in ('sampling-baseline','sampling-candidate'): continue
+  result=next(r for r in report['results'] if r['runName']==expected_run['runName'])
+  children=result['children'];selectors=sorted(expected_run['selectors'])
+  assert len(children)==expected_run['expectedCount'] and [c['selector'] for c in children]==selectors
+  proof_raw=(ROOT/'evidence/native'/(expected_run['lane']+'-build-for-testing-proof.json')).read_bytes()
+  assert hashlib.sha256(proof_raw).hexdigest()==result['buildProofSHA256']
+  proof=json.loads(proof_raw)
+  assert proof['nativeAcceptance'] is False and proof['sourceExcludedPaths']==['build/']
+  assert proof['config']['scheme']=='FlashNestSamplingUI' and proof['config']['configuration']=='Debug'
+  assert proof['config']['sdk']=='iphonesimulator' and proof['config']['xcode']=='16.2' and proof['config']['os']=='18.2' and proof['config']['signing'] is False
+  assert proof['sourceFiles'] and proof['productFiles'] and proof['references']
+  staging=json.loads((ROOT/'evidence/native'/(expected_run['lane']+'-staging-provenance.json')).read_text())
+  expected_built_app=staging['gateOffAppFiles'].copy()
+  for path,change in staging['changedAppFiles'].items():
+   assert expected_built_app[path]==change['before'];expected_built_app[path]=change['after']
+  assert {path:digest for path,digest in proof['sourceFiles'].items() if path.startswith('App/')}==expected_built_app
+  assert set(proof['approvedDestinations'])=={'2','3'} and proof['config']['firstDestination'] in proof['approvedDestinations'].values()
+  assert set(proof['preflightReceiptSHA256'])=={'xcode-version.log','available-devices.log','tool-receipt.json','binding.json'}
+  for name,digest in proof['preflightReceiptSHA256'].items():
+   assert hashlib.sha256((ROOT/'evidence/native'/name).read_bytes()).hexdigest()==digest
+  xctestrun_relative=Path(proof['xctestrun']).relative_to(Path(proof['products'])).as_posix()
+  assert proof['productFiles'][xctestrun_relative]==proof['xctestrunSHA256']
+  for index,child in enumerate(children,1):
+   child_name=expected_run['runName']+'-selector-'+str(index).zfill(2)
+   child_raw=(ROOT/'evidence/native'/(child_name+'-verification.json')).read_bytes()
+   assert hashlib.sha256(child_raw).hexdigest()==child['verificationSHA256'] and json.loads(child_raw)==child['report']
+   actual=child['report']
+   assert actual['runName']==child_name and actual['lane']==expected_run['lane'] and type(actual['tests']) is int and actual['tests']==1
+   assert actual['semanticResultValid'] is True and actual['osVersion']=='18.2'
+ candidate_build_raw=(ROOT/'evidence/native/sampling-candidate-build-for-testing-proof.json').read_bytes()
+ for boundary in (r for r in report['results'] if r['lane']=='sampling-enhanced-boundary'):
+  assert boundary['buildProofSHA256']==hashlib.sha256(candidate_build_raw).hexdigest()
  authority_raw=(ROOT/'validation-harness/native-sampling-validation/approved-candidate-app-source-manifest.json').read_bytes()
  assert hashlib.sha256(authority_raw).hexdigest()==report['candidateAppSourceAuthoritySHA256']
  authority=json.loads(authority_raw)

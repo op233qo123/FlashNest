@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Serial, synthetic-only final native regression adapter. No dispatch or IPA."""
+import plistlib
 import argparse, hashlib, importlib.util, json, os, platform, re, shutil, signal, subprocess, sys, time, zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent; WORK=ROOT.parent
@@ -180,9 +181,101 @@ class Runner:
   else:require(matches[0]['state']=='Shutdown','Simulator is not in a stable shutdown/booted state')
   self.command(['xcrun','simctl','erase',device],name+'-erase')
   self.command(['xcrun','simctl','bootstatus',device,'-b'],name+'-boot',timeout=120)
+ def sampling_source_map(self,app):
+  out={}
+  for p in sorted(Path(app).rglob('*')):
+   rel=p.relative_to(app)
+   if rel.parts[0]=='build':continue
+   require(not p.is_symlink(),'Linked sampling build input rejected')
+   if p.is_file():out[rel.as_posix()]=sha(p)
+  return out
+ def validate_sampling_products(self,proof):
+  require(all(not p.is_symlink() for p in (Path(proof['app'])/'build',Path(proof['app'])/'build/Build',Path(proof['products']))),'Linked derived data rejected')
+  require(self.sampling_source_map(Path(proof['app']))==proof['sourceFiles'],'Sampling source changed after build')
+  require(inventory(Path(proof['products']))==proof['productFiles'],'Built sampling product changed')
+  require(sha(Path(proof['xctestrun']))==proof['xctestrunSHA256'],'xctestrun changed')
+  require({name:sha(self.out/name) for name in proof['preflightReceiptSHA256']}==proof['preflightReceiptSHA256'],'Preflight tool/device evidence changed')
+ def sampling_build(self,app,project,device,key):
+  require(device in self.devices.values(),'Unreviewed simulator destination')
+  cfg=self.lanes[key];cache=getattr(self,'sampling_builds',{});self.sampling_builds=cache
+  cache_key=(str(app.resolve()),cfg['scheme'])
+  if cache_key in cache:
+   proof=cache[cache_key];require(proof['project']==project and proof['config']['scheme']==cfg['scheme'],'Sampling build configuration differs');self.validate_sampling_products(proof);return proof
+  require(not (app/'build').exists() and not (app/'build').is_symlink(),'Sampling requires fresh dedicated derived data')
+  source=self.sampling_source_map(app);name=key+'-build-for-testing'
+  config={'scheme':cfg['scheme'],'configuration':'Debug','sdk':'iphonesimulator','xcode':'16.2','os':'18.2','signing':False,'firstDestination':device,'derivedData':str(app/'build')}
+  argv=['xcodebuild','build-for-testing','-project',project,'-scheme',cfg['scheme'],'-configuration','Debug','-sdk','iphonesimulator','-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',app/'build','-disableAutomaticPackageResolution','CODE_SIGNING_ALLOWED=NO','CODE_SIGNING_REQUIRED=NO']
+  self.command(argv,name,app,timeout=600)
+  require(self.sampling_source_map(app)==source,'Build mutated sampling source/configuration')
+  products=app/'build/Build/Products';product_map=inventory(products)
+  configs=list(products.glob('*.xctestrun'));require(len(configs)==1,'Exactly one built xctestrun required')
+  xctestrun=configs[0];data=plistlib.loads(xctestrun.read_bytes());targets=[]
+  def visit(value):
+   if isinstance(value,dict):
+    if 'TestBundlePath' in value:targets.append(value)
+    for child in value.values():visit(child)
+   elif isinstance(value,list):
+    for child in value:visit(child)
+  visit(data);require(targets,'No executable test targets in xctestrun')
+  references=[]
+  for target in targets:
+   host=None
+   for field in ('TestHostPath','TestBundlePath','UITargetAppPath'):
+    if field not in target:
+     raise ValueError('Missing sampling UI product path: '+field)
+    raw=target[field];require(isinstance(raw,str) and '..' not in Path(raw).parts,'Unsafe xctestrun product reference')
+    require(set(re.findall(r'__[A-Za-z][A-Za-z0-9_]*?__',raw)) <= {'__TESTROOT__','__TESTHOST__'},'Unknown product path substitution')
+    value=raw.replace('__TESTROOT__',str(products))
+    if '__TESTHOST__' in value:
+     require(host is not None,'Unresolved test host');value=value.replace('__TESTHOST__',str(host if host.is_dir() else host.parent))
+    resolved=Path(value).resolve();require(resolved.is_relative_to(products.resolve()) and resolved.exists(),'Test product outside pinned build/missing')
+    if field=='TestHostPath':host=resolved
+    references.append({'field':field,'raw':raw,'resolved':str(resolved)})
+  proof={'app':str(app.resolve()),'project':project,'config':config,'sourceFiles':source,'sourceExcludedPaths':['build/'],'preflightReceiptSHA256':{name:sha(self.out/name) for name in ('xcode-version.log','available-devices.log','tool-receipt.json','binding.json')},'approvedDestinations':self.devices.copy(),'buildCommand':[str(x) for x in argv],'buildLogSHA256':sha(self.out/(name+'.log')),'products':str(products),'productFiles':product_map,'xctestrun':str(xctestrun),'xctestrunSHA256':sha(xctestrun),'references':references,'nativeAcceptance':False}
+  proof_path=self.out/(name+'-proof.json');dump(proof_path,proof);proof['proofSHA256']=sha(proof_path)
+  cache[cache_key]=proof;return proof
  def test(self,app,project,device,key,name=None):
-  cfg=self.lanes[key];name=name or key;result=self.stage/(name+'.xcresult');seconds=cfg['maximumTestExecutionSeconds']
+  if key=='sampling-enhanced-boundary':
+   name=name or key;cfg=self.lanes[key]
+   require((str(app.resolve()),cfg['scheme']) in getattr(self,'sampling_builds',{}),'Enhanced requires already pinned candidate build')
+   proof=self.sampling_build(app,project,device,'sampling-candidate')
+   error=None;pin_error=None
+   try:report=self.test_once(app,project,device,key,name,xctestrun=proof['xctestrun'],append_result=False)
+   except Exception as e:error=e
+   try:self.validate_sampling_products(proof)
+   except Exception as e:pin_error=e
+   if error is not None or pin_error is not None:
+    dump(self.out/(name+'-build-pin-error.json'),{'primaryError':str(error) if error else None,'postBuildPinError':str(pin_error) if pin_error else None,'nativeAcceptance':False})
+    raise error or pin_error
+   report['buildProofSHA256']=proof['proofSHA256'];self.results.append(report);dump(self.out/(name+'-verification.json'),report);return report
+  if key not in ('sampling-baseline','sampling-candidate'):return self.test_once(app,project,device,key,name)
+  cfg=self.lanes[key];name=name or key;proof=self.sampling_build(app,project,device,key)
+  require(len(cfg['selectors'])==cfg['expectedCount'] and len(set(cfg['selectors']))==cfg['expectedCount'],'Invalid sampling selector set')
+  children=[]
+  for index,selector in enumerate(sorted(cfg['selectors'])):
+   self.validate_sampling_products(proof)
+   child_name=name+'-selector-'+str(index+1).zfill(2)
+   child_cfg={**cfg,'selectors':[selector],'expectedCount':1}
+   dump(self.out/(name+'-selector-progress.json'),{'lane':key,'expectedSelectors':sorted(cfg['selectors']),'completedChildren':children,'runningSelector':selector,'nativeAcceptance':False})
+   child_error=None;pin_error=None
+   try:child=self.test_once(app,project,device,key,child_name,cfg_override=child_cfg,xctestrun=proof['xctestrun'],append_result=False,attachment_group=name)
+   except Exception as e:child_error=e
+   try:self.validate_sampling_products(proof)
+   except Exception as e:pin_error=e
+   if child_error is not None or pin_error is not None:
+    dump(self.out/(name+'-selector-progress.json'),{'lane':key,'expectedSelectors':sorted(cfg['selectors']),'completedChildren':children,'failedSelector':selector,'error':str(child_error or pin_error),'postBuildPinError':str(pin_error) if pin_error else None,'notExecutedSelectors':sorted(cfg['selectors'])[index+1:],'nativeAcceptance':False})
+    raise child_error or pin_error
+   children.append({'selector':selector,'report':child,'verificationSHA256':sha(self.out/(child_name+'-verification.json'))})
+   dump(self.out/(name+'-selector-progress.json'),{'lane':key,'expectedSelectors':sorted(cfg['selectors']),'completedChildren':children,'nativeAcceptance':False})
+  require([c['selector'] for c in children]==sorted(cfg['selectors']),'Incomplete sampling lane')
+  require(all(c['report']['tests']==1 and c['report']['semanticResultValid'] is True and c['report']['osVersion']=='18.2' and c['report']['lane']==cfg['name'] for c in children),'Invalid child semantic result')
+  report={'lane':cfg['name'],'runName':name,'tests':cfg['expectedCount'],'osVersion':'18.2','semanticResultValid':True,'sourceRuntimeRunIdentityMustBeIndependentlyAuthenticated':True,'buildProofSHA256':proof['proofSHA256'],'children':children}
+  self.results.append(report);dump(self.out/(name+'-verification.json'),report)
+ def test_once(self,app,project,device,key,name=None,cfg_override=None,xctestrun=None,append_result=True,attachment_group=None):
+  cfg=cfg_override or self.lanes[key];name=name or key;result=self.stage/(name+'.xcresult');seconds=cfg['maximumTestExecutionSeconds']
   argv=['xcodebuild','test','-project',project,'-scheme',cfg['scheme'],'-configuration','Debug','-sdk','iphonesimulator','-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',str(app/'build'),'-resultBundlePath',str(result),'-disableAutomaticPackageResolution','-parallel-testing-enabled','NO','-maximum-concurrent-test-simulator-destinations','1','-test-timeouts-enabled','YES','-default-test-execution-time-allowance',str(seconds),'-maximum-test-execution-time-allowance',str(seconds)]
+  if xctestrun is not None:
+   argv=['xcodebuild','test-without-building','-xctestrun',xctestrun,'-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',str(app/'build'),'-resultBundlePath',str(result),'-parallel-testing-enabled','NO','-maximum-concurrent-test-simulator-destinations','1','-test-timeouts-enabled','YES','-default-test-execution-time-allowance',str(seconds),'-maximum-test-execution-time-allowance',str(seconds)]
   argv += ['-only-testing:'+s for s in cfg['selectors']]+['CODE_SIGNING_ALLOWED=NO','CODE_SIGNING_REQUIRED=NO']
   error=None;extraction_errors=[];summary=None
   try:log=self.command(argv,name,app,timeout=min(2400,seconds*cfg['expectedCount']+300))
@@ -205,7 +298,9 @@ class Runner:
      require(not p.is_symlink(),'Linked attachment rejected')
      if p.is_file() and p.suffix.lower() in ('.png','.jpg','.jpeg','.txt','.json'):
       require(p.stat().st_size<=8*1024*1024,'Oversized attachment rejected, not truncated')
-      dest=self.out/'attachments'/name/p.relative_to(export);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,dest);self.budget()
+      dest=self.out/'attachments'/(attachment_group or name)
+      if attachment_group:dest=dest/name
+      dest=dest/p.relative_to(export);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,dest);self.budget()
    except Exception as e:extraction_errors.append({'phase':'copy','error':str(e)})
   else:extraction_errors.append({'phase':'result','error':'xcodebuild produced no xcresult: '+name})
   evidence={'runName':name,'primaryError':str(error) if error else None,'extractionErrors':extraction_errors,
@@ -215,7 +310,9 @@ class Runner:
   require(not extraction_errors,'Evidence extraction failed: '+json.dumps(extraction_errors))
   report=self.verifier.verify(summary,log.read_text(),cfg)
   if key.startswith('audio-'):report['audio']=self.verifier.verify_audio_records(log.read_text(),cfg)
-  report['runName']=name;self.results.append(report);dump(self.out/(name+'-verification.json'),report)
+  report['runName']=name
+  if append_result:self.results.append(report)
+  dump(self.out/(name+'-verification.json'),report);return report
  def install_source(self,app,project,device,name):
   self.command(['xcodebuild','-project',project,'-scheme','FlashNestFixtureSource','-configuration','Debug','-sdk','iphonesimulator','-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',str(app/'build-source'),'-disableAutomaticPackageResolution','CODE_SIGNING_ALLOWED=NO','CODE_SIGNING_REQUIRED=NO','build'],name+'-source-build',app,600)
   self.command(['xcrun','simctl','install',device,app/'build-source/Build/Products/Debug-iphonesimulator/FlashNestFixtureSource.app'],name+'-source-install')

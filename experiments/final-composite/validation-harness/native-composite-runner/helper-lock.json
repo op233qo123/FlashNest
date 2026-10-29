@@ -1,7 +1,7 @@
 {
   "contract": "native-v3-oriented-capture-and-explicit-no-context-loss",
   "files": {
-    "native-composite-runner/README.md": "07f30f5161e27e2484cd050294f15f76eaa34005757589f6ed4ab3bb763b5840",
+    "native-composite-runner/README.md": "380ebadeb82bb22d6558add1f6dbdf6533587d8d78355a5f50ddd340d7385f03",
     "native-composite-runner/binding-template.json": "911b141c99f98cf492d78dfd848116a4f7e2b60f745a854d1d29dae491dad00d",
     "native-composite-runner/legacy-automatic-negative/canvas.png": "daebacd91d870e88bf2fced371065d6769250016da5866dea9bdd59fa18c50bf",
     "native-composite-runner/legacy-automatic-negative/expected-identities.json": "9a16d0198bb84d27a50e32fc7e668ac478b802a011a1190f9fbfd0fc6d077071",
@@ -19,11 +19,12 @@
     "native-composite-runner/legacy-source-restore/files/scripts/test_shell.js": "65702fd15b6170ca60a1b9381497dad51085f2d321006223d68349413b85c830",
     "native-composite-runner/legacy-source-restore/manifest.json": "257cb7433d1f934c646108b8c2f021d0fb0fb38eb2d8e8271c612851dd245fe7",
     "native-composite-runner/local-tests.log": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc",
-    "native-composite-runner/run.py": "94e711e2a9603a0201eebc8fffc9f5f61044bc7b365c11d56598d9e81153d638",
+    "native-composite-runner/run.py": "7e368bd5e044ae355c796f181eeca46d06a56f6bd323f76af17997d15d0a8d99",
     "native-composite-runner/selection-contract-v3.json": "6aeb4157f8522088c9f0cd9c98b0a609871c710bc9be8dfca1e36119a977074b",
-    "native-composite-runner/test_evidence_preservation.py": "7c63a7650b95ba892f7245c5705cf17583804a1d32f56ae74576eaf1eabacf8c",
+    "native-composite-runner/test_evidence_preservation.py": "b0a9184f983a0987bc588b2ac9584a91c1ecc81eb9f92b6ff7c77e641a9432fc",
     "native-composite-runner/test_policy_runner_v3.py": "aee1bb6b70df0625654374097c9df13653be3c1ed2e028acb444a19bff5dc3a2",
     "native-composite-runner/test_runner.py": "334b50cfe5af463fdac0554fa715b222307a75ca8097c8b210e8412ed8a9f3e0",
+    "native-composite-runner/test_sampling_split.py": "fc751c447787497d8fa15faf8a7d90380480e68a3e1a030794fae4ca08617107",
     "native-sampling-validation/Host/SamplingHost.swift": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4",
     "native-sampling-validation/Host/sampling-probe.js": "da4a93c5e8beb23f52f27cd9d1b7fe405ca583fbd6e3a8e1f1fb618e00770be4",
     "native-sampling-validation/README.md": "65d929c394d91ed13c105c9c10fd8e7d4b74e1f0fe23c7801ed9827e744fee4f",

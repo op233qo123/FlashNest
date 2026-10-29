@@ -2,16 +2,16 @@
   "contract": "native-policy-v3-authored-not-native-executed",
   "files": {
     "README.md": {
-      "bytes": 13084,
-      "sha256": "07f30f5161e27e2484cd050294f15f76eaa34005757589f6ed4ab3bb763b5840"
+      "bytes": 15997,
+      "sha256": "380ebadeb82bb22d6558add1f6dbdf6533587d8d78355a5f50ddd340d7385f03"
     },
     "binding-template.json": {
       "bytes": 1071,
       "sha256": "911b141c99f98cf492d78dfd848116a4f7e2b60f745a854d1d29dae491dad00d"
     },
     "helper-lock.json": {
-      "bytes": 12505,
-      "sha256": "95b1b567e6dd2af5d40b36bee7e2c7ca1247cb708cf8d1286dca394dca38c4f7"
+      "bytes": 12627,
+      "sha256": "b3dbb0b7e63015795f50051aa060e1b696d87137ed15a77d387596db29034b7d"
     },
     "legacy-automatic-negative/canvas.png": {
       "bytes": 14709,
@@ -78,16 +78,16 @@
       "sha256": "91d41ce70900bb68efd898c55028f4d116e41806a0d46df9d662d8af528237bc"
     },
     "run.py": {
-      "bytes": 29204,
-      "sha256": "94e711e2a9603a0201eebc8fffc9f5f61044bc7b365c11d56598d9e81153d638"
+      "bytes": 37746,
+      "sha256": "7e368bd5e044ae355c796f181eeca46d06a56f6bd323f76af17997d15d0a8d99"
     },
     "selection-contract-v3.json": {
       "bytes": 20509,
       "sha256": "6aeb4157f8522088c9f0cd9c98b0a609871c710bc9be8dfca1e36119a977074b"
     },
     "test_evidence_preservation.py": {
-      "bytes": 4405,
-      "sha256": "7c63a7650b95ba892f7245c5705cf17583804a1d32f56ae74576eaf1eabacf8c"
+      "bytes": 5269,
+      "sha256": "b0a9184f983a0987bc588b2ac9584a91c1ecc81eb9f92b6ff7c77e641a9432fc"
     },
     "test_policy_runner_v3.py": {
       "bytes": 1991,
@@ -96,6 +96,10 @@
     "test_runner.py": {
       "bytes": 4799,
       "sha256": "334b50cfe5af463fdac0554fa715b222307a75ca8097c8b210e8412ed8a9f3e0"
+    },
+    "test_sampling_split.py": {
+      "bytes": 7497,
+      "sha256": "fc751c447787497d8fa15faf8a7d90380480e68a3e1a030794fae4ca08617107"
     }
   },
   "scope": "Authored native runner adapter; no actual execution"
