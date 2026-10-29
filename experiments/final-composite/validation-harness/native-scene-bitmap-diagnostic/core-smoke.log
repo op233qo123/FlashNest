@@ -1,0 +1,37 @@
+
+running 1 test
+test bitmap_synthetic ... FAILED
+
+failures:
+
+---- bitmap_synthetic ----
+assertion failed: `(ruffle_actual == flash_expected)`
+
+Diff < left / right > :
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":1,"timeMs":162,"bytesTotal":-1,"phase":"parent.ready"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":2,"timeMs":186,"bytesTotal":-1,"phase":"old.open"}
+<SCENE_PHASE {"bytesLoaded":12630171,"sequence":3,"timeMs":316,"bytesTotal":12630171,"phase":"old.progress-end"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":4,"timeMs":493,"bytesTotal":-1,"phase":"old.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":5,"timeMs":493,"bytesTotal":-1,"phase":"old.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":6,"timeMs":493,"bytesTotal":-1,"phase":"old.complete"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":7,"timeMs":494,"bytesTotal":-1,"phase":"old.awaiting-space"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":8,"timeMs":497,"bytesTotal":-1,"phase":"transition.key"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":9,"timeMs":497,"bytesTotal":-1,"phase":"before-unload"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":10,"timeMs":497,"bytesTotal":-1,"phase":"old.unload-event"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":11,"timeMs":497,"bytesTotal":-1,"phase":"returned-unload"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":12,"timeMs":498,"bytesTotal":-1,"phase":"new.open"}
+<SCENE_PHASE {"bytesLoaded":45165019,"sequence":13,"timeMs":974,"bytesTotal":45165019,"phase":"new.progress-end"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":14,"timeMs":1151,"bytesTotal":-1,"phase":"new.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":15,"timeMs":1151,"bytesTotal":-1,"phase":"new.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":16,"timeMs":1151,"bytesTotal":-1,"phase":"new.complete"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":17,"timeMs":1151,"bytesTotal":-1,"phase":"parent.done"}
+<
+
+
+
+
+failures:
+    bitmap_synthetic
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; finished in 1.19s
+

@@ -1,0 +1,199 @@
+{
+  "schema": "flashnest-scene-bitmap-fixtures-v1",
+  "encoding": "rfc1950-stored-prefix-fixed-huffman-v1",
+  "files": {
+    "sized-bitmap/main.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 2593,
+      "declaredBytes": 2566,
+      "actualDecodedBytes": 2566,
+      "sha256": "c6980af8aab76e1ec05c380bc16d187439a1f95fbe20c6ef27e1a5b3570b9a6f",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 82,
+          "length": 2512,
+          "abcSHA256": "e72da3a38b959c70fda84da97d8f35bd637bc30b9ac57fb4cded4c8254d9ddc4"
+        },
+        {
+          "code": 76,
+          "length": 16,
+          "symbols": [
+            [
+              0,
+              "SceneParent"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "sized-bitmap/old.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 12630171,
+      "declaredBytes": 13668527,
+      "actualDecodedBytes": 13668527,
+      "sha256": "af3c30b0f6811b9b246bfa82a9a1294d884970233e481835131bc2769e693d7c",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 13630706,
+          "payloadSHA256": "1ac4f8218ef784b636a48fd600709528260437d4ae05570ef5c92e28155bf322"
+        },
+        {
+          "code": 36,
+          "length": 36751,
+          "decodedPixelsSHA256": "5aaa70354419800805932b0e486c96d1d494f0b680f5afd46df6845c2ba388b2",
+          "decodedPixelBytes": 4194304,
+          "centersARGB": [
+            [
+              255,
+              255,
+              0,
+              0
+            ],
+            [
+              255,
+              0,
+              255,
+              0
+            ],
+            [
+              255,
+              0,
+              0,
+              255
+            ],
+            [
+              255,
+              255,
+              255,
+              255
+            ]
+          ]
+        },
+        {
+          "code": 82,
+          "length": 991,
+          "abcSHA256": "061ebaf9dd9def92a36bf6ec44ae1c6400d03e4c75e1e7d507b885c9cfdc6915"
+        },
+        {
+          "code": 76,
+          "length": 29,
+          "symbols": [
+            [
+              0,
+              "SceneChild"
+            ],
+            [
+              2,
+              "SceneBitmap"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "sized-bitmap/new.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 45165019,
+      "declaredBytes": 50368687,
+      "actualDecodedBytes": 50368687,
+      "sha256": "40b6fcd90674d5618091a2739a62b328e0919daec5935d6456dfcdc506e7c6cd",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 50330866,
+          "payloadSHA256": "a7119fda2ac01ad89713bcd5bb8a9bb21fe3ccd55729b651a55eeda534314962"
+        },
+        {
+          "code": 36,
+          "length": 36751,
+          "decodedPixelsSHA256": "542b29ba3d905c5db7623b9f8b11c8502917cf795995292d559a6ec5f57eae25",
+          "decodedPixelBytes": 4194304,
+          "centersARGB": [
+            [
+              255,
+              0,
+              255,
+              255
+            ],
+            [
+              255,
+              255,
+              0,
+              255
+            ],
+            [
+              255,
+              255,
+              255,
+              0
+            ],
+            [
+              255,
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        {
+          "code": 82,
+          "length": 991,
+          "abcSHA256": "061ebaf9dd9def92a36bf6ec44ae1c6400d03e4c75e1e7d507b885c9cfdc6915"
+        },
+        {
+          "code": 76,
+          "length": 29,
+          "symbols": [
+            [
+              0,
+              "SceneChild"
+            ],
+            [
+              2,
+              "SceneBitmap"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    }
+  }
+}

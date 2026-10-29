@@ -461,6 +461,10 @@
       "bytes": 2383,
       "sha256": "f4e570f42fc35545afbd288b82f30f46a24594188c27d2171c3cc050eb6fcda7"
     },
+    "scripts/run_native_bitmap_scene_diagnostic.py": {
+      "bytes": 11267,
+      "sha256": "e4f332ed1519b96a5463da19503271c9c92ca0d446933fc90ef57a5d37faa51e"
+    },
     "scripts/run_native_context_pair_diagnostic.py": {
       "bytes": 9123,
       "sha256": "c843f16000a4839582c85ad01521b73677c99a5cb547c9c13ac09c26843c9320"
@@ -812,6 +816,18 @@
     "validation-harness/browser-runtime-validation/scripts/verify_results.py": {
       "bytes": 3817,
       "sha256": "5a5fa9e72c3dfec2ff521e04c8c6b579f905a69f598d6d48158d81fe5c3cc127"
+    },
+    "validation-harness/native-bitmap-scene-diagnostic/NativeSceneLoaderUITests.swift": {
+      "bytes": 13468,
+      "sha256": "bb3928e83c783ab1cb5e33642af76fa8bde91f9076ac46030b12fc605846b305"
+    },
+    "validation-harness/native-bitmap-scene-diagnostic/SamplingHost.swift": {
+      "bytes": 11366,
+      "sha256": "1054a90060a87c668d804f2889b39e34ab72ab990fa0ccc9e5d72763562131fc"
+    },
+    "validation-harness/native-bitmap-scene-diagnostic/stage_scene_host.py": {
+      "bytes": 4420,
+      "sha256": "6a4b9143dee30b23d50131224c226f273849e7de4132683d3d8ab24f32eac347"
     },
     "validation-harness/native-composite-runner/README.md": {
       "bytes": 17443,
@@ -1221,6 +1237,86 @@
       "bytes": 20648,
       "sha256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583"
     },
+    "validation-harness/native-scene-bitmap-diagnostic/README.md": {
+      "bytes": 5738,
+      "sha256": "61ee6499814876400c3d7e9f70212fbcaff40bc8f60bc7a5e44179d20f264ef1"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/abc/SceneChild.abc": {
+      "bytes": 986,
+      "sha256": "061ebaf9dd9def92a36bf6ec44ae1c6400d03e4c75e1e7d507b885c9cfdc6915"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/abc/SceneParent.abc": {
+      "bytes": 2507,
+      "sha256": "e72da3a38b959c70fda84da97d8f35bd637bc30b9ac57fb4cded4c8254d9ddc4"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/as/SceneBitmap.as": {
+      "bytes": 173,
+      "sha256": "78881ae437c5f79191cbd1c62b011b941aa742add642fc31ce01ffa1b4dee3f4"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/as/SceneChild.as": {
+      "bytes": 580,
+      "sha256": "4916a879c46d3ecc8273ebec48e7d756dc240e8a4d87aadedb6f5eb428d07e86"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/as/SceneParent.as": {
+      "bytes": 3160,
+      "sha256": "bd212b138316fb03b8afbaf4044021d4dea937ef27d1175302eaf14ec287af6f"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/baseline-fixture-manifest.json": {
+      "bytes": 4988,
+      "sha256": "56c11028855855710ec696b7eef62a67177ff4a87eaa633c52c09b88abb59a04"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/compile_abc.py": {
+      "bytes": 1388,
+      "sha256": "9368e1f705ddb27846330322b6025edaff73e003d6479a880f4dcbf537f4f95f"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/compiler-provenance.json": {
+      "bytes": 884,
+      "sha256": "d5bb913ba8bac695978ad811fdb12e89fcd50bb854051d18fbc6c89bac7b5b08"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/composition-proof.json": {
+      "bytes": 797,
+      "sha256": "4d14245dce96a636345cbfce485a9d3bc24bb2bf85beffc9201a405fab443596"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/core-smoke.log": {
+      "bytes": 2002,
+      "sha256": "b04d09db9f47a5c5fc04299215d5842be23c35528316e368effb0f6096066c52"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/fixture-manifest.json": {
+      "bytes": 4371,
+      "sha256": "aaa9542d9fe884e034cdaffe87f9c1c818f97b23464140d5ebea910c0d643496"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/generate_fixtures.py": {
+      "bytes": 7397,
+      "sha256": "172bb044bde51604944fab7b90c98803862268a506bfa0e400547dfa554248be"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/local-core-evidence.json": {
+      "bytes": 340,
+      "sha256": "6eaba1cd0b477056a5902aab963882515cca4ae886d536beac5cbb01ada3fddc"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/observer.js": {
+      "bytes": 2803,
+      "sha256": "8b38508a51a9a500cd38b3642f8a29a37ffdc485defae0d317a830743e6afd91"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/pixel_oracle.py": {
+      "bytes": 4736,
+      "sha256": "ba0158da6942f506c00b95c1930c4614d0c7a635b2d69cf7ae17185fc8c4dd9e"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/tests/test_bitmap.py": {
+      "bytes": 4756,
+      "sha256": "cbb155df2274594704d9e0bf9b779dfdc4d9597d8aae799aa7574b47d249559b"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/tests/test_native.py": {
+      "bytes": 4566,
+      "sha256": "1d85835316b222358ae672284dda49009bcd8260a94c9fde399e73b13e8703f5"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/tests/test_observer.js": {
+      "bytes": 3281,
+      "sha256": "0998cb60d56f4c5fbdec31bff8a055339aff9bfc496bf02b3be972ebbe4fa75e"
+    },
+    "validation-harness/native-scene-bitmap-diagnostic/verify_phases.py": {
+      "bytes": 15529,
+      "sha256": "a5cff91013232dc3c10be07af5ffd7666e16181ce032e23a997fd3b0058b6a3f"
+    },
     "validation-harness/native-scene-cws-diagnostic/README.md": {
       "bytes": 5417,
       "sha256": "7dc71982f490876ded8738e93b23228bbb2cfd02c85f74da16500171262641d5"
@@ -1547,6 +1643,6 @@
       ]
     }
   },
-  "reason": "Only bounded tiny and sized public synthetic CWS same-WK Loader transitions eligible. Product and engine unchanged. Body fulfillment and Loader events do not expose exact WASM copy/decompression phases or prove OOM. No native/full198/render acceptance; original real-device scene crash remains unresolved.",
+  "reason": "Explicitly authorized single sized-bitmap same-WK transition diagnostic only. Product and engine unchanged; original binary bytes retained, actual old/new pixels and draw required. No native/full198, VRAM, texImage or original-crash resolution claim.",
   "schemaVersion": 1
 }

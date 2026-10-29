@@ -1,0 +1,23 @@
+{
+  "priorFreezeSHA256": "d26450dada772d42001a624112243d1136acb2ef911d6b7bc16228c55c14340d",
+  "baselineFixtureManifestSHA256": "56c11028855855710ec696b7eef62a67177ff4a87eaa633c52c09b88abb59a04",
+  "caseCount": 1,
+  "kind": "sized-bitmap",
+  "logicalDecodedPixelsPerBitmap": 4194304,
+  "binaryPayloads": {
+    "old": {
+      "exactBinaryTagUnchanged": true,
+      "length": 13630706,
+      "payloadSHA256": "1ac4f8218ef784b636a48fd600709528260437d4ae05570ef5c92e28155bf322",
+      "compressedFileDelta": 38848,
+      "decodedSWFDelta": 37039
+    },
+    "new": {
+      "exactBinaryTagUnchanged": true,
+      "length": 50330866,
+      "payloadSHA256": "a7119fda2ac01ad89713bcd5bb8a9bb21fe3ccd55729b651a55eeda534314962",
+      "compressedFileDelta": 38944,
+      "decodedSWFDelta": 37039
+    }
+  }
+}

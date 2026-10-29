@@ -1,0 +1,8 @@
+{
+  "originalOutcome": "FAILED: intentionally empty Flash golden",
+  "semanticPhaseCount": 17,
+  "singleSyntheticSpacePair": true,
+  "nullCoreNotNativePixelProof": true,
+  "logSHA256": "b04d09db9f47a5c5fc04299215d5842be23c35528316e368effb0f6096066c52",
+  "binarySHA256": "fc15ee30b578a1c479bcb168d68fd4f61489b62036597b927725e196d5508bfc"
+}
