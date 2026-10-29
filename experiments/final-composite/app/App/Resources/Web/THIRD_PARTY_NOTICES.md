@@ -7,11 +7,11 @@ content is included. The following complete upstream texts are distributed in
 
 ## Modified experimental Ruffle 0.7.1
 
-Runtime identity: **FlashNest composite experimental 0434fe9a2a3d**, channel `flashnest-composite-experimental`. This is modified software, not an unmodified official release or a universal stability fix. Base version remains0.7.1.
+Runtime identity: **FlashNest composite experimental 097ceee6431e**, channel `flashnest-composite-experimental`. This is modified software, not an unmodified official release or a universal stability fix. Base version remains0.7.1.
 
 Fixed upstream source: https://github.com/ruffle-rs/ruffle/tree/89a7049965f3090e706265670df309a5128233ac
 
-The original three queued-goto/audio lifecycle/audio recovery patches are retained. The final composite adds cache release, load cancellation, stale-parent guard, owning audio payloads, traced MovieLibrary ownership and frame-admitted GC, plus render-density modes. Exact58 modified source files and54-file composite patch are identified by the source-set SHA-256 `0434fe9a2a3d2e4637938f6b0f67fe7eff17dd777ea940f02b29febc8b6d70aa`. Dependency locks are unchanged.
+The original three queued-goto/audio lifecycle/audio recovery patches are retained. The final composite adds cache release, load cancellation, stale-parent guard, owning audio payloads, traced MovieLibrary ownership and frame-admitted GC, plus render-density modes. Exact58 modified source files, including the54-file composite patch and the additional two-file touch-contact coordinate correction, are identified by the source-set SHA-256 `097ceee6431e9c7737814bf488b2747b794ce1cbe2ae03dbec474ba88efbb9a4`. Dependency locks are unchanged.
 
 The engine artifact's source-correspondence contains the ordered patches, modified sources, locks, recipe, full notices and source-bound GC review. Its provenance supplies the actual build source commit/run and exact complete runtime file inventory. The offline installer verifies all corresponding bytes before installing only runtime assets, never test fixtures, evidence or source files. This is compact reconstructible correspondence, not a complete dependency archive or independent clean-build byte reproduction.
 

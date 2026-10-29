@@ -71,3 +71,54 @@ Remaining mandatory work: independent final freeze review, final release artifac
 Staging additionally accepts --approved-app-manifest FILE and --approved-app-manifest-sha256 HASH. These must be independently reviewed before launch. The original manifest remains the executable/source authority: only runtime-identity.json, Ruffle-MODIFICATIONS.md, Ruffle-THIRD-PARTY-LICENSES.md, THIRD_PARTY_NOTICES.md and licenses.manifest.json may differ; all other App paths and the full file set remain identical. Baseline and candidate use distinct truthful metadata maps where their actual engine differs. Observed SamplingIdentity binds the effective per-arm manifest hash. This is not permission to alter code or bypass final review.
 
 Actual WebGPU backend is named webgpu. It is recognized but fails the explicit GL-only probe boundary; the harness never forces another backend to hide missing WebGPU evidence.
+
+## v2 input contract amendment (authored; new actual execution required)
+
+This is **not** the unchanged old 161-method contract. Method selections remain
+22 sampling / 161 total, while input semantics and fixture bytes are revised.
+The old delivered baseline is an explicitly observed negative, not Flash reference
+compatibility: DOWN reports the previous stored stage point; UP reports the last
+MOVE (or DOWN when no MOVE), before storing release coordinates. Candidate DOWN
+and UP must independently report the current event point.
+
+- `independent_mouse_mapping.py` models f32 matrices and Twips/physical-pixel
+  quantization for the known zero-origin 320×240, centered fixture. It is derived
+  from source, never fitted/calibrated from DOWN or UP responses. Its five-point
+  self-test reproduces the actual old diagnostic UP values; that check is not
+  native execution or a Flash golden. Existing .15 numeric tolerance is retained.
+- Passive canvas-target input observation captures offsetX/Y, client coordinates,
+  rect, pointer identity and only the last MOVE of each contact (bounded storage).
+  Offset versus client-minus-rect is checked independently. Resize keeps stored
+  stage Twips; previous physical inputs use their old rect before re-reporting
+  through the new viewport. No baseline defect is imposed on candidate output.
+- Five real taps plus one real short drag per phase remain. Drag target comes
+  only from fixture geometry and viewport, never callback-derived calibration.
+- Each UP first stops drag and traces actual position/target, then traces actual
+  onMouseMove count, **then** resets target to (100,70) and emits RESET. Six exact
+  resets/order and actual positive drag movement are required. This original
+  synthetic-fixture change makes subsequent-phase cross-arm pixels comparable;
+  it cannot erase the recorded pre-reset drag failure. No host target mutation.
+- Candidate tier DOWN/UP parity remains against candidate Original. The five
+  valid tap-UP coordinates and Stage metadata also retain cross-arm parity.
+  ALL six target values are independently checked using raw stage-Twips delta: a
+  stale baseline DOWN that hits can move the target during a post-resize tap, even
+  without a MOVE; a negative target before RESET is an explicit known negative. Legacy drag-UP is independently
+  checked against its observed last MOVE rather than silently waived.
+- Original/fallback full pixel equality, green-vector bounds, backing/GL ratios,
+  trusted UIKit event counts, all lifecycle/navigation checks remain mandatory.
+  Auto white/black screenshots still fail; READY never substitutes visibility.
+- 24 baseline negative phases + 132 candidate current-input phases =156;
+  780 taps +156 drags =936 pointer pairs and936 post-UP resets. These are
+  semantic controls, not extra XCTest methods or executed evidence.
+
+The passive before-input visibility snapshot is merged without extra rendering
+work. All hashes must be newly reviewed and actual engine/browser/native runs
+must use the revised runtime and this v2 contract before any package gate opens.
+
+### Early visibility rejection (not acceptance)
+
+After each exported lane, check_early_visibility.py requires12 baseline or66
+candidate before-input snapshot/hash pairs and uses the exact unchanged
+`green_bounds` predicate to reject blank/missing vectors before the next lane.
+A successful early check does not prove full pixel parity, geometry, input or
+runtime eligibility; the complete final verifier remains mandatory.

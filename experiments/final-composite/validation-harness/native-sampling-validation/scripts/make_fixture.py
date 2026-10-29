@@ -43,7 +43,15 @@ def movie(mode,align,quality=None):
     # Trace all clicks, including misses; drag only when the vector bounds hit.
     drag=discard(call(box,'startDrag'))
     down=trace('DOWN',x,y,hit,*metadata)+hit+action(0x12)+action(0x9d,struct.pack('<h',len(drag)))+drag
+    # v2: retain motion/UP evidence before deterministic reset for cross-arm pixels.
+    count=member(root,'moveCount')
+    code+=setmember(root,'moveCount',integer(0))
+    move=setmember(root,'moveCount',count+integer(1)+action(0x47))
+    code+=setmember(root,'onMouseMove',function(move))
     up=discard(call(box,'stopDrag'))+trace('UP',x,y,member(box,'_x'),member(box,'_y'),*metadata)
+    up+=trace('MOTION',count,x,y,member(box,'_x'),member(box,'_y'))
+    up+=setmember(box,'_x',integer(100))+setmember(box,'_y',integer(70))+setmember(root,'moveCount',integer(0))
+    up+=trace('RESET',member(box,'_x'),member(box,'_y'))
     code+=setmember(root,'onMouseDown',function(down))+setmember(root,'onMouseUp',function(up))
     code+=setmember(root,'onResize',function(trace('RESIZE',*metadata)))
     code+=discard(call(stage,'addListener',root))+trace('READY',*metadata)+action(0x07)
@@ -52,7 +60,7 @@ def movie(mode,align,quality=None):
 
 def main():
     out=ROOT/'fixtures';out.mkdir(exist_ok=True)
-    manifest={'original':True,'stage':[320,240],'files':{}}
+    manifest={'contract':'flashnest-native-sampling-v2','resetAfterUpTrace':True,'original':True,'stage':[320,240],'files':{}}
     for mode, quality, name in [('showAll',None,'showAll-center.swf'),('noScale',None,'noScale-center.swf')]:
         data=movie(mode,'',quality)
         (out/name).write_bytes(data)

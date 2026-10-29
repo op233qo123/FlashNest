@@ -22,6 +22,21 @@ else:
  assert report['shippingDefaultAppliesAllTiers']==('automatic' in report['shippingPoliciesWithAllReductions'])
  geometry=json.loads((ROOT/'evidence/native/sampling-geometry.json').read_text())
  assert geometry['matrixPassed'] is True and geometry['shippingReductionRequirementMet'] is True
+ assert report['nativeContract']=='flashnest-native-composite-v2' and report['samplingContract']=='flashnest-native-sampling-v2'
+ assert geometry['contract']=='flashnest-native-sampling-v2'
+ assert geometry['historicalStaleDownNegativePhases']==24 and geometry['candidateCurrentDownUpPhases']==132 and geometry['fixtureResetsAfterObservedUp']==936
+ assert report['candidateAudioGateOn'] is True and report['candidateAudioMatchesPostGeometryApp'] is True and report['historicalAudioGateOff'] is True
+ # Independently bind the audio App build inputs/resources to the final App with only
+ # the already-reviewed production gate flip, not just the runner's boolean report.
+ audio_raw=(ROOT/'evidence/native/audio-candidate-post-geometry-app-map.json').read_bytes()
+ assert hashlib.sha256(audio_raw).hexdigest()==report['candidateAudioAppManifestSHA256']
+ expected_audio={p[len('App/'):]:h for p,h in lock['appSourceManifest']['files'].items() if p.startswith('App/')}
+ gate=(ROOT/'validation-app-template/App/Player/RenderSamplingSettings.swift').read_bytes()
+ assert hashlib.sha256(gate).hexdigest()==expected_audio['Player/RenderSamplingSettings.swift']
+ old=b'static let runtimeValidated = false';new=b'static let runtimeValidated = true'
+ assert gate.count(old)==1
+ expected_audio['Player/RenderSamplingSettings.swift']=hashlib.sha256(gate.replace(old,new)).hexdigest()
+ assert json.loads(audio_raw)==expected_audio
  assert geometry['actualShippingReductionPolicies']==report['shippingPoliciesWithAllReductions']
  assert report['audibleOutputProven'] is False and report['privateProviderReproduced'] is False and report['ipaBuilt'] is False
 print('PASS final lane receipt cross-binding',lane)

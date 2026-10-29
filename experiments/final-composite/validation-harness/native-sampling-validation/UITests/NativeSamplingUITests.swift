@@ -86,27 +86,24 @@ final class NativeSamplingUITests: XCTestCase {
                     [round(left + visibleWidth * $0[0]), round(top + visibleHeight * $0[1])]
                 }
                 let crop = try screenshot(app, before: before, name: rowID + "-" + phase)
+                // Keep renderer/context state paired with pixels even if a later input assertion aborts.
+                try attachJSON(["schema": "flashnest-native-sampling-before-input-v1", "row": rowID,
+                    "phase": phase, "arm": arm, "rendererPolicy": renderer, "before": before,
+                    "cropSHA256": crop], name: rowID + "-" + phase + "-before-input")
                 let oldDowns = trace(before, "DOWN").count, oldUps = trace(before, "UP").count
                 for (i, point) in points.enumerated() {
                     coordinate(app, viewport: viewport, css: css, point: point).tap()
                     _ = try poll(app) { self.trace($0, "DOWN").count == oldDowns + i + 1 && self.trace($0, "UP").count == oldUps + i + 1 }
                 }
-                let taps = try snapshot(app), downs = trace(taps, "DOWN")
-                let a = downs[oldDowns], b = downs[oldDowns + 1], c = downs[oldDowns + 2]
-                let sx = (Double(b[0])! - Double(a[0])!) / (points[1][0] - points[0][0])
-                let sy = (Double(c[1])! - Double(a[1])!) / (points[2][1] - points[0][1])
-                XCTAssertGreaterThan(sx, 0); XCTAssertGreaterThan(sy, 0)
-                let drag = [round(points[0][0] + (target[0] + 60 - Double(a[0])!) / sx),
-                            round(points[0][1] + (target[1] + 50 - Double(a[1])!) / sy)]
-                // Preserve observed input and target state BEFORE a bounds failure can abort the phase.
-                // This is diagnostic evidence only; calibration, target selection and assertions are unchanged.
-                try attachJSON(["schema": "flashnest-native-sampling-pre-drag-v1", "row": rowID, "phase": phase, "arm": arm,
+                let taps = try snapshot(app)
+                // Independent fixture/viewport mapping. Never calibrate from tested DOWN or UP.
+                let stageLeft = (width - 320 * stageScale) / 2
+                let stageTop = (height - 240 * stageScale) / 2
+                let drag = [round(stageLeft + 160 * stageScale), round(stageTop + 120 * stageScale)]
+                try attachJSON(["schema": "flashnest-native-sampling-pre-drag-v2", "row": rowID, "phase": phase, "arm": arm,
                     "before": before, "afterTaps": taps, "points": points, "cachedTarget": target,
-                    "lastObservedUp": trace(taps, "UP").last ?? [],
-                    "lastObservedTarget": Array((trace(taps, "UP").last ?? []).dropFirst(2).prefix(2)),
-                    "css": css, "viewport": viewport, "calibrationDowns": [a, b, c],
-                    "inverseSlopes": [sx, sy], "proposedDrag": drag, "canvasSize": [width, height]],
-                    name: rowID + "-" + phase + "-pre-drag")
+                    "mapping": [stageScale, stageLeft, stageTop], "proposedDrag": drag,
+                    "canvasSize": [width, height]], name: rowID + "-" + phase + "-pre-drag")
                 XCTAssertTrue(drag[0] > 0 && drag[0] + 8 < width && drag[1] > 0 && drag[1] + 6 < height,
                     "Pre-drag bounds: row=\(rowID), phase=\(phase), drag=\(drag), canvas=\([width, height]), cachedTarget=\(target), lastUp=\(trace(taps, "UP").last ?? [])")
                 let end = [drag[0] + 8, drag[1] + 6]
@@ -116,8 +113,12 @@ final class NativeSamplingUITests: XCTestCase {
                 let finalDown = trace(after, "DOWN").last!, finalUp = trace(after, "UP").last!
                 XCTAssertEqual(finalDown[2], "true", "Actual AVM1 hitTest, not a DOM/config echo")
                 XCTAssertGreaterThan(Double(finalUp[2])!, target[0]); XCTAssertGreaterThan(Double(finalUp[3])!, target[1])
-                target = [Double(finalUp[2])!, Double(finalUp[3])!]
-                let record: [String: Any] = ["schema": "flashnest-native-sampling-v1", "row": rowID, "arm": arm, "lane": lane,
+                let motion = try XCTUnwrap(trace(after, "MOTION").last)
+                XCTAssertGreaterThan(Double(motion[0])!, 0, "Actual onMouseMove callbacks missing during drag")
+                XCTAssertEqual(trace(after, "RESET").count - trace(before, "RESET").count, 6)
+                XCTAssertEqual(trace(after, "RESET").last!, ["100", "70"])
+                target = [100, 70] // Fixture reset is after UP/motion evidence, never a host mutation.
+                let record: [String: Any] = ["schema": "flashnest-native-sampling-v2", "row": rowID, "arm": arm, "lane": lane,
                     "rendererPolicy": renderer, "scaleMode": mode, "tier": tier, "phase": phase,
                     "before": before, "after": after, "points": points, "drag": [drag, end], "cropSHA256": crop]
                 try attachJSON(record, name: rowID + "-" + phase)

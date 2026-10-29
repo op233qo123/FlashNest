@@ -84,3 +84,13 @@ The verifier requires exact scheme title, count, iOS18.2device/configuration, ze
 - Actual speaker/listening or approved physical-device capture, device interruptions, the prior unexplained SIGILL/SIGBUS/OOM cause, private-game compatibility and unknown file-provider behavior are not claimed resolved.
 
 The stopping point for this preparation is a reviewed frozen test recipe/selection and passing local contract checks. The parent-owned next step is final-runtime binding followed by exact iOS18.2CI; only the single final user IPA may follow accepted gates.
+
+## v2 candidate gate binding
+
+Candidate `stage` now requires `--candidate-gate-on`; historical negative forbids
+it. Only the exact `runtimeValidated = false` to `true` line may differ from the
+frozen executable source, verified by inverse transform against the original
+hash and byte count. The composite runner first requires its App map to equal
+the post-geometry gate-on final App, including final metadata. Baseline historical
+App and audio controls are unchanged. Source-manifest schema2 records the gate
+state. This does not establish active reduced sampling or audible output.

@@ -1,24 +1,20 @@
 {
-  "schema": 1,
-  "state": "authored-not-executed",
-  "shippingFilesChanged": [],
-  "productionBundleID": "com.flashnest.app",
+  "contract": "native-contract-v2-authored-not-executed",
   "diagnosticBundleID": "com.flashnest.late-audio.diagnostic",
-  "testSelectionSHA256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583",
   "files": {
     "README.md": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "8c263d0d319b278d6f8d5f59daf94db3ac678058ebda34e76971d0ec26a49ce1",
-        "bytes": 9856
+        "bytes": 10441,
+        "sha256": "1c58aaccfb43e14780a1abeeaeb5dadf35e2376120d761033b103726ec0dd8c9"
       },
       "scope": "test-only"
     },
     "Tests/NativeSaveSettingsPreservationTests.swift": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "3854a5d718164ea770225b58268ce707a6bef62873b5dded33c739281a324dbc",
-        "bytes": 10942
+        "bytes": 10942,
+        "sha256": "3854a5d718164ea770225b58268ce707a6bef62873b5dded33c739281a324dbc"
       },
       "scope": "test-bundle-only; no App edit",
       "target": "final-app/Tests/NativeSaveSettingsPreservationTests.swift"
@@ -26,152 +22,152 @@
     "diagnostics/Host/LateAudioHost.swift": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "06fe5b9000a6cd66c26f5863b894cbb01a26fc8ebf4f8623b7c3383a7998962e",
-        "bytes": 10452
+        "bytes": 10452,
+        "sha256": "06fe5b9000a6cd66c26f5863b894cbb01a26fc8ebf4f8623b7c3383a7998962e"
       },
       "scope": "test-only"
     },
     "diagnostics/Info.plist": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "e4af5aaba32185944005d25c6d7b27775402771994ac568d3373195e1484007f",
-        "bytes": 1278
+        "bytes": 1278,
+        "sha256": "e4af5aaba32185944005d25c6d7b27775402771994ac568d3373195e1484007f"
       },
       "scope": "test-only"
     },
     "diagnostics/UITests/LateAudioUITests.swift": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "67867cb50e0bbd226ae2cfebf99eb52c60e1a01949bfd7e94723c70db7a4999d",
-        "bytes": 11941
+        "bytes": 11941,
+        "sha256": "67867cb50e0bbd226ae2cfebf99eb52c60e1a01949bfd7e94723c70db7a4999d"
       },
       "scope": "test-only"
     },
     "diagnostics/baseline-runtime-identity.json": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "7971584216be895d47e01f877e2ba3dad1aba07ce796e654fe8e6d3b6cd6ee69",
-        "bytes": 2280
+        "bytes": 2280,
+        "sha256": "7971584216be895d47e01f877e2ba3dad1aba07ce796e654fe8e6d3b6cd6ee69"
       },
       "scope": "test-only"
     },
     "diagnostics/evidence-bridge.inc.js": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "03a3a5da5097d21cadd97dcdfa48fd44e1b33430077b36354a8922af0cc5c893",
-        "bytes": 3458
+        "bytes": 3458,
+        "sha256": "03a3a5da5097d21cadd97dcdfa48fd44e1b33430077b36354a8922af0cc5c893"
       },
       "scope": "test-only"
     },
     "diagnostics/late-audio-probe.js": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "01231807a4e5fa1f85e1182c08dcf498d87319ede55075cdd68c3ffc420d32db",
-        "bytes": 21950
+        "bytes": 21950,
+        "sha256": "01231807a4e5fa1f85e1182c08dcf498d87319ede55075cdd68c3ffc420d32db"
       },
       "scope": "test-only"
     },
     "diagnostics/late-host-adapter.js": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "d01d52e3a6abc67e70f6ec780abbb7329964ac1ad6cefb49e69ec5bba42aef77",
-        "bytes": 3677
+        "bytes": 3677,
+        "sha256": "d01d52e3a6abc67e70f6ec780abbb7329964ac1ad6cefb49e69ec5bba42aef77"
       },
       "scope": "test-only"
     },
     "diagnostics/retired-candidate-runtime-files.json": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "ce542724b7486d9852b0e503427e9364983ac70ef1990948999e04d2442e09d4",
-        "bytes": 1644
+        "bytes": 1644,
+        "sha256": "ce542724b7486d9852b0e503427e9364983ac70ef1990948999e04d2442e09d4"
       },
       "scope": "test-only"
     },
     "diagnostics/verify_late_evidence.py": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "f63cd8121b95c42860f90a70a1cb70a8fb3856a058e64052c615f1ad4d8c22e0",
-        "bytes": 12270
+        "bytes": 12270,
+        "sha256": "f63cd8121b95c42860f90a70a1cb70a8fb3856a058e64052c615f1ad4d8c22e0"
       },
       "scope": "test-only"
     },
     "evidence/audio-overlay-plan.json": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "c35ddcf9706f8cd1b68a9f410374f739efae68680c4d82bf0437be97faf1e636",
-        "bytes": 12772
+        "bytes": 12772,
+        "sha256": "c35ddcf9706f8cd1b68a9f410374f739efae68680c4d82bf0437be97faf1e636"
       },
       "scope": "test-only"
     },
     "evidence/audio-warning.log": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "487c20e1f8a1418d7a6e37e95eff0b42970d65cb68922cee3a22e1631f579940",
-        "bytes": 66
+        "bytes": 66,
+        "sha256": "487c20e1f8a1418d7a6e37e95eff0b42970d65cb68922cee3a22e1631f579940"
       },
       "scope": "test-only"
     },
     "evidence/bridge-adapter.log": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "11f1b262c5525befd047a590cc0878bb1fa84f349e11ea993b12d1b0b61a72da",
-        "bytes": 1194
+        "bytes": 1194,
+        "sha256": "11f1b262c5525befd047a590cc0878bb1fa84f349e11ea993b12d1b0b61a72da"
       },
       "scope": "test-only"
     },
     "evidence/late-probe.log": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "5e3d6f40cb0f7c60b5ca1ad78a0b6692d17817c9baae1cece3744986849b59dc",
-        "bytes": 5129
+        "bytes": 5129,
+        "sha256": "5e3d6f40cb0f7c60b5ca1ad78a0b6692d17817c9baae1cece3744986849b59dc"
       },
       "scope": "test-only"
     },
     "evidence/local-contract-tests.log": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "dadac9843170a864174fd2fe05efb0fe2d6ed95a42f6d4bbf25f5cb9613e1146",
-        "bytes": 3997
+        "bytes": 3997,
+        "sha256": "dadac9843170a864174fd2fe05efb0fe2d6ed95a42f6d4bbf25f5cb9613e1146"
       },
       "scope": "test-only"
     },
     "evidence/shell-en.log": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "ce252cb46941efed3f2df3c97cdf1dec1152a1cf27b92dedfb99a3216d3a1fc7",
-        "bytes": 526
+        "bytes": 526,
+        "sha256": "ce252cb46941efed3f2df3c97cdf1dec1152a1cf27b92dedfb99a3216d3a1fc7"
       },
       "scope": "test-only"
     },
     "evidence/shell-zh.log": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "8aa6f14007863aebb984657fe5fd9e5cebbe5fce40301f28105434510f1644f1",
-        "bytes": 536
+        "bytes": 536,
+        "sha256": "8aa6f14007863aebb984657fe5fd9e5cebbe5fce40301f28105434510f1644f1"
       },
       "scope": "test-only"
     },
     "fixture-inventory.json": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "8899119e854eb19e1a9f37a73d541cd75900eda6114352a90911b09dad5bce34",
-        "bytes": 2415
+        "bytes": 2415,
+        "sha256": "8899119e854eb19e1a9f37a73d541cd75900eda6114352a90911b09dad5bce34"
       },
       "scope": "test-only"
     },
     "input-lock.json": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "f755e3b80f6c38b7bf00de3f61c5386d8f2e8dc87c31f01b9f5df4a30e2ef533",
-        "bytes": 13010
+        "bytes": 13010,
+        "sha256": "f755e3b80f6c38b7bf00de3f61c5386d8f2e8dc87c31f01b9f5df4a30e2ef533"
       },
       "scope": "test-only"
     },
     "overlay/App/Player/PlayerSession.swift": {
       "baselineSHA256": "6225d8143031c56531e7f2499a14146ea94b0bd26c1e71c18070104f142a6316",
       "new": {
-        "sha256": "0829c9ca7f86fbb94e28075fcc7e5c38826b2ef8dc7833284cbfc7e7e8255a96",
-        "bytes": 41657
+        "bytes": 41657,
+        "sha256": "0829c9ca7f86fbb94e28075fcc7e5c38826b2ef8dc7833284cbfc7e7e8255a96"
       },
       "scope": "test-only",
       "target": "isolated-audio/App/Player/PlayerSession.swift"
@@ -179,8 +175,8 @@
     "overlay/App/Resources/Web/shell.js": {
       "baselineSHA256": "d523ee88178038b5f7bd12fad1e5bb54c7c6c0cc662b5cfb3bf331a0bff77ddd",
       "new": {
-        "sha256": "8adf97bc8437e07d83deeb6b8642cc69b012190173bf0367d7ea9c374e206bbe",
-        "bytes": 27987
+        "bytes": 27987,
+        "sha256": "8adf97bc8437e07d83deeb6b8642cc69b012190173bf0367d7ea9c374e206bbe"
       },
       "scope": "test-only",
       "target": "isolated-audio/App/Resources/Web/shell.js"
@@ -188,42 +184,55 @@
     "scripts/run_shell_regression.cjs": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "d5f7cdbb1486d7ca8318f22026c432c0901acacb234066b0d3be0fd19882f03c",
-        "bytes": 1024
+        "bytes": 1024,
+        "sha256": "d5f7cdbb1486d7ca8318f22026c432c0901acacb234066b0d3be0fd19882f03c"
       },
       "scope": "test-only"
     },
     "scripts/stage_audio_target.py": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "ee51987b9cf5fa822104fb7fca171cb4656ebb37d10cad1f4aacc2617517a321",
-        "bytes": 14313
+        "bytes": 15279,
+        "sha256": "74701f48f77d074c880d437738d9a0d467e90b0455875615ecd7c7cb4b79ace8"
       },
       "scope": "test-only"
     },
     "scripts/test_contracts.py": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "907238f7996296c8fd70de9604a36a6059903e4bbe89616a6c4da3c82cb4c4d2",
-        "bytes": 12551
+        "bytes": 12551,
+        "sha256": "907238f7996296c8fd70de9604a36a6059903e4bbe89616a6c4da3c82cb4c4d2"
+      },
+      "scope": "test-only"
+    },
+    "scripts/test_gate_contract_v2.py": {
+      "baselineSHA256": null,
+      "new": {
+        "bytes": 2344,
+        "sha256": "daad77321d2867a09c009572df14dfc0545b6d093fa186d92ca72d7023cf7bf5"
       },
       "scope": "test-only"
     },
     "scripts/verify_results.py": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "182d8685478cda416fe279adf480360aeb6427a9ac907db570c6c470f12f410e",
-        "bytes": 4148
+        "bytes": 4148,
+        "sha256": "182d8685478cda416fe279adf480360aeb6427a9ac907db570c6c470f12f410e"
       },
       "scope": "test-only"
     },
     "test-selection.json": {
       "baselineSHA256": null,
       "new": {
-        "sha256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583",
-        "bytes": 20648
+        "bytes": 20648,
+        "sha256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583"
       },
       "scope": "test-only"
     }
-  }
+  },
+  "productionBundleID": "com.flashnest.app",
+  "schema": 1,
+  "shippingFilesChanged": [],
+  "state": "authored-not-executed",
+  "testSelectionSHA256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583"
 }

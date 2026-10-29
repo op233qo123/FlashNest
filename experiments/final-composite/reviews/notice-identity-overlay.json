@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "scope": "Exactly named non-executable third-party attribution identity correction; no runtime or executable source change",
+  "browserSourceCommit": "80dbfabd0d0e9c6344e7063b71047dc73d6ebd5c",
+  "engineRunID": 40794075613,
+  "engineArchiveSHA256": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a",
+  "engineArchiveUnmodified": true,
+  "historicalArtifactNoticeStillOldIdentity": true,
+  "sourceSetSHA256": "097ceee6431e9c7737814bf488b2747b794ce1cbe2ae03dbec474ba88efbb9a4",
+  "files": {
+    "THIRD_PARTY_NOTICES.md": {
+      "before": {
+        "sha256": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
+        "bytes": 5048
+      },
+      "after": {
+        "sha256": "35f7beb69b847fb6b4e24097fa1f5cfa271542a9b2759e64ec33bb63a3ac9c5c",
+        "bytes": 5124
+      }
+    },
+    "App/Resources/Web/THIRD_PARTY_NOTICES.md": {
+      "before": {
+        "sha256": "dadb75ace6046c05e16ca93ee9eca80ed3de5cead2ea6aa75196430cbdf3ec6b",
+        "bytes": 5048
+      },
+      "after": {
+        "sha256": "35f7beb69b847fb6b4e24097fa1f5cfa271542a9b2759e64ec33bb63a3ac9c5c",
+        "bytes": 5124
+      }
+    },
+    "App/Resources/Web/licenses.manifest.json": {
+      "before": {
+        "sha256": "9cefd54f26737f5e26bb3d5db8c3fa922cde3897564315bb61e723b9064ccd1d",
+        "bytes": 1405
+      },
+      "after": {
+        "sha256": "76219b3ae5d34aef5cb5ac96bc1b016f83492fde16745ddcd4597f0333f9d782",
+        "bytes": 1405
+      }
+    }
+  },
+  "nativeAndFinalUseCorrectedNotice": true,
+  "independentReviewPending": false
+}

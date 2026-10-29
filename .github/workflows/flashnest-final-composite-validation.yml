@@ -1,6 +1,16 @@
 name: FlashNest final runtime browser and native validation (no IPA)
 on:
   workflow_dispatch:
+    inputs:
+      lane:
+        description: 'Explicit validation lane; never builds IPA'
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - browser
+          - native
 permissions:
   contents: read
   actions: read
@@ -9,11 +19,21 @@ concurrency:
   cancel-in-progress: false
 jobs:
   browser:
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.lane == 'both' || inputs.lane == 'browser') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     env:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
+      - name: Reject unsupported literal lane before checkout
+        shell: bash
+        env:
+          VALIDATION_LANE: ${{ inputs.lane }}
+        run: |
+          case "$VALIDATION_LANE" in
+            both|browser) ;;
+            *) echo "Unsupported validation lane" >&2; exit 1 ;;
+          esac
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
@@ -44,12 +64,22 @@ jobs:
           retention-days: 1
           if-no-files-found: warn
   native:
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.lane == 'both' || inputs.lane == 'native') }}
     runs-on: macos-14
     timeout-minutes: 150
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
+      - name: Reject unsupported literal lane before checkout
+        shell: bash
+        env:
+          VALIDATION_LANE: ${{ inputs.lane }}
+        run: |
+          case "$VALIDATION_LANE" in
+            both|native) ;;
+            *) echo "Unsupported validation lane" >&2; exit 1 ;;
+          esac
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
@@ -99,3 +129,4 @@ jobs:
           path: experiments/final-composite/evidence/native*
           retention-days: 1
           if-no-files-found: warn
+

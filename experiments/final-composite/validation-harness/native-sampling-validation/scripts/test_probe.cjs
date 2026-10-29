@@ -11,6 +11,7 @@ function setup(quality = '') {
   class GL2 extends GL { renderbufferStorageMultisample(...args) { calls.push(['multi', this, args]); return 7; } }
   class Canvas {
     constructor() { this.width = 300; this.height = 450; this.clientWidth = 400; this.clientHeight = 600; this.attributes = []; this.context = new GL2(this); }
+    addEventListener(type, callback, options) { assert.equal(options.passive, true); listeners[type] = callback; }
     getContext(type) { if (type === 'throw') throw Error('original exception'); return type === 'webgl2' ? this.context : null; }
     getBoundingClientRect() { return {x: 0, y: 0, width: 400, height: 600}; }
   }
@@ -31,7 +32,7 @@ assert.throws(() => canvas.getContext('throw'), /original exception/);
 assert.equal(canvas.context.renderbufferStorageMultisample(1, 4, 2, 1200, 1800), 7);
 assert.equal(canvas.context.renderbufferStorageMultisample(1, 4, 2, 1200, 1800), 7);
 assert.equal(box.console.log('%cNew Ruffle instance created (Version: test | Used renderer: webgl)'), 11);
-const e = {composedPath: () => [canvas], type: 'pointerdown', isTrusted: true, clientX: 30, clientY: 40, pointerType: 'touch', pointerId: 1};
+const e = {composedPath: () => [canvas], type: 'pointerdown', isTrusted: true, clientX: 30, clientY: 40, offsetX: 30, offsetY: 40, pointerType: 'touch', pointerId: 1};
 listeners.pointerdown(e);
 let m = box.__samplingNativeProbe.measure();
 assert.deepEqual(Array.from(m.gl), [300, 450]); assert.equal(m.storage.length, 1);

@@ -142,7 +142,11 @@ def transform_session(data):
     return replace_once(text, '    func setPaused(_ value: Bool) {\n', insert + '    func setPaused(_ value: Bool) {\n').encode()
 
 
-def source_bytes(source, final_metadata=None):
+GATE = 'App/Player/RenderSamplingSettings.swift'
+GATE_OFF = b'static let runtimeValidated = false'
+GATE_ON = b'static let runtimeValidated = true'
+
+def source_bytes(source, final_metadata=None, candidate_gate_on=False):
     result = {}
     actual_app = {'App/' + k: v for k, v in inventory(Path(source) / 'App').items() if not ('App/' + k).startswith(RUNTIME)}
     expected_app = {k: v for k, v in LOCK['files'].items() if k.startswith('App/')}
@@ -154,21 +158,26 @@ def source_bytes(source, final_metadata=None):
     for name, expected in LOCK['files'].items():
         data = read(source, name)
         accepted = (final_metadata or {}).get(name, expected)
-        if record(data) != accepted:
+        checked = data
+        if candidate_gate_on and name == GATE:
+            if data.count(GATE_ON) != 1 or GATE_OFF in data:
+                fail('candidate gate-on exact transform missing')
+            checked = data.replace(GATE_ON, GATE_OFF)
+        if record(checked) != accepted:
             fail('frozen source drift: ' + name)
         result[name] = data
     return result
 
 
-def overlay(source, final_metadata=None):
-    inputs = source_bytes(source, final_metadata)
+def overlay(source, final_metadata=None, candidate_gate_on=False):
+    inputs = source_bytes(source, final_metadata, candidate_gate_on)
     diagnostics = diagnostic_bytes()
     changes = {SHELL: transform_shell(inputs[SHELL], diagnostics), SESSION: transform_session(inputs[SESSION])}
     # The production predicate is read verbatim, not replaced or forced true.
     predicate = '!!player && started && !paused && !backgrounded && !document.hidden && !closing && !fatal'
     if predicate not in inputs[SHELL].decode() or predicate not in diagnostics['evidence-bridge.inc.js'].decode():
         fail('production active-intent correspondence drift')
-    manifest = {'schema': 1, 'state': 'authored-not-executed', 'shippingSourceUnchanged': True,
+    manifest = {'schema': 2, 'candidateGateOn': candidate_gate_on, 'state': 'authored-not-executed', 'shippingSourceUnchanged': True,
         'audibleOutputProven': False, 'totalContextCount': None,
         'runtimeBound': False, 'sourceInputs': {k: record(v) for k, v in inputs.items()},
         'changes': {k: {'baseline': record(inputs[k]), 'diagnostic': record(v)} for k, v in changes.items()},
@@ -228,6 +237,11 @@ def project():
         'schemes': {'LateAudioDiagnostic': {'build': {'targets': {'LateAudioDiagnostic': 'all', 'LateAudioUITests': ['test']}}, 'test': {'targets': ['LateAudioUITests']}}}}
 
 
+def validate_gate_role(role, enabled):
+    if role not in ('candidate-composite', 'baseline-historical') or enabled != (role == 'candidate-composite'):
+        fail('candidate requires gate-on App; historical negative must remain gate-off')
+
+
 def stage(args):
     no_symlink_ancestors(args.source)
     no_symlink_ancestors(args.output)
@@ -243,7 +257,8 @@ def stage(args):
     if output == runtime_root or output.is_relative_to(runtime_root) or runtime_root.is_relative_to(output):
         fail('output must be disjoint from runtime input')
     metadata = json.loads(Path(args.final_metadata).read_text()) if args.final_metadata else None
-    inputs, diagnostics, changes, manifest = overlay(source, metadata)
+    validate_gate_role(args.role, args.candidate_gate_on)
+    inputs, diagnostics, changes, manifest = overlay(source, metadata, args.candidate_gate_on)
     files, raw_inventory = validate_runtime(args.runtime, args.runtime_inventory, args.runtime_inventory_sha256, args.role)
     contents = {}
     for name, data in inputs.items():
@@ -259,7 +274,7 @@ def stage(args):
         contents[name] = diagnostics[name]
     for name in ('late-audio-probe.js', 'late-host-adapter.js', 'Info.plist'):
         contents['staged/' + name] = diagnostics[name]
-    identity = {'schema': 1, 'role': args.role, 'runtimeInventorySHA256': digest(raw_inventory),
+    identity = {'schema': 2, 'role': args.role, 'candidateGateOn': args.candidate_gate_on, 'runtimeInventorySHA256': digest(raw_inventory),
         'runtimeFiles': files, 'scope': 'isolated diagnostic only; no IPA, audible-output or context-census claim'}
     contents['staged/late-runtime-identity.json'] = (json.dumps(identity, indent=2) + '\n').encode()
     contents['project.yml'] = (json.dumps(project(), indent=2) + '\n').encode()
@@ -268,7 +283,7 @@ def stage(args):
     output.mkdir(parents=True, exist_ok=False)
     for name, data in contents.items():
         p = output / name; p.parent.mkdir(parents=True, exist_ok=True); p.write_bytes(data)
-    source_bytes(source, metadata); diagnostic_bytes()
+    source_bytes(source, metadata, args.candidate_gate_on); diagnostic_bytes()
     validate_runtime(args.runtime, args.runtime_inventory, args.runtime_inventory_sha256, args.role)
     (output / 'source-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     return manifest
@@ -282,6 +297,7 @@ def main():
     for name in ('source', 'runtime', 'runtime-inventory', 'runtime-inventory-sha256', 'role', 'output'):
         run.add_argument('--' + name, required=True)
     run.add_argument('--final-metadata')
+    run.add_argument('--candidate-gate-on', action='store_true')
     args = parser.parse_args()
     if args.command == 'plan':
         metadata = json.loads(Path(args.final_metadata).read_text()) if args.final_metadata else None

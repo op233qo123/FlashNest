@@ -34,3 +34,25 @@ Serial xcodebuild, no automatic test repetition, no parallel simulators. Standar
 Each suite invokes the strict save/audio summary-and-log verifier, including actual module/class/method names and iOS18.2. Audio uses its semantic record checker. Sampling has its separate external-identity/rendering/input verifier. Final native-acceptance.json supplies the agreed workflow receipt: actual selected candidate WASM hash, geometry requirement, exact shipping policies that achieved all reductions, a default=true claim only when automatic achieved them, simulator classification, results,161 methods, no physical-device/audible/private-provider/IPA claim.
 
 Remaining unknowns are deliberate fail-closed inputs: final engine receipt/map and App metadata, installed runner model availability, compiled Swift/Xcode outcomes and actual native results. No local mock or source check can fill those unknowns.
+
+## v2 semantic amendment
+
+`nativeContract=flashnest-native-composite-v2` requires geometry contract
+`flashnest-native-sampling-v2` with24 explicitly historical negative phases,
+132 candidate current-input phases and936 trace-before-reset controls.
+161 method selections remain, but the old contract is NOT claimed unchanged.
+After geometry passes, candidate audio uses a fresh exact gate-on transform and
+its entire production App inventory must equal the post-geometry gate-on main
+App. The map and its SHA256 are emitted in the native acceptance receipt.
+Historical fatal-audio negative still uses its unchanged gate-off App/runtime.
+Audio staging permits only the inverse-verified exact runtimeValidated line;
+metadata overrides cannot authorize executable changes. No low-tier activation
+or audible output is inferred merely from this gate-on source binding.
+New engine, browser and native execution are mandatory; prior receipts cannot
+certify changed runtime/fixture/harness bytes.
+
+After each successful exported sampling lane, early visibility rejection checks
+12 baseline /66 candidate before-input screenshot hashes with the existing
+verifier green-vector predicate. No thresholds/fallbacks are changed. Failure
+uses normal artifact preservation; success is not acceptance and never bypasses
+the complete52-row/156-phase final geometry/pixel gate.

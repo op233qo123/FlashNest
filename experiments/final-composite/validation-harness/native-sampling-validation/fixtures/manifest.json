@@ -1,4 +1,6 @@
 {
+  "contract": "flashnest-native-sampling-v2",
+  "resetAfterUpTrace": true,
   "original": true,
   "stage": [
     320,
@@ -9,15 +11,15 @@
       "mode": "showAll",
       "align": "",
       "fixtureQuality": null,
-      "bytes": 1877,
-      "sha256": "17e480d7a6fde9c1f97b2f7dba72d4e5e3c03a0b506476ee9f4944728ea749ac"
+      "bytes": 2414,
+      "sha256": "77a4dc364eee57944bc469085c6bd8a54d0ecfa3873f1f5eba0184f51dbedfe2"
     },
     "noScale-center.swf": {
       "mode": "noScale",
       "align": "",
       "fixtureQuality": null,
-      "bytes": 1877,
-      "sha256": "65d470ec5890ceeed4f16b6b6825ed1e9048eb36329cd7b8d7b388a52e844f34"
+      "bytes": 2414,
+      "sha256": "49239943a9dc7388b171cc0d3fecf249a7fcac1ec1c277bfc8d91ee8cb7eac6e"
     }
   }
 }

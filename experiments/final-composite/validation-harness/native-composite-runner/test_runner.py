@@ -2,15 +2,16 @@
 """Local mocked/source contracts, not native execution."""
 import importlib.util,json,tempfile,unittest,shutil
 from pathlib import Path
+import os
 spec=importlib.util.spec_from_file_location('runner',Path(__file__).with_name('run.py'));r=importlib.util.module_from_spec(spec);spec.loader.exec_module(r)
-APP=r.WORK/'next-ipa-156-prep/app-integration/source'
+APP=Path(os.environ.get('FLASHNEST_REVIEWED_TEMPLATE', str(r.WORK / 'next-ipa-156-prep/app-integration/source')))
 class Contracts(unittest.TestCase):
  def test_pinned_xcodegen_archive_hash_matches_approved_route(self):
   expected='a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82'
   self.assertEqual(len(expected),64)
   self.assertEqual(json.loads((Path(r.__file__).parent/'binding-template.json').read_text())['xcodegenArchiveSHA256'],expected)
   self.assertIn(expected,Path(r.__file__).read_text())
-  self.assertIn(expected,(r.WORK/'zip-native-validation/payload/.github/workflows/validate-zip-selection-ios18.yml').read_text())
+  self.assertIn(expected,Path(os.environ.get('FLASHNEST_REVIEWED_WORKFLOW',str(r.WORK/'zip-native-validation/payload/.github/workflows/validate-zip-selection-ios18.yml'))).read_text())
 
  def test_exact_selection_counts_and_no_picker_save_overlap(self):
   lanes=r.selections(APP)

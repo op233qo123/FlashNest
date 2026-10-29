@@ -8,6 +8,7 @@ physical-device GPU/memory/audio, and never changes runtimeValidated.
 import argparse, hashlib, itertools, json, math
 from pathlib import Path
 from PIL import Image, ImageChops
+from independent_mouse_mapping import stage_position, reported_position, current_position
 
 TIERS = {'original': 1, 'threeQuarter': .75, 'half': .5, 'quarter': .25}
 PHASES = ('portrait', 'landscape', 'portrait-return')
@@ -95,10 +96,62 @@ def check_inputs(row):
     for event, pos in zip(events, positions):
         require(pairs([event['x']-css[0], event['y']-css[1]], pos, .51), 'Trusted touch reached wrong DOM coordinates')
     downs, ups = trace(after, 'DOWN')[-6:], trace(after, 'UP')[-6:]
+    motions, resets = trace(after, 'MOTION'), trace(after, 'RESET')
+    require(len(motions)-len(trace(before,'MOTION')) == 6 and len(resets)-len(trace(before,'RESET')) == 6,
+            'Missing trace-before-reset motion/reset evidence')
+    require(all(r == ['100','70'] for r in resets[-6:]), 'Fixture target reset differs')
+    require(float(motions[-1][0]) > 0 and events[-1]['lastMove'] is not None, 'Drag has no actual onMouseMove/trusted MOVE observation')
     require(downs[-1][2] == 'true', 'SWF hitTest failed')
-    require(float(ups[-1][2]) > float(ups[-2][2]) and float(ups[-1][3]) > float(ups[-2][3]), 'SWF drag did not move')
-    for down, up in zip(downs, ups):
-        require(down[5] == row['scaleMode'] and up[6] == row['scaleMode'] and down[6] == up[7] == '', 'Stage mode/alignment changed')
+    require(float(ups[-1][2]) > 100 and float(ups[-1][3]) > 70, 'SWF drag did not move before reset')
+    for motion,up in zip(motions[-6:],ups):
+        require(len(motion)==5 and float(motion[0])>=0 and float(motion[0]).is_integer(), 'Invalid observed motion count')
+        require(pairs([float(v) for v in motion[1:]], [float(v) for v in up[:4]], 0), 'MOTION and pre-reset UP evidence disagree')
+    dpr = before['measurement']['dpr']; mode = row['scaleMode']
+    viewport = [math.floor(v*dpr) for v in css[2:]]
+    prior_events = before['measurement']['events']
+    previous = (0, 0)
+    if prior_events:
+        previous_event = prior_events[-1]
+        require(previous_event['type'] == 'pointerup', 'Prior phase left pointer active')
+        previous = stage_position([previous_event['offsetX'], previous_event['offsetY']],
+            [math.floor(v*dpr) for v in previous_event['rect'][2:]], dpr, mode)
+    for i, (down, up) in enumerate(zip(downs, ups)):
+        down_event, up_event = events[2*i:2*i+2]
+        require(down_event['id']==up_event['id'], 'DOWN/UP pointer IDs differ')
+        for event in (down_event, up_event):
+            require(pairs(event['rect'], css, .01), 'Input canvas rectangle changed')
+            require(pairs([event['offsetX'],event['offsetY']], [event['x']-css[0],event['y']-css[1]], .01),
+                    'Canvas-target offset disagrees with independent client/rect coordinates')
+        current_down = current_position([down_event['offsetX'],down_event['offsetY']], viewport,dpr,mode)
+        expected_down = current_down if row['arm']=='candidate' else reported_position(previous,viewport,dpr,mode)
+        # Old baseline UP dispatch precedes assigning its release point as well.
+        # Use independently observed last MOVE (or DOWN if no MOVE), never a SWF response.
+        up_input = up_event if row['arm']=='candidate' else (up_event['lastMove'] or down_event)
+        if up_event['lastMove']:
+            move = up_event['lastMove']
+            require(move['type']=='pointermove' and move['trusted'] is True and move['pointerType']=='touch' and move['id']==up_event['id'], 'Invalid last native MOVE')
+            require(pairs(move['rect'],css,.01) and pairs([move['offsetX'],move['offsetY']], [move['x']-css[0],move['y']-css[1]],.01), 'MOVE offset/rect disagree')
+        expected_up = current_position([up_input['offsetX'],up_input['offsetY']],viewport,dpr,mode)
+        require(pairs([float(v) for v in down[:2]],expected_down),
+                'Candidate current DOWN or explicit historical stale-DOWN negative changed')
+        require(pairs([float(v) for v in up[:2]],expected_up), 'Candidate current UP or historical pre-release UP negative differs')
+        expected_hit = 100 <= expected_down[0] <= 220 and 70 <= expected_down[1] <= 170
+        require(down[2] == str(expected_hit).lower(), 'Independent fixture hitTest differs')
+        # startDrag retains RAW stage Twips at callback time, not rounded _xmouse.
+        # Historical post-resize stale DOWN may hit the old target and move it
+        # during the late DOWN position update, even with no DOM MOVE in a tap.
+        raw_down = stage_position([down_event['offsetX'],down_event['offsetY']],viewport,dpr,mode) if row['arm']=='candidate' else previous
+        raw_up = stage_position([up_input['offsetX'],up_input['offsetY']],viewport,dpr,mode)
+        expected_target = [100+(raw_up[0]-raw_down[0])/20,70+(raw_up[1]-raw_down[1])/20] if expected_hit else [100,70]
+        require(pairs([float(v) for v in up[2:4]],expected_target), 'Independent pre-reset drag/tap target delta differs')
+        previous = stage_position([up_event['offsetX'],up_event['offsetY']],viewport,dpr,mode)
+        require(down[5] == mode and up[6] == mode and down[6] == up[7] == '', 'Stage mode/alignment changed')
+        expected_stage = [320,240] if mode=='showAll' else [round(v/dpr) for v in viewport]
+        require(pairs([float(v) for v in down[3:5]],expected_stage,0) and
+                pairs([float(v) for v in up[4:6]],expected_stage,0), 'Independent Stage dimensions differ')
+    # Ordering is material: resetting before UP would hide failed drag movement.
+    relevant = [line.split('DENSITY|',1)[1].split('|',1)[0] for line in after['traces'][len(before['traces']):] if 'DENSITY|' in line]
+    require(relevant == ['DOWN','UP','MOTION','RESET']*6, 'Fixture callback/reset order changed')
 
 def green_bounds(image):
     rgb = image.convert('RGB'); pixels = rgb.load(); xs, ys = [], []
@@ -126,7 +179,7 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
             except (ValueError, UnicodeError): continue
             if not isinstance(record, dict): continue
             schema = record.get('schema')
-            if schema == 'flashnest-native-sampling-v1': records.append(record)
+            if schema == 'flashnest-native-sampling-v2': records.append(record)
             if schema == 'flashnest-native-sampling-lifecycle-v1': lifecycle.append(record)
             if schema == 'flashnest-native-sampling-navigation-v1': navigation.append(record)
     keyed = {}
@@ -157,8 +210,14 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
         reference = keyed[baseline_key]
         require(row['before']['measurement']['css'] == reference['before']['measurement']['css'], 'Original CSS stage geometry changed')
         require(row['points'] == reference['points'], 'Trusted test targets changed between tiers')
+        # Historical DOWN is intentionally a negative control, not candidate compatibility.
+        # Candidate tier parity remains strict against that lane's candidate Original.
+        if arm=='candidate' and lane=='shipping-default-quality':
+            trace_equal([u[:2]+u[4:] for u in trace(row['after'],'UP')[-6:-1]],
+                        [u[:2]+u[4:] for u in trace(reference['after'],'UP')[-6:-1]])
+        input_reference = keyed[('candidate',dpr,policy,mode,'original',lane,phase)] if arm=='candidate' else reference
         for moment in ('before', 'after'):
-            for label in ('DOWN', 'UP'): trace_equal(trace(row[moment], label), trace(reference[moment], label))
+            for label in ('DOWN','UP','RESET'): trace_equal(trace(row[moment],label),trace(input_reference[moment],label))
         require(row['cropSHA256'] in pngs and reference['cropSHA256'] in pngs, 'Actual canvas screenshot missing')
         with Image.open(pngs[row['cropSHA256']]) as image, Image.open(pngs[reference['cropSHA256']]) as original:
             require(image.size == original.size, 'Screenshot logical size changed')
@@ -192,7 +251,9 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
         needed = {('candidate', dpr, policy, mode, tier, 'shipping-default-quality', phase)
                   for dpr, mode, tier, phase in itertools.product((2, 3), MODES, ('threeQuarter', 'half', 'quarter'), PHASES)}
         if needed <= reduction_keys: policies_reduced.append(policy)
-    return {'matrixEvidenceConsistent': True, 'matrixPassed': not unsupported, 'unsupportedControls': unsupported,
+    return {'contract':'flashnest-native-sampling-v2', 'historicalStaleDownNegativePhases':24,
+        'candidateCurrentDownUpPhases':132, 'independentMapping':'source-f32-twips-center-320x240',
+        'fixtureResetsAfterObservedUp':936, 'matrixEvidenceConsistent': True, 'matrixPassed': not unsupported, 'unsupportedControls': unsupported,
         'shippingRows': 40, 'diagnosticRows': 12, 'phases': 156,
         'trustedTaps': 780, 'trustedDrags': 156, 'actualShippingReductionPolicies': policies_reduced,
         'shippingReductionRequirementMet': bool(policies_reduced), 'wasmActuallyObserved': {k: sorted(v) for k,v in wasm_by_arm.items()},

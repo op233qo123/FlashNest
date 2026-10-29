@@ -2,11 +2,12 @@
 """Mock verifier/patch contract tests only. No native or rendering pass implied."""
 import copy, hashlib, json, unittest, tempfile
 from pathlib import Path
+import os
 import prepare_overlay as staging
 import verify_results as verify
 
 ROOT = Path(__file__).resolve().parents[1]
-APP = ROOT.parent / 'next-ipa-156-prep/app-integration/source'
+APP=Path(os.environ.get('FLASHNEST_REVIEWED_TEMPLATE', str(ROOT.parent / 'next-ipa-156-prep/app-integration/source')))
 def measurement(lane='shipping-default-quality', scale=.25, applied=.25):
     row = {'row':'mock', 'arm':'candidate', 'lane':lane, 'tier':'quarter', 'rendererPolicy':'webgl', 'phase':'portrait'}
     m = {'dpr':3, 'canvas':[round(1200*applied),round(1800*applied)], 'gl':[round(1200*applied),round(1800*applied)],

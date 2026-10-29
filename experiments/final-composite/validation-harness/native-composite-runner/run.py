@@ -207,8 +207,13 @@ class Runner:
    for arm,(app,project) in sampling_apps.items():
     name='sampling-'+arm+'-dpr'+dpr;self.reset(device,name)
     self.test(app,project,device,'sampling-'+arm,name)
+    # Reject absent vectors immediately after each lane, before later matrix runs.
+    # This is NOT acceptance: full baseline pixels/geometry still run below.
+    self.command([sys.executable,SAMPLING/'scripts/check_early_visibility.py','--attachments',self.out/'attachments'/name,'--expected-phases','12' if arm=='baseline' else '66','--output',self.out/(name+'-early-visibility.json')],name+'-early-visibility',timeout=180)
   self.command([sys.executable,SAMPLING/'scripts/verify_results.py','--attachments',self.out/'attachments','--candidate-inventory-sha256',identities['candidate']['runtimeInventorySHA256'],'--baseline-inventory-sha256',identities['baseline']['runtimeInventorySHA256'],'--expected-identities',self.out/'sampling-expected-identities.json','--output',self.out/'sampling-geometry.json'],'sampling-geometry-verifier',timeout=180)
-  geometry=json.loads((self.out/'sampling-geometry.json').read_text());require(geometry['matrixPassed'] is True and geometry['shippingReductionRequirementMet'] is True,'Native geometry not accepted; do not run gate-on copy')
+  geometry=json.loads((self.out/'sampling-geometry.json').read_text())
+  require(geometry.get('contract')=='flashnest-native-sampling-v2' and geometry.get('historicalStaleDownNegativePhases')==24 and geometry.get('candidateCurrentDownUpPhases')==132 and geometry.get('fixtureResetsAfterObservedUp')==936,'Reviewed v2 input contract evidence required')
+  require(geometry['matrixPassed'] is True and geometry['shippingReductionRequirementMet'] is True,'Native geometry not accepted; do not run gate-on copy')
   # No shipping mutation: new main copy, only gate and exact hardcoded test expectation change.
   main=self.copy_app('main-gate-on');overlay=gate_on_overlay(main);dump(self.out/'gate-on-overlay.json',overlay)
   shutil.copyfile(SAVE/'Tests/NativeSaveSettingsPreservationTests.swift',main/'Tests/NativeSaveSettingsPreservationTests.swift')
@@ -221,16 +226,25 @@ class Runner:
   self.reset(device,'picker-ui');self.install_source(picker,picker_project,device,'picker-ui');self.test(picker,picker_project,device,'picker-ui')
   self.command([sys.executable,ZIP/'verify_containers.py',device,self.out/'picker-copy-verification.json'],'picker-private-copy-verifier')
   self.reset(device,'save-ui');self.install_source(main,project,device,'save-ui');self.test(main,project,device,'save-ui')
-  # Audio uses the unmodified gate-off App, exact candidate or historical runtime.
+  # Candidate audio consumes the same post-geometry gate-on production App bytes.
+  # Historical audio-negative remains the unchanged gate-off App/runtime.
   for role,key in [('candidate-composite','audio-candidate'),('baseline-historical','audio-baseline')]:
    runtime=self.args.candidate_engine if key=='audio-candidate' else self.args.baseline/'historical'
    full=runtime/'runtime-files.json';app=self.stage/key
    audio_source=self.args.app
+   gate_args=[]
+   if key=='audio-candidate':
+    audio_source=self.copy_app('audio-candidate-gate-on-source')
+    audio_gate=gate_on_overlay(audio_source)
+    require(inventory(audio_source/'App') == inventory(main/'App'),'Candidate audio App differs from post-geometry gate-on final App')
+    dump(self.out/'audio-candidate-gate-on-overlay.json',audio_gate)
+    dump(self.out/'audio-candidate-post-geometry-app-map.json',inventory(audio_source/'App'))
+    gate_args=['--candidate-gate-on']
    if key=='audio-baseline':
     audio_source=self.copy_app('audio-historical-source')
     self.metadata_overlay(audio_source,self.args.baseline/'historical/app-metadata',b['audioFinalMetadata'][role])
    metadata=self.stage/(key+'-metadata.json');dump(metadata,b['audioFinalMetadata'][role])
-   self.command([sys.executable,SAVE/'scripts/stage_audio_target.py','stage','--source',audio_source,'--runtime',runtime/'runtime','--runtime-inventory',full,'--runtime-inventory-sha256',sha(full),'--role',role,'--output',app,'--final-metadata',metadata],key+'-stage',timeout=120)
+   self.command([sys.executable,SAVE/'scripts/stage_audio_target.py','stage','--source',audio_source,'--runtime',runtime/'runtime','--runtime-inventory',full,'--runtime-inventory-sha256',sha(full),'--role',role,'--output',app,'--final-metadata',metadata]+gate_args,key+'-stage',timeout=120)
    self.reset(device,key);project=self.project(app,key,'LateAudioDiagnostic');self.test(app,project,device,key)
    shutil.copyfile(app/'source-manifest.json',self.out/(key+'-source-manifest.json'))
   require(inventory(self.args.app)==b['appFiles'],'Immutable final App input changed during tests')
@@ -241,6 +255,9 @@ class Runner:
    'shippingReductionRequirementMet':geometry['shippingReductionRequirementMet'],
    'shippingPoliciesWithAllReductions':geometry['actualShippingReductionPolicies'],
    'engineSHA256':b['engine']['sha256'],'selectedWasmSHA256':self.candidate_map[observed[0]]['sha256'],
+   'nativeContract':'flashnest-native-composite-v2','samplingContract':'flashnest-native-sampling-v2',
+   'candidateAudioGateOn':True,'candidateAudioMatchesPostGeometryApp':True,'historicalAudioGateOff':True,
+   'candidateAudioAppManifestSHA256':sha(self.out/'audio-candidate-post-geometry-app-map.json'),
    'samplingRows':52,'samplingPhases':156,'nativeMethods':sum(x['tests'] for x in self.results),'results':self.results,
    'audibleOutputProven':False,'privateProviderReproduced':False,'ipaBuilt':False}
   dump(self.out/'native-acceptance.json',receipt);self.budget();return receipt
