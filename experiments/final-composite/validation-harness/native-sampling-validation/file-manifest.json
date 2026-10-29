@@ -6,16 +6,16 @@
       "sha256": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4"
     },
     "Host/sampling-probe.js": {
-      "bytes": 14003,
-      "sha256": "4c551bfd2b2a2a92e8141f14724d1264e196aa8e9cceb4a0fa06ee2a27bae1d8"
+      "bytes": 8040,
+      "sha256": "da4a93c5e8beb23f52f27cd9d1b7fe405ca583fbd6e3a8e1f1fb618e00770be4"
     },
     "README.md": {
       "bytes": 17725,
       "sha256": "65d929c394d91ed13c105c9c10fd8e7d4b74e1f0fe23c7801ed9827e744fee4f"
     },
     "UITests/NativeSamplingUITests.swift": {
-      "bytes": 23674,
-      "sha256": "88955576a294fd56701ef2673b01a62cb631a25f4da6675785be859362765923"
+      "bytes": 26749,
+      "sha256": "1312f354fb0bfedca8da87ab504ad08a88c142b68504461164c3aa1a21d85f15"
     },
     "approved-app-source-manifest.json": {
       "bytes": 30427,
@@ -77,25 +77,29 @@
       "bytes": 5841,
       "sha256": "afc6c9ea8ce0b97d62ce445f75c36c1f52d7f350bb5df34beef430e329626c07"
     },
+    "scripts/test_oriented_crop.py": {
+      "bytes": 2557,
+      "sha256": "9bb70c43b8c92fea0d37de5d47e5a1ddff8079278c618e6c9c6e2ccc42e2da5f"
+    },
     "scripts/test_policy_v3.py": {
-      "bytes": 5355,
-      "sha256": "84bb42a9c999ee19bc9dd8e7b5d1633ee05e4104831161e8c95b345787995dcf"
+      "bytes": 5898,
+      "sha256": "2f5621ecab0e49171d799e4ed9d665bd81667992fb3b4fd9cfe135df500ca634"
     },
     "scripts/test_probe.cjs": {
       "bytes": 5029,
       "sha256": "d82f7cd8ac2f3848fc0ed492554a4dfcb2b1b285794dbb23e967dee6b740529f"
     },
     "scripts/test_verifier.py": {
-      "bytes": 7422,
-      "sha256": "76f3cfe8ed1e938874e3de6726ecc7c10e3f7adcf5c3ca4624a5bc18467bd808"
+      "bytes": 7565,
+      "sha256": "911047a11dc39c10d758ed8e292d69ad4f52ab00d32f2981d9105921eb24c0d8"
     },
     "scripts/verify_legacy_negative.py": {
       "bytes": 2839,
       "sha256": "b96c910230d46f86aa65832034a8a590d2a9adbb281ef21d4c07162dc7255445"
     },
     "scripts/verify_results.py": {
-      "bytes": 29659,
-      "sha256": "3b8c35cc6dbf8c97f947b18856ec04e720c26ea2724706d76df38d48b7a3b0dd"
+      "bytes": 32550,
+      "sha256": "aa0bf4c5d23246f3e09d6622e4524c5bf27f81508e459157f198d905592d71c1"
     }
   },
   "scope": "Authored simulator-only harness, no native execution"

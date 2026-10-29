@@ -44,6 +44,8 @@ def check_measurement(row, snapshot, candidate_inventory, baseline_inventory, un
     require(snapshot['os'] == '18.2', 'OS not exact iOS18.2')
     require(snapshot['screenScale'] in (2, 3) and numeric(m['dpr'], snapshot['screenScale'], 0), 'Live DPR not 2/3 or CSS differs')
     require(not snapshot['failure'] and not snapshot['traceOverflow'] and not m['overflow'] and m['hidden'] is False, 'Runtime/observation error, overflow or hidden page')
+    require(m['contextLost'] is False, 'Positive matrix observed lost context')
+    require(not any(e.get('type') == 'webglcontextlost' for e in m['contextEvents']), 'Positive matrix observed historical context loss')
     width, height = m['css'][2:]
     require((width > height) if row['phase'] == 'landscape' else (height > width), 'Actual same-player orientation aspect missing')
     require(snapshot['loaded'] is True and snapshot['gate'] == (arm == 'candidate'), 'Wrong gate or unloaded movie')
@@ -167,7 +169,27 @@ def green_bounds(image):
     require(len(xs) >= 100, 'Rendered synthetic green vector not present')
     return [min(xs), min(ys), max(xs), max(ys)]
 
-def verify_enhanced_boundary(records, boundaries, pngs, expected_identity):
+def check_oriented_crop(snapshot, capture_name, crop_sha, crops, pngs, used):
+    key=(snapshot['identity']['arm'], snapshot['screenScale'], capture_name)
+    require(key in crops, 'Missing oriented crop capture metadata')
+    require(key not in used, 'Oriented crop capture reused');used.add(key)
+    c=crops[key];dpr=snapshot['screenScale'];css=snapshot['measurement']['css'];screen=snapshot['screenBounds'];viewport=snapshot['viewport']
+    require(c['cropSHA256']==crop_sha and crop_sha in pngs, 'Bound crop SHA differs/missing')
+    require(c['identity']==snapshot['identity'] and c['epoch']==snapshot['epoch'], 'Crop player/source identity differs')
+    require(c['css']==css and c['screenBounds']==screen and c['viewport']==viewport, 'Crop observed native geometry differs')
+    require(c['normalization']=='UIImage.draw-oriented-scale1-v1', 'Crop normalization differs')
+    raw=c['rawCGPixels'];orientation=c['imageOrientation'];normalized=c['normalizedPixels'];rect=c['cropRectPixels']
+    require(type(orientation) is int and orientation in range(8), 'Invalid image orientation')
+    require(len(raw)==2 and all(type(n) is int and n>0 for n in raw), 'Invalid raw pixel dimensions')
+    require(normalized==(raw[::-1] if orientation in (2,3,6,7) else raw), 'Orientation dimensions stretched')
+    require(len(screen)==2 and pairs(normalized,[n*dpr for n in screen],1), 'Normalized screen/DPR mismatch')
+    require(len(css)==4 and len(viewport)==4, 'Missing native crop geometry')
+    x=(viewport[0]+css[0])*dpr;y=(viewport[1]+css[1])*dpr
+    expected=[math.floor(x),math.floor(y),math.ceil(x+css[2]*dpr)-math.floor(x),math.ceil(y+css[3]*dpr)-math.floor(y)]
+    require(rect==expected and rect[0]>=0 and rect[1]>=0 and rect[0]+rect[2]<=normalized[0] and rect[1]+rect[3]<=normalized[1], 'Crop rectangle clipped/differs')
+    with Image.open(pngs[crop_sha]) as image:require(list(image.size)==rect[2:], 'Actual crop dimensions clipped/differ')
+
+def verify_enhanced_boundary(records, boundaries, pngs, expected_identity, crops=None, used=None):
     require(len(records)==6 and len(boundaries)==2, 'Enhanced requires3 window samples and1 error boundary perDPR')
     keyed={};outcomes=[]
     for item in records:
@@ -192,6 +214,8 @@ def verify_enhanced_boundary(records, boundaries, pngs, expected_identity):
             require(m['sampledAtMs']>last_sample,'Enhanced stale page sample');last_sample=m['sampledAtMs']
             require(m['renderer'] in ('webgl','wgpu-webgl','webgpu','canvas'), 'Enhanced actual backend unobserved')
             require(item.get('cropSHA256') in pngs and not item.get('observationError') and not item.get('cropError'), 'Enhanced actual diagnostic crop missing')
+            require(crops is not None and used is not None, 'Oriented crop authority required')
+            check_oriented_crop(snap,'enhanced-policy-'+label,item['cropSHA256'],crops,pngs,used)
             vector=False
             with Image.open(pngs[item['cropSHA256']]) as image:
                 try:green_bounds(image);vector=True
@@ -220,6 +244,7 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
             require(isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value), 'Missing external provenance hash: ' + field)
     records, lifecycle, navigation, pngs = [], [], [], {}
     enhanced_windows,enhanced_boundaries=[],[]
+    crops={};used_crops=set()
     files = [p for p in Path(folder).rglob('*') if p.is_file()]
     require(sum(p.stat().st_size for p in files) <= 128 * 1024 * 1024, 'Exported evidence exceeds128MiB; do not silently truncate')
     for p in files:
@@ -229,6 +254,9 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
             except (ValueError, UnicodeError): continue
             if not isinstance(record, dict): continue
             schema = record.get('schema')
+            if schema == 'flashnest-oriented-crop-v1':
+                crop_key=(record['identity']['arm'],record['screenScale'],record['captureName'])
+                require(crop_key not in crops, 'Duplicate oriented crop capture key');crops[crop_key]=record
             if schema == 'flashnest-native-sampling-v3': records.append(record)
             if schema == 'flashnest-native-sampling-lifecycle-v1': lifecycle.append(record)
             if schema == 'flashnest-native-sampling-navigation-v1': navigation.append(record)
@@ -272,6 +300,7 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
         for moment in ('before', 'after'):
             for label in ('DOWN','UP','RESET'): trace_equal(trace(row[moment],label),trace(input_reference[moment],label))
         require(row['cropSHA256'] in pngs and reference['cropSHA256'] in pngs, 'Actual canvas screenshot missing')
+        check_oriented_crop(row['before'],row['row']+'-'+row['phase'],row['cropSHA256'],crops,pngs,used_crops)
         with Image.open(pngs[row['cropSHA256']]) as image, Image.open(pngs[reference['cropSHA256']]) as original:
             require(image.size == original.size, 'Screenshot logical size changed')
             require(pairs(green_bounds(image), green_bounds(original), math.ceil(2 * dpr / applied)), 'Rendered vector bounds moved')
@@ -299,7 +328,8 @@ def verify(folder, candidate_inventory, baseline_inventory, expected_identities)
         require(e.index('provisional') < e.index('redirect') < e.index('commit'), 'Initial real callback order wrong')
         require(item['loaded']['status'] != 'unknown' and failed['status'] == 'unknown' and failed['failure'], 'Initial binding/failure reporting regressed')
         require(any(x in failed['navigationEvents'] for x in ('provisional-failure', 'committed-failure')), 'No actual WK failure callback')
-    enhanced=verify_enhanced_boundary(enhanced_windows,enhanced_boundaries,pngs,expected_identities['candidate'])
+    enhanced=verify_enhanced_boundary(enhanced_windows,enhanced_boundaries,pngs,expected_identities['candidate'],crops,used_crops)
+    require(set(crops)==used_crops, 'Unexpected/unconsumed oriented crop captures')
     policies_reduced = []
     for policy in POLICIES:
         needed = {('candidate', dpr, policy, mode, tier, 'shipping-default-quality', phase)

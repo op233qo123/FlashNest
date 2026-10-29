@@ -15,7 +15,7 @@ def measurement(lane='shipping-default-quality', scale=.25, applied=.25):
         'storage':[[4,1200,1800]] if applied==1 else [], 'attributes':{'data-flashnest-render-scale':str(applied),
         'data-flashnest-render-request':str(scale), 'data-flashnest-viewport-width':'1200',
         'data-flashnest-viewport-height':'1800', 'data-flashnest-renderer':'webgl'},
-        'overflow':False, 'hidden':False, 'mobileQualityBranch':True,
+        'contextLost':False, 'contextEvents':[], 'overflow':False, 'hidden':False, 'mobileQualityBranch':True,
         'diagnosticLaunchQuality': None if lane=='shipping-default-quality' else lane.removeprefix('diagnostic-launch-')}
     snapshot = {'identity':{'runtimeInventorySHA256':'candidate', 'runtimeFiles':{'actual.wasm':'sha'}, 'arm':'candidate',
         'simulatorOnly':True, 'shippingDefaultQualityOmitted':True, 'rendererPolicyContract':'candidate-three-mode-v1'}, 'os':'18.2', 'screenScale':3, 'measurement':m,
@@ -56,6 +56,7 @@ class Contracts(unittest.TestCase):
         r,s=measurement('diagnostic-launch-low');self.assertEqual(self.check(r,s),.25)
     def test_backing_status_identity_quality_mutants_rejected(self):
         changes=[('gl',[1200,1800]),('canvas',[300,449]),('dpr',2),('client',[401,600]),
+                 ('contextLost',True),('contextEvents',[{'type':'webglcontextlost','trusted':True}]),
                  ('context','webgpu'),('renderer',None),('overflow',True),('hidden',True),
                  ('diagnosticLaunchQuality','low'),('wasm',[]),('wasm',['other.wasm']),
                  ('storage',[[4,1200,1800]])]

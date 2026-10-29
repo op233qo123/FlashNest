@@ -297,15 +297,62 @@ final class NativeSamplingUITests: XCTestCase {
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: viewport[0] + css[0] + point[0], dy: viewport[1] + css[1] + point[1]))
     }
     private func screenshot(_ app: XCUIApplication, before: [String: Any], name: String) throws -> String {
-        let image = XCUIScreen.main.screenshot().image, cg = try XCTUnwrap(image.cgImage)
-        let viewport = try XCTUnwrap(before["viewport"] as? [Double]), screen = try XCTUnwrap(before["screenBounds"] as? [Double])
+        let image = XCUIScreen.main.screenshot().image
+        let raw = try XCTUnwrap(image.cgImage)
+        let rawAttachment = XCTAttachment(image: image)
+        rawAttachment.name = name + "-raw-full"; rawAttachment.lifetime = .keepAlways; add(rawAttachment)
+        try attachJSON(["rawCGPixels": [raw.width, raw.height], "imageOrientation": image.imageOrientation.rawValue,
+            "imagePointSize": [image.size.width, image.size.height], "imageScale": image.scale,
+            "screenBounds": before["screenBounds"] ?? [], "viewport": before["viewport"] ?? []], name: name + "-raw-image-geometry")
+        let swapsAxes: Bool
+        switch image.imageOrientation {
+        case .left, .right, .leftMirrored, .rightMirrored: swapsAxes = true
+        default: swapsAxes = false
+        }
+        let width = swapsAxes ? raw.height : raw.width
+        let height = swapsAxes ? raw.width : raw.height
+        let format = UIGraphicsImageRendererFormat(); format.scale = 1; format.opaque = true; format.preferredRange = .standard
+        let normalized = UIGraphicsImageRenderer(size: CGSize(width: CGFloat(width), height: CGFloat(height)), format: format).image { _ in
+            image.draw(in: CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)))
+        }
+        let cg = try XCTUnwrap(normalized.cgImage)
+        let normalizedAttachment = XCTAttachment(image: normalized)
+        normalizedAttachment.name = name + "-normalized-full"; normalizedAttachment.lifetime = .keepAlways; add(normalizedAttachment)
+        let viewport = try XCTUnwrap(before["viewport"] as? [Double])
+        let screen = try XCTUnwrap(before["screenBounds"] as? [Double])
+        let dpr = try XCTUnwrap(before["screenScale"] as? Double)
         let css = try XCTUnwrap((before["measurement"] as? [String: Any])?["css"] as? [Double])
-        let sx = Double(cg.width) / screen[0], sy = Double(cg.height) / screen[1]
-        let rect = CGRect(x: (viewport[0] + css[0]) * sx, y: (viewport[1] + css[1]) * sy, width: css[2] * sx, height: css[3] * sy).integral
-        let crop = try XCTUnwrap(cg.cropping(to: rect)), bytes = try XCTUnwrap(UIImage(cgImage: crop).pngData())
+        guard screen.count == 2, viewport.count == 4, css.count == 4,
+              abs(Double(cg.width) - screen[0] * dpr) <= 1,
+              abs(Double(cg.height) - screen[1] * dpr) <= 1 else {
+            throw Failure.invalid("Oriented screenshot does not match independent screen/DPR")
+        }
+        let rect = CGRect(x: (viewport[0] + css[0]) * dpr, y: (viewport[1] + css[1]) * dpr,
+                          width: css[2] * dpr, height: css[3] * dpr).integral
+        let geometry: [String: Any] = ["rawCGPixels": [raw.width, raw.height],
+            "imageOrientation": image.imageOrientation.rawValue, "normalization": "UIImage.draw-oriented-scale1-v1",
+            "normalizedPixels": [cg.width, cg.height], "cropRectPixels": [rect.origin.x, rect.origin.y, rect.width, rect.height]]
+        try attachJSON(geometry, name: name + "-crop-geometry")
+        guard rect.minX >= 0, rect.minY >= 0, rect.maxX <= CGFloat(cg.width), rect.maxY <= CGFloat(cg.height) else {
+            throw Failure.invalid("Oriented crop outside screen")
+        }
+        let crop = try XCTUnwrap(cg.cropping(to: rect))
+        guard crop.width == Int(rect.width), crop.height == Int(rect.height) else {
+            throw Failure.invalid("Oriented crop was clipped")
+        }
+        let bytes = try XCTUnwrap(UIImage(cgImage: crop).pngData())
         let attachment = XCTAttachment(data: bytes, uniformTypeIdentifier: "public.png")
         attachment.name = name + "-canvas.png"; attachment.lifetime = .keepAlways; add(attachment)
-        return SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+        let hash = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+        var bound = geometry
+        bound["schema"] = "flashnest-oriented-crop-v1"
+        bound["captureName"] = name; bound["cropSHA256"] = hash
+        bound["identity"] = before["identity"]; bound["epoch"] = before["epoch"]
+        bound["screenScale"] = dpr; bound["screenBounds"] = screen; bound["viewport"] = viewport
+        bound["css"] = css; bound["imagePointSize"] = [image.size.width, image.size.height]
+        bound["imageScale"] = image.scale
+        try attachJSON(bound, name: name + "-bound-crop-geometry")
+        return hash
     }
     private func attachJSON(_ object: [String: Any], name: String) throws {
         let bytes = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
