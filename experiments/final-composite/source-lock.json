@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "ENGINE_BUILD_SOURCE_ELIGIBLE_NATIVE_AND_IPA_PENDING",
+  "status": "ENGINE_BUILD_SOURCE_ELIGIBLE_TOUCH_DELTA_NATIVE_AND_IPA_PENDING",
   "releaseEligible": false,
   "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
   "patches": [
@@ -19,6 +19,10 @@
     {
       "path": "patches/final-composite-runtime.patch",
       "sha256": "44feaebb0359cc305f60b6514a7898b5717237a45e3e1c2c68c94fa7802e6540"
+    },
+    {
+      "path": "patches/touch-contact-boundary.patch",
+      "sha256": "603a28f72401a7ba5ac1a9866121e5a4cdc8c425b6161c738359df503e32160f"
     }
   ],
   "modifiedSourceFiles": {
@@ -187,8 +191,8 @@
       "bytes": 113589
     },
     "core/src/player.rs": {
-      "sha256": "7df0827413fec8c95994e4160d930d4d35796ba957f3edf3326da846d604a61f",
-      "bytes": 130370
+      "sha256": "86b8fc75c30137049e663619d4318917331da36a78f7b6b4b0d5180fb1d31d75",
+      "bytes": 132892
     },
     "render/src/backend.rs": {
       "sha256": "7fa4fe412b019aa8c0e7d0e892a83239e4246135cf2343f3af085dc1d77b5f33",
@@ -251,8 +255,8 @@
       "bytes": 30266
     },
     "web/src/lib.rs": {
-      "sha256": "b28a878ccc1909e5e55b8ee134323421a978163de330f866d289fbab5948dd8f",
-      "bytes": 56335
+      "sha256": "006829db6fa8ca989bbb258d3c9328ea80a100e53e98c9aa4fc988f8ede02e85",
+      "bytes": 57237
     }
   },
   "sourceDateEpoch": 1791399335,
@@ -266,8 +270,8 @@
   "wasmOptRequired": true,
   "runtimeValidated": false,
   "productionGcReview": {
-    "path": "reviews/engine-source-eligibility.json",
-    "sha256": "74fd9c13bde56ba122a7f17afe003045fa08b0f17a7c15e9badb5ed06155e9d7"
+    "path": "reviews/touch-engine-source-eligibility.json",
+    "sha256": "900ead1d5f9a9a2f90145c7e03c09b1d178edd51c4f10ba05d3139f32614a138"
   },
   "nativeAcceptance": null,
   "finalRuntimeBrowserAcceptance": null,

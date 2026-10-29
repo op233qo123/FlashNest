@@ -1,0 +1,133 @@
+   Compiling crossbeam-utils v0.8.21
+   Compiling log v0.4.34
+   Compiling bitflags v2.13.2
+   Compiling serde_core v1.0.229
+   Compiling regex-syntax v0.8.11
+   Compiling rayon-core v1.13.0
+   Compiling anstyle v1.0.14
+   Compiling arrayvec v0.7.8
+   Compiling utf8parse v0.2.2
+   Compiling anstyle-parse v1.0.0
+   Compiling colorchoice v1.0.5
+   Compiling anstyle-query v1.1.5
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling serde v1.0.229
+   Compiling strsim v0.11.1
+   Compiling clap_lex v1.1.1
+   Compiling anstream v1.0.0
+   Compiling dasp_sample v0.11.0
+   Compiling libc v0.2.189
+   Compiling rustix v1.1.4
+   Compiling winnow v1.0.4
+   Compiling dasp_frame v0.11.0
+   Compiling linux-raw-sys v0.12.1
+   Compiling lazy_static v1.5.0
+   Compiling crossbeam-epoch v0.9.21
+   Compiling anyhow v1.0.104
+   Compiling lyon_geom v1.0.6
+   Compiling crossbeam-deque v0.8.8
+   Compiling tracing-core v0.1.36
+   Compiling lyon_path v1.0.7
+   Compiling annotate-snippets v0.12.16
+   Compiling generic-array v0.14.7
+   Compiling rayon v1.12.0
+   Compiling regex-automata v0.4.18
+   Compiling find-msvc-tools v0.1.13
+   Compiling dasp_ring_buffer v0.11.0
+   Compiling shlex v2.0.1
+   Compiling bitflags v1.3.2
+   Compiling symphonia-core v0.5.5
+   Compiling terminal_size v0.4.4
+   Compiling cc v1.4.7
+   Compiling indexmap v2.14.2
+   Compiling tracing v0.1.44
+   Compiling swf v0.3.0
+   Compiling clap_builder v4.6.7
+   Compiling typenum v1.20.1
+   Compiling lyon_tessellation v1.0.15
+   Compiling libdeflate-sys v1.26.0
+   Compiling globset v0.4.19
+   Compiling regex v1.13.1
+   Compiling naga-types v30.0.1
+   Compiling naga v30.0.1
+   Compiling png v0.18.1
+   Compiling clap v4.6.7
+   Compiling dasp_rms v0.11.0
+   Compiling asc v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/tools/asc)
+   Compiling lyon_algorithms v1.0.5
+   Compiling swf v0.3.0 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/swf)
+   Compiling dasp_peak v0.11.0
+   Compiling getrandom v0.4.3
+   Compiling image v0.25.10
+   Compiling serde_json v1.0.151
+   Compiling dasp_envelope v0.11.0
+   Compiling rascal v0.3.6
+   Compiling lyon v1.0.1
+   Compiling ignore v0.4.32
+   Compiling symphonia-metadata v0.5.5
+   Compiling naga-agal v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/render/naga-agal)
+   Compiling dasp_interpolate v0.11.0
+   Compiling dasp_window v0.11.1
+   Compiling ruffle_render v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/render)
+   Compiling build_playerglobal v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/core/build_playerglobal)
+   Compiling dasp_signal v0.11.0
+   Compiling fluent-template-macros v0.13.3
+   Compiling symphonia-bundle-mp3 v0.5.5
+   Compiling gc-arena v0.7.0
+   Compiling env_filter v2.0.0
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling symphonia-codec-aac v0.5.5
+   Compiling filetime v0.2.29
+   Compiling dasp_slice v0.11.0
+   Compiling concurrent-queue v2.5.0
+   Compiling bumpalo v3.20.3
+   Compiling ruffle_core v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/core)
+   Compiling jiff v0.2.28
+   Compiling async-channel v2.5.0
+   Compiling zopfli v0.8.3
+   Compiling dasp v0.11.0
+   Compiling symphonia v0.5.5
+   Compiling ruffle_common v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/core/common)
+   Compiling vfs v0.13.0
+   Compiling digest v0.10.7
+   Compiling fluent-templates v0.13.3
+   Compiling libdeflater v1.26.0
+   Compiling ruffle_video v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/video)
+   Compiling rand v0.10.2
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling serde_spanned v1.1.1
+   Compiling toml_parser v1.1.3+spec-1.1.0
+   Compiling id3 v1.17.2
+   Compiling flv-rs v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/flv)
+   Compiling rgb v0.8.53
+   Compiling parse-size v1.1.0
+   Compiling cpufeatures v0.2.17
+   Compiling toml_writer v1.1.2+spec-1.1.0
+   Compiling yansi v1.0.1
+   Compiling fastrand v2.5.0
+   Compiling diff v0.1.13
+   Compiling escape8259 v0.5.3
+   Compiling libtest-mimic v0.8.2
+   Compiling tempfile v3.27.0
+   Compiling toml v1.1.6+spec-1.1.0
+   Compiling pretty_assertions v1.4.1
+   Compiling sha2 v0.10.9
+   Compiling ruffle_input_format v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/tests/input-format)
+   Compiling ruffle_socket_format v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/tests/socket-format)
+   Compiling cfg-expr v0.20.9
+   Compiling approx v0.5.1
+   Compiling env_logger v0.11.11
+   Compiling ruffle_fs_tests_runner v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/tests/fs-tests-runner)
+   Compiling matchers v0.2.0
+   Compiling tracing-log v0.2.0
+   Compiling oxipng v10.2.1
+   Compiling sharded-slab v0.1.7
+   Compiling thread_local v1.1.10
+   Compiling nu-ansi-term v0.50.3
+   Compiling temp-dir v0.2.0
+   Compiling tracing-subscriber v0.3.23
+   Compiling ruffle_test_framework v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/tests/framework)
+   Compiling tests v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/tests)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 10s
+  Executable tests/regression_tests.rs (touch-input-repair/target-candidate-local/debug/deps/tests-36fbcafa20f69d03)

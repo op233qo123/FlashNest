@@ -1,0 +1,218 @@
+   Compiling symphonia-core v0.5.5
+   Compiling naga v30.0.1
+   Compiling ruffle_core v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/core)
+   Compiling symphonia-metadata v0.5.5
+   Compiling symphonia-codec-aac v0.5.5
+   Compiling symphonia-bundle-mp3 v0.5.5
+   Compiling symphonia v0.5.5
+   Compiling naga-agal v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/render/naga-agal)
+   Compiling ruffle_render v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/render)
+   Compiling ruffle_video v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/source/video)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 41.09s
+     Running unittests src/lib.rs (touch-input-repair/target-candidate-local/debug/deps/ruffle_core-54528bab7f756728)
+
+running 134 tests
+test avm2::array::tests::test_occupied_count_delete ... ok
+test avm2::array::tests::test_occupied_count_from_iter ... ok
+test avm2::array::tests::test_occupied_count_from_storage ... ok
+test avm2::array::tests::test_occupied_count_new ... ok
+test avm2::array::tests::test_occupied_count_pop_all_holes ... ok
+test avm2::array::tests::test_occupied_count_pop_hole ... ok
+test avm2::array::tests::test_occupied_count_pop_non_hole ... ok
+test avm2::array::tests::test_occupied_count_push ... ok
+test avm2::array::tests::test_occupied_count_push_hole ... ok
+test avm2::array::tests::test_occupied_count_remove_hole ... ok
+test avm2::array::tests::test_occupied_count_remove_non_hole ... ok
+test avm2::array::tests::test_occupied_count_remove_oob ... ok
+test avm2::array::tests::test_occupied_count_set_extend ... ok
+test avm2::array::tests::test_occupied_count_set_length_extend ... ok
+test avm2::array::tests::test_occupied_count_set_length_shrink_faster_to_count_deleted ... ok
+test avm2::array::tests::test_occupied_count_set_length_shrink_faster_to_count_remaining ... ok
+test avm2::array::tests::test_occupied_count_set_length_shrink_holes ... ok
+test avm2::array::tests::test_occupied_count_set_length_shrink_occupied ... ok
+test avm2::array::tests::test_occupied_count_set_no_extend ... ok
+test avm2::array::tests::test_occupied_count_shift_all_holes ... ok
+test avm2::array::tests::test_occupied_count_shift_hole ... ok
+test avm2::array::tests::test_occupied_count_shift_non_hole ... ok
+test avm2::array::tests::test_occupied_count_splice_delete ... ok
+test avm2::array::tests::test_occupied_count_splice_insert ... ok
+test avm2::array::tests::test_occupied_count_splice_insert_and_delete ... ok
+test avm2::array::tests::test_occupied_count_unshift_empty ... ok
+test avm2::array::tests::test_occupied_count_unshift_holes ... ok
+test avm2::array::tests::test_occupied_count_unshift_non_holes ... ok
+a
+a
+f
+d
+next
+a
+a
+f
+d
+e
+b
+test avm2::dynamic_map::tests::test_dynamic_map ... ok
+test avm2::e4x::is_xml_name::tests::verify_is_xml_name_table_order ... ok
+test avm2::value::tests::test_string_to_f64 ... ok
+test backend::audio::decoders::g711::tests::alaw_reset ... ok
+test backend::audio::decoders::g711::tests::alaw_seek ... ok
+test backend::audio::decoders::g711::tests::mulaw_reset ... ok
+test backend::audio::decoders::g711::tests::mulaw_seek ... ok
+test character::render_cache_tests::bitmap_cache_release_preserves_live_handles_and_recreates ... ok
+test compatibility_rules::tests::test_domain_matches ... ok
+test compatibility_rules::tests::test_fpdownload_rewrite_upgrades_to_https ... ok
+test display_object::morph_shape::test::test_lerp_rounding ... ok
+test ecma_conversions::test::test_round_to_even ... ok
+test ecma_conversions::test::wrapping_i16 ... ok
+test ecma_conversions::test::wrapping_i32 ... ok
+test ecma_conversions::test::wrapping_u16 ... ok
+test ecma_conversions::test::wrapping_u32 ... ok
+
+thread 'font::atlas::test::bad_bitmap_format' (1179) panicked at render/src/bitmap.rs:323:9:
+assertion `left == right` failed: Can't copy a region between bitmaps of different formats
+  left: Rgba
+ right: Rgb
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test font::atlas::test::bad_bitmap_format - should panic ... ok
+test font::atlas::test::cloned_atlas_shares_pages_with_the_original ... ok
+test font::atlas::test::dropping_a_glyph_frees_its_space_for_reuse ... ok
+test font::atlas::test::first_glyph_creates_a_page ... ok
+test font::atlas::test::glyph_larger_than_page ... ok
+test font::atlas::test::glyph_placement ... ok
+test font::atlas::test::glyph_region_matches_the_bitmap_size ... ok
+test font::atlas::test::glyph_translation ... ok
+test font::atlas::test::glyphs_go_to_the_earliest_page ... ok
+test font::atlas::test::margins_are_cleared ... ok
+test font::atlas::test::new_atlas_has_no_pages ... ok
+test font::atlas::test::new_page_created_when_no_space ... ok
+
+thread 'font::atlas::test::zero_sized_glyph' (1191) panicked at core/src/font/atlas.rs:43:9:
+assertion failed: bitmap.width() != 0 && bitmap.height() != 0
+test font::atlas::test::zero_sized_glyph - should panic ... ok
+test html::line_wrapping::tests::wrap_line_breakpoint_every_word ... ok
+test html::line_wrapping::tests::wrap_line_breakpoint_irregular_sized_words ... ok
+test html::line_wrapping::tests::wrap_line_breakpoint_no_room ... ok
+test html::line_wrapping::tests::wrap_line_no_breakpoint ... ok
+test html::style_sheet::tests::parse_empty ... ok
+test html::style_sheet::tests::parse_empty_property_name_and_unclosed ... ok
+test html::style_sheet::tests::parse_last_property_without_semicolon ... ok
+test html::style_sheet::tests::parse_properties_cursed ... ok
+test html::style_sheet::tests::parse_properties_empty ... ok
+test html::style_sheet::tests::parse_properties_no_value_eof ... ok
+test html::style_sheet::tests::parse_properties_no_value_explicit_close ... ok
+test html::style_sheet::tests::parse_properties_no_value_semicolon ... ok
+test html::style_sheet::tests::parse_properties_semicolons_are_crazy ... ok
+test html::style_sheet::tests::parse_properties_whitespace ... ok
+test html::style_sheet::tests::parse_property_without_semicolon ... ok
+test html::style_sheet::tests::parse_selectors_empty ... ok
+test html::style_sheet::tests::parse_selectors_invalid ... ok
+test html::style_sheet::tests::parse_selectors_just_end ... ok
+test html::style_sheet::tests::parse_selectors_multiple ... ok
+test html::style_sheet::tests::parse_selectors_no_end ... ok
+test html::style_sheet::tests::parse_selectors_single ... ok
+test html::style_sheet::tests::parse_selectors_with_comment ... ok
+test html::style_sheet::tests::parse_two_selectors ... ok
+test html::test::bounds_extents ... ok
+test html::test::bounds_position_add ... ok
+test html::test::bounds_position_addassign ... ok
+test html::test::bounds_size_add ... ok
+test html::test::bounds_size_addassign ... ok
+test html::test::bounds_union ... ok
+test html::test::bounds_union_reverse ... ok
+test html::test::bounds_unionassign ... ok
+test html::test::bounds_unionassign_reverse ... ok
+test html::test::bounds_with_size ... ok
+test html::test::formatspans_ensure_span_break ... ok
+test html::test::formatspans_ensure_span_break_redundant ... ok
+test html::test::formatspans_get_text_format ... ok
+test html::test::formatspans_normalize_exact_spans ... ok
+test html::test::formatspans_normalize_long_spans ... ok
+test html::test::formatspans_normalize_long_spans_with_merge ... ok
+test html::test::formatspans_normalize_merge_many_spans ... ok
+test html::test::formatspans_normalize_merge_spans ... ok
+test html::test::formatspans_normalize_no_spans ... ok
+test html::test::formatspans_normalize_no_text ... ok
+test html::test::formatspans_normalize_set_text_format_double_cut ... ok
+test html::test::formatspans_normalize_set_text_format_no_cut ... ok
+test html::test::formatspans_normalize_set_text_format_single_cut ... ok
+test html::test::formatspans_normalize_short_spans ... ok
+test html::test::formatspans_replace_text_degenerate ... ok
+test html::test::formatspans_replace_text_edgebounds ... ok
+test html::test::formatspans_replace_text_inbounds ... ok
+test html::test::formatspans_replace_text_oob ... ok
+test html::test::formatspans_resolve_position ... ok
+test html::test::formatspans_set_default ... ok
+test html::test::formatspans_span_boundaries ... ok
+test html::test::from_swf_rectangle ... ok
+test html::test::into_swf_rectangle ... ok
+test html::test::position_add ... ok
+test html::test::position_add_assign ... ok
+test html::test::textformat_merge ... ok
+test html::test::textformat_mix ... ok
+test input::tests::spurious_key_up_ignored ... ok
+test socket::tests::normal_host ... ok
+test socket::tests::truncate_host_at_null ... ok
+test avm1::value::test::to_number_swf6 ... ok
+test avm1::value::test::abstract_gt_str ... ok
+test avm1::value::test::abstract_lt_str ... ok
+test avm1::value::test::abstract_lt_num ... ok
+test avm1::value::test::to_number_swf7 ... ok
+test avm1::value::test::f64_to_string ... ok
+test avm1::value::test::to_primitive_num ... ok
+test avm1::value::test::abstract_gt_num ... ok
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|40|20|false|320|240|showAll|",
+    "DENSITY|UP|40|20|100|70|320|240|showAll|",
+    "DENSITY|DOWN|110|90|true|320|240|showAll|",
+    "DENSITY|PRESS|110|90",
+    "DENSITY|UP|110|90|100|70|320|240|showAll|",
+    "DENSITY|RELEASE|110|90",
+]
+test touch_input_tests::touch_first_and_consecutive_down_current_without_move ... ok
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|110|90|true|320|240|showAll|",
+    "DENSITY|RESIZE|400|300|noScale|",
+    "DENSITY|PRESS|97.5|82.5",
+    "DENSITY|UP|97.5|82.5|87.5|62.5|400|300|noScale|",
+    "DENSITY|RELEASE|97.5|82.5",
+]
+test touch_input_tests::touch_stage_change_during_down_observation ... ok
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|0|0|false|320|240|showAll|",
+    "DENSITY|UP|40|20|100|70|320|240|showAll|",
+    "DENSITY|DOWN|40|20|false|320|240|showAll|",
+    "DENSITY|PRESS|110|90",
+    "DENSITY|UP|110|90|100|70|320|240|showAll|",
+    "DENSITY|RELEASE|110|90",
+]
+test touch_input_tests::touch_ordinary_mouse_known_negative_still_unchanged ... ok
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|110|90|true|320|240|showAll|",
+    "DENSITY|PRESS|110|90",
+    "DENSITY|UP|130|110|120|90|320|240|showAll|",
+    "DENSITY|SECOND|20|30",
+    "DENSITY|RELEASE|130|110",
+    "DENSITY|MOVE|130|110",
+    "DENSITY|DOWN|150|130|true|320|240|showAll|",
+    "DENSITY|PRESS|150|130",
+    "DENSITY|UP|150|130|120|90|320|240|showAll|",
+    "DENSITY|SECOND|40|50",
+    "DENSITY|RELEASE|150|130",
+]
+test touch_input_tests::touch_up_stop_then_start_new_drag_preserves_endpoint_and_next_delta ... ok
+test touch_input_tests::touch_duplicate_unmatched_boundaries_preserve_existing_dispatch_counts ... ok
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|110|90|true|320|240|showAll|",
+    "DENSITY|PRESS|110|90",
+    "DENSITY|UP|130|110|120|90|320|240|showAll|",
+    "DENSITY|RELEASE|130|110",
+]
+test touch_input_tests::touch_release_without_last_move_finalizes_current_endpoint ... ok
+
+test result: ok. 134 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.54s
+

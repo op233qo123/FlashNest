@@ -1,0 +1,83 @@
+   Compiling ruffle_core v0.7.1 (/workspace/scratch/bbe5ec6ec106/touch-input-repair/accepted-before/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.29s
+     Running unittests src/lib.rs (touch-input-repair/source/target/debug/deps/ruffle_core-f10ea94a1a0b6a37)
+
+running 6 tests
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|0|0|false|320|240|showAll|",
+    "DENSITY|PRESS|110|90",
+    "DENSITY|UP|110|90|100|70|320|240|showAll|",
+    "DENSITY|RELEASE|130|110",
+]
+
+thread 'touch_input_tests::touch_release_without_last_move_finalizes_current_endpoint' (628) panicked at core/src/touch_input_tests.rs:51:5:
+assertion `left == right` failed
+  left: ["DENSITY|READY|320|240|showAll|", "DENSITY|DOWN|0|0|false|320|240|showAll|", "DENSITY|PRESS|110|90", "DENSITY|UP|110|90|100|70|320|240|showAll|", "DENSITY|RELEASE|130|110"]
+ right: ["DENSITY|READY|320|240|showAll|", "DENSITY|DOWN|110|90|true|320|240|showAll|", "DENSITY|PRESS|110|90", "DENSITY|UP|130|110|120|90|320|240|showAll|", "DENSITY|RELEASE|130|110"]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test touch_input_tests::touch_release_without_last_move_finalizes_current_endpoint ... FAILED
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|0|0|false|320|240|showAll|",
+    "DENSITY|PRESS|110|90",
+    "DENSITY|UP|110|90|100|70|320|240|showAll|",
+    "DENSITY|SECOND|20|30",
+    "DENSITY|RELEASE|130|110",
+    "DENSITY|MOVE|130|110",
+    "DENSITY|DOWN|150|130|true|320|240|showAll|",
+    "DENSITY|PRESS|150|130",
+    "DENSITY|UP|150|130|100|70|320|240|showAll|",
+    "DENSITY|SECOND|60|70",
+    "DENSITY|RELEASE|150|130",
+]
+
+thread 'touch_input_tests::touch_up_stop_then_start_new_drag_preserves_endpoint_and_next_delta' (630) panicked at core/src/touch_input_tests.rs:77:5:
+assertion failed: result.iter().any(|s| s.starts_with("DENSITY|UP|130|110|120|90|"))
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|0|0|false|320|240|showAll|",
+    "DENSITY|RESIZE|400|300|noScale|",
+    "DENSITY|UP|97.5|82.5|100|70|400|300|noScale|",
+]
+
+thread 'touch_input_tests::touch_stage_change_during_down_observation' (629) panicked at core/src/touch_input_tests.rs:60:5:
+assertion failed: result.iter().any(|s| s.starts_with("DENSITY|DOWN|110|90|true|"))
+test touch_input_tests::touch_stage_change_during_down_observation ... FAILED
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|0|0|false|320|240|showAll|",
+    "DENSITY|UP|40|20|100|70|320|240|showAll|",
+    "DENSITY|DOWN|40|20|false|320|240|showAll|",
+    "DENSITY|PRESS|110|90",
+    "DENSITY|UP|110|90|100|70|320|240|showAll|",
+    "DENSITY|RELEASE|110|90",
+]
+test touch_input_tests::touch_ordinary_mouse_known_negative_still_unchanged ... ok
+[
+    "DENSITY|READY|320|240|showAll|",
+    "DENSITY|DOWN|0|0|false|320|240|showAll|",
+    "DENSITY|UP|40|20|100|70|320|240|showAll|",
+    "DENSITY|DOWN|40|20|false|320|240|showAll|",
+    "DENSITY|PRESS|110|90",
+    "DENSITY|UP|110|90|100|70|320|240|showAll|",
+    "DENSITY|RELEASE|110|90",
+]
+
+thread 'touch_input_tests::touch_first_and_consecutive_down_current_without_move' (626) panicked at core/src/touch_input_tests.rs:33:5:
+assertion failed: downs[0].starts_with("DENSITY|DOWN|40|20|false|")
+test touch_input_tests::touch_first_and_consecutive_down_current_without_move ... FAILED
+test touch_input_tests::touch_up_stop_then_start_new_drag_preserves_endpoint_and_next_delta ... FAILED
+test touch_input_tests::touch_duplicate_unmatched_boundaries_preserve_existing_dispatch_counts ... ok
+
+failures:
+
+failures:
+    touch_input_tests::touch_first_and_consecutive_down_current_without_move
+    touch_input_tests::touch_release_without_last_move_finalizes_current_endpoint
+    touch_input_tests::touch_stage_change_during_down_observation
+    touch_input_tests::touch_up_stop_then_start_new_drag_preserves_endpoint_and_next_delta
+
+test result: FAILED. 2 passed; 4 failed; 0 ignored; 0 measured; 124 filtered out; finished in 0.39s
+
+error: test failed, to rerun pass `--lib`

@@ -1,0 +1,35 @@
+--- a/tests/framework/src/runner/automation.rs
++++ b/tests/framework/src/runner/automation.rs
+@@ -16,7 +16,7 @@
+         return;
+     }
+ 
+-    let handled = player.handle_event(match evt {
++    let event = match evt {
+         AutomatedEvent::MouseDown {
+             pos, btn, index, ..
+         } => PlayerEvent::MouseDown {
+@@ -95,7 +95,22 @@
+         }
+         AutomatedEvent::ImeCommit { text } => PlayerEvent::Ime(ImeEvent::Commit(text.clone())),
+         AutomatedEvent::Wait | AutomatedEvent::SetClipboardText { .. } => unreachable!(),
+-    });
++    };
++    // Test-only replay; all existing handled/cursor assertions and golden traces remain active.
++    let handled = if std::env::var_os("RUFFLE_TEST_TOUCH_BOUNDARIES").is_some() {
++        match event {
++            PlayerEvent::MouseDown {
++                x,
++                y,
++                button,
++                index,
++            } => player.handle_touch_start(x, y, button, index),
++            PlayerEvent::MouseUp { x, y, button } => player.handle_touch_end(x, y, button),
++            _ => player.handle_event(event),
++        }
++    } else {
++        player.handle_event(event)
++    };
+ 
+     match evt {
+         AutomatedEvent::MouseDown {
