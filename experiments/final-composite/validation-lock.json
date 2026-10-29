@@ -400,7 +400,7 @@
     "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
     "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4"
   },
-  "diagnosticOnly": true,
+  "diagnosticOnly": false,
   "dispatchAllowed": true,
   "engine": {
     "artifactID": 12862634818,
@@ -539,7 +539,7 @@
     },
     "validation-bindings/native-binding.json": {
       "bytes": 26851,
-      "sha256": "8472f485298d1a7f971d0515e34c7954b38bd5da5ca768f80f625cc8039ab256"
+      "sha256": "647582ac6f558db789e4c6087775a95739a501a6049954f28ae618ff6373516f"
     },
     "validation-bindings/sampling-baseline-approved-app.json": {
       "bytes": 30481,
@@ -815,11 +815,11 @@
     },
     "validation-harness/native-composite-runner/file-manifest.json": {
       "bytes": 4496,
-      "sha256": "790d4275f00d432c4123a2716666120f38aaa952bca1d3bb7cdc649d2118185c"
+      "sha256": "a47fb8b70455522cf7178b96d398c6162c596d259f6d2426a9658ca388c5940b"
     },
     "validation-harness/native-composite-runner/helper-lock.json": {
-      "bytes": 13130,
-      "sha256": "8abc0f32b113d8b937a6547e3f2dc66db26adad28b75bf64dc41591c9d53a1d5"
+      "bytes": 13260,
+      "sha256": "290ddb8e3e908220ef39534cea50adf5e836a2c860318c3af8674e8da85322d9"
     },
     "validation-harness/native-composite-runner/legacy-automatic-negative/canvas.png": {
       "bytes": 14709,
@@ -950,20 +950,20 @@
       "sha256": "67205b1d9a082838e972608d6d23fc8b1c9efc6b7b4fe7a57e41af8e0c0c670a"
     },
     "validation-harness/native-sampling-validation/Host/SamplingHost.swift": {
-      "bytes": 13629,
-      "sha256": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4"
+      "bytes": 15063,
+      "sha256": "9f9dcbb55d007d94a4f198a2eb9a6f928d2eba53ac5b68eca36054541575e8d5"
     },
     "validation-harness/native-sampling-validation/Host/sampling-probe.js": {
       "bytes": 8040,
       "sha256": "da4a93c5e8beb23f52f27cd9d1b7fe405ca583fbd6e3a8e1f1fb618e00770be4"
     },
     "validation-harness/native-sampling-validation/README.md": {
-      "bytes": 20945,
-      "sha256": "95bd1c672f2e12ab4766c9ed334f3ecd62c692fa87d5e34d9799effce2700130"
+      "bytes": 25745,
+      "sha256": "9326a239693c17b48194c966df22fc2c099d19f55ea6a6df30bd32221c1c13ab"
     },
     "validation-harness/native-sampling-validation/UITests/NativeSamplingUITests.swift": {
-      "bytes": 30646,
-      "sha256": "32715026aa06d7a6bf341f7faaa5ccd5f589b063015e6668337e25a7fdc610b6"
+      "bytes": 37699,
+      "sha256": "cb6af6d7a8f12ffb0cc0bccbb33dd0c193a0226aece9855e33fc15ae7e313349"
     },
     "validation-harness/native-sampling-validation/approved-app-source-manifest.json": {
       "bytes": 30427,
@@ -990,8 +990,8 @@
       "sha256": "03a30b0b1ed75b8e75c8aa5367a6d1619db75b17a50194b7b32aa603d2856f52"
     },
     "validation-harness/native-sampling-validation/file-manifest.json": {
-      "bytes": 4188,
-      "sha256": "6abf05235dfc9d971e9491ca8f00b631473d4dd2f211d7414c71a62cf87a407d"
+      "bytes": 4336,
+      "sha256": "48c9176de5ccd8f8d064ac21b94a2e967f3820c5bfbd3c3a28ab090bb468e200"
     },
     "validation-harness/native-sampling-validation/fixtures/manifest.json": {
       "bytes": 576,
@@ -1034,20 +1034,24 @@
       "sha256": "afc6c9ea8ce0b97d62ce445f75c36c1f52d7f350bb5df34beef430e329626c07"
     },
     "validation-harness/native-sampling-validation/scripts/test_oriented_crop.py": {
-      "bytes": 2557,
-      "sha256": "9bb70c43b8c92fea0d37de5d47e5a1ddff8079278c618e6c9c6e2ccc42e2da5f"
+      "bytes": 2934,
+      "sha256": "300237d48aaf5978f0c15c49b6e747f6f22cce6f41c9ec5c3c6fce4570a79fef"
     },
     "validation-harness/native-sampling-validation/scripts/test_policy_v3.py": {
-      "bytes": 5898,
-      "sha256": "2f5621ecab0e49171d799e4ed9d665bd81667992fb3b4fd9cfe135df500ca634"
+      "bytes": 6376,
+      "sha256": "c3302268170b3c9484cd6bc63e01230c098177dc14587e159a2a561552ccf20f"
     },
     "validation-harness/native-sampling-validation/scripts/test_probe.cjs": {
       "bytes": 5029,
       "sha256": "d82f7cd8ac2f3848fc0ed492554a4dfcb2b1b285794dbb23e967dee6b740529f"
     },
+    "validation-harness/native-sampling-validation/scripts/test_raster_edge.py": {
+      "bytes": 4768,
+      "sha256": "c3c031bbdffba10c0daae2314484219b311be286044ef07c8f230ef130b54df3"
+    },
     "validation-harness/native-sampling-validation/scripts/test_tier_partition_v4.py": {
-      "bytes": 5871,
-      "sha256": "d785ef8f0f310e0f3edd439f073fc26401dcb735e25d4071b205c8341f181fd1"
+      "bytes": 5867,
+      "sha256": "9e2acd7a7fb581523b57ba7473ab85b98749abc79748893e17ee36ab2bd64d67"
     },
     "validation-harness/native-sampling-validation/scripts/test_verifier.py": {
       "bytes": 7565,
@@ -1058,8 +1062,8 @@
       "sha256": "b96c910230d46f86aa65832034a8a590d2a9adbb281ef21d4c07162dc7255445"
     },
     "validation-harness/native-sampling-validation/scripts/verify_results.py": {
-      "bytes": 33703,
-      "sha256": "af21f451f35d2997b0197f989fff30cc002ab18c826428624499b29572a20e20"
+      "bytes": 35240,
+      "sha256": "56823dd81844e8f5590c7c79385b5ebb6ce4dc974a41fda36a55848def65e4b8"
     },
     "validation-harness/native-save-audio-validation/README.md": {
       "bytes": 10946,
@@ -1431,6 +1435,6 @@
       ]
     }
   },
-  "reason": "Only one original quarter WebGL showAll restart diagnostic is eligible; unchanged90s wait with staged-only safe observations. Full198 and IPA acceptance remain blocked.",
+  "reason": "Complete198 v4 native eligible with explicit one-pixel outer-raster evidence and passive restart observations. Prior intermittent restart/context failures remain unexplained; all original regression assertions required, no native or IPA acceptance.",
   "schemaVersion": 1
 }

@@ -124,13 +124,28 @@ enum NativeSamplingTransport {
             web.topAnchor.constraint(equalTo: content.topAnchor), web.bottomAnchor.constraint(equalTo: content.bottomAnchor)])
     }
     @objc private func snapshotTapped() { Task { await snapshot() } }
+    private func restartSafeDiagnosticText(_ text: String) -> String {
+        var safe = text
+        for pattern in [#"(?i)\b(?:https?|file|wss?|flashnest)://[^\s\"'<>]+"#, #"\b[A-Za-z0-9_-]{32,}={0,2}\b"#] {
+            if let regex = try? NSRegularExpression(pattern: pattern) {
+                safe = regex.stringByReplacingMatches(in: safe, range: NSRange(safe.startIndex..., in: safe), withTemplate: "[redacted]")
+            }
+        }
+        return safe.count > 2048 ? String(safe.prefix(2048)) + " [truncated]" : safe
+    }
+    private var restartObservationPhase = "idle"
     private func snapshot() async {
         request += 1
         var result: [String: Any] = ["schema": 1, "request": request, "epoch": epoch, "identity": identity,
             "screenScale": UIScreen.main.scale, "nativeScale": UIScreen.main.nativeScale,
             "screenBounds": [UIScreen.main.bounds.width, UIScreen.main.bounds.height],
             "os": UIDevice.current.systemVersion, "gate": RenderSamplingSettings.runtimeValidated,
-            "loaded": session.isLoaded, "failure": failure ?? session.failure ?? "",
+            "loaded": session.isLoaded, "failure": restartSafeDiagnosticText(failure ?? session.failure ?? ""),
+            "restartObservation": ["saveReady": session.saveReady, "saveFailure": restartSafeDiagnosticText(session.saveFailure ?? ""),
+                "restartFailure": restartSafeDiagnosticText(session.restartFailure ?? ""), "restartRequired": session.restartRequired,
+                "hasWebView": session.webView != nil, "restartPhase": restartObservationPhase,
+                "processTerminated": NSNull(), "preservationStage": NSNull(),
+                "privateFieldAvailability": "not-exposed-by-product"] as [String: Any],
             "traces": NativeSamplingProbe.traces, "traceOverflow": NativeSamplingProbe.traceOverflow,
             "requested": session.requestedSamplingSettings?.mode.scale ?? -1,
             "applied": session.appliedSamplingStatus.applied ?? -1,
@@ -152,10 +167,14 @@ enum NativeSamplingTransport {
         present(UIHostingController(rootView: panel), animated: false)
     }
     @objc private func restartTapped() {
+        restartObservationPhase = "requested"
         Task {
             retainedOldView = session.webView
-            guard await session.saveAndRestart() else { failure = "Actual save/restart failed"; await snapshot(); return }
-            attach(); await snapshot()
+            restartObservationPhase = "before-saveAndRestart"
+            let restartSucceeded = await session.saveAndRestart()
+            restartObservationPhase = restartSucceeded ? "returned-true" : "returned-false"
+            guard restartSucceeded else { failure = "Actual save/restart failed"; await snapshot(); return }
+            attach(); restartObservationPhase = "attached"; await snapshot()
             // Keep the released WK object only through this explicit old-view check.
             if let old = retainedOldView, let url = old.url {
                 session.receiveScriptMessage(from: old, isMainFrame: true, requestURL: url,

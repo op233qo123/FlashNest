@@ -8,7 +8,9 @@ class Contracts(unittest.TestCase):
   f=p/'crop.png';Image.new('RGB',(1334,660),'green').save(f);sha=hashlib.sha256(f.read_bytes()).hexdigest()
   s={'identity':{'arm':'candidate','source':'exact'},'epoch':1,'screenScale':2,'screenBounds':[667,375],'viewport':[0,45,667,330],'measurement':{'css':[0,0,667,330]}}
   c={'captureName':'row-landscape','cropSHA256':sha,'identity':s['identity'],'epoch':1,'screenScale':2,'screenBounds':s['screenBounds'],'viewport':s['viewport'],'css':s['measurement']['css'],'normalization':'UIImage.draw-oriented-scale1-v1','rawCGPixels':[750,1334],'imageOrientation':3,'normalizedPixels':[1334,750],'cropRectPixels':[0,90,1334,660]}
-  return s,c,{sha:f}
+  full=p/'original.png';Image.new('RGB',(1334,750),'green').save(full);original=hashlib.sha256(full.read_bytes()).hexdigest()
+  c.update(cropMapping='nominal-dpr-explicit-outer-edge-v1',desiredCropRectPixels=c['cropRectPixels'].copy(),missingOuterEdgePixels=[0,0,0,0],imagePointSize=[667,375],imageScale=2,originalPNGSHA256=original,originalPNGPixels=[1334,750])
+  return s,c,{sha:f,original:full}
  def test_good_and_same_pixel_different_capture(self):
   with tempfile.TemporaryDirectory() as d:
    s,c,pngs=self.model(Path(d));key=('candidate',2,'row-landscape');used=set();crops={key:c}

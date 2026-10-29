@@ -201,7 +201,18 @@ def check_oriented_crop(snapshot, capture_name, crop_sha, crops, pngs, used):
     require(len(css)==4 and len(viewport)==4, 'Missing native crop geometry')
     x=(viewport[0]+css[0])*dpr;y=(viewport[1]+css[1])*dpr
     expected=[math.floor(x),math.floor(y),math.ceil(x+css[2]*dpr)-math.floor(x),math.ceil(y+css[3]*dpr)-math.floor(y)]
-    require(rect==expected and rect[0]>=0 and rect[1]>=0 and rect[0]+rect[2]<=normalized[0] and rect[1]+rect[3]<=normalized[1], 'Crop rectangle clipped/differs')
+    require(c.get('cropMapping')=='nominal-dpr-explicit-outer-edge-v1','Explicit outer-edge mapping required')
+    require(c.get('desiredCropRectPixels')==expected,'Desired nominal-DPR crop differs')
+    require(type(c['imageScale']) in (int,float) and math.isfinite(c['imageScale']) and c['imageScale']>0 and len(c['imagePointSize'])==2 and all(type(n) in (int,float) and math.isfinite(n) and n>0 for n in c['imagePointSize']),'Invalid UIImage point/scale metadata')
+    require(pairs([n*c['imageScale'] for n in c['imagePointSize']],normalized,0.000001),'UIImage oriented point/scale dimensions differ')
+    nominal=[n*dpr for n in screen];right=max(0,expected[0]+expected[2]-normalized[0]);bottom=max(0,expected[1]+expected[3]-normalized[1])
+    require(expected[0]>=0 and expected[1]>=0 and expected[0]+expected[2]<=nominal[0] and expected[1]+expected[3]<=nominal[1],'Desired crop outside independent screen')
+    require(right==0 or (right<=1 and expected[0]+expected[2]==nominal[0] and nominal[0]-normalized[0]==right),'Unproven/internal right edge deficit')
+    require(bottom==0 or (bottom<=1 and expected[1]+expected[3]==nominal[1] and nominal[1]-normalized[1]==bottom),'Unproven/internal bottom edge deficit')
+    require(c.get('missingOuterEdgePixels')==[0,0,right,bottom],'Missing edge declaration differs')
+    require(rect==[expected[0],expected[1],expected[2]-right,expected[3]-bottom] and rect[2]>0 and rect[3]>0,'Actual explicit crop differs')
+    original=c.get('originalPNGSHA256');require(original in pngs,'Original screenshot PNG bytes missing')
+    with Image.open(pngs[original]) as image:require(list(image.size)==c.get('originalPNGPixels'),'Original PNG dimensions differ')
     with Image.open(pngs[crop_sha]) as image:require(list(image.size)==rect[2:], 'Actual crop dimensions clipped/differ')
 
 def verify_enhanced_boundary(records, boundaries, pngs, expected_identity, crops=None, used=None):

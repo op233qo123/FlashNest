@@ -1,6 +1,7 @@
 import XCTest
 import UIKit
 import CryptoKit
+import ImageIO
 
 /// Actual XCUITest taps/drags and OS orientation; no synthetic input events.
 /// Only diagnostics fault-inject status messages, after physical evidence.
@@ -259,14 +260,77 @@ final class NativeSamplingUITests: XCTestCase {
         XCTAssertTrue(play.waitForExistence(timeout: 60)); XCTAssertTrue(wait { play.isEnabled && play.isHittable }); play.tap()
         let afterReload = try poll(app) { ($0["measurement"] as? [String: Any])?["canvas"] != nil }
         XCTAssertEqual(afterReload["status"] as? String, "unknown")
+        try? restartObservationRecord(row: row, label: "before", fields: ["snapshot": before])
+        try? restartObservationRecord(row: row, label: "after-reload", fields: ["snapshot": afterReload])
         app.buttons["sampling-restart"].tap()
-        XCTAssertTrue(play.waitForExistence(timeout: 90)); XCTAssertTrue(wait { play.isEnabled && play.isHittable }); play.tap()
+        let restartPlayAvailable = play.waitForExistence(timeout: 90)
+        // Keep the original wait result fixed; diagnostic reads cannot turn it into success.
+        let originalContinueAfterFailure = continueAfterFailure
+        continueAfterFailure = true
+        do {
+            // Preserve original screenshot bytes BEFORE refreshing potentially stalled WebKit evidence.
+            let bytes = XCUIScreen.main.screenshot().pngRepresentation
+            let attachment = XCTAttachment(data: bytes, uniformTypeIdentifier: "public.png")
+            attachment.name = row + "-restart-original.png"; attachment.lifetime = .keepAlways; add(attachment)
+            let pngHash = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+            let cached = app.staticTexts["sampling-evidence"].value as? String ?? ""
+            let cachedData = cached.data(using: .utf8) ?? Data()
+            let parsed = (try? JSONSerialization.jsonObject(with: cachedData)) as? [String: Any]
+            let safeCached = try JSONSerialization.data(withJSONObject: restartSafeObservation(parsed ?? [:]), options: [.sortedKeys])
+            try restartObservationRecord(row: row, label: "after-restart-wait-raw", fields: [
+                "restartPlayAvailable": restartPlayAvailable, "originalPNGSHA256": pngHash, "cachedAXValue": String(decoding: safeCached, as: UTF8.self), "cachedAXSanitized": true, "cachedAXParseFailed": parsed == nil])
+        } catch {
+            try? restartObservationRecord(row: row, label: "after-restart-wait-raw", fields: [
+                "restartPlayAvailable": restartPlayAvailable, "observationError": "Raw capture unavailable"])
+        }
+        do {
+            let observed = try snapshot(app, allowingFailure: true)
+            try restartObservationRecord(row: row, label: "after-restart-wait-refreshed", fields: [
+                "restartPlayAvailable": restartPlayAvailable, "snapshot": observed])
+        } catch {
+            try? restartObservationRecord(row: row, label: "after-restart-wait-refreshed", fields: [
+                "restartPlayAvailable": restartPlayAvailable, "observationError": "Refreshed capture unavailable"])
+        }
+        continueAfterFailure = originalContinueAfterFailure
+        XCTAssertTrue(restartPlayAvailable); XCTAssertTrue(wait { play.isEnabled && play.isHittable }); play.tap()
         let expectedEpoch = try number(before["epoch"]) + 1
         let restarted = try poll(app) { $0["status"] as? String != "unknown" && (try? self.number($0["epoch"])) == expectedEpoch }
         XCTAssertEqual(try number(restarted["requested"]), 0.25)
         try verifyStatusUI(app, expected: restarted)
         try attachJSON(["schema": "flashnest-native-sampling-lifecycle-v1", "row": row, "before": before,
             "stale": stale, "returned": returned, "invalidated": invalidated, "afterReload": afterReload, "restarted": restarted], name: row + "-lifecycle")
+    }
+    private func restartSafeObservation(_ value: Any) -> Any {
+        if let object = value as? [String: Any] {
+            var result: [String: Any] = [:]
+            for (key, entry) in object {
+                if key == "identity" { result[key] = entry; continue }
+                if ["failure", "saveFailure", "restartFailure", "probeError", "observationError", "message"].contains(key), let text = entry as? String {
+                    var safe = text
+                    for pattern in [#"(?i)\b(?:https?|file|wss?|flashnest)://[^\s\"'<>]+"#, #"\b[A-Za-z0-9_-]{32,}={0,2}\b"#] {
+                        if let regex = try? NSRegularExpression(pattern: pattern) {
+                            safe = regex.stringByReplacingMatches(in: safe, range: NSRange(safe.startIndex..., in: safe), withTemplate: "[redacted]")
+                        }
+                    }
+                    result[key] = safe.count > 2048 ? String(safe.prefix(2048)) + " [truncated]" : safe
+                } else { result[key] = restartSafeObservation(entry) }
+            }
+            return result
+        }
+        if let array = value as? [Any] { return array.map { restartSafeObservation($0) } }
+        return value
+    }
+    private func restartObservationRecord(row: String, label: String, fields: [String: Any]) throws {
+        var record = restartSafeObservation(fields) as? [String: Any] ?? [:]
+        record["schema"] = "flashnest-restart-observation-v1"
+        record["row"] = row; record["label"] = label; record["identity"] = identity
+        record["diagnosticOnly"] = true; record["nativeAcceptance"] = false
+        record["observedUptimeSeconds"] = ProcessInfo.processInfo.systemUptime
+        let bytes = try JSONSerialization.data(withJSONObject: record, options: [.sortedKeys])
+        guard bytes.count <= 65_536 else { throw Failure.invalid("Restart diagnostic64KiB limit") }
+        let attachment = XCTAttachment(data: bytes, uniformTypeIdentifier: "public.json")
+        attachment.name = row + "-restart-" + label + ".json"; attachment.lifetime = .keepAlways; add(attachment)
+        print("FLASHNEST_RESTART_OBSERVATION_JSON " + String(decoding: bytes, as: UTF8.self))
     }
     private func verifyStatusUI(_ app: XCUIApplication, expected: [String: Any]) throws {
         app.buttons["sampling-settings"].tap()
@@ -314,12 +378,22 @@ final class NativeSamplingUITests: XCTestCase {
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: viewport[0] + css[0] + point[0], dy: viewport[1] + css[1] + point[1]))
     }
     private func screenshot(_ app: XCUIApplication, before: [String: Any], name: String) throws -> String {
-        let image = XCUIScreen.main.screenshot().image
+        let captured = XCUIScreen.main.screenshot()
+        let originalPNG = captured.pngRepresentation
+        let originalPNGHash = SHA256.hash(data: originalPNG).map { String(format: "%02x", $0) }.joined()
+        let originalAttachment = XCTAttachment(data: originalPNG, uniformTypeIdentifier: "public.png")
+        originalAttachment.name = name + "-original-pngRepresentation"; originalAttachment.lifetime = .keepAlways; add(originalAttachment)
+        let pngSource = try XCTUnwrap(CGImageSourceCreateWithData(originalPNG as CFData, nil))
+        let pngProperties = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(pngSource, 0, nil) as? [CFString: Any])
+        let pngWidth = try XCTUnwrap(pngProperties[kCGImagePropertyPixelWidth] as? NSNumber).intValue
+        let pngHeight = try XCTUnwrap(pngProperties[kCGImagePropertyPixelHeight] as? NSNumber).intValue
+        let image = captured.image
         let raw = try XCTUnwrap(image.cgImage)
         let rawAttachment = XCTAttachment(image: image)
         rawAttachment.name = name + "-raw-full"; rawAttachment.lifetime = .keepAlways; add(rawAttachment)
         try attachJSON(["rawCGPixels": [raw.width, raw.height], "imageOrientation": image.imageOrientation.rawValue,
             "imagePointSize": [image.size.width, image.size.height], "imageScale": image.scale,
+            "originalPNGSHA256": originalPNGHash, "originalPNGPixels": [pngWidth, pngHeight],
             "screenBounds": before["screenBounds"] ?? [], "viewport": before["viewport"] ?? []], name: name + "-raw-image-geometry")
         let swapsAxes: Bool
         switch image.imageOrientation {
@@ -344,12 +418,27 @@ final class NativeSamplingUITests: XCTestCase {
               abs(Double(cg.height) - screen[1] * dpr) <= 1 else {
             throw Failure.invalid("Oriented screenshot does not match independent screen/DPR")
         }
-        let rect = CGRect(x: (viewport[0] + css[0]) * dpr, y: (viewport[1] + css[1]) * dpr,
+        let desired = CGRect(x: (viewport[0] + css[0]) * dpr, y: (viewport[1] + css[1]) * dpr,
                           width: css[2] * dpr, height: css[3] * dpr).integral
+        // No CSS rescaling. Only a proven <=1px absent outer screen edge may be omitted.
+        let nominalWidth = CGFloat(screen[0] * dpr), nominalHeight = CGFloat(screen[1] * dpr)
+        let missingRight = max(0, desired.maxX - CGFloat(cg.width))
+        let missingBottom = max(0, desired.maxY - CGFloat(cg.height))
+        let rect = CGRect(x: desired.minX, y: desired.minY, width: desired.width - missingRight, height: desired.height - missingBottom)
         let geometry: [String: Any] = ["rawCGPixels": [raw.width, raw.height],
+            "cropMapping": "nominal-dpr-explicit-outer-edge-v1", "originalPNGSHA256": originalPNGHash, "originalPNGPixels": [pngWidth, pngHeight],
+            "desiredCropRectPixels": [desired.origin.x, desired.origin.y, desired.width, desired.height],
+            "missingOuterEdgePixels": [0, 0, missingRight, missingBottom],
             "imageOrientation": image.imageOrientation.rawValue, "normalization": "UIImage.draw-oriented-scale1-v1",
             "normalizedPixels": [cg.width, cg.height], "cropRectPixels": [rect.origin.x, rect.origin.y, rect.width, rect.height]]
         try attachJSON(geometry, name: name + "-crop-geometry")
+        guard desired.minX >= 0, desired.minY >= 0, desired.maxX <= nominalWidth, desired.maxY <= nominalHeight,
+              (missingRight == 0 || (missingRight <= 1 && desired.maxX == nominalWidth && nominalWidth - CGFloat(cg.width) == missingRight)),
+              (missingBottom == 0 || (missingBottom <= 1 && desired.maxY == nominalHeight && nominalHeight - CGFloat(cg.height) == missingBottom)),
+              abs(image.size.width * image.scale - CGFloat(width)) < 0.000001,
+              abs(image.size.height * image.scale - CGFloat(height)) < 0.000001 else {
+            throw Failure.invalid("Unproven/internal or multi-pixel screenshot edge deficit")
+        }
         guard rect.minX >= 0, rect.minY >= 0, rect.maxX <= CGFloat(cg.width), rect.maxY <= CGFloat(cg.height) else {
             throw Failure.invalid("Oriented crop outside screen")
         }

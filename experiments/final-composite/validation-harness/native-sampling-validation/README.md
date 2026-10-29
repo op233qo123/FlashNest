@@ -1,3 +1,19 @@
+# Explicit outer-raster edge evidence amendment (native v4)
+
+This narrowly amends screenshot evidence, not renderer, input, tier, lifecycle, case deadline, green threshold or acceptance count. All198=196+2 roles and48 rows/144 phases/720 taps/144 drags/864RESET/150 sidecars remain unchanged. No existing failed run is reclassified.
+
+Actual40841923386 DPR3 portrait: UIImage rawCG and normalized raster1178×2556, orientation0, pointSize392.6666667×852 at scale3; independent app screen393×852 and nominal DPR3 imply1179×2556. Desired crop[0,312,1179,2142] exceeded the recorded raster by one right-edge pixel. This establishes a discrepancy in observed representations, NOT its platform/renderer cause. Historical pngRepresentation was not captured.
+
+The helper now captures the SAME XCUIScreenshot's original pngRepresentation bytes/SHA/dimensions before obtaining its image. These are passive evidence only; they never replace the existing UIImage.draw path or fill missing pixels. The original PNG can differ in dimensions from UIImage; each is independently recorded. See Apple's API representations: https://developer.apple.com/documentation/xcuiautomation/xcuiscreenshot . No API-root-cause claim is inferred.
+
+Coordinates remain nominal CSS×DPR, never scaled to fit raster. Desired integral crop is retained. An actual crop may omit only an explicitly recorded right/bottom outer strip of at most1 physical pixel per edge when its desired endpoint equals the independent screen×DPR endpoint and the full normalized raster is short by exactly that amount. Internal, left/top, >1, mismatched screen or unproven deficits fail. Actual crop is explicitly computed before calling CGImage.cropping; returned size must exactly match it, so no silent API clipping. No stretch/padding/recovery.
+
+Existing flashnest-oriented-crop-v1 sidecar adds cropMapping=nominal-dpr-explicit-outer-edge-v1, desiredCropRectPixels, missingOuterEdgePixels[left,top,right,bottom], originalPNGSHA256/originalPNGPixels. cropRectPixels means the explicit actual rectangle. Identity/capture key/epoch/source/CSS/viewport/screen, original PNG bytes/dims, raw orientation, normalized dimensions and actual PNG size are all checked. UIImage pointSize×imageScale must equal ORIENTED raw dimensions (actual pair8 records confirm that; unrotated raw comparison would be wrong). Same PNG hash across distinct valid captures remains allowed. Extra PNGs/geometry attachments never add rows or captures.
+
+37 local Python tests +2 JS suites include right/bottom/corner edges, rotated/all8 orientations, internal/multipixel/left/native-screen/pointsize/source-PNG/crop mismatch negatives and unchanged native contracts. Read-only actual DPR3 geometry replay uses a derived crop and modeled sidecar, explicitly marking the old normalized screenshot as a surrogate for the absent original-PNG field; it is not collected native evidence. Eight prior actual paired UIImage geometry records are rechecked. New actual execution and final source binding remain required.
+
+---
+
 # Native v4 single-tier method contract — current authority
 
 This explicitly replaces v3's166-method execution partition. It does not weaken matrix, input, pixel, source identity, no-loss, sidecar, or lifecycle requirements. No production App/runtime/probe/fixture change is part of this delta. The runner/workflow owner separately supplies per-DPR jobs and exact product-bound execution; this directory does not change run.py or workflow.
@@ -260,3 +276,11 @@ candidate before-input snapshot/hash pairs and uses the exact unchanged
 `green_bounds` predicate to reject blank/missing vectors before the next lane.
 A successful early check does not prove full pixel parity, geometry, input or
 runtime eligibility; the complete final verifier remains mandatory.
+
+## Full-run read-only restart observation merge
+
+The approved a6ee restart Host/UI observation is now composed with the approved d7d9 raster-edge patch. No single-DPR diagnostic verifier is used in full acceptance. The complete existing geometry/lifecycle assertions remain authoritative; extra restart JSON/stdout/PNGs are bounded diagnostic evidence only, with no new success/health gate. Four quarter/showAll lifecycle rows (Automatic/WebGL ×DPR2/3) may emit four labels each: at most16 records, each≤64KiB. Partial failure records remain useful and do not replace the original XCTest failure. Existing logs/attachments budgets still apply.
+
+The original90-second result remains fixed and asserted unchanged; no recovery/new clicks/new player/renderer switch/wait extension is introduced. Full before/afterReload context, raw screenshot and cached error-sanitized AX state precede potentially stalled refresh. Private product fields remain null/not-exposed; identity hashes are unchanged by targeted error redaction. Host/UI is test harness only; production App/runtime untouched.
+
+Composition is proven in both orders: remove restart observation from combined UI to obtain exact d7d9 edge UI; remove edge import/screenshot changes to obtain exact a6ee restart UI; remove both to recover exact published UI. Host equals exact a6ee Host. Original tier-body hash remains unchanged. The lifecycle source-hash unit control now pins the already-reviewed readonly-observation lifecycle segment, while the separate composition/inverse proof establishes its relation to original lifecycle code. This is an explicit test expectation upgrade, not a claim the lifecycle source stayed byte-identical after adding observations. Native198 execution remains required.

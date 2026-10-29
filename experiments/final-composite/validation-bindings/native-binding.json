@@ -256,7 +256,7 @@
     "runtimeInventorySHA256": "572ed90d2fc90a892d2f2d6bcd2dc693b35d593bb7decf3e1276f5481989a078",
     "sha256": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a"
   },
-  "helperLockSHA256": "8abc0f32b113d8b937a6547e3f2dc66db26adad28b75bf64dc41591c9d53a1d5",
+  "helperLockSHA256": "290ddb8e3e908220ef39534cea50adf5e836a2c860318c3af8674e8da85322d9",
   "nativeContract": "flashnest-native-composite-v4",
   "ready": true,
   "samplingAppManifests": {

@@ -31,12 +31,12 @@ class TierPartition(unittest.TestCase):
   for quality,tiers in [('low',('original','quarter')),('high',('original','threeQuarter','half','quarter'))]:
    expected|={('candidate',dpr,'webgl','showAll',tier,'diagnostic-launch-'+quality) for dpr,tier in itertools.product((2,3),tiers)}
   self.assertEqual(actual,expected)
- def test_original_tier_body_waits_inputs_and_lifecycle_are_byte_preserved(self):
+ def test_original_tier_body_and_reviewed_readonly_lifecycle_are_exact(self):
   body=self.source[self.source.index('        for tier in tiers {'):self.source.index('    private func lifecycle(')]
   body=body.replace('"flashnest-native-sampling-v4"','"flashnest-native-sampling-v3"').replace(', "method": method','')
   self.assertEqual(hashlib.sha256(body.encode()).hexdigest(),'d8174db5675852616d4d39f7a7921c631829d59621a024be34eb6f564ae958b4')
   life=self.source[self.source.index('    private func lifecycle('):self.source.index('    private func verifyStatusUI(')]
-  self.assertEqual(hashlib.sha256(life.encode()).hexdigest(),'ce2be92f706121ca64bde95623886523384cd97c6f95fd01115345bac7c34cb3')
+  self.assertEqual(hashlib.sha256(life.encode()).hexdigest(),'e46fe5e19b926111bdb7228f4b2ba45937bf3ecdf7ab827b210ff9a7c1a5739a')
   self.assertIn('executionTimeAllowance = 900',self.source)
  def test_selection_counts_and_roles_explicitly_v4(self):
   c=json.loads((ROOT.parent/'native-composite-runner/selection-contract-v4.json').read_text());self.assertEqual(c['contract'],'flashnest-native-composite-v4');self.assertEqual(c['schema'],4)

@@ -27,10 +27,12 @@ class PolicyContracts(unittest.TestCase):
         identity={'arm':'candidate','rendererPolicyContract':'candidate-three-mode-v1'};records=[];boundaries=[]
         for dpr in (2,3):
             file=p/f'blank-{dpr}.png';Image.new('RGB',(375*dpr,602*dpr),'white').save(file);h=hashlib.sha256(file.read_bytes()).hexdigest();pngs[h]=file
+            full=p/f'original-{dpr}.png';Image.new('RGB',(375*dpr,647*dpr),'white').save(full);original=hashlib.sha256(full.read_bytes()).hexdigest();pngs[original]=full
             for label,t in [('ready',0),('after-5s',5),('after-15s',15)]:
                 m={'dpr':dpr,'css':[0,0,375,602],'loadObservation':{'count':1,'rendererQuery':'enhanced','hasPreferredRenderer':False,'preferredRenderer':None,'hasQuality':False,'renderScale':1},'events':[],'overflow':False,'diagnosticOverflow':False,'sampledAtMs':1000+1000*t,'renderer':'wgpu-webgl','contextLost':True,'gl':[0,0]}
                 s={'screenBounds':[375,647],'viewport':[0,45,375,602],'screenScale':dpr,'identity':identity,'os':'18.2','epoch':1,'gate':True,'requested':1,'failure':'','traceOverflow':False,'measurement':m,'traces':['DENSITY|READY|375|602|noScale|']}
                 crops[('candidate',dpr,'enhanced-policy-'+label)]={'captureName':'enhanced-policy-'+label,'cropSHA256':h,'identity':identity,'epoch':1,'screenScale':dpr,'screenBounds':[375,647],'viewport':[0,45,375,602],'css':[0,0,375,602],'normalization':'UIImage.draw-oriented-scale1-v1','rawCGPixels':[375*dpr,647*dpr],'imageOrientation':0,'normalizedPixels':[375*dpr,647*dpr],'cropRectPixels':[0,45*dpr,375*dpr,602*dpr]}
+                crops[('candidate',dpr,'enhanced-policy-'+label)].update(cropMapping='nominal-dpr-explicit-outer-edge-v1',desiredCropRectPixels=[0,45*dpr,375*dpr,602*dpr],missingOuterEdgePixels=[0,0,0,0],imagePointSize=[375,647],imageScale=dpr,originalPNGSHA256=original,originalPNGPixels=[375*dpr,647*dpr])
                 records.append({'snapshot':s,'label':label,'diagnosticOnly':True,'nativeAcceptance':False,'targetElapsedSeconds':t,'elapsedSeconds':t,'anchorUptimeSeconds':10,'observedUptimeSeconds':10+t,'captureFinishedUptimeSeconds':11+t,'cropSHA256':h,'observationError':''})
             before=copy.deepcopy(s);before['measurement']['sampledAtMs']+=100;failed=copy.deepcopy(s);failed.update(failure='real navigation failure',status='unknown',navigationEvents=['provisional-failure'])
             boundaries.append({'beforeFailure':before,'failed':failed,'diagnosticOnly':True,'nativeAcceptance':False,'beforeFailureUptimeSeconds':27,'failedUptimeSeconds':30})
