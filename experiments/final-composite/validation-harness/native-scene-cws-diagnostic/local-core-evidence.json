@@ -1,0 +1,11 @@
+{
+  "binaryPath": "touch-input-repair/source/target/debug/deps/tests-36fbcafa20f69d03",
+  "binarySHA256": "fc15ee30b578a1c479bcb168d68fd4f61489b62036597b927725e196d5508bfc",
+  "fixtureManifestSHA256": "56c11028855855710ec696b7eef62a67177ff4a87eaa633c52c09b88abb59a04",
+  "case": "tiny",
+  "nativeExecution": false,
+  "originalRunnerOutcome": "FAILED: intentionally empty Flash golden",
+  "independentPhaseContract": "15 milestones accepted by verify_as",
+  "claim": "local existing core executable only; not shipped WASM/iOS acceptance",
+  "traceLogSHA256": "0e9afa5dac4d31d24fbd4c1508672d87ea2d14d2ebeb4ada0d0ce1b8c983bcdf"
+}

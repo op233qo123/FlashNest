@@ -485,6 +485,10 @@
       "bytes": 9349,
       "sha256": "28012382d810e114877d553ec96b042eaa688e680a65f0de13dabb301eb4d34e"
     },
+    "scripts/run_native_scene_loader_diagnostic.py": {
+      "bytes": 11317,
+      "sha256": "f816096667a52036303ecdabc8679a1314c704ae334547553dbab9266d0ad0fd"
+    },
     "scripts/run_native_validation.py": {
       "bytes": 1788,
       "sha256": "baeedca7c2c34adddce6888e96925fe1c6ef20b36e0230b31d458fc41c6ee02f"
@@ -1217,6 +1221,82 @@
       "bytes": 20648,
       "sha256": "c4a816d08a9616c7d9cc25e24465fef11d9f015abbf245cdbc1951f9ed29e583"
     },
+    "validation-harness/native-scene-cws-diagnostic/README.md": {
+      "bytes": 5417,
+      "sha256": "7dc71982f490876ded8738e93b23228bbb2cfd02c85f74da16500171262641d5"
+    },
+    "validation-harness/native-scene-cws-diagnostic/abc/SceneChild.abc": {
+      "bytes": 718,
+      "sha256": "3347cd6fc3500c12d3e9d296f0dd9b82617db5c482007256c279ae33242c6ff9"
+    },
+    "validation-harness/native-scene-cws-diagnostic/abc/SceneParent.abc": {
+      "bytes": 2168,
+      "sha256": "1fb0193c0e40b94004dadd8bc59bc985eb7d5654d4649d84d8f38254acb12d42"
+    },
+    "validation-harness/native-scene-cws-diagnostic/as/SceneChild.as": {
+      "bytes": 341,
+      "sha256": "0d3f30c23675d996d2dc9b579ac4f1e4ef3ea3d4436db5c120f4f9ce147425be"
+    },
+    "validation-harness/native-scene-cws-diagnostic/as/SceneParent.as": {
+      "bytes": 2631,
+      "sha256": "59b156ced6d03f7a595a2e64edb5187ac4f63e884cc178d3271188398bbf144e"
+    },
+    "validation-harness/native-scene-cws-diagnostic/compile_abc.py": {
+      "bytes": 1231,
+      "sha256": "104fe48857eb1f28109e9cd9c5d900c520cc4ef7911fd83633a9064fbe8b489a"
+    },
+    "validation-harness/native-scene-cws-diagnostic/compiler-provenance.json": {
+      "bytes": 791,
+      "sha256": "393f74c40699a2a211aa115e8681151dbcd5c8331824bd0b4850a676819326be"
+    },
+    "validation-harness/native-scene-cws-diagnostic/core-smoke.log": {
+      "bytes": 1779,
+      "sha256": "0e9afa5dac4d31d24fbd4c1508672d87ea2d14d2ebeb4ada0d0ce1b8c983bcdf"
+    },
+    "validation-harness/native-scene-cws-diagnostic/fixture-manifest.json": {
+      "bytes": 4988,
+      "sha256": "56c11028855855710ec696b7eef62a67177ff4a87eaa633c52c09b88abb59a04"
+    },
+    "validation-harness/native-scene-cws-diagnostic/generate_fixtures.py": {
+      "bytes": 5239,
+      "sha256": "75f0e60558d11a528b4da8d93bce04729eab6c15e5a18361f7383b96d467dc49"
+    },
+    "validation-harness/native-scene-cws-diagnostic/local-core-evidence.json": {
+      "bytes": 627,
+      "sha256": "162b8086b5a8315b83a65d0bb5711693098780df7abc54ced2924dfcf7e464c4"
+    },
+    "validation-harness/native-scene-cws-diagnostic/observer.js": {
+      "bytes": 2803,
+      "sha256": "8b38508a51a9a500cd38b3642f8a29a37ffdc485defae0d317a830743e6afd91"
+    },
+    "validation-harness/native-scene-cws-diagnostic/tests/test_fixtures.py": {
+      "bytes": 2216,
+      "sha256": "871e8c31e54e8deb99639ed5a40ab056a5e5518724f3071448dd1fdc0300c82d"
+    },
+    "validation-harness/native-scene-cws-diagnostic/tests/test_native_verifier.py": {
+      "bytes": 5681,
+      "sha256": "e55652f8c2db6e13459e567592029cbe601545507afeddbbe44a3913d9296f80"
+    },
+    "validation-harness/native-scene-cws-diagnostic/tests/test_observer.js": {
+      "bytes": 3281,
+      "sha256": "0998cb60d56f4c5fbdec31bff8a055339aff9bfc496bf02b3be972ebbe4fa75e"
+    },
+    "validation-harness/native-scene-cws-diagnostic/verify_phases.py": {
+      "bytes": 11814,
+      "sha256": "cacfe1a52a578367212959a02cb47f3646fd73217aea8c5c110450893d7112e8"
+    },
+    "validation-harness/native-scene-loader-diagnostic/NativeSceneLoaderUITests.swift": {
+      "bytes": 7379,
+      "sha256": "cb606d5b906990aceac0ae29db08b649d7a248a078d14ad3dcef97df6bb4e710"
+    },
+    "validation-harness/native-scene-loader-diagnostic/SamplingHost.swift": {
+      "bytes": 10028,
+      "sha256": "bdeba21187f0d78bbee3d234646d2601ab5cd9a808c1461dd0997dea2755ebc4"
+    },
+    "validation-harness/native-scene-loader-diagnostic/stage_scene_host.py": {
+      "bytes": 4417,
+      "sha256": "50daf8bc7d032a4c61e35cf3a7af794441cffc1dcf02df0746382ba7644151bf"
+    },
     "validation-harness/zip-native-validation/payload/experiments/zip-selection/README.md": {
       "bytes": 4949,
       "sha256": "278e2dea670173cf08c988442085e9f8afe989f443dbdda67e22cc09c354e7a3"
@@ -1467,6 +1547,6 @@
       ]
     }
   },
-  "reason": "Only bounded blank WK ownership and exact source-copy representable identity observations eligible. No product change, no game, no native/full198/render acceptance. Formal validation remains incomplete after current new-WebContent termination.",
+  "reason": "Only bounded tiny and sized public synthetic CWS same-WK Loader transitions eligible. Product and engine unchanged. Body fulfillment and Loader events do not expose exact WASM copy/decompression phases or prove OOM. No native/full198/render acceptance; original real-device scene crash remains unresolved.",
   "schemaVersion": 1
 }
