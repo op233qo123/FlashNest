@@ -1,0 +1,10 @@
+{
+  "SamplingHost.swift": {
+    "before": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4",
+    "after": "9f9dcbb55d007d94a4f198a2eb9a6f928d2eba53ac5b68eca36054541575e8d5"
+  },
+  "NativeSamplingUITests.swift": {
+    "before": "32715026aa06d7a6bf341f7faaa5ccd5f589b063015e6668337e25a7fdc610b6",
+    "after": "ab52c20d2fd311296a0e0af11e3c1fda3fb3799df15c56f8fba03696189fd024"
+  }
+}

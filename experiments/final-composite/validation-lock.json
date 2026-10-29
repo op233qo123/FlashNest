@@ -400,7 +400,7 @@
     "vendor/ruffle-audio-recovery-source/queued-goto-guard.patch": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f",
     "vendor/ruffle-audio-recovery-source/source-correspondence.manifest.json": "f08aa7b8b6306c1f7598d97e55c173ad47ab7948166ecd2905c9f472d519b4d4"
   },
-  "diagnosticOnly": false,
+  "diagnosticOnly": true,
   "dispatchAllowed": true,
   "engine": {
     "artifactID": 12862634818,
@@ -476,6 +476,10 @@
     "scripts/run_native_navigation_diagnostic.py": {
       "bytes": 9274,
       "sha256": "e3d044e3e5f3305b7d979ceb7c2d04d7394e80369b075ea263c7645e44aa4fcc"
+    },
+    "scripts/run_native_restart_diagnostic.py": {
+      "bytes": 9349,
+      "sha256": "28012382d810e114877d553ec96b042eaa688e680a65f0de13dabb301eb4d34e"
     },
     "scripts/run_native_validation.py": {
       "bytes": 1788,
@@ -912,6 +916,38 @@
     "validation-harness/native-composite-runner/test_sampling_split.py": {
       "bytes": 7768,
       "sha256": "749ee2b6800280c518d95b011c3aeb061556051e8581d95a025d844d1c87e049"
+    },
+    "validation-harness/native-restart-diagnostic/README.md": {
+      "bytes": 3024,
+      "sha256": "eb5f1e7516f4aab1c7ee407bd4c43a941e3ade80f53a06112b0208fe49928168"
+    },
+    "validation-harness/native-restart-diagnostic/base/NativeSamplingUITests.swift": {
+      "bytes": 30646,
+      "sha256": "32715026aa06d7a6bf341f7faaa5ccd5f589b063015e6668337e25a7fdc610b6"
+    },
+    "validation-harness/native-restart-diagnostic/base/SamplingHost.swift": {
+      "bytes": 13629,
+      "sha256": "d1ec367c223ffc10638bfd478def012ee37d0b93c55af59830fa4d13778b36a4"
+    },
+    "validation-harness/native-restart-diagnostic/overlay/NativeSamplingUITests.swift": {
+      "bytes": 35277,
+      "sha256": "ab52c20d2fd311296a0e0af11e3c1fda3fb3799df15c56f8fba03696189fd024"
+    },
+    "validation-harness/native-restart-diagnostic/overlay/SamplingHost.swift": {
+      "bytes": 15063,
+      "sha256": "9f9dcbb55d007d94a4f198a2eb9a6f928d2eba53ac5b68eca36054541575e8d5"
+    },
+    "validation-harness/native-restart-diagnostic/source-pins.json": {
+      "bytes": 398,
+      "sha256": "da63c92b70d9fab92387b8e2bd81ffbd81f3f24fd6cb7750a124ea2606124254"
+    },
+    "validation-harness/native-restart-diagnostic/stage_restart_diagnostic.py": {
+      "bytes": 9550,
+      "sha256": "a394a20e703c5f71131f78d0be198eaedda47e5c2bd15c1c8d186b29ce52f8ed"
+    },
+    "validation-harness/native-restart-diagnostic/tests/test_overlay.py": {
+      "bytes": 5699,
+      "sha256": "67205b1d9a082838e972608d6d23fc8b1c9efc6b7b4fe7a57e41af8e0c0c670a"
     },
     "validation-harness/native-sampling-validation/Host/SamplingHost.swift": {
       "bytes": 13629,
@@ -1395,6 +1431,6 @@
       ]
     }
   },
-  "reason": "Independently reviewed v4 tier partition and isolated DPR DAG eligible for execution. All 198 methods and 144 phases required; no native or IPA acceptance claim.",
+  "reason": "Only one original quarter WebGL showAll restart diagnostic is eligible; unchanged90s wait with staged-only safe observations. Full198 and IPA acceptance remain blocked.",
   "schemaVersion": 1
 }
