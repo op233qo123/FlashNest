@@ -1,0 +1,90 @@
+name: Build FlashNest 1.5.6 release with accepted UI validation limitation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-release-build22-waiver
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: macos-14
+    timeout-minutes: 35
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      PYTHONDONTWRITEBYTECODE: '1'
+      RELEASE_RECIPE_PATH: recipe/experiments/release-ipa-156-build22
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - name: Require exact release scope; no full native acceptance
+        id: contract
+        run: |
+          set -euo pipefail
+          python3 recipe/experiments/release-build22-waiver/waiver.py preflight
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          test "$(xcodebuild -version | head -1)" = 'Xcode 16.2'
+          test "$(xcrun --sdk iphoneos --show-sdk-version)" = '18.2'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 9bc000e37695696f2427b25fe08efe4993bf22e5
+          path: source-checkout
+          persist-credentials: false
+      - name: Stage frozen release App with explicit low-sampling override
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 recipe/experiments/release-build22-waiver/waiver.py stage --source-checkout source-checkout --recipe-checkout recipe --output release-package
+      - name: Diagnostic JS and source-contract controls against staged bytes
+        env:
+          PHASE_APP: release-package/app
+          WAIVER_EVIDENCE_DIR: release-package
+        run: |
+          set -euo pipefail
+          python3 recipe/experiments/release-build22-waiver/test_waiver.py
+          node --check release-package/app/App/Resources/Web/shell.js
+          node recipe/experiments/device-phase-diagnostic-ipa-156-build20/checks/test_phase.js
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/checks/test_server_phase.py
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/checks/test_native_contract.py
+      - name: Verify exact downloaded candidate artifact with strict consumer controls
+        env:
+          CANDIDATE_ARCHIVE: release-package/candidate.zip
+        run: python3 recipe/experiments/release-ipa-156-build22/test_candidate_consumer.py
+      - name: Use authenticated XcodeGen and locked package dependency
+        working-directory: release-package/app
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 120 https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  '"$RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-experimental"
+          "$RUNNER_TEMP/xcodegen-experimental/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Build unsigned Release device App only
+        working-directory: release-package/app
+        run: |
+          set -euo pipefail
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNest -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - name: Package and inspect release unsigned IPA; never full acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test ! -e release-package/artifacts
+          mkdir release-package/artifacts
+          bash release-package/app/scripts/package_unsigned.sh release-package/app/build/Build/Products/Release-iphoneos/FlashNest.app release-package/artifacts/FlashNest-1.5.6-build22-unsigned.ipa
+          python3 recipe/experiments/release-build22-waiver/waiver.py verify --ipa release-package/artifacts/FlashNest-1.5.6-build22-unsigned.ipa --app release-package/app --output release-package --record release-package/artifacts/release-provenance.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-1.5.6-build22-unsigned
+          path: |
+            release-package/artifacts/FlashNest-1.5.6-build22-unsigned.ipa
+            release-package/artifacts/FlashNest-1.5.6-build22-unsigned.ipa.sha256
+            release-package/artifacts/release-provenance.json
+          if-no-files-found: error
+          retention-days: 7
