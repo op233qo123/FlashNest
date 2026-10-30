@@ -5,7 +5,7 @@ from pathlib import Path
 import package_checks as c
 import candidate_composite_runtime as consumer
 ROOT=Path(__file__).resolve().parent
-OWN={'package.py','package_checks.py','candidate_composite_runtime.py','test_candidate_consumer.py','test_package.py','workflow.yml','README.md','run_selected_tests.py'}
+OWN={'package.py','package_checks.py','candidate_composite_runtime.py','test_candidate_consumer.py','test_package.py','workflow.yml','README.md','run_selected_tests.py','ruffle_test_cleanup.py','test_cleanup.py'}
 def encoded(x):return (json.dumps(x,sort_keys=True,indent=2)+'\n').encode()
 def inputs(verify=True,dispatch=False):
  x=c.load(ROOT/'inputs.json')
@@ -13,6 +13,7 @@ def inputs(verify=True,dispatch=False):
  c.require(x['schemaVersion']==1 and x['build']=='22' and x['version']=='1.5.6' and x['bundleID']=='com.flashnest.app','Wrong release package identity')
  for k in ('nativeAccepted','fullGatePassed','physicalDeviceCertified','originalCrashResolved','diagnosticOptInDefault'):c.require(x[k] is False,'Unjustified acceptance/default-on '+k)
  c.require(x['experimentalGateOverride'] is True,'Prior experimental sampling setting must remain on')
+ c.require(x['testOnlyCleanup']=={'afterBytes': 7756, 'afterSHA256': '352a69b45ff5bae09a7d4e268aeb5048e65d515ac91e4dabca21a774c9385e21', 'beforeSHA256': '8a8364cee19f6b53490b6e8706a3e35b34c9eb4e191fa1f013591992d376e192', 'path': 'Tests/RuffleRuntimeTests.swift', 'productChange': False},'Unreviewed test-only cleanup delta')
  c.require(x['candidateEngine']['runID']==40998892881 and x['candidateEngine']['sha256']=='2cb4022b1859156f2e28dcb5d499ebf01cbf13b386acb8467d34c147ed22d28d','Wrong candidate engine')
  c.require(x['browserEvidence']['runID']==41002083024 and x['browserEvidence']['cases']==6 and x['browserEvidence']['sha256']=='59729cc06fa314146a8190c3ab6d396186e00c9bd48f4fbdcc447f898e0ab7aa','Wrong actual focused browser evidence')
  c.require(len(x['baseAppFiles'])==207 and len(x['candidateRuntimeFiles'])==12,'Incomplete baseline/runtime inventory')
@@ -111,7 +112,8 @@ def selected_gate(app,evidence):
  evidence=evidence.resolve();r=c.load(evidence/'verification.json')
  c.require(r.get('schema')=='flashnest-selected-native-regression-v1' and r.get('selectedNativeRegressionPassed') is True,'Selected native gate not passed')
  for k,v in {'totalTestCount':16,'passedTests':16,'failedTests':0,'skippedTests':0,'expectedFailures':0}.items():c.require(type(r.get(k)) is int and r[k]==v,'Selected receipt count differs: '+k)
- c.require(r['sourceInventory']==runner.source_inventory(app),'Selected source inventory differs')
+ config=inputs();runner.test_source_closure(app,config['candidateAppFiles']);cleanup=runner.cleanup_contract(app,config);base=runner.source_inventory(app);tested=dict(base);tested[cleanup['path']]={'sha256':cleanup['afterSHA256'],'bytes':cleanup['afterBytes']}
+ c.require(r['baseSourceInventory']==base and r['testedSourceInventory']==tested and r['testOnlyCleanup']==cleanup and r['restoredOriginal207'] is True,'Selected exact test-only delta or restoration differs')
  for k in ('fullGatePassed','physicalDeviceCertified','nativePixelAcceptance','samplingBackingPixelAcceptance'):c.require(r[k] is False,'Selected tests promoted to full acceptance')
  device=None;methods=[];proof={}
  for lane,bundle,expected in [('unit','FlashNestTests',runner.UNIT),('ui','FlashNestUITests',runner.UI)]:
@@ -126,7 +128,7 @@ def selected_gate(app,evidence):
  c.require(str(r['runID'])==os.environ.get('GITHUB_RUN_ID') and r['head']==os.environ.get('GITHUB_SHA'),'Selected run/head differs')
  c.require(r['fixtureSourceInstalled']['bundleID']==runner.FIXTURE_BUNDLE,'Fixture identity differs')
  c.require(isinstance(r['fixtureSourceInstalled']['executableSHA256'],str) and len(r['fixtureSourceInstalled']['executableSHA256'])==64,'Fixture executable hash missing')
- return {'selectedReleaseGatePassed':True,'selectedNativeMethods':methods,'selectedEvidenceSHA256':c.digest((evidence/'verification.json').read_bytes()),'actualPackagingRunID':os.environ.get('GITHUB_RUN_ID'),'actualPackagingCommit':os.environ.get('GITHUB_SHA'),'lanes':proof,'skippedTests':0,'fullGatePassed':False,'physicalDeviceCertified':False}
+ return {'selectedReleaseGatePassed':True,'selectedNativeMethods':methods,'selectedEvidenceSHA256':c.digest((evidence/'verification.json').read_bytes()),'actualPackagingRunID':os.environ.get('GITHUB_RUN_ID'),'actualPackagingCommit':os.environ.get('GITHUB_SHA'),'lanes':proof,'testOnlyCleanup':cleanup,'baseSourceInventory':base,'testedSourceInventory':tested,'restoredOriginal207':True,'skippedTests':0,'fullGatePassed':False,'physicalDeviceCertified':False}
 
 def verify(ipa,app,out,record,evidence):
  x=inputs(dispatch=True);c.verify_sources(app,x['candidateAppFiles']);gate=selected_gate(app,evidence)

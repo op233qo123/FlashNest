@@ -14,6 +14,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
       PYTHONDONTWRITEBYTECODE: '1'
+      CRASH_RECIPE_PATH: recipe/experiments/single-wk-crash-diagnostic
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -44,6 +45,7 @@ jobs:
           PHASE_APP: release-package/app
         run: |
           set -euo pipefail
+          python3 recipe/experiments/release-ipa-156-build22/test_cleanup.py
           node --check release-package/app/App/Resources/Web/shell.js
           node recipe/experiments/device-phase-diagnostic-ipa-156-build20/checks/test_phase.js
           python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/checks/test_server_phase.py
@@ -94,14 +96,6 @@ jobs:
         if: always()
         with:
           name: FlashNest-build22-selected-native-tests
-          path: |
-            focused-evidence/unit.log
-            focused-evidence/ui.log
-            focused-evidence/fixture-source-build.log
-            focused-evidence/unit-summary.json
-            focused-evidence/ui-summary.json
-            focused-evidence/unit-verification.json
-            focused-evidence/ui-verification.json
-            focused-evidence/verification.json
+          path: focused-evidence/public-evidence
           if-no-files-found: warn
           retention-days: 7

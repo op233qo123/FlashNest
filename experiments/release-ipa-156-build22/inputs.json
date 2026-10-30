@@ -522,9 +522,16 @@
     "ruffle.js": "2151d8850b72d96302d4061aad62ba749ab9b3c7bf9bfdb49813964a2a4d95fe",
     "ruffle.js.map": "2130f3c4fbfbf53b6d149ad62b0a6f2dc0b7db313afe257e3649c089ae08740f"
   },
+  "crashCollector": {
+    "files": {
+      "collect_crash.py": "d3e3b4e375ad7d1568f4e3f004631b072e280503ea796e1e4c96405e32581a15",
+      "run_single.py": "ac5c8afd3613b12bc7e4ae6ba1489b9f61de3edf282a1c06ef74e472d6890118"
+    },
+    "repositoryPath": "experiments/single-wk-crash-diagnostic"
+  },
   "diagnosticOptInDefault": false,
   "dispatchAllowed": true,
-  "dispatchReason": "Explicitly authorized exact ten-file release recipe publication, sixteen selected native tests and one build22 unsigned IPA build; tag and release only after actual successful verification.",
+  "dispatchReason": "Authorized necessary test-only fixture isolation retry: one selected sixteen-method run with bounded failure collection, strict original207 restoration before Release and packaging; no product or runtime changes.",
   "experimentalGateOverride": true,
   "fullGatePassed": false,
   "kind": "RELEASE-PACKAGE",
@@ -532,17 +539,26 @@
   "originalCrashResolved": false,
   "physicalDeviceCertified": false,
   "recipeFiles": {
-    "README.md": "b74e97419b76389f4219436b859c149f770c8605546db756c31f2739ffff8e4a",
+    "README.md": "c38551af326980d50ef660b877a2ad1c2e08a3405d87286c0f75e31c07810b12",
     "candidate_composite_runtime.py": "bb7503fb88c792c07dc6c785dfc3bf6f3ba7d5822b2ff4bbdd776e09f0920b52",
-    "package.py": "7a95b09ea8dc70160d071f591bc552613d9f7d624f23007d09486f20f6076796",
+    "package.py": "4879ca1743daceb4c6194064792cfae71b1e737b3538750663f774a5345c4418",
     "package_checks.py": "18def1aae27dd73ee07c78bbc562c6045e4eb101f3e964ea6a448b562951b593",
-    "run_selected_tests.py": "9d1be27ba52e2a910adf811f6f18043a5626c519025290ab0da7c1135f0ab34d",
+    "ruffle_test_cleanup.py": "f2d6182bb8e98ce938e0c07ff77732da67ddecbeb610377a9fd9ff4e78828c7c",
+    "run_selected_tests.py": "9f57f4f4aeb2fc4bb30f3167f051b667727c610f7a93c70bb9306de84305be1a",
     "test_candidate_consumer.py": "2a05ce3d9153d05c188b1cff9935dbccc23c3075d1aff426171c62b911913b65",
-    "test_package.py": "6ed9ea08af609306e64c62eff3fb5f8da52fec28eeaf31ac5b308a022fb70da4",
-    "workflow.yml": "1f82ce262e5d8b681f398e473ca2e25a27e3c4e28093fcdce5a95d45d733fcd5"
+    "test_cleanup.py": "e89efbd09e2dcf0cb8ce74fd690c28a6369a1314b464a24701bea2d813ccfc39",
+    "test_package.py": "e8808336236267a0ef812bf32c4634509b97206e66c418e1bfaa9b6cbc30aeee",
+    "workflow.yml": "e9e8bbd9d9a902318af56063e24693ad64f1787ae201323a7b1eb050d8992779"
   },
   "releaseChannel": "release",
   "schemaVersion": 1,
   "sourceCommit": "9bc000e37695696f2427b25fe08efe4993bf22e5",
+  "testOnlyCleanup": {
+    "afterBytes": 7756,
+    "afterSHA256": "352a69b45ff5bae09a7d4e268aeb5048e65d515ac91e4dabca21a774c9385e21",
+    "beforeSHA256": "8a8364cee19f6b53490b6e8706a3e35b34c9eb4e191fa1f013591992d376e192",
+    "path": "Tests/RuffleRuntimeTests.swift",
+    "productChange": false
+  },
   "version": "1.5.6"
 }

@@ -37,19 +37,30 @@ class PackageTests(unittest.TestCase):
  def test_selected_gate_rechecks_both_lanes_and_rejects_skip(self):
   import run_selected_tests as runner
   with tempfile.TemporaryDirectory() as tmp:
-   root=Path(tmp);r={'schema':'flashnest-selected-native-regression-v1','selectedNativeRegressionPassed':True,'selectedReleaseGatePassed':True,'runID':123,'head':'a'*40,'totalTestCount':16,'passedTests':16,'failedTests':0,'skippedTests':0,'expectedFailures':0,'sourceInventory':{},'fixtureSourceInstalled':{'bundleID':runner.FIXTURE_BUNDLE,'executableSHA256':'a'*64},'fullGatePassed':False,'physicalDeviceCertified':False,'nativePixelAcceptance':False,'samplingBackingPixelAcceptance':False}
+   root=Path(tmp);r={'schema':'flashnest-selected-native-regression-v1','selectedNativeRegressionPassed':True,'selectedReleaseGatePassed':True,'runID':123,'head':'a'*40,'totalTestCount':16,'passedTests':16,'failedTests':0,'skippedTests':0,'expectedFailures':0,'baseSourceInventory':{},'testedSourceInventory':{'Tests/RuffleRuntimeTests.swift':{'sha256':'b'*64,'bytes':123}},'testOnlyCleanup':{'path':'Tests/RuffleRuntimeTests.swift','afterSHA256':'b'*64,'afterBytes':123},'restoredOriginal207':True,'fixtureSourceInstalled':{'bundleID':runner.FIXTURE_BUNDLE,'executableSHA256':'a'*64},'fullGatePassed':False,'physicalDeviceCertified':False,'nativePixelAcceptance':False,'samplingBackingPixelAcceptance':False}
    for lane,bundle,expected in [('unit','FlashNestTests',runner.UNIT),('ui','FlashNestUITests',runner.UI)]:
     counts={'passedTests':len(expected),'failedTests':0,'skippedTests':0,'expectedFailures':0};summary={'result':'Passed','totalTestCount':len(expected),**counts,'devicesAndConfigurations':[{'device':{'deviceId':'synthetic-device','osVersion':'18.2','platform':'iOS Simulator','architecture':'arm64'},**counts}]}
     raw=json.dumps(summary).encode();log='\n'.join("Test Case '-["+bundle+'.'+cls+' '+method+"]' passed" for cls,method in expected)
     (root/(lane+'-summary.json')).write_bytes(raw);(root/(lane+'.log')).write_text(log);v=runner.verify(summary,log,expected,bundle,'synthetic-device');v.update(summarySHA256=n.c.digest(raw),resultBundle=lane+'.xcresult');r[lane]=v;(root/(lane+'-verification.json')).write_text(json.dumps(v))
    r['expected']=r['unit']['expected']+r['ui']['expected'];r['actual']=r['unit']['actual']+r['ui']['actual']
    (root/'verification.json').write_text(json.dumps(r))
-   with patch.dict(n.os.environ,{'GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}),patch.object(runner,'source_inventory',return_value={}):
+   with patch.dict(n.os.environ,{'GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}),patch.object(runner,'source_inventory',return_value={}),patch.object(runner,'cleanup_contract',return_value=r['testOnlyCleanup']),patch.object(n,'inputs',return_value={'candidateAppFiles':{}}),patch.object(runner,'test_source_closure'):
     gate=n.selected_gate(root,root);self.assertEqual(len(gate['selectedNativeMethods']),16)
     r['skippedTests']=1;(root/'verification.json').write_text(json.dumps(r))
     with self.assertRaises(ValueError):n.selected_gate(root,root)
     r['skippedTests']=0;(root/'verification.json').write_text(json.dumps(r));(root/'ui.log').write_text('')
     with self.assertRaises(ValueError):n.selected_gate(root,root)
+ def test_extra_test_source_is_rejected(self):
+  import run_selected_tests as runner
+  with tempfile.TemporaryDirectory() as tmp:
+   app=Path(tmp);(app/'Tests').mkdir();(app/'UITests').mkdir();(app/'Tests/A.swift').write_text('original');baseline={'Tests/A.swift':n.c.digest(b'original')}
+   runner.test_source_closure(app,baseline);(app/'Tests/Extra.swift').write_text('extra')
+   with self.assertRaises(ValueError):runner.test_source_closure(app,baseline)
+ def test_failed_lane_public_result_excludes_free_text(self):
+  import run_selected_tests as runner
+  with tempfile.TemporaryDirectory() as tmp:
+   out=Path(tmp);(out/'public-evidence').mkdir();expected=(runner.UNIT[0],);cls,method=expected[0];(out/'unit.log').write_text("Test Case '-[FlashNestTests."+cls+' '+method+"]' failed\n/Users/PRIVATE_SENTINEL/input.swf")
+   raw=json.dumps({'failedTests':1,'failureMessage':'PRIVATE_SENTINEL'}).encode();runner.lane_result(out,'unit','FlashNestTests',expected,raw,RuntimeError('PRIVATE_SENTINEL'),'123','a'*40);text=(out/'public-evidence/unit-result.json').read_text();self.assertNotIn('PRIVATE_SENTINEL',text);self.assertIn(method,text);self.assertEqual(json.loads(text)['counts']['failedTests'],1)
 import copy,json,pathlib,sys,unittest
 ROOT=pathlib.Path(__file__).resolve().parent;sys.path.insert(0,str(ROOT));import run_selected_tests as r
 DEVICE='01234567-89AB-CDEF-0123-456789ABCDEF'

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Bounded existing native regression subset. No full-suite or physical-device certification."""
-import hashlib,json,os,plistlib,re,subprocess,sys,time
+import hashlib,json,os,plistlib,re,subprocess,sys,time,importlib.util
 from pathlib import Path
 import package_checks as c
+import ruffle_test_cleanup as cleanup
 
 UNIT = (
  ('LoadingPhaseDiagnosticsTests','testClientOnlyAcceptsBoundedScalarsAndCurrentSession'),
@@ -61,11 +62,56 @@ def source_inventory(app):
  c.require(len(UNIT)==15 and len(set(UNIT))==15 and len(UI)==1,'Selected inventory changed')
  return result
 
+def test_source_closure(app,baseline,change=None):
+ for directory in ('Tests','UITests'):
+  prefix=directory+'/';expected={p[len(prefix):]:(change['afterSHA256'] if change and p==change['path'] else h) for p,h in baseline.items() if p.startswith(prefix)}
+  c.require(c.file_map(app/directory)==expected,'Unexpected test source closure: '+directory)
+
+def cleanup_contract(app,config):
+ import ruffle_test_cleanup as cleanup
+ spec=config['testOnlyCleanup'];path=spec['path']
+ c.require(path==cleanup.TARGET and spec['productChange'] is False,'Unexpected cleanup target')
+ raw=(app/path).read_bytes();c.require(sha(raw)==spec['beforeSHA256']==config['candidateAppFiles'][path],'Wrong original test hash')
+ modified=cleanup.transform(raw.decode()).encode();c.require(sha(modified)==spec['afterSHA256'] and len(modified)==spec['afterBytes'],'Wrong reviewed test overlay')
+ return spec
+
+def lane_result(out,name,bundle,expected,raw,failure,run_id,head):
+ log=(out/(name+'.log')).read_text(errors='replace');allowed=set(expected);result={'runID':int(run_id),'head':head,'lane':name,'bundle':bundle,'selected':['/'.join((bundle,cls,method)) for cls,method in expected],'passed':[],'failed':[],'unexpectedMethodCount':0,'logSHA256':sha((out/(name+'.log')).read_bytes()),'summarySHA256':sha(raw) if raw is not None else None,'counts':{},'failureType':type(failure).__name__ if failure else None,'selectedReleaseGatePassed':False}
+ for cls,method,status in re.findall(r"Test Case '-\["+re.escape(bundle)+r"\.([A-Za-z0-9_]+) ([A-Za-z0-9_]+)\]' (passed|failed)",log):
+  if (cls,method) in allowed:result[status].append('/'.join((bundle,cls,method)))
+  else:result['unexpectedMethodCount']+=1
+ if raw is not None:
+  try:
+   summary=json.loads(raw)
+   for key in ('totalTestCount','passedTests','failedTests','skippedTests','expectedFailures'):
+    value=summary.get(key)
+    if type(value) is int and 0<=value<=100000:result['counts'][key]=value
+  except (ValueError,AttributeError):result['summaryUnsupported']=True
+ (out/'public-evidence'/(name+'-result.json')).write_text(json.dumps(result,indent=2)+'\n')
+
+def collect_failed_lane(out,name,start,end):
+ config=c.load(Path(__file__).with_name('inputs.json'));pin=config['crashCollector']
+ base=Path(os.environ.get('CRASH_RECIPE_PATH',str(Path(__file__).resolve().parent.parent/'native-single-wk-crash-diagnostic'))).resolve()
+ modules={}
+ for filename,digest in pin['files'].items():
+  file=base/filename;c.require(file.is_file() and not file.is_symlink() and sha(file.read_bytes())==digest,'Crash collector source differs')
+  spec=importlib.util.spec_from_file_location('release_crash_'+file.stem,file);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);modules[file.stem]=module
+ events,unmatched=modules['run_single'].crash_events((out/(name+'.log')).read_text(errors='replace'))
+ remaining=15-(time.time()-end)
+ if events and remaining>0:time.sleep(remaining)
+ roots=[Path.home()/'Library/Logs/DiagnosticReports']
+ # Exact freshly created simulator diagnostic path supplied by this runner.
+ device=(out/'simulator-id.txt').read_text().strip();roots.append(Path.home()/'Library/Developer/CoreSimulator/Devices'/device/'data/Library/Logs/DiagnosticReports')
+ result=modules['collect_crash'].collect(roots,out/'public-evidence'/('crashes-'+name),start,end+15,{e['pid'] for e in events})
+ return {'lane':name,'events':events,'unmatchedCrashLines':unmatched,'collection':result,'testFailureRemainsFailure':True}
+
 def run(app,out):
  app=Path(app).resolve();out=Path(out).resolve();out.mkdir(exist_ok=False)
  run_id=os.environ.get('GITHUB_RUN_ID','');head=os.environ.get('GITHUB_SHA','')
  c.require(run_id.isdigit() and int(run_id)>0 and re.fullmatch('[0-9a-f]{40}',head),'Missing CI run/head binding')
- inventory=source_inventory(app);deadline=time.monotonic()+BUDGETS['overallSeconds'];device=None
+ config=c.load(Path(__file__).with_name('inputs.json'));baseline=config['candidateAppFiles'];c.verify_sources(app,baseline);cleanup_spec=cleanup_contract(app,config);test_source_closure(app,baseline)
+ inventory=source_inventory(app);state=out/'test-cleanup-state.json';(out/'public-evidence').mkdir();tested_inventory=None;source_record={'runID':int(run_id),'head':head,'testOnlyCleanup':cleanup_spec,'original207SourceFiles':baseline,'baseSourceInventory':inventory,'restoredOriginal207':False};crash_evidence={'status':'notfound','reason':'no-failed-lane','collected':False};receipt=None
+ deadline=time.monotonic()+BUDGETS['overallSeconds'];device=None
  def budget(seconds):
   remaining=deadline-time.monotonic();c.require(remaining>0,'Selected native regression total deadline exceeded')
   return min(seconds,remaining)
@@ -80,21 +126,32 @@ def run(app,out):
         '-disableAutomaticPackageResolution','-parallel-testing-enabled','NO','-maximum-concurrent-test-simulator-destinations','1',
         '-test-timeouts-enabled','YES','-default-test-execution-time-allowance',str(method_seconds),'-maximum-test-execution-time-allowance',str(method_seconds)]
   args+=selectors(bundle,expected)+['CODE_SIGNING_ALLOWED=NO','CODE_SIGNING_REQUIRED=NO']
-  failure=None
+  failure=None;started=time.time()
   try:command(args,command_seconds,name+'.log')
   except (subprocess.CalledProcessError,subprocess.TimeoutExpired) as error:failure=error
+  ended=time.time()
+  if failure is not None:
+   nonlocal crash_evidence
+   try:crash_evidence=collect_failed_lane(out,name,started,ended)
+   except Exception as error:crash_evidence={'status':'unsupported','errorType':type(error).__name__,'testFailureRemainsFailure':True}
+  raw=None
   if result.exists():
-   raw=command(['xcrun','xcresulttool','get','test-results','summary','--path',str(result)],60)
-   (out/(name+'-summary.json')).write_bytes(raw)
-  else:raw=None
+   try:
+    raw=command(['xcrun','xcresulttool','get','test-results','summary','--path',str(result)],60)
+    (out/(name+'-summary.json')).write_bytes(raw)
+   except Exception as error:failure=failure or error
+  lane_result(out,name,bundle,expected,raw,failure,run_id,head)
   if failure:raise failure
   c.require(raw is not None,'Missing selected xcresult: '+name)
   receipt=verify(json.loads(raw),(out/(name+'.log')).read_text(),expected,bundle,device)
   receipt['summarySHA256']=sha(raw);receipt['resultBundle']=result.name
   (out/(name+'-verification.json')).write_text(json.dumps(receipt,indent=2)+'\n');return receipt
  try:
+  cleanup.apply(app,state,baseline);test_source_closure(app,baseline,cleanup_spec);tested_inventory=source_inventory(app);source_record['testedSourceInventory']=tested_inventory
+  for path,h in baseline.items():c.require(sha((app/path).read_bytes())==(cleanup_spec['afterSHA256'] if path==cleanup_spec['path'] else h),'Unexpected test-stage source delta')
   device=command(['xcrun','simctl','create','FlashNestSelectedRegression','com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation','com.apple.CoreSimulator.SimRuntime.iOS-18-2'],60).decode().strip()
   c.require(re.fullmatch(r'[0-9A-Fa-f-]{36}',device) is not None,'Invalid created simulator identifier')
+  (out/'simulator-id.txt').write_text(device)
   command(['xcrun','simctl','boot',device],60);command(['xcrun','simctl','bootstatus',device,'-b'],180)
   unit=lane('unit','FlashNest','FlashNestTests',UNIT,120,BUDGETS['unitCommandSeconds'])
   # The existing UI test genuinely selects files from this separate app sandbox.
@@ -110,17 +167,29 @@ def run(app,out):
   installed_info=plistlib.loads((Path(installed)/'Info.plist').read_bytes())
   c.require(installed_info.get('CFBundleIdentifier')==FIXTURE_BUNDLE and (Path(installed)/executable).read_bytes()==binary,'Installed fixture identity differs')
   ui=lane('ui','FlashNestUI','FlashNestUITests',UI,420,BUDGETS['uiCommandSeconds'])
-  c.require(source_inventory(app)==inventory,'Selected source changed during testing')
+  c.require(source_inventory(app)==tested_inventory,'Selected source changed during testing')
   receipt={'schema':'flashnest-selected-native-regression-v1','selectedNativeRegressionPassed':True,'selectedReleaseGatePassed':True,'runID':int(run_id),'head':head,
            'expected':unit['expected']+ui['expected'],'actual':unit['actual']+ui['actual'],'totalTestCount':16,
-           'passedTests':16,'failedTests':0,'skippedTests':0,'expectedFailures':0,'unit':unit,'ui':ui,'sourceInventory':inventory,
+           'passedTests':16,'failedTests':0,'skippedTests':0,'expectedFailures':0,'unit':unit,'ui':ui,'baseSourceInventory':inventory,'testedSourceInventory':tested_inventory,'testOnlyCleanup':cleanup_spec,
            'fixtureSourceInstalled':{'bundleID':FIXTURE_BUNDLE,'executableSHA256':sha(binary)},'budgets':BUDGETS,
            'fullGatePassed':False,'physicalDeviceCertified':False,'nativePixelAcceptance':False,'samplingBackingPixelAcceptance':False,
            'scope':'Selected public synthetic save/import/lifecycle tests only; no app-process-relaunch or full-matrix certification.'}
-  (out/'verification.json').write_text(json.dumps(receipt,indent=2)+'\n')
+  # A passing receipt is only written after strict inverse restoration below.
  finally:
+  restore_error=None
+  try:
+   if state.exists():cleanup.restore(app,state)
+   c.verify_sources(app,baseline);test_source_closure(app,baseline);source_record['restoredOriginal207']=True
+  except Exception as error:restore_error=error;source_record['restoreErrorType']=type(error).__name__
+  (out/'public-evidence/test-source-receipt.json').write_text(json.dumps(source_record,indent=2)+'\n')
+  (out/'public-evidence/crash-evidence-status.json').write_text(json.dumps(crash_evidence,indent=2)+'\n')
+  if receipt is not None and restore_error is None:
+   receipt['restoredOriginal207']=True;receipt['crashEvidence']=crash_evidence
+   (out/'verification.json').write_text(json.dumps(receipt,indent=2)+'\n')
+   (out/'public-evidence/verification.json').write_text(json.dumps(receipt,indent=2)+'\n')
   if device:
    for action in ('shutdown','delete'):
     try:subprocess.run(['xcrun','simctl',action,device],timeout=60,check=False)
     except (subprocess.TimeoutExpired,OSError):pass
+  if restore_error:raise restore_error
 if __name__=='__main__':run(*sys.argv[1:])
