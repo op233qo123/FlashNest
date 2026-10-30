@@ -51,4 +51,11 @@ class Tests(unittest.TestCase):
         for forbidden in ('-configuration Release','package_unsigned.sh','package.py verify','release-provenance.json'):
             self.assertNotIn(forbidden,text)
         self.assertIn('if: always()',text);self.assertIn('collect_evidence.py',text)
+    def test_only_ui_execution_never_claims_unit_pass(self):
+        text=Path(__file__).with_name('run_probe.py').read_text()
+        self.assertNotIn("unit=lane(",text)
+        self.assertEqual(text.count("ui=lane('ui'"),1)
+        self.assertIn("'unitNotRun':True",text)
+        self.assertIn("'priorSelectedUnitStatus':'failed'",text)
+        self.assertIn("'selectedReleaseGatePassed':False",text)
 if __name__=='__main__':unittest.main()

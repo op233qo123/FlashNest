@@ -22,7 +22,7 @@ def run(app,out):
  preflight(True)
  app=Path(app).resolve();out=Path(out).resolve();out.mkdir(exist_ok=False)
  baseline=c.load(BASE/'inputs.json')['candidateAppFiles'];c.verify_sources(app,baseline)
- state=out/'overlay-state.json';probe_record={'diagnosticOnly':True,'selectedReleaseGatePassed':False,'baselineSourceFiles':baseline,'restoredOriginalSource':False};ui=None
+ state=out/'overlay-state.json';probe_record={'unitNotRun':True,'scope':'One existing lifecycle UI test with opt-in observation only; no App-unit acceptance claim','priorSelectedUnitRun':41011238103,'priorSelectedUnitStatus':'failed','diagnosticOnly':True,'selectedReleaseGatePassed':False,'baselineSourceFiles':baseline,'restoredOriginalSource':False};ui=None
  run_id=os.environ.get('GITHUB_RUN_ID','');head=os.environ.get('GITHUB_SHA','')
  c.require(run_id.isdigit() and int(run_id)>0 and re.fullmatch('[0-9a-f]{40}',head),'Missing CI run/head binding')
  inventory=source_inventory(app);deadline=time.monotonic()+BUDGETS['overallSeconds'];device=None
@@ -56,7 +56,6 @@ def run(app,out):
   device=command(['xcrun','simctl','create','FlashNestSelectedRegression','com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation','com.apple.CoreSimulator.SimRuntime.iOS-18-2'],60).decode().strip()
   c.require(re.fullmatch(r'[0-9A-Fa-f-]{36}',device) is not None,'Invalid created simulator identifier')
   command(['xcrun','simctl','boot',device],60);command(['xcrun','simctl','bootstatus',device,'-b'],180)
-  unit=lane('unit','FlashNest','FlashNestTests',UNIT,120,BUDGETS['unitCommandSeconds'])
   # The existing UI test genuinely selects files from this separate app sandbox.
   command(['xcodebuild','build','-project','FlashNest.xcodeproj','-scheme','FlashNestFixtureSource','-configuration','Debug','-sdk','iphonesimulator',
            '-destination','platform=iOS Simulator,id='+device,'-derivedDataPath',str(out/'build'),'-disableAutomaticPackageResolution',
@@ -78,7 +77,7 @@ def run(app,out):
   c.require(sha(package_lock.read_bytes())==baseline['Package.resolved'],'Generated project package lock differs')
   ui=lane('ui','FlashNestUI','FlashNestUITests',UI,420,BUDGETS['uiCommandSeconds'])
   probe_record['observedUIAssertionsPassed']=True
-  probe_record['unit']=unit;probe_record['ui']=ui
+  probe_record['ui']=ui
 
  finally:
   restore_error=None

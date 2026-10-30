@@ -44,3 +44,7 @@ Swift or demonstrate the defect. Actual Xcode compilation and simulator evidence
 remain pending separately authorized execution.
 
 Evidence retention is capped at 24 MiB payload, 3 MiB per attachment, 2 MiB per log. Oversized images are omitted with explicit size/reason, never truncated. Only bounded synthetic attachments and whitelisted log/receipt files are uploaded; overlay state, source backups and simulator containers are excluded.
+
+## Current execution scope
+
+Only the existing lifecycle UI method and its required FixtureSource app run. The App unit suite is not rerun: receipt unitNotRun=true. The earlier selected-unit run41011238103 remains failed, not promoted or erased. This targeted observation cannot satisfy the unchanged formal 16-method release gate. All original UI assertions, the 60-second Play wait, source/runtime checks, opt-in probe, and inverse-source verification remain unchanged.

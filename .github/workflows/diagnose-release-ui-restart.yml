@@ -65,7 +65,7 @@ jobs:
           mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
           cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
           xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
-      - name: Selected native loading, import, save and lifecycle tests, not full regression
+      - name: One existing lifecycle UI diagnostic only; App unit suite not rerun
         run: |
           set -euo pipefail
           python3 recipe/experiments/release-ui-identity-probe/run_probe.py release-package/app focused-evidence
