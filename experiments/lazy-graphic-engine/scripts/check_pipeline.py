@@ -11,7 +11,7 @@ def check(root=ROOT):
   if rel.is_absolute() or '..' in rel.parts or '\\' in p:raise ValueError('Unsafe pipeline path')
   f=root/p
   if f.is_symlink() or not f.is_file() or f.stat().st_size!=row['bytes'] or hashlib.sha256(f.read_bytes()).hexdigest()!=row['sha256']:raise ValueError('Pipeline file changed: '+p)
- for directory in ('scripts','patches','reviews','app','browser','browser-fixtures','fixture-sources'):
+ for directory in ('scripts','patches','reviews','app','browser','browser-fixtures','fixture-sources','preflight'):
   actual={f.relative_to(root).as_posix() for f in (root/directory).rglob('*') if f.is_file()}
   expected={p for p in lock['files'] if p.startswith(directory+'/')}
   if actual!=expected:raise ValueError('Unexpected source closure files: '+directory)

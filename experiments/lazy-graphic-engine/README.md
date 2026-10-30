@@ -33,3 +33,15 @@ Engine artifact retention7days includes full before/after source maps, original
 patches plus candidate patch, provenance, runtime source maps and complete license
 notices. Focused browser evidence is separate and retained7days. Partial/missing
 results cannot be reported as full acceptance.
+
+## Focused-only recovery after engine40998892881 succeeded
+
+The new 25-minute focused workflow reuses artifact12953027984, exact archive
+SHA2562cb4022b1859156f2e28dcb5d499ebf01cbf13b386acb8467d34c147ed22d28d,
+original run40998892881/head6d3e4322293972a28ab2cdf129ee6398f40f0f37. It does
+not rebuild the engine or relabel that receipt as the retry run. The first browser
+launch failed before any fixture because the downloaded headless shell had no
+usable sandbox on that runner. Recovery uses the already successful official
+Chrome channel and exact old preflight, with chromium_sandbox=True; no security
+policy changes, sandbox disabling, browser downgrade or arbitrary substitute.
+All six fixture pages and assertions remain unchanged.

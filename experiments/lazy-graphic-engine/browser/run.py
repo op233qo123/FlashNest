@@ -48,7 +48,7 @@ def run(a):
  result={'passed':False,'scope':'Desktop Chromium actual WebGL calls/pixels, not native GPU memory or decode counters','rows':[],'contractSHA256':digest(a.contract.read_bytes())}
  try:
   with sync_playwright() as pw:
-   browser=pw.chromium.launch(headless=True,chromium_sandbox=True,args=['--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+   browser=pw.chromium.launch(channel='chrome',headless=True,chromium_sandbox=True,args=['--enable-unsafe-swiftshader'])
    try:
     for fixture,states in FIXTURES:
      for arm in ['baseline','candidate']:

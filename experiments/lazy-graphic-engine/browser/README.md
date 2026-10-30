@@ -23,13 +23,12 @@ and shared repaint/mask/hit must add none after first display. The original full
 call records remain available, including unrelated/background allocations.
 The deterministic CPU decode-counter test remains separate evidence.
 
-Playwright Chromium with sandbox enabled and SwiftShader exercises actual WebGL,
+The existing official Chrome channel with sandbox enabled exercises actual WebGL,
 not a hardware GPU or iOS WebKit. No frame timing or RSS conclusion is supported.
 The original observer itself adds bounded overhead and is not production code.
 
 Dependencies reuse existing pinned browser harness requirements. The authorized
-runner must install its matching Chromium before this script; never silently use
-an arbitrary browser or add --no-sandbox. Only after the candidate build: fill a
+runner must first pass the existing official Chrome/sandbox helper/AppArmor preflight; do not download a headless-shell replacement or change sandbox settings. Only after the candidate build: fill a
 separate contract with exact complete runtime inventories, selected WASM SHAs,
 and fixture-directory inventory, then set dispatchAllowed in that ephemeral
 execution contract. Do not mutate the false template to suggest acceptance.
@@ -53,3 +52,7 @@ its phases; no phase recreates a player or resets caches. Renderer fallback,
 missing selected identity, timeouts or semantic failures fail rather than skip.
 
 Trace observation is installed at the pinned renderer-created log (the instance already exists) and reaffirmed after load. This avoids the accepted setter silently discarding pre-instance observers and catches constructor traces before load resolves. The log wrapper and extra observer can affect timing; this is an opt-in synthetic diagnostic, not zero-interference profiling.
+
+The focused retry permits SwiftShader through the previously reviewed launch flag,
+but does not force ANGLE: use actual observed renderer/context evidence rather than
+claiming a particular physical or software GPU implementation.

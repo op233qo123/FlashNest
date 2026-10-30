@@ -1,0 +1,20 @@
+{
+  "browserAccepted": false,
+  "engine": {
+    "artifactID": 12953027984,
+    "bytes": 13344196,
+    "provenanceSHA256": "c4097881f8bc25c22e2eefaabb20664160ef8ce87ca11173d89c94a7ba4fd9f7",
+    "runID": 40998892881,
+    "runtimeInventorySHA256": "4eb6f264ac091574078769bff43417a74826017b618c539ccc4ff69ac8c81ba1",
+    "sha256": "2cb4022b1859156f2e28dcb5d499ebf01cbf13b386acb8467d34c147ed22d28d",
+    "sourceCommit": "6d3e4322293972a28ab2cdf129ee6398f40f0f37",
+    "sourceLockSHA256": "7200650c24fe505844ea676c02c44a42dd2ee7bc484344e775e4458d84566494",
+    "sourceSetSHA256": "8700425d24eca9d0fea72bc49fe2f2f3854a7965b75f24abeff19f867d4ed53a",
+    "wasmSHA256": [
+      "0fabc6602d29091438c307ca715cf0973641b93cd2d7513798865cb8e1c3f054",
+      "87874aba45cac4b3c4a08e10e853966b324b8fad8d113fcfe4649a05bdffe318"
+    ]
+  },
+  "nativeAcceptance": false,
+  "originalEngineBuildSucceeded": true
+}

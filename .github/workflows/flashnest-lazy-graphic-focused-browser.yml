@@ -1,0 +1,75 @@
+name: FlashNest lazy Graphic focused WebGL retry (reuse exact engine, no rebuild)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-lazy-graphic-focused-browser
+  cancel-in-progress: false
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      PREP: experiments/lazy-graphic-engine
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Require exact reviewed focused recipe and candidate source contract
+        run: |
+          python3 "$PREP/scripts/check_pipeline.py"
+          python3 "$PREP/scripts/check_contract.py" --mode engine
+          python3 "$PREP/scripts/test_candidate_contract.py"
+          python3 "$PREP/scripts/test_focused_reuse.py"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Install pinned Python libraries only; require existing official Chrome
+        run: |
+          set -euo pipefail
+          python3 -m venv focused-browser-venv
+          focused-browser-venv/bin/pip install --require-virtualenv -r "$PREP/browser/requirements.txt"
+          test ! -e focused-preflight
+          mkdir -p focused-preflight/scripts focused-preflight/evidence
+          cp "$PREP/preflight/browser_preflight.py" "$PREP/preflight/evidence_budget.py" focused-preflight/scripts/
+          focused-browser-venv/bin/python focused-preflight/scripts/browser_preflight.py
+      - name: Verify original baseline and successful candidate engine without recompilation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir "$PREP/engine-mirrors"
+          cp experiments/final-composite/engine-mirrors/ruffle-composite-40794075613.zip.part1 "$PREP/engine-mirrors/"
+          cp experiments/final-composite/engine-mirrors/ruffle-composite-40794075613.zip.part2 "$PREP/engine-mirrors/"
+          python3 "$PREP/scripts/stage_validation_runtime.py"
+          python3 "$PREP/scripts/stage_reused_candidate.py" --output lazy-graphic-engine
+      - name: Execute unchanged six pages with sandboxed official Chrome WebGL
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          focused-browser-venv/bin/python "$PREP/fixture-sources/eight-jpeg3/tests/test_fixture.py"
+          focused-browser-venv/bin/python "$PREP/fixture-sources/shared-boundaries/tests/test_shared.py"
+          focused-browser-venv/bin/python "$PREP/browser/test_contract.py"
+          node "$PREP/browser/test_page.cjs"
+          python3 "$PREP/scripts/prepare_browser_contract.py" --reuse-candidate --candidate lazy-graphic-engine --output focused-browser-contract.json
+          focused-browser-venv/bin/python "$PREP/browser/run.py" --contract focused-browser-contract.json --baseline-runtime "$PREP/staged-engine/runtime" --candidate-runtime lazy-graphic-engine/runtime --fixtures "$PREP/browser-fixtures" --output focused-browser-evidence
+      - name: Bound synthetic browser evidence
+        if: always()
+        id: budget
+        run: |
+          set -euo pipefail
+          mkdir focused-upload
+          if test -d focused-browser-evidence; then cp -R focused-browser-evidence focused-upload/browser; fi
+          if test -f focused-browser-contract.json; then cp focused-browser-contract.json focused-upload/; fi
+          if test -f focused-preflight/evidence/browser-preflight.json; then cp focused-preflight/evidence/browser-preflight.json focused-upload/; fi
+          python3 "$PREP/scripts/evidence_budget.py" focused-upload --max-bytes 134217728
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.budget.outputs.allowed == 'true'
+        with:
+          name: FlashNest-lazy-graphic-focused-WebGL-reuse-not-native
+          path: focused-upload
+          if-no-files-found: warn
+          retention-days: 7

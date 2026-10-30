@@ -3,8 +3,8 @@
   "dispatchAllowed": false,
   "files": {
     "README.md": {
-      "bytes": 3739,
-      "sha256": "75d7569a0d76f13df0a71fa0e3ab84db239371d633772723d6f8720ecf40b2e6"
+      "bytes": 4008,
+      "sha256": "4753e84c5865b78074836724018eb32cc4b6450eb88e2afafb4e850cc26e15a8"
     },
     "contract.template.json": {
       "bytes": 285,
@@ -19,8 +19,8 @@
       "sha256": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574"
     },
     "run.py": {
-      "bytes": 8436,
-      "sha256": "ce8990867787e09e8012abe3248124252727b9321169e10e229e2662eaeacc38"
+      "bytes": 8427,
+      "sha256": "8f2859ab6a575922c040ceb42ec1899e5c6d068a06e59a4183a53421e75591af"
     },
     "test_contract.py": {
       "bytes": 1473,
