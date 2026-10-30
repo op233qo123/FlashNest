@@ -65,6 +65,29 @@ final class LoadingPhaseDiagnosticsTests: XCTestCase {
         try FileManager.default.createSymbolicLink(at: file, withDestinationURL: target)
         XCTAssertTrue(store.read().isEmpty)
         XCTAssertThrowsError(try store.clear())
+        XCTAssertEqual(try Data(contentsOf: target), Data("[]".utf8))
+        XCTAssertEqual(try FileManager.default.attributesOfItem(atPath: file.path)[.type] as? FileAttributeType, .typeSymbolicLink)
+        let freshStore = LoadingPhaseDiagnostics(root: root)
+        XCTAssertTrue(freshStore.read().isEmpty)
+        XCTAssertThrowsError(try freshStore.clear())
+        XCTAssertEqual(try Data(contentsOf: target), Data("[]".utf8))
+
+        // A dangling link is an existing unsafe item, not a missing output file.
+        try FileManager.default.removeItem(at: target)
+        XCTAssertTrue(freshStore.read().isEmpty)
+        XCTAssertThrowsError(try freshStore.clear())
+        XCTAssertFalse(FileManager.default.fileExists(atPath: target.path))
+        XCTAssertEqual(try FileManager.default.attributesOfItem(atPath: file.path)[.type] as? FileAttributeType, .typeSymbolicLink)
+
+        // Reject a linked direct parent before createDirectory or atomic write.
+        let actualDirectory = root.appendingPathComponent("actual", isDirectory: true)
+        let linkedDirectory = root.appendingPathComponent("linked", isDirectory: true)
+        try FileManager.default.createDirectory(at: actualDirectory, withIntermediateDirectories: false)
+        try FileManager.default.createSymbolicLink(at: linkedDirectory, withDestinationURL: actualDirectory)
+        let linkedStore = LoadingPhaseDiagnostics(root: linkedDirectory)
+        XCTAssertTrue(linkedStore.read().isEmpty)
+        XCTAssertThrowsError(try linkedStore.clear())
+        XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: actualDirectory.path).isEmpty)
     }
     func testPreferenceDefaultsOff() {
         let name = UUID().uuidString

@@ -88,9 +88,12 @@ final class LoadingPhaseDiagnostics {
         file = directory.appendingPathComponent("loading-phases.json")
     }
     func read() -> [LoadingPhaseSnapshot] {
-        guard let values = try? file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]),
-              values.isRegularFile == true, values.isSymbolicLink != true,
-              let size = values.fileSize, size <= Self.maximumBytes,
+        guard let directoryValues = try? freshAttributes(file.deletingLastPathComponent()),
+              directoryValues[.type] as? FileAttributeType == .typeDirectory,
+              let values = try? freshAttributes(file),
+              values[.type] as? FileAttributeType == .typeRegular,
+              let size = values[.size] as? NSNumber, size.int64Value >= 0,
+              size.int64Value <= Int64(Self.maximumBytes),
               let handle = try? FileHandle(forReadingFrom: file) else { return [] }
         defer { try? handle.close() }
         guard let bytes = try? handle.read(upToCount: Self.maximumBytes + 1), bytes.count <= Self.maximumBytes,
@@ -104,14 +107,29 @@ final class LoadingPhaseDiagnostics {
         try write([snapshot] + Array(previous))
     }
     func clear() throws { try write([]) }
+    /// Query filesystem attributes afresh, without URL resource-value caches or
+    /// fileExists (which follows symlinks and reports dangling links as absent).
+    /// This rejects existing links; it is not a race-proof hostile-filesystem API.
+    private func freshAttributes(_ url: URL) throws -> [FileAttributeKey: Any]? {
+        do { return try FileManager.default.attributesOfItem(atPath: url.path) }
+        catch {
+            let error = error as NSError
+            if error.domain == NSCocoaErrorDomain &&
+                (error.code == NSFileReadNoSuchFileError || error.code == NSFileNoSuchFileError) { return nil }
+            throw error
+        }
+    }
     private func write(_ snapshots: [LoadingPhaseSnapshot]) throws {
         let directory = file.deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let directoryValues = try directory.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-        guard directoryValues.isDirectory == true, directoryValues.isSymbolicLink != true else { throw CocoaError(.fileWriteInvalidFileName) }
-        if FileManager.default.fileExists(atPath: file.path) {
-            let values = try file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
-            guard values.isRegularFile == true, values.isSymbolicLink != true else { throw CocoaError(.fileWriteInvalidFileName) }
+        if let values = try freshAttributes(directory) {
+            guard values[.type] as? FileAttributeType == .typeDirectory else { throw CocoaError(.fileWriteInvalidFileName) }
+        } else {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+        guard let directoryValues = try freshAttributes(directory),
+              directoryValues[.type] as? FileAttributeType == .typeDirectory else { throw CocoaError(.fileWriteInvalidFileName) }
+        if let values = try freshAttributes(file) {
+            guard values[.type] as? FileAttributeType == .typeRegular else { throw CocoaError(.fileWriteInvalidFileName) }
         }
         let bytes = try JSONEncoder().encode(snapshots)
         guard bytes.count <= Self.maximumBytes else { throw CocoaError(.fileWriteOutOfSpace) }

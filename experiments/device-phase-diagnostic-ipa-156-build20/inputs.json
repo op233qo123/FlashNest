@@ -439,7 +439,7 @@
     "App/Player/CacheCleanupWarmLease.swift": "7a65228c2f54f10709f7ff570fe0c46c8d8ed7095405aac75e5c280b383fd5b6",
     "App/Player/LastSessionDiagnostics.swift": "2c3b885317918f913065c36c09a13de689420e71a971960d018fb728a6bbbba2",
     "App/Player/LegacySavePreservationError.swift": "7f382319af7e2b80967f7f757793627668db7a3d87f45beba14e19869dd7ec1c",
-    "App/Player/LoadingPhaseDiagnostics.swift": "e650c20e272d440abedc7e96e661ff6619106cbb47fe8d841208be8e4b9b2874",
+    "App/Player/LoadingPhaseDiagnostics.swift": "6efb891bd320b917e9c8857fc0da6fe1d4b1c7a6bdf14c2d5e083e7406384e3c",
     "App/Player/PackageWebKitProfiles.swift": "a02b15af8ac09cfab6ba93e47fc829f387154210238acc201823d22f98a23234",
     "App/Player/PlayerSession.swift": "3214e7c5cb0e7e71b655cacf63c0a3e591d8d1cdbad72b4b9b4a26ceb19da120",
     "App/Player/RenderSamplingSettings.swift": "c65a4bcd16a0c916e5252ae1b89c1031c3fa5fa0f0c7e3981c5fa99e178c94f3",
@@ -517,7 +517,7 @@
     "Tests/LegacySavePreservationDiagnosticsTests.swift": "0af8d34b54545ffbb386fda9ade8ff35c84e73063492f6cc28481d644db0f3c6",
     "Tests/LibraryPreferencesTests.swift": "c467227748d191c8ffd8b5ded01bc7228105e749980a36b6081faf4553b3f8bf",
     "Tests/LibraryRemovalTests.swift": "f6604c80306931fd3df2dc68ae8ffb01f95c17438453f7220094d5fb8c9ba671",
-    "Tests/LoadingPhaseDiagnosticsTests.swift": "60e7cfa957bb2577bea63a3a0305d724c84534481e4a4afe7bc220a6a839dd72",
+    "Tests/LoadingPhaseDiagnosticsTests.swift": "caa8a986eb759a6ba5003875c90ec7d6acb048ad9664152f6d14f3c868a54e57",
     "Tests/LocalImportInboxTests.swift": "a55bcf80a6aea5a851b8b8aab07d4510c9a5062d0904a9416fe0ff03675715d7",
     "Tests/LocalizationTests.swift": "19c143383c6adc27a8093c4e7c4688bea97be004c9becf54217ca7684721f1c1",
     "Tests/LoopbackLoadPhaseTests.swift": "d9a496fd2d913cf5b1bb3e7f9e95820d3d6f73c66c6ffa914375814d38aaa378",
@@ -633,7 +633,7 @@
   "diagnosticOptInDefault": false,
   "diagnosticOverlay": {
     "App/Player/LoadingPhaseDiagnostics.swift": {
-      "after": "e650c20e272d440abedc7e96e661ff6619106cbb47fe8d841208be8e4b9b2874",
+      "after": "6efb891bd320b917e9c8857fc0da6fe1d4b1c7a6bdf14c2d5e083e7406384e3c",
       "before": null
     },
     "App/Player/PlayerSession.swift": {
@@ -661,7 +661,7 @@
       "before": "5a47e35af1161cba3bfaa11affb9ecb736ccdd249a1ed15194906dbec9547ba2"
     },
     "Tests/LoadingPhaseDiagnosticsTests.swift": {
-      "after": "60e7cfa957bb2577bea63a3a0305d724c84534481e4a4afe7bc220a6a839dd72",
+      "after": "caa8a986eb759a6ba5003875c90ec7d6acb048ad9664152f6d14f3c868a54e57",
       "before": null
     },
     "Tests/LoopbackLoadPhaseTests.swift": {
@@ -725,7 +725,7 @@
   "recipeFiles": {
     "README.md": "ee51bb64d97b62a7222ddf6e43a8b45a428c90d564d333158b74c04a3b31b7f4",
     "build-device-phase-diagnostic-ipa.yml": "e0ed0f3282b8e03a106204b7fa697bbf24c938ee999dab57ceae10300f243da7",
-    "checks/test_native_contract.py": "2b7af8a907507d258c1b3c62308e7e19479d2160aa1e811ed409bf1a4531dc31",
+    "checks/test_native_contract.py": "d5117889abf6908368cc5fa12ee0f36eeb3ce5191f3ea2c1c6e9f72f794978a4",
     "checks/test_phase.js": "dbba54f069fb4477768273d30c72fed9b6cef3f588b12a652d042470b148edf7",
     "checks/test_server_phase.py": "aa243d7dfbdd0264b538913f087b80ffc30ff6b385c7905913e5fb7c29245b6a",
     "experiment.py": "05cd7f5d018253292cbbad94b26546854272b185d1a7de2bf08eee7f66a3d25f",

@@ -10,7 +10,7 @@ class NativeContract(unittest.TestCase):
   self.assertIn('phaseSession',source)
  def test_bounds_and_atomic(self):
   source=(ROOT/'App/Player/LoadingPhaseDiagnostics.swift').read_text()
-  for token in ['65_536','snapshots.count <= 2','events.count <= 32','eventCount < 256 || event.phase == .webProcessTerminated','options: .atomic','isSymbolicLink != true','clock=hostProcessingTime','eventCapReached=']:
+  for token in ['65_536','snapshots.count <= 2','events.count <= 32','eventCount < 256 || event.phase == .webProcessTerminated','options: .atomic','attributesOfItem(atPath: url.path)','clock=hostProcessingTime','eventCapReached=']:
    self.assertIn(token,source)
  def test_save_code_unchanged(self):
   baseline=json.loads((pathlib.Path(__file__).resolve().parents[1]/'inputs.json').read_text())['appGateOffFiles']
