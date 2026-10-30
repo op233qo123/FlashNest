@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import copy,json,struct,tempfile,unittest,zipfile
+import copy,json,struct,tempfile,unittest,zipfile,plistlib,re
 from pathlib import Path
 from unittest.mock import patch
 import experiment as e
@@ -37,6 +37,20 @@ class Tests(unittest.TestCase):
  def test_recipe_drift_rejects(self):
   x=self.fixture();x['recipeFiles']['experiment.py']='0'*64
   with patch.object(c,'load',return_value=x),self.assertRaises(ValueError):e.inputs()
+ def assert_version_alignment(self,x,project,debug):
+  expected={'CFBundleShortVersionString':x['version'],'CFBundleVersion':x['build']}
+  for key,value in expected.items():
+   self.assertEqual(debug[key],value)
+   self.assertEqual(re.findall(r"^\s*"+key+r": '([^']+)'$",project,re.M),[value])
+  self.assertEqual(re.findall(r"^\s*MARKETING_VERSION: '([^']+)'$",project,re.M),[x['version']])
+  self.assertEqual(re.findall(r"^\s*CURRENT_PROJECT_VERSION: '([^']+)'$",project,re.M),[x['build']])
+ def test_all_package_version_sources_align(self):
+  x=self.fixture();project=(e.ROOT/'overlay/project.yml').read_text();debug=plistlib.loads((e.ROOT/'overlay/App/Info-Debug.plist').read_bytes())
+  self.assert_version_alignment(x,project,debug)
+  for key in ('CFBundleVersion','CFBundleShortVersionString'):
+   bad=dict(debug);bad[key]='19'
+   with self.subTest(key=key),self.assertRaises(AssertionError):self.assert_version_alignment(x,project,bad)
+  with self.assertRaises(AssertionError):self.assert_version_alignment(x,project.replace("CURRENT_PROJECT_VERSION: '20'","CURRENT_PROJECT_VERSION: '19'"),debug)
  def test_diagnostic_default_on_rejected(self):
   x=self.fixture();x['diagnosticOptInDefault']=True
   with patch.object(c,'load',return_value=x),self.assertRaises(ValueError):e.inputs(False)

@@ -428,7 +428,7 @@
     "App/Import/PackageDocumentPicker.swift": "bf1839f3b362d784df95c03880cd984d86942f605ffea1df1b4c68bf9aec76cb",
     "App/Import/PackageImporter.swift": "3d48828d83a6f29de920827cc5e8290e272bcf7e22e64f0f3490d6f6096b6fc9",
     "App/Import/ZIPIntegrity.swift": "878382765edba65617ab161fde074f77630f44af3051485275b06492d7d834fe",
-    "App/Info-Debug.plist": "d1b98ec51c1638e9db22ea1e2ba232ea52645989e7467c27b6828ac98c7b42a4",
+    "App/Info-Debug.plist": "5ae4ef8e9f74eed18f11cacca6d34be4c77bec91e8d05c9a6b0039ebeae5f8ad",
     "App/Localization/L10n.swift": "cf58cafe35064b95a0d69fc43a2772cd98674f07227ed35b9cc03d2abf3f00c3",
     "App/Models/GamePackage.swift": "e9b43efa845f71b61b888e7afc1c5c753c294abe5dabd9207de0df0f3c776ec6",
     "App/Models/LibraryPreferences.swift": "b7aea093302d2b8a6e5269a462e9ec6f928ca601b0a74f3359d7cff41e39c780",
@@ -632,6 +632,10 @@
   "diagnosticOnly": true,
   "diagnosticOptInDefault": false,
   "diagnosticOverlay": {
+    "App/Info-Debug.plist": {
+      "after": "5ae4ef8e9f74eed18f11cacca6d34be4c77bec91e8d05c9a6b0039ebeae5f8ad",
+      "before": "d1b98ec51c1638e9db22ea1e2ba232ea52645989e7467c27b6828ac98c7b42a4"
+    },
     "App/Player/LoadingPhaseDiagnostics.swift": {
       "after": "6efb891bd320b917e9c8857fc0da6fe1d4b1c7a6bdf14c2d5e083e7406384e3c",
       "before": null
@@ -731,7 +735,7 @@
     "experiment.py": "05cd7f5d018253292cbbad94b26546854272b185d1a7de2bf08eee7f66a3d25f",
     "package_checks.py": "18def1aae27dd73ee07c78bbc562c6045e4eb101f3e964ea6a448b562951b593",
     "run_focused_tests.py": "b5810e5da6ed1a500a4175be18e3875d55ddc0e254469d838a14ca54001fe473",
-    "test_experiment.py": "1c7f318176f19321f26fd4a863c088c0018c3e976de3d7616011e62606986aec"
+    "test_experiment.py": "3b54b38e73a43cdc5a3328b870fed34947751820f622c27d8c4ac9a8b39e9071"
   },
   "repository": "op233qo123/FlashNest",
   "runtimeFiles": {
