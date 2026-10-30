@@ -56,6 +56,7 @@ jobs:
         run: |
           set -euo pipefail
           cd experiments/final-composite
+          validation-venv/bin/python scripts/test_engine_archive_mirror.py
           validation-venv/bin/python scripts/stage_validation_runtime.py
           validation-venv/bin/python scripts/stage_validation_inputs.py
           validation-venv/bin/python scripts/validate_final_app.py --app validation-app

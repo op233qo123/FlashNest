@@ -420,6 +420,24 @@
       "6c999b09a43da7f83086ccd331753de65523b6640a39255fb10212e10087bb4a"
     ]
   },
+  "engineArchiveTransport": {
+    "bytes": 13365799,
+    "kind": "repository-exact-archive-parts",
+    "parts": [
+      {
+        "bytes": 7340032,
+        "path": "engine-mirrors/ruffle-composite-40794075613.zip.part1",
+        "sha256": "e52e16625953c947e23238d02c3867212faa176a8fe45c13d74bcb28a37d7ccd"
+      },
+      {
+        "bytes": 6025767,
+        "path": "engine-mirrors/ruffle-composite-40794075613.zip.part2",
+        "sha256": "e11b3cce11f74ceafb763c39bd5fec35975ddbcc58f86dbde6f7e7aa1669762e"
+      }
+    ],
+    "repository": "op233qo123/FlashNest",
+    "sha256": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a"
+  },
   "harnessFiles": {
     "diagnostics/native-candidate-context/method.swift": {
       "bytes": 5212,
@@ -506,8 +524,12 @@
       "sha256": "84c4e86db58cd4dcdc12359dfda451923906838abef6263d57ea4e8435490953"
     },
     "scripts/stage_validation_runtime.py": {
-      "bytes": 5323,
-      "sha256": "49a7fd3cb77227f170c62db54b6d6ae3529b235726005f16090d81ce0ba5988c"
+      "bytes": 7552,
+      "sha256": "685b82c75531e0a03810cab9cce5bd9e60b9b8332ba00c9a8f7c291e1be54b41"
+    },
+    "scripts/test_engine_archive_mirror.py": {
+      "bytes": 4436,
+      "sha256": "69284e357e55f9316c09007787df77940a1e8c62826ba434cce99b2f77aac4b0"
     },
     "scripts/validate_binding.py": {
       "bytes": 1327,
@@ -1755,6 +1777,6 @@
       ]
     }
   },
-  "reason": "Explicit user authorization: publish the exact 30 reviewed synthetic diagnostic files and run one two-arm retained-versus-dropped prefix diagnostic. Product/engine unchanged; no private assets, new IPA, native acceptance or original-crash resolution claim.",
+  "reason": "Explicit user authorization: publish the original exact engine archive mirror and four necessary script/configuration files in the same repository, then run one unchanged two-arm diagnostic retry. No new engine or IPA; original archive/provenance/correspondence checks and baseline transport remain unchanged.",
   "schemaVersion": 1
 }

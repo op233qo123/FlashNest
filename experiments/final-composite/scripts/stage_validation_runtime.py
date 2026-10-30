@@ -33,10 +33,34 @@ def fetch(e):
  require(len(data)==e['bytes'] and sha(data)==e['sha256'],'Artifact archive bytes/hash differ')
  return data
 
+def fetch_engine(e, transport):
+ # Exact original archive split only to fit repository tool transfer limits.
+ # Historical baseline fetch() and all original archive validations stay unchanged.
+ if transport is None:return fetch(e)
+ require(isinstance(transport,dict) and set(transport)=={'kind','repository','parts','bytes','sha256'},'Invalid engine transport schema')
+ require(transport['kind']=='repository-exact-archive-parts' and transport['repository']=='op233qo123/FlashNest','Unapproved engine mirror kind/repository')
+ require(transport['bytes']==e['bytes'] and transport['sha256']==e['sha256'],'Mirror does not pin the original complete archive')
+ parts=transport['parts'];expected=['engine-mirrors/ruffle-composite-40794075613.zip.part1','engine-mirrors/ruffle-composite-40794075613.zip.part2']
+ require(isinstance(parts,list) and len(parts)==2,'Exactly two ordered mirror parts required')
+ require(all(isinstance(p,dict) and set(p)=={'path','bytes','sha256'} for p in parts),'Invalid mirror part schema')
+ require([p['path'] for p in parts]==expected,'Mirror part order/path differs')
+ require(all(type(p['bytes']) is int and 0<p['bytes']<8*1024*1024 and isinstance(p['sha256'],str) and len(p['sha256'])==64 for p in parts),'Invalid mirror part bounds')
+ require(sum(p['bytes'] for p in parts)==e['bytes'],'Part sizes do not reconstruct original archive')
+ parent=ROOT/'engine-mirrors';require(parent.is_dir() and not parent.is_symlink(),'Mirror directory must be regular')
+ result=bytearray()
+ for part in parts:
+  path=ROOT/part['path'];require(path.is_file() and not path.is_symlink(),'Mirror part must be a regular checked-out file')
+  require(path.stat().st_size==part['bytes'],'Mirror part size differs')
+  with path.open('rb') as handle:data=read_limited(handle,part['bytes'])
+  require(len(data)==part['bytes'] and sha(data)==part['sha256'],'Mirror part bytes/hash differ')
+  result.extend(data)
+ data=bytes(result);require(len(data)==e['bytes'] and sha(data)==e['sha256'],'Reassembled mirror archive bytes/hash differ')
+ return data
+
 def main():
  lock=json.loads((ROOT/'validation-lock.json').read_text());require(lock.get('dispatchAllowed') is True,'Unapproved validation binding');e=lock['engine'];out=ROOT/'staged-engine'
  require(not out.exists(),'Existing staging requires inspection, not overwrite')
- data=fetch(e)
+ data=fetch_engine(e,lock.get('engineArchiveTransport'))
  with zipfile.ZipFile(io.BytesIO(data)) as z:
   rows=z.infolist();require(len(rows)<=5000 and sum(i.file_size for i in rows)<=402653184,'Oversized artifact')
   names=set()
@@ -64,6 +88,6 @@ def main():
   for name in sorted(names):
    if name.startswith(required):
     target=out/name[len(required):];target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(z.read(name))
- (ROOT/'evidence').mkdir(exist_ok=True);(ROOT/'evidence/engine-staging.json').write_text(json.dumps({'verified':True,'engine':e},indent=2)+'\n')
+ (ROOT/'evidence').mkdir(exist_ok=True);(ROOT/'evidence/engine-staging.json').write_text(json.dumps({'verified':True,'engine':e,'archiveTransport':lock.get('engineArchiveTransport',{'kind':'original-actions-artifact'}),'originalArtifactCurrentlyAvailable':None},indent=2)+'\n')
  print('Verified exact final engine archive, run, source and runtime correspondence')
 if __name__=='__main__':main()
