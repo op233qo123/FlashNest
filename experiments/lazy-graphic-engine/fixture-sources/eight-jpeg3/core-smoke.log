@@ -1,0 +1,22 @@
+
+running 1 test
+test neutral_eight_jpeg3 ... FAILED
+
+failures:
+
+---- neutral_eight_jpeg3 ----
+assertion failed: `(ruffle_actual == flash_expected)`
+
+Diff < left / right > :
+<NEUTRAL_GRAPHIC ready unshown=8
+<NEUTRAL_GRAPHIC first-display requested=1 remaining-unshown=7
+<
+
+
+
+
+failures:
+    neutral_eight_jpeg3
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.23s
+

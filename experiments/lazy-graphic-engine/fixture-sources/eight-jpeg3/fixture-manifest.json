@@ -1,0 +1,84 @@
+{
+  "schema": "neutral-eight-jpeg3-v1",
+  "bytes": 6809,
+  "sha256": "157877bf76ed5f02f570ab4bfd72c490290e179ef7d060fb7955311ed811c09c",
+  "images": [
+    {
+      "id": 1,
+      "shapeID": 101,
+      "width": 16,
+      "height": 16,
+      "alphaBytes": 256,
+      "alphaValue": 255,
+      "jpegSHA256": "884055b0a0434e20b3be177c3411f75e6c68b0de1170ab83a1424d0464c6e1a8"
+    },
+    {
+      "id": 2,
+      "shapeID": 102,
+      "width": 16,
+      "height": 16,
+      "alphaBytes": 256,
+      "alphaValue": 255,
+      "jpegSHA256": "12fdbb10cf3778c1d03a5505c229f3831329177446bf2576ca4a48a2b716281f"
+    },
+    {
+      "id": 3,
+      "shapeID": 103,
+      "width": 16,
+      "height": 16,
+      "alphaBytes": 256,
+      "alphaValue": 255,
+      "jpegSHA256": "89206ea8d598bca7e1e2ffecd801575db1a240884e74675bee69d9deeab81691"
+    },
+    {
+      "id": 4,
+      "shapeID": 104,
+      "width": 16,
+      "height": 16,
+      "alphaBytes": 256,
+      "alphaValue": 255,
+      "jpegSHA256": "df06b8506acb9b22b0f99bc2da32b5db3562e46c511c4adadfda1d0bdaf3a4dd"
+    },
+    {
+      "id": 5,
+      "shapeID": 105,
+      "width": 16,
+      "height": 16,
+      "alphaBytes": 256,
+      "alphaValue": 255,
+      "jpegSHA256": "4766ff17e316d0a2ba55558711887e5063c2113905dc2322bf4f2b4656e448af"
+    },
+    {
+      "id": 6,
+      "shapeID": 106,
+      "width": 16,
+      "height": 16,
+      "alphaBytes": 256,
+      "alphaValue": 255,
+      "jpegSHA256": "672ebcccf2133fc04e76fce4236bf455a2791f4e0b754f5119cd0cc5dce39e06"
+    },
+    {
+      "id": 7,
+      "shapeID": 107,
+      "width": 16,
+      "height": 16,
+      "alphaBytes": 256,
+      "alphaValue": 255,
+      "jpegSHA256": "c392562d0af4f2af59e1b5ec7fe525ff8efe785db86690c68314da42f24d1b64"
+    },
+    {
+      "id": 8,
+      "shapeID": 108,
+      "width": 16,
+      "height": 16,
+      "alphaBytes": 256,
+      "alphaValue": 255,
+      "jpegSHA256": "f9d2a831bf5f7732fb0beec28e3954d930d53863dd34f58649d5eec98b71c030"
+    }
+  ],
+  "initialBitmapPlacements": 0,
+  "frame2BitmapPlacements": 1,
+  "trigger": "one Space keydown (keyCode32); render after timeline advances",
+  "privateInputs": false,
+  "pressureTest": false
+}

@@ -1,0 +1,26 @@
+{
+  "baseReviewSHA256": "900ead1d5f9a9a2f90145c7e03c09b1d178edd51c4f10ba05d3139f32614a138",
+  "baseSourceLockSHA256": "98a0fae33b42a94ea037742e7458ff119facd8f5e4ad4f62ef9c9434cbfef97b",
+  "baseSourceSetSHA256": "097ceee6431e9c7737814bf488b2747b794ce1cbe2ae03dbec474ba88efbb9a4",
+  "candidateDiagnosticBuildReviewed": true,
+  "forbidden": [
+    "CountingRenderer",
+    "lazy_count_backend",
+    "lazy_graphic_tests",
+    "new test-only runtime feature"
+  ],
+  "modifiedSourceSetSHA256": "8700425d24eca9d0fea72bc49fe2f2f3854a7965b75f24abeff19f867d4ed53a",
+  "nativeAcceptance": false,
+  "productDelta": {
+    "afterSHA256": "50b9413ea24a04ce3b611ca94a6c3eeff9ec8d4eca426b59ca6cf34d3b7828f1",
+    "beforeSHA256": "e6d46a5d8b7593eb41117fc205972f2b754ff4626e3ab782dfc2bccc8fac0c64",
+    "patchSHA256": "032cba9b544cd447f0347b8ac286074b6491b2ab44108c4b8ed692124f936bb6",
+    "path": "core/src/display_object/graphic.rs"
+  },
+  "productionAccepted": false,
+  "runtimeBuilt": false,
+  "schemaVersion": 1,
+  "scope": "Independent source review passed for experimental candidate build only; unchanged accepted GC/audio/touch source plus one Graphic lazy handle-registration delta; production/native/browser acceptance remains false",
+  "strongMigrationRootsPresent": false,
+  "testOnlyReleaseHooksEnabled": false
+}

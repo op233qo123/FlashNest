@@ -1,0 +1,1 @@
+{"schemaVersion":1,"dispatchAllowed":false,"reason":"Local preparation only; candidate WASM not built or pinned; no actual browser run","runtimes":{"baseline":{"runID":40794075613,"files":{},"selectedWasmSHA256":null},"candidate":{"files":{},"selectedWasmSHA256":null}},"fixtures":{}}

@@ -1,0 +1,57 @@
+{
+  "localOnly": true,
+  "externalPublicationAuthorized": false,
+  "nativeAcceptance": false,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1728,
+      "sha256": "4196cf974d63119c63ca18221827f0b050b8eace153b3ead2ec83a19e7d286d1"
+    },
+    {
+      "path": "generate.py",
+      "bytes": 2762,
+      "sha256": "9e55f50fd140c8ef4e7a5af284e46baf777e9c2039f30f070b485746f8b6a4c5"
+    },
+    {
+      "path": "image.jpg",
+      "bytes": 636,
+      "sha256": "884055b0a0434e20b3be177c3411f75e6c68b0de1170ab83a1424d0464c6e1a8"
+    },
+    {
+      "path": "as/NeutralSharedRoot.as",
+      "bytes": 2136,
+      "sha256": "cf90b49bb54326abd72420cd9cf0438fdfac9911313a7f3e056ebbd06bd525d7"
+    },
+    {
+      "path": "abc/NeutralSharedRoot.abc",
+      "bytes": 1936,
+      "sha256": "be06602acfb6558e7fe1363bfe2944bad9cd0244e31af02391ad1534da868439"
+    },
+    {
+      "path": "neutral-shared-boundaries.swf",
+      "bytes": 2745,
+      "sha256": "1c88d205187a5d6d52837846eb55d26c1326a717c3331b29220add9821c244b6"
+    },
+    {
+      "path": "fixture-manifest.json",
+      "bytes": 677,
+      "sha256": "00c9936eef2c41a421723beabf36f703a9af7b0357f716110c3736c354d754ca"
+    },
+    {
+      "path": "tests/test_shared.py",
+      "bytes": 2622,
+      "sha256": "eca6b863325febdaa69d7a48956ad004a3d1718255f25f55c3f441e61105c418"
+    },
+    {
+      "path": "core-smoke.log",
+      "bytes": 435,
+      "sha256": "6ab0a2001f8943d770c883ab3d9379504d04489f4cbaba0c072bbb31986e1d89"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 573,
+      "sha256": "6960c71b473644133936ed92015e1ef78d69bb8c5abafba0ff944b53de1ba17d"
+    }
+  ]
+}

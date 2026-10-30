@@ -1,0 +1,8 @@
+{
+  "pinnedLocalCompilerImportAndNullRunner": {
+    "touch-input-repair/source/tools/asc/asc.jar": "4dc2aef13198cfa0692b2f2dda3cce10890277066d7c5aa2ac3e9c9f9a2c462e",
+    "touch-input-repair/source/target/debug/build/ruffle_core-73d259c11b992840/out/playerglobal_import.abc": "bacacb58df8390161c34e68f9e69406b9f1c9f6103bdacd3162034f42cce1eb3",
+    "touch-input-repair/source/target/debug/deps/tests-36fbcafa20f69d03": "fc15ee30b578a1c479bcb168d68fd4f61489b62036597b927725e196d5508bfc"
+  },
+  "nullLogOutcome": "intentionally empty golden mismatch; semantic markers only"
+}

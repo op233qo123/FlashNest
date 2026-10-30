@@ -1,0 +1,20 @@
+--- a/core/src/display_object/graphic.rs
++++ b/core/src/display_object/graphic.rs
+@@ -53,16 +53,11 @@
+         swf_shape: swf::Shape,
+         movie: Arc<SwfMovie>,
+     ) -> Self {
+-        let library = context.library.library_for_movie(movie.clone(), context.gc_context).unwrap();
+         let shared = GraphicShared {
+             id: swf_shape.id,
+             shape_bounds: swf_shape.shape_bounds,
+             edge_bounds: swf_shape.edge_bounds,
+-            render_handle: Some(RefCell::new(Some(
+-                context
+-                    .renderer
+-                    .register_shape((&swf_shape).into(), &MovieLibrarySource { library: &library }),
+-            ))),
++            render_handle: Some(RefCell::new(None)),
+             shape: swf_shape,
+             movie,
+             scaled_handle: RefCell::new(TessellationCache::new()),

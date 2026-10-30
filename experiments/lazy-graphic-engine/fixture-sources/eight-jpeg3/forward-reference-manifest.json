@@ -1,0 +1,9 @@
+{
+  "bytes": 1947,
+  "sha256": "d94e684dfa5344e7203b04d229e4005b7d1cba43565a4bab772d18f521115162",
+  "purpose": "Compatibility negative control: one Shape101 references not-yet-defined bitmap1, then one JPEG3 bitmap1; one Space displays Shape101. Root trace unshown=8 is inherited generic marker, NOT a count oracle for this control.",
+  "initialBitmapPlacements": 0,
+  "bitmapDefinitions": 1,
+  "shapeDefinitions": 1,
+  "expectedOutcome": "Observe, not assume baseline/candidate equivalence."
+}

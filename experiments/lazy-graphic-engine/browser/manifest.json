@@ -1,0 +1,35 @@
+{
+  "actualBrowserRun": false,
+  "dispatchAllowed": false,
+  "files": {
+    "README.md": {
+      "bytes": 3739,
+      "sha256": "75d7569a0d76f13df0a71fa0e3ab84db239371d633772723d6f8720ecf40b2e6"
+    },
+    "contract.template.json": {
+      "bytes": 285,
+      "sha256": "70e23f899797c22ee3fa5d8a28282a00bc6f69fc3d4c976b166a9a8a66276616"
+    },
+    "page.html": {
+      "bytes": 4520,
+      "sha256": "2265d5dcbe020eeece0f8798db1c7f933f38f927ec3a9d4263e1ddfbcd3066b0"
+    },
+    "requirements.txt": {
+      "bytes": 89,
+      "sha256": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574"
+    },
+    "run.py": {
+      "bytes": 8436,
+      "sha256": "ce8990867787e09e8012abe3248124252727b9321169e10e229e2662eaeacc38"
+    },
+    "test_contract.py": {
+      "bytes": 1473,
+      "sha256": "69f4fd6ca0a7305949f4d28d31be8d2aab348f13b8b337ae8915668198b84389"
+    },
+    "test_page.cjs": {
+      "bytes": 2301,
+      "sha256": "4f46970170f3140dc519ee31bbc4f7f3a83515838123fc586c855ae9365e7ae8"
+    }
+  },
+  "schemaVersion": 1
+}

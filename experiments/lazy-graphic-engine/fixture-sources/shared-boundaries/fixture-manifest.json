@@ -1,0 +1,53 @@
+{
+  "schema": "neutral-shared-boundaries-v1",
+  "bytes": 2745,
+  "sha256": "1c88d205187a5d6d52837846eb55d26c1326a717c3331b29220add9821c244b6",
+  "imageID": 1,
+  "shapeID": 101,
+  "imageSize": [
+    16,
+    16
+  ],
+  "placements": [
+    [
+      32,
+      32
+    ],
+    [
+      80,
+      32
+    ]
+  ],
+  "keys": [
+    "S",
+    "R",
+    "M",
+    "H"
+  ],
+  "stage": [
+    320,
+    240
+  ],
+  "backgroundRGBA": [
+    255,
+    255,
+    255,
+    255
+  ],
+  "maskRectangle": [
+    32,
+    32,
+    8,
+    16
+  ],
+  "insideHit": [
+    84,
+    36
+  ],
+  "outsideHit": [
+    100,
+    36
+  ],
+  "rendererCounts": "must observe, not assumed",
+  "originalEightImageFixtureUnchanged": true
+}

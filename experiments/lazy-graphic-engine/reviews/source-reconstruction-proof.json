@@ -1,0 +1,10 @@
+{
+  "acceptedEngineRun": 40794075613,
+  "acceptedFullSourceFiles": 25921,
+  "acceptedFullSourceManifestSHA256": "8677a41016f609ca4f14138565e5aec06d5d1c586dc4d6f0a33d87507a2aafde",
+  "localActualSourceSnapshotMatched": true,
+  "patchAppliesAndMatchesExactCandidateBytes": true,
+  "runtimeBuildExecutedLocally": false,
+  "soleCandidateProductDelta": "core/src/display_object/graphic.rs",
+  "testHookSourcesIncludedInRuntime": false
+}

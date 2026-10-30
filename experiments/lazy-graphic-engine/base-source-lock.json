@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "status": "ENGINE_BUILD_SOURCE_ELIGIBLE_TOUCH_DELTA_NATIVE_AND_IPA_PENDING",
+  "releaseEligible": false,
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "patches": [
+    {
+      "path": "patches/queued-goto-guard.patch",
+      "sha256": "de0acabdf957fccbc11966b67defd0a7f577cdc5a147db949e0a4f0e56c6331f"
+    },
+    {
+      "path": "patches/audio-lifecycle.patch",
+      "sha256": "89dfadc1b9d113adb01f08582237559c71a5c0e04fe712cb0e31d80f077b07b9"
+    },
+    {
+      "path": "patches/audio-recovery.patch",
+      "sha256": "631027394ab35c7ff5b8bd1da1402a649c38e913dd2b788d1a9ef514fc6aee60"
+    },
+    {
+      "path": "patches/final-composite-runtime.patch",
+      "sha256": "44feaebb0359cc305f60b6514a7898b5717237a45e3e1c2c68c94fa7802e6540"
+    },
+    {
+      "path": "patches/touch-contact-boundary.patch",
+      "sha256": "603a28f72401a7ba5ac1a9866121e5a4cdc8c425b6161c738359df503e32160f"
+    }
+  ],
+  "modifiedSourceFiles": {
+    "core/src/avm1/activation.rs": {
+      "sha256": "39169eb094d4055198930c82850c2eaab05b913161eafda8606fe09d30404b07",
+      "bytes": 126559
+    },
+    "core/src/avm1/globals/bitmap_data.rs": {
+      "sha256": "9a9e13cbd63da89d2eeb753491299c803d911b8853ef7f322ef4c1656eb99ee7",
+      "bytes": 41364
+    },
+    "core/src/avm1/globals/movie_clip.rs": {
+      "sha256": "a208f7c3cdeec9319726da2093f6a5b1f95b3555ec613ce3463b46e713bf114b",
+      "bytes": 64744
+    },
+    "core/src/avm1/globals/sound.rs": {
+      "sha256": "98dcd18c69f843a8aed1f91c5246ce3adc6fd86a745f1a8fd1d888aba66c5598",
+      "bytes": 33371
+    },
+    "core/src/avm2.rs": {
+      "sha256": "79e8008c3ed2194ea31a62bb23af649ed0d9ef13a17fd8c03e74233de4db8dc0",
+      "bytes": 24504
+    },
+    "core/src/avm2/class.rs": {
+      "sha256": "0821d46eed43b009beae8bf168f8b8b26ffb4e4e007a891ecb332b9bc9ca7749",
+      "bytes": 46380
+    },
+    "core/src/avm2/globals/flash/display/bitmap.rs": {
+      "sha256": "0a7a5f99d845e410f73eee0a24e5b123ec03b862ab9bf4e2d84f6f6b70355128",
+      "bytes": 7044
+    },
+    "core/src/avm2/globals/flash/display/bitmap_data.rs": {
+      "sha256": "53339c2b03fa458bd657fb9ea77d6786d7abf5e9ee6b0d0200a93d1ffb7a4b94",
+      "bytes": 51571
+    },
+    "core/src/avm2/globals/flash/display/display_object.rs": {
+      "sha256": "8ed9b17c053233fc1cbcc5401be04ead7804f88f5d51c11b1cc535dacdaf2196",
+      "bytes": 36371
+    },
+    "core/src/avm2/globals/flash/display/loader_info.rs": {
+      "sha256": "bc54996d7318af79b3aa44c0026c22327d8d4054f0dbc35e18cea03463f16e64",
+      "bytes": 18572
+    },
+    "core/src/avm2/globals/flash/display/simple_button.rs": {
+      "sha256": "208c7246426f0566f69a81f18486e72ae8387127530eacc2060de3b89b44d365",
+      "bytes": 11161
+    },
+    "core/src/avm2/globals/flash/display/sprite.rs": {
+      "sha256": "9705f9b96af16722146430dc0a56bbe2f2cc0567bb2a415e323a588d3e482396",
+      "bytes": 10032
+    },
+    "core/src/avm2/globals/flash/media/sound.rs": {
+      "sha256": "938ada6484f70264a07f50c6426902223f52a5fd59856c9141edeaa06ef72bca",
+      "bytes": 10568
+    },
+    "core/src/avm2/globals/flash/media/video.rs": {
+      "sha256": "ce27172212338a7e8ba67bd467d11da5ec194ba2a042ae6e19df2d661b115649",
+      "bytes": 3698
+    },
+    "core/src/avm2/globals/flash/text/font.rs": {
+      "sha256": "e197fd2567441c2b45c5faf03d4bcf58867c387c355e5931a72809bcf4d966f3",
+      "bytes": 5246
+    },
+    "core/src/avm2/object/bytearray_object.rs": {
+      "sha256": "77046b4bb7222636a4e13f11b61b1d9c3b29b963d98152fb2610fb0ba89e24ba",
+      "bytes": 5512
+    },
+    "core/src/avm2/object/font_object.rs": {
+      "sha256": "946439a973a5092e1390f51cd17004e651be614ede52ab3065b679321d3ea5c3",
+      "bytes": 2341
+    },
+    "core/src/avm2/object/loaderinfo_object.rs": {
+      "sha256": "e71aa0b769e4aea84a0aacef5b3f599167faab7ea278af92b63461e68b22b027",
+      "bytes": 12730
+    },
+    "core/src/avm2/object/sound_object.rs": {
+      "sha256": "75255ff682cdee399d48c02fcfe37883205424b05e57859f913fe7e84ba885f6",
+      "bytes": 9568
+    },
+    "core/src/avm2/script.rs": {
+      "sha256": "6b8f18b1fcba1f304f5c4c988f8c0f2f4db63566b5e35eb495422de872c4dcba",
+      "bytes": 23864
+    },
+    "core/src/backend/audio.rs": {
+      "sha256": "df62b3cdf7ce3875e1b5d414d4c6e096ae5ef2a23f17de2b3515ac024a40edce",
+      "bytes": 33468
+    },
+    "core/src/backend/audio/decoders.rs": {
+      "sha256": "fbd2d8eed862988efbcb8d253ab022b653e44cfd050ac87a8dfb68de6116a7d4",
+      "bytes": 21102
+    },
+    "core/src/backend/audio/mixer.rs": {
+      "sha256": "1b9b876dcc2da329b28452504e0127f605d9b21e512cc94ee870f52310bf2826",
+      "bytes": 40275
+    },
+    "core/src/character.rs": {
+      "sha256": "cd79531f430691f2077011fef3f6cc28b401c9a1324b1cb2ae4796bd6643e6a4",
+      "bytes": 6233
+    },
+    "core/src/context.rs": {
+      "sha256": "9a22e63af4d610559e5a7e8e1b13b96a1a988ad2c2a8d459ddd5797f2a3bd87f",
+      "bytes": 25562
+    },
+    "core/src/debug_ui/display_object.rs": {
+      "sha256": "d1a45248d8fe51be6d6335cce35e6cb9f70da7e58184e73d6e627417b13d0823",
+      "bytes": 77569
+    },
+    "core/src/debug_ui/movie.rs": {
+      "sha256": "4ec4023ad26772a896fc4fe3da02b46f425aeac747c1405ff7f4b2741f92d20e",
+      "bytes": 12764
+    },
+    "core/src/display_object.rs": {
+      "sha256": "22266b687d50f769e3debaa6e23c40bf7f93012043830bfd8f004a48e74f7326",
+      "bytes": 121973
+    },
+    "core/src/display_object/avm1_button.rs": {
+      "sha256": "ee4e663edc250a884955e9f8c192ce670b070efda09de6f86fd96dcb7a9de3cb",
+      "bytes": 24513
+    },
+    "core/src/display_object/avm2_button.rs": {
+      "sha256": "ebb9950e1c257685e55a60b0de2db24a2c8199e655560d36f2dbe1a5b4a01b7e",
+      "bytes": 31525
+    },
+    "core/src/display_object/container.rs": {
+      "sha256": "676b9c07e37c182d6551bd0bc9a4d36bdc5aee619d47f8fe14aff3995be0cf8d",
+      "bytes": 45745
+    },
+    "core/src/display_object/edit_text.rs": {
+      "sha256": "a6c4672be50e8d2d8bd9e120070665f7d703ef872f62348ca05ab92d71416b34",
+      "bytes": 132106
+    },
+    "core/src/display_object/graphic.rs": {
+      "sha256": "e6d46a5d8b7593eb41117fc205972f2b754ff4626e3ab782dfc2bccc8fac0c64",
+      "bytes": 12987
+    },
+    "core/src/display_object/morph_shape.rs": {
+      "sha256": "998dd3c8fc2e8eac010553d2eb726625bd1fb0d4cfc1e22eb4ef767151a23838",
+      "bytes": 23082
+    },
+    "core/src/display_object/movie_clip.rs": {
+      "sha256": "9404365744d36ab47eefd1f57626dfacda4a8eba34530963fd56dae69523ae1d",
+      "bytes": 193277
+    },
+    "core/src/display_object/text.rs": {
+      "sha256": "596a29838f993b86c86bafa06ccb0ad4cda94918ee74dd22777d1887a7528e7b",
+      "bytes": 14048
+    },
+    "core/src/external.rs": {
+      "sha256": "cce920c3c54ac5008a2f04ed77825bfa40bbce7509f25ff568d37a711bb3baa7",
+      "bytes": 14058
+    },
+    "core/src/html/layout/context.rs": {
+      "sha256": "b3a58588477b978338f6b12490e601f7267ff44c2527d901f708b4a1aa9a77e4",
+      "bytes": 3457
+    },
+    "core/src/html/text_format.rs": {
+      "sha256": "85e34bc8d8fae775231d74cfea4a86f20a9b28b2eb7e4a3a0c7ab079c81d6171",
+      "bytes": 75413
+    },
+    "core/src/library.rs": {
+      "sha256": "ddd9988232bddfa7222d7d796e66c0af8d0b4febe015b439d08b5ee65507e0f6",
+      "bytes": 34444
+    },
+    "core/src/loader.rs": {
+      "sha256": "a8a1faf8c1e3bcf471bc3d631ecca84e38775fd30b8af69b64204867c715d54c",
+      "bytes": 113589
+    },
+    "core/src/player.rs": {
+      "sha256": "86b8fc75c30137049e663619d4318917331da36a78f7b6b4b0d5180fb1d31d75",
+      "bytes": 132892
+    },
+    "render/src/backend.rs": {
+      "sha256": "7fa4fe412b019aa8c0e7d0e892a83239e4246135cf2343f3af085dc1d77b5f33",
+      "bytes": 18220
+    },
+    "render/webgl/src/lib.rs": {
+      "sha256": "2979d295bc76550d6c13d706cd7e8bb0794faa3aecf9ec6704a87187ded037a9",
+      "bytes": 67038
+    },
+    "render/wgpu/src/backend.rs": {
+      "sha256": "791f3a51e16719770739ae82e4dca7bf4b843252dc80e9b175e2dd2102176ca0",
+      "bytes": 52104
+    },
+    "render/wgpu/src/surface.rs": {
+      "sha256": "f0e7655c8ea7422a0c51702dee6cfb01cde1de4b82f49add03bad880219167e1",
+      "bytes": 15030
+    },
+    "render/wgpu/src/surface/commands.rs": {
+      "sha256": "7652d605d47e4b2568859e79a0dabb3994ec3005c1f1d16bae62fa1b06641c5c",
+      "bytes": 35392
+    },
+    "render/wgpu/src/surface/target.rs": {
+      "sha256": "769e55726b0ca1af6251210c922332d7066553dabbcec4637a97641046e42928",
+      "bytes": 13728
+    },
+    "web/packages/core/src/internal/audio-operation.ts": {
+      "sha256": "32986bab21da5cc3417ce2b67dfd6a3f829fa2b5c5910805e4a833fb1843a2cb",
+      "bytes": 6286
+    },
+    "web/packages/core/src/internal/builder.ts": {
+      "sha256": "e2a5fec80bb51399d933b431c4156172fef837135c515355f9e1612d62f20b56",
+      "bytes": 6615
+    },
+    "web/packages/core/src/internal/player/inner.tsx": {
+      "sha256": "657d499e59031824cc1e976fa21f3b74d72f9d855ff7a0e3f016676932b3df77",
+      "bytes": 92823
+    },
+    "web/packages/core/src/public/config/default.ts": {
+      "sha256": "12d9c925f5e19c1d4601f992604e1352c3720999a0f8a9eb1828265e006f5237",
+      "bytes": 1726
+    },
+    "web/packages/core/src/public/config/load-options.ts": {
+      "sha256": "ec5df0e3a3666d9c23402ab827fec93a02c81faacbe941e3bac1f3546b8757e2",
+      "bytes": 23055
+    },
+    "web/packages/core/src/ruffle-imports.ts": {
+      "sha256": "0cd19f0f895e3a3534dbb4ec29567cc569e871b8d8b4593b367fc35455f31111",
+      "bytes": 1652
+    },
+    "web/packages/core/test/render-scale.ts": {
+      "sha256": "5d27bb6111d81098cdb0923adf0430046efe9904972713fb4d13d815bc177ae6",
+      "bytes": 2065
+    },
+    "web/src/audio.rs": {
+      "sha256": "e03078285ccccc4734837f6bb79559e008a307e7acd2a0d6649c617d1dcb9dc1",
+      "bytes": 12785
+    },
+    "web/src/builder.rs": {
+      "sha256": "1de5e6b9c21b2def41e6c692e0f6993557602f6a94fd9e9840f0c61d94067b65",
+      "bytes": 30266
+    },
+    "web/src/lib.rs": {
+      "sha256": "006829db6fa8ca989bbb258d3c9328ea80a100e53e98c9aa4fc988f8ede02e85",
+      "bytes": 57237
+    }
+  },
+  "sourceDateEpoch": 1791399335,
+  "requiredFeatures": [
+    "jpegxr"
+  ],
+  "requiredWasmFlavors": [
+    "extensions",
+    "mvp"
+  ],
+  "wasmOptRequired": true,
+  "runtimeValidated": false,
+  "productionGcReview": {
+    "path": "reviews/touch-engine-source-eligibility.json",
+    "sha256": "900ead1d5f9a9a2f90145c7e03c09b1d178edd51c4f10ba05d3139f32614a138"
+  },
+  "nativeAcceptance": null,
+  "finalRuntimeBrowserAcceptance": null,
+  "toolchain": {
+    "rust": "1.99.1",
+    "node": "24.22.1",
+    "npm": "11.19.1",
+    "wasmBindgen": "0.2.127",
+    "binaryen": "129",
+    "clang": "18",
+    "java": "21.0.13+9"
+  },
+  "locks": {
+    "Cargo.lock": "c63981977750d740c24a70fdd1582f9f4b40f9bb8bf18fd8ed2790e576628e0d",
+    "web/package-lock.json": "fff432c1cd6a43c1b907dca1ebe438d38f28748368060cd1769bb9cb5bf05147"
+  },
+  "forbiddenProductionFeatures": [
+    "flashnest_test_weak_movie_registry",
+    "flashnest_observation"
+  ],
+  "workflowDispatchAllowed": true,
+  "engineBuildEligible": true
+}

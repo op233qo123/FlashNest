@@ -1,0 +1,40 @@
+{
+  "dispatchAllowed": true,
+  "engine": {
+    "artifactID": 12862634818,
+    "bytes": 13365799,
+    "provenanceSHA256": "6fa95c80d75bdb7073576f6833b1e85c61c91227d232fa91e70ad9be57806a6f",
+    "runID": 40794075613,
+    "runtimeInventorySHA256": "572ed90d2fc90a892d2f2d6bcd2dc693b35d593bb7decf3e1276f5481989a078",
+    "sha256": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a",
+    "sourceCommit": "aaac9ee3dc162fb038dfd0c8595a5c0580f039e0",
+    "sourceSetSHA256": "097ceee6431e9c7737814bf488b2747b794ce1cbe2ae03dbec474ba88efbb9a4",
+    "wasmFlavorBySHA256": {
+      "6c999b09a43da7f83086ccd331753de65523b6640a39255fb10212e10087bb4a": "extensions",
+      "bfac1872d0320b7529ef2edc3a6ce5bdb245c7635da54c9c0d33c4ddc183e94a": "mvp"
+    },
+    "wasmSHA256": [
+      "bfac1872d0320b7529ef2edc3a6ce5bdb245c7635da54c9c0d33c4ddc183e94a",
+      "6c999b09a43da7f83086ccd331753de65523b6640a39255fb10212e10087bb4a"
+    ]
+  },
+  "engineArchiveTransport": {
+    "bytes": 13365799,
+    "kind": "repository-exact-archive-parts",
+    "parts": [
+      {
+        "bytes": 7340032,
+        "path": "engine-mirrors/ruffle-composite-40794075613.zip.part1",
+        "sha256": "e52e16625953c947e23238d02c3867212faa176a8fe45c13d74bcb28a37d7ccd"
+      },
+      {
+        "bytes": 6025767,
+        "path": "engine-mirrors/ruffle-composite-40794075613.zip.part2",
+        "sha256": "e11b3cce11f74ceafb763c39bd5fec35975ddbcc58f86dbde6f7e7aa1669762e"
+      }
+    ],
+    "repository": "op233qo123/FlashNest",
+    "sha256": "f7bdfb860b22acac4e2f5985341d158512502855ed1be714a5ec06359e047e9a"
+  },
+  "reason": "Explicit user authorization for one candidate engine build and focused WebGL experiment; original accepted engine archive verification only, not new baseline acceptance"
+}

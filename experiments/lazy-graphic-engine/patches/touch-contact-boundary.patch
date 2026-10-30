@@ -1,0 +1,174 @@
+diff --git a/core/src/player.rs b/core/src/player.rs
+--- a/core/src/player.rs
++++ b/core/src/player.rs
+@@ -1094,8 +1094,39 @@
+             | PlayerEvent::GamepadButtonUp { .. }
+             | PlayerEvent::Ime { .. }
+             | PlayerEvent::TextInput { .. }
+-            | PlayerEvent::TextControl { .. } => self.handle_input_event(event),
+-        }
++            | PlayerEvent::TextControl { .. } => self.handle_input_event(event, None),
++        }
++    }
++
++    /// Begin a touch without inventing a preceding mouse move event.
++    /// Touch has no hover position: AVM1 down listeners must observe this contact,
++    /// while button rollover/press processing still runs in its normal second wave.
++    /// Mouse and pen input must continue to use `handle_event`.
++    pub fn handle_touch_start(
++        &mut self,
++        x: f64,
++        y: f64,
++        button: MouseButton,
++        index: Option<usize>,
++    ) -> bool {
++        self.handle_input_event(
++            PlayerEvent::MouseDown {
++                x,
++                y,
++                button,
++                index,
++            },
++            Some(TouchBoundary::Start),
++        )
++    }
++
++    /// End a touch at its actual release position, without a synthetic move.
++    /// Existing stopDrag and second-wave processing retain their normal ordering.
++    pub fn handle_touch_end(&mut self, x: f64, y: f64, button: MouseButton) -> bool {
++        self.handle_input_event(
++            PlayerEvent::MouseUp { x, y, button },
++            Some(TouchBoundary::End),
++        )
+     }
+ 
+     fn handle_focus_event(&mut self, event: PlayerEvent) -> bool {
+@@ -1130,12 +1161,36 @@
+     /// 6. Then, we dispatch the event through AVM1 global listener objects.
+     /// 7. The AVM1 action queue is drained.
+     /// 8. Mouse state is updated. This triggers button rollovers, which are a
+-    ///    second wave of event processing.
+-    fn handle_input_event(&mut self, event: PlayerEvent) -> bool {
++    ///    second wave of event processing. Dedicated touch start/end entrypoints
++    ///    synchronize only coordinates before step 2, because touch has no hover;
++    ///    they preserve this second wave and its post-callback transform update.
++    fn handle_input_event(
++        &mut self,
++        event: PlayerEvent,
++        touch_boundary: Option<TouchBoundary>,
++    ) -> bool {
+         let mut player_event_handled = false;
+         let prev_mouse_buttons = self.input.get_mouse_down_buttons();
+         let Some(event) = self.input.process_event(event) else {
+             return false;
++        };
++
++        // Only dedicated touch boundary entry points may synchronize early.
++        // Keep the original position for the later moved comparison, and recompute
++        // the transform after callbacks as before (scripts may change the stage).
++        let touch_previous_position = if let Some(boundary) = touch_boundary {
++            let (x, y) = match (boundary, &event) {
++                (TouchBoundary::Start, InputEvent::MouseDown { x, y, .. })
++                | (TouchBoundary::End, InputEvent::MouseUp { x, y, .. }) => (*x, *y),
++                _ => unreachable!("touch boundary must match the accepted mouse event"),
++            };
++            let previous = self.mouse_position;
++            let inverse_view_matrix =
++                self.mutate_with_update_context(|context| context.stage.inverse_view_matrix());
++            self.mouse_position = inverse_view_matrix * Point::from_pixels(x, y);
++            Some(previous)
++        } else {
++            None
+         };
+ 
+         let changed_mouse_buttons = self
+@@ -1443,7 +1498,7 @@
+         {
+             let inverse_view_matrix =
+                 self.mutate_with_update_context(|context| context.stage.inverse_view_matrix());
+-            let prev_mouse_position = self.mouse_position;
++            let prev_mouse_position = touch_previous_position.unwrap_or(self.mouse_position);
+             self.mouse_position = inverse_view_matrix * Point::from_pixels(x, y);
+ 
+             // Update the dragged object here to keep it constantly in sync with the mouse position.
+@@ -3402,3 +3457,10 @@
+     /// Represents the debug version of Flash Player, i.e. flashplayerdebugger.
+     Debug,
+ }
++
++/// Touch has no preceding hover; only its discrete contact boundaries synchronize early.
++#[derive(Clone, Copy)]
++enum TouchBoundary {
++    Start,
++    End,
++}
+diff --git a/web/src/lib.rs b/web/src/lib.rs
+--- a/web/src/lib.rs
++++ b/web/src/lib.rs
+@@ -670,15 +670,26 @@
+                             2 => MouseButton::Right,
+                             _ => MouseButton::Unknown,
+                         };
+-                        let event = PlayerEvent::MouseDown {
+-                            x: js_event.offset_x() * device_pixel_ratio,
+-                            y: js_event.offset_y() * device_pixel_ratio,
+-                            button,
+-                            // TODO The index should be provided by the browser, not calculated.
+-                            index: None,
+-                        };
++                        let x = js_event.offset_x() * device_pixel_ratio;
++                        let y = js_event.offset_y() * device_pixel_ratio;
++                        let is_touch = js_event.pointer_type() == "touch";
+                         let handled = instance
+-                            .with_core_mut(|core| core.handle_event(event))
++                            .with_core_mut(|core| {
++                                // A touch starts without a preceding hover/move. Synchronize
++                                // its position without emitting an artificial MouseMove.
++                                // Pen (including hover) and mouse retain their existing path.
++                                if is_touch {
++                                    core.handle_touch_start(x, y, button, None)
++                                } else {
++                                    core.handle_event(PlayerEvent::MouseDown {
++                                        x,
++                                        y,
++                                        button,
++                                        // TODO The index should be provided by the browser, not calculated.
++                                        index: None,
++                                    })
++                                }
++                            })
+                             .unwrap_or_default();
+ 
+                         if handled && matches!(button, MouseButton::Right) {
+@@ -702,18 +713,21 @@
+                                 .unchecked_ref::<Element>()
+                                 .release_pointer_capture(js_event.pointer_id());
+                         }
+-                        let event = PlayerEvent::MouseUp {
+-                            x: js_event.offset_x() * instance.device_pixel_ratio,
+-                            y: js_event.offset_y() * instance.device_pixel_ratio,
+-                            button: match js_event.button() {
+-                                0 => MouseButton::Left,
+-                                1 => MouseButton::Middle,
+-                                2 => MouseButton::Right,
+-                                _ => MouseButton::Unknown,
+-                            },
++                        let x = js_event.offset_x() * instance.device_pixel_ratio;
++                        let y = js_event.offset_y() * instance.device_pixel_ratio;
++                        let button = match js_event.button() {
++                            0 => MouseButton::Left,
++                            1 => MouseButton::Middle,
++                            2 => MouseButton::Right,
++                            _ => MouseButton::Unknown,
+                         };
++                        let is_touch = js_event.pointer_type() == "touch";
+                         let _ = instance.with_core_mut(|core| {
+-                            core.handle_event(event);
++                            if is_touch {
++                                core.handle_touch_end(x, y, button);
++                            } else {
++                                core.handle_event(PlayerEvent::MouseUp { x, y, button });
++                            }
+                         });
+ 
+                         if instance.has_focus {

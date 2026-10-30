@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "reviewedAtUTC": "2026-10-29T00:21:00Z",
+  "scope": "Independent two-file touch-coordinate delta review, inheriting unchanged accepted reclamation source; eligible for experimental engine build only",
+  "productionAccepted": true,
+  "strongMigrationRootsPresent": false,
+  "testOnlyReleaseHooksEnabled": false,
+  "modifiedSourceSetSHA256": "097ceee6431e9c7737814bf488b2747b794ce1cbe2ae03dbec474ba88efbb9a4",
+  "modifiedSourceFileCount": 58,
+  "inheritedProductionReview": {
+    "path": "flashnest-published-recovery/experiments/final-composite/reviews/engine-source-eligibility.json",
+    "sha256": "74fd9c13bde56ba122a7f17afe003045fa08b0f17a7c15e9badb5ed06155e9d7",
+    "bytes": 3053,
+    "scope": "Historical accepted composite GC/audio/density policy; not rerun or newly measured here"
+  },
+  "delta": {
+    "baseCommit": "89a7049965f3090e706265670df309a5128233ac",
+    "acceptedCompositeSource": "flashnest-published-recovery/experiments/final-composite/source-lock.json",
+    "files": [
+      {
+        "path": "core/src/player.rs",
+        "beforeSha256": "7df0827413fec8c95994e4160d930d4d35796ba957f3edf3326da846d604a61f",
+        "afterSha256": "86b8fc75c30137049e663619d4318917331da36a78f7b6b4b0d5180fb1d31d75",
+        "bytes": 132892
+      },
+      {
+        "path": "web/src/lib.rs",
+        "beforeSha256": "b28a878ccc1909e5e55b8ee134323421a978163de330f866d289fbab5948dd8f",
+        "afterSha256": "006829db6fa8ca989bbb258d3c9328ea80a100e53e98c9aa4fc988f8ede02e85",
+        "bytes": 57237
+      }
+    ],
+    "patchSha256": "603a28f72401a7ba5ac1a9866121e5a4cdc8c425b6161c738359df503e32160f"
+  },
+  "independentChecks": {
+    "all58MappedSourceHashesAndSizesMatch": true,
+    "onlyTwoMappedFilesChanged": true,
+    "patchReappliedToAcceptedBeforeMatchesByteExactly": true,
+    "extraDragInvocationAdded": false,
+    "ordinaryMousePenDispatchChanged": false,
+    "secondWaveOrderingPreserved": true
+  },
+  "localResults": {
+    "isolatedCorePassed": 130,
+    "targetedTouchCasesAmongCore": 6,
+    "unchangedMouseGoldenPassed": 9,
+    "typedTouchGoldenPassed": 9,
+    "wasm32WebCargoCheckPassed": true,
+    "acceptedBeforeTargetedFailed": 4,
+    "acceptedBeforeControlsPassed": 2,
+    "sharedTargetCollisionLogExcluded": true
+  },
+  "evidence": {
+    "touch-input-repair/core-all-tests.log": {
+      "sha256": "5878c8c343733a221dc957a012b454f8f99cec3fbb9d96d514e6dc1939a959cd",
+      "bytes": 10285
+    },
+    "touch-input-repair/web-check.log": {
+      "sha256": "3c0cc7b3f885257212e95a29b83b46f39a2756293d3629b2f59fd20abeba4d57",
+      "bytes": 13911
+    },
+    "touch-input-repair/touch-before-red-tests.log": {
+      "sha256": "d64605c4b80ba27327a03ac1271e746a9492dae955bde373626718c30818740b",
+      "bytes": 4012
+    },
+    "touch-input-repair/golden-isolated-build.log": {
+      "sha256": "a227b1550e8f34ffdf4eb8915aa94cd27f14322b198a333d451d9a401382c51a",
+      "bytes": 5384
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm1_clip_event_propagation_order.log": {
+      "sha256": "e4a54fe46124ac5fb8e93ce940493d1b55b6748c202ca220a54dfea1eb70b2e6",
+      "bytes": 158
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm1_drag_drop.log": {
+      "sha256": "573ea9a32a8b66ed7c66fdcfaf7a56c57c7245015375b05771db769f5adf99bc",
+      "bytes": 139
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm1_hitarea_remove_owner_drag.log": {
+      "sha256": "0f6b303c936cd548b23ac267151aa58c5140262acf2ea4b1838c6a0525204e38",
+      "bytes": 155
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm1_hitarea_sweep.log": {
+      "sha256": "ae299e3b2deaa16b38395745e87498fd761730b272d8ea46faf462420ad26cfc",
+      "bytes": 143
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm1_mouse_events.log": {
+      "sha256": "906785502d2b85c09bc45cd2495091772c7bc32bd9a4b616a95304f26cbf27bf",
+      "bytes": 142
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm1_mouse_events_visible_enabled.log": {
+      "sha256": "05d8d212de5e0e0590db8c8ba2b4d2c1befaed9edc8d9fdfcd00b2390545cb33",
+      "bytes": 158
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm1_mouse_hover_events_while_dragging.log": {
+      "sha256": "229b3e2725b45d2983a9a57bf089cb5aa1627e86eb6db13cbeb52cdb890c102b",
+      "bytes": 163
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm2_mouse_click_events.log": {
+      "sha256": "3490499ff87e1d43e10e3a7d8e79a12f4d2320dd1bdb7e846a4cba48e96c02fb",
+      "bytes": 148
+    },
+    "touch-input-repair/goldens-isolated-mouse/avm2_mouseevent_stagexy.log": {
+      "sha256": "78af836b995ac5db4aa75691117af831e03cfc4e3b58ef1312651e82e4a0e22a",
+      "bytes": 148
+    },
+    "touch-input-repair/goldens-isolated-touch/avm1_clip_event_propagation_order.log": {
+      "sha256": "221edf435c0e47d72625f06fcd7ed8937a60917f1f1877c52c70ba16d8a12154",
+      "bytes": 158
+    },
+    "touch-input-repair/goldens-isolated-touch/avm1_drag_drop.log": {
+      "sha256": "3ec65d727089c9b063c774e0c49149748aca908e1a809a21c8b5969ad91e5909",
+      "bytes": 139
+    },
+    "touch-input-repair/goldens-isolated-touch/avm1_hitarea_remove_owner_drag.log": {
+      "sha256": "1d37a75e3c5328f3ed2a67e7d9104b644a23d36b220cdd81fcc022063a17aa5b",
+      "bytes": 155
+    },
+    "touch-input-repair/goldens-isolated-touch/avm1_hitarea_sweep.log": {
+      "sha256": "b992c375fc6fbf00d6a392bc25fb5e42bf09ec2ddddcd45693c34fc811108fa9",
+      "bytes": 143
+    },
+    "touch-input-repair/goldens-isolated-touch/avm1_mouse_events.log": {
+      "sha256": "906785502d2b85c09bc45cd2495091772c7bc32bd9a4b616a95304f26cbf27bf",
+      "bytes": 142
+    },
+    "touch-input-repair/goldens-isolated-touch/avm1_mouse_events_visible_enabled.log": {
+      "sha256": "d25115e744115d8f4ec160b48bb571fd798c94c7b87f75bbe53ef610260d71a4",
+      "bytes": 158
+    },
+    "touch-input-repair/goldens-isolated-touch/avm1_mouse_hover_events_while_dragging.log": {
+      "sha256": "e9d7dc4ae1ad8eee769a2f0f09264d93faf41a5ca69c19115d9d465bc8bb6dde",
+      "bytes": 163
+    },
+    "touch-input-repair/goldens-isolated-touch/avm2_mouse_click_events.log": {
+      "sha256": "be30a9af29b59effd8c1d9cabe5f3a0e5f59914d6bded0d74392ac4b71a07c44",
+      "bytes": 148
+    },
+    "touch-input-repair/goldens-isolated-touch/avm2_mouseevent_stagexy.log": {
+      "sha256": "7cc40276fa68fa41aa38f5262f6b1cfee2363fd599c480ed89fe515b387b5dfe",
+      "bytes": 148
+    }
+  },
+  "nativeAcceptance": false,
+  "browserAcceptance": false,
+  "ipaAcceptance": false,
+  "physicalDeviceAcceptance": false,
+  "runtimeValidated": false,
+  "remainingGates": [
+    "Actual release-equivalent extensions/MVP WASM build with exact provenance and complete notices",
+    "Final runtime browser geometry/input/fallback validation",
+    "Exact iOS 18.2 simulator native picker, density/status, save and audio recovery validation",
+    "Final test IPA byte correspondence and user delivery"
+  ],
+  "limitations": [
+    "Known weak-library and owning-audio retention risks repaired; this does not identify or certify the phone WebContent termination cause.",
+    "Large-fixture peak remains approximately 516 MiB; late in-process RSS fall is observed but is not a stable plateau or guaranteed memory-pressure safety.",
+    "Normal-frame GC debt targets are object credits, not a wall-clock or maximum-frame-latency guarantee.",
+    "Native sound output, real device GPU behavior and total active audio graph count are not certified by these host tests.",
+    "MVP shipping loader path execution remains unestablished unless a supported natural route is observed.",
+    "This is bounded source/core compatibility acceptance, not final WASM build or browser/native acceptance.",
+    "Pointercancel behavior is unchanged and not certified as repaired; no synthetic cancellation release was added.",
+    "Before/after tests use isolated targets; core-all-tests.invalid-shared-target.log is excluded because it ran the wrong old binary.",
+    "Automatic-renderer missing native pixels remains unresolved; local test passes are not visibility proof."
+  ]
+}

@@ -1,0 +1,25 @@
+
+running 1 test
+test neutral_shared ... FAILED
+
+failures:
+
+---- neutral_shared ----
+assertion failed: `(ruffle_actual == flash_expected)`
+
+Diff < left / right > :
+<NEUTRAL_SHARED ready
+<NEUTRAL_SHARED shown
+<NEUTRAL_SHARED redrawn
+<NEUTRAL_SHARED masked
+<NEUTRAL_SHARED hit inside=true outside=false
+<
+
+
+
+
+failures:
+    neutral_shared
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.19s
+
