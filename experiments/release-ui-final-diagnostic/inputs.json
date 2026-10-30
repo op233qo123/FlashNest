@@ -1,0 +1,23 @@
+{
+  "baseInputsSHA256": "9d5e7a8debeae79f0a372ec09c1ac771ed93a764e88cf0ff2b09ca85f798456b",
+  "diagnosticOnly": true,
+  "dispatchAllowed": true,
+  "dispatchReason": "Authorized final one-method UI failure-location diagnostic only; original assertions and timeouts unchanged; no product changes, release build, IPA or repeat-until-pass loop.",
+  "schemaVersion": 1,
+  "selectedReleaseGatePassed": false,
+  "sourceFiles": {
+    "README.md": "20fd98c13aebe734c47ae356811588477b905b056516ae017c450d9bfe7f052a",
+    "collect_evidence.py": "f2dd10e14e88c2c544604b45375ea17c8d7c5e05ba34f8b1938861c088edf116",
+    "overlay.py": "9e13a52387716538f622283376fb3161cf4e817cd2e1df45212e7f4059b5adbf",
+    "run_ui.py": "8e4f5e5d618431bdcc9eca2c03666cf0d1865fd9b296e703c591b6fae5183567",
+    "test_collector.py": "d3b9a58ec4975c74d73ccf42781111bae40027caa5c452b17e73ee9fb6e45578",
+    "test_overlay.py": "f1e50c78d897ae10e7a51d8aedcbe7d080819d2ecf960d3c7bd2f7790a337cf9",
+    "workflow.yml": "4059875c95695745951275eee05b3f428920d2d38a4abe89e707bfdb05fada71"
+  },
+  "testOnlyOverlay": {
+    "afterBytes": 16275,
+    "afterSHA256": "3dbdf9d3ff6a54f707cbf5cea8c8b20c774dafc11fd1e197fc76cd13f50b3bfb",
+    "beforeSHA256": "b493d0c5d3986727bd80aad166d944d07d37312b061d8cabf69266dcb1269405",
+    "path": "UITests/LifecyclePlayerUITests.swift"
+  }
+}
