@@ -1,0 +1,98 @@
+name: Build loading-phase DIAGNOSTIC EXPERIMENTAL UNVERIFIED FlashNest 1.5.6 build20 IPA
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-device-phase-diagnostic-ipa-156-build20
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: macos-14
+    timeout-minutes: 50
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - name: Require explicit experimental scope; no full native acceptance
+        id: contract
+        run: |
+          set -euo pipefail
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/test_experiment.py
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/experiment.py preflight
+          test -x "$DEVELOPER_DIR/usr/bin/xcodebuild"
+          test "$(xcodebuild -version | head -1)" = 'Xcode 16.2'
+          test "$(xcrun --sdk iphoneos --show-sdk-version)" = '18.2'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 9bc000e37695696f2427b25fe08efe4993bf22e5
+          path: source-checkout
+          persist-credentials: false
+      - name: Stage frozen experimental App with explicit low-sampling override
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/experiment.py stage --checkout source-checkout --output experimental-package
+      - name: Diagnostic JS and source-contract controls against staged bytes
+        env:
+          PHASE_APP: experimental-package/app
+        run: |
+          set -euo pipefail
+          node --check experimental-package/app/App/Resources/Web/shell.js
+          node recipe/experiments/device-phase-diagnostic-ipa-156-build20/checks/test_phase.js
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/checks/test_server_phase.py
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/checks/test_native_contract.py
+      - name: Use authenticated XcodeGen and locked package dependency
+        working-directory: experimental-package/app
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 120 https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  '"$RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-experimental"
+          "$RUNNER_TEMP/xcodegen-experimental/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Focused native loading-phase tests, not full game regression
+        run: |
+          set -euo pipefail
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/run_focused_tests.py experimental-package/app focused-evidence
+      - name: Build unsigned Release device App only
+        working-directory: experimental-package/app
+        run: |
+          set -euo pipefail
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNest -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - name: Package and inspect experimental unsigned IPA; never full acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test ! -e experimental-package/artifacts
+          mkdir experimental-package/artifacts
+          bash experimental-package/app/scripts/package_unsigned.sh experimental-package/app/build/Build/Products/Release-iphoneos/FlashNest.app experimental-package/artifacts/FlashNest-1.5.6-build20-EXPERIMENTAL-UNVERIFIED-unsigned.ipa
+          python3 recipe/experiments/device-phase-diagnostic-ipa-156-build20/experiment.py verify --ipa experimental-package/artifacts/FlashNest-1.5.6-build20-EXPERIMENTAL-UNVERIFIED-unsigned.ipa --app experimental-package/app --output experimental-package --record experimental-package/artifacts/EXPERIMENTAL-provenance.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-1.5.6-build20-EXPERIMENTAL-UNVERIFIED-unsigned
+          path: |
+            experimental-package/artifacts/FlashNest-1.5.6-build20-EXPERIMENTAL-UNVERIFIED-unsigned.ipa
+            experimental-package/artifacts/FlashNest-1.5.6-build20-EXPERIMENTAL-UNVERIFIED-unsigned.ipa.sha256
+            experimental-package/artifacts/EXPERIMENTAL-provenance.json
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-build20-loading-phase-focused-tests
+          path: |
+            focused-evidence/focused.log
+            focused-evidence/summary.json
+            focused-evidence/verification.json
+          if-no-files-found: warn
+          retention-days: 7
