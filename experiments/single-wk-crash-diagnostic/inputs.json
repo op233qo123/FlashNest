@@ -1,0 +1,16 @@
+{
+  "baseInputsSHA256": "f579172a78e05cc26f8a8a27646144399005e5760fbcbf0ecd5582a8cdf393d3",
+  "diagnosticOnly": true,
+  "dispatchAllowed": true,
+  "dispatchReason": "Authorized necessary diagnostic retry of the single original ZIP runtime selector with bounded sanitized crash collection; no product changes, probe, IPA or release.",
+  "schemaVersion": 1,
+  "selectedReleaseGatePassed": false,
+  "sourceFiles": {
+    "README.md": "fb9ecabfe67c337f93bb013cb68391935419f3cae36b4f37e25ad3c9f04312cd",
+    "collect_crash.py": "d3e3b4e375ad7d1568f4e3f004631b072e280503ea796e1e4c96405e32581a15",
+    "run_single.py": "ac5c8afd3613b12bc7e4ae6ba1489b9f61de3edf282a1c06ef74e472d6890118",
+    "test_collector.py": "e992cb7e085ad6b33caf0c3d8e7a378508e52405339791314eace307fab3d857",
+    "test_runner.py": "be06951217c609786c04a5689d8b2d4d40d0f901d5effd4bbb34c7f2dad56529",
+    "workflow.yml": "fb1c13d7a88bd077f3b4710cc03de55b904e2e156211a2ceaf88379807c9560a"
+  }
+}
