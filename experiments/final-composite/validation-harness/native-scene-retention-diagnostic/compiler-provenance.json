@@ -1,0 +1,23 @@
+{
+  "ascSHA256": "4dc2aef13198cfa0692b2f2dda3cce10890277066d7c5aa2ac3e9c9f9a2c462e",
+  "playerglobalImportSHA256": "bacacb58df8390161c34e68f9e69406b9f1c9f6103bdacd3162034f42cce1eb3",
+  "javaObserved": "OpenJDK21.0.12.1",
+  "compilerSource": "frozen Ruffle tools/asc/asc.jar",
+  "arguments": [
+    "-AS3",
+    "-md",
+    "-import",
+    "<pinned playerglobal>",
+    "-optimize",
+    "<class>.as"
+  ],
+  "files": {
+    "as/PrefixChild.as": "da48841e1f70be0c3d5adb27883a70698fe164d1f34688e0b036cd03bf809a7e",
+    "as/SceneBitmap.as": "78881ae437c5f79191cbd1c62b011b941aa742add642fc31ce01ffa1b4dee3f4",
+    "as/SceneChild.as": "4916a879c46d3ecc8273ebec48e7d756dc240e8a4d87aadedb6f5eb428d07e86",
+    "as/SceneParent.as": "b78ac2e5718c92d74443731960bfb5ca54721523595c37d4605d506d31770668",
+    "abc/PrefixChild.abc": "9d030bca8ca2ddc00bc173fac7365965c071836a2d606e027c12c1f9f5661333",
+    "abc/SceneChild.abc": "061ebaf9dd9def92a36bf6ec44ae1c6400d03e4c75e1e7d507b885c9cfdc6915",
+    "abc/SceneParent.abc": "9096036f0a70acddc4fa6e030db52d0db54688d3eda4680e7822fc1cc0172f00"
+  }
+}

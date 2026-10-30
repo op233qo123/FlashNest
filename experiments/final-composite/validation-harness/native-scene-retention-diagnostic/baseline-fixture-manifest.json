@@ -1,0 +1,212 @@
+{
+  "schema": "flashnest-scene-cws-fixtures-v1",
+  "encoding": "rfc1950-stored-prefix-fixed-zero-tail-v1",
+  "files": {
+    "tiny/main.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 2252,
+      "declaredBytes": 2227,
+      "actualDecodedBytes": 2227,
+      "sha256": "6a12ef93560184b7d676231132010efba17c8841b14a0e4524b93c2ec9fe28f6",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 82,
+          "length": 2173,
+          "abcSHA256": "1fb0193c0e40b94004dadd8bc59bc985eb7d5654d4649d84d8f38254acb12d42"
+        },
+        {
+          "code": 76,
+          "length": 16
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "tiny/old.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 34016,
+      "declaredBytes": 65536,
+      "actualDecodedBytes": 65536,
+      "sha256": "46f9bc18c1adff2ee92883e32dac9d2ec19647c40f0c7e1d56173dbc81ca04fb",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 64754,
+          "payloadSHA256": "12accd4d8b0dc3152b20bd16bf533507ba8df6e9d0a6e9db8eb5b03a072b03d5"
+        },
+        {
+          "code": 82,
+          "length": 723,
+          "abcSHA256": "3347cd6fc3500c12d3e9d296f0dd9b82617db5c482007256c279ae33242c6ff9"
+        },
+        {
+          "code": 76,
+          "length": 15
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "tiny/new.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 34016,
+      "declaredBytes": 65536,
+      "actualDecodedBytes": 65536,
+      "sha256": "2c46d58664b4bbb3e588c07e9bf06a5b2d97a0332d499e8a7c6b1bdb852f77c1",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 64754,
+          "payloadSHA256": "22e34736f6d1da4716eb649d7aaff47ebdd50f9d134666ef7098d8f7c0a29c33"
+        },
+        {
+          "code": 82,
+          "length": 723,
+          "abcSHA256": "3347cd6fc3500c12d3e9d296f0dd9b82617db5c482007256c279ae33242c6ff9"
+        },
+        {
+          "code": 76,
+          "length": 15
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "sized/main.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 2252,
+      "declaredBytes": 2227,
+      "actualDecodedBytes": 2227,
+      "sha256": "6a12ef93560184b7d676231132010efba17c8841b14a0e4524b93c2ec9fe28f6",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 82,
+          "length": 2173,
+          "abcSHA256": "1fb0193c0e40b94004dadd8bc59bc985eb7d5654d4649d84d8f38254acb12d42"
+        },
+        {
+          "code": 76,
+          "length": 16
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "sized/old.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 12591323,
+      "declaredBytes": 13631488,
+      "actualDecodedBytes": 13631488,
+      "sha256": "2ceaa46fb580ca937f8a623726bbc9f51a1919449e3f73a539ec50158faa4536",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 13630706,
+          "payloadSHA256": "1ac4f8218ef784b636a48fd600709528260437d4ae05570ef5c92e28155bf322"
+        },
+        {
+          "code": 82,
+          "length": 723,
+          "abcSHA256": "3347cd6fc3500c12d3e9d296f0dd9b82617db5c482007256c279ae33242c6ff9"
+        },
+        {
+          "code": 76,
+          "length": 15
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "sized/new.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 45126075,
+      "declaredBytes": 50331648,
+      "actualDecodedBytes": 50331648,
+      "sha256": "235023288c1fe7a425070a43308ebe00d3d7ab1f3845f8eefebf79ebb0e4cf24",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 50330866,
+          "payloadSHA256": "a7119fda2ac01ad89713bcd5bb8a9bb21fe3ccd55729b651a55eeda534314962"
+        },
+        {
+          "code": 82,
+          "length": 723,
+          "abcSHA256": "3347cd6fc3500c12d3e9d296f0dd9b82617db5c482007256c279ae33242c6ff9"
+        },
+        {
+          "code": 76,
+          "length": 15
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    }
+  }
+}

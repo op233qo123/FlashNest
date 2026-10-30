@@ -1,0 +1,330 @@
+{
+  "schema": "flashnest-scene-retention-fixtures-v1",
+  "encoding": "rfc1950-stored-prefix-fixed-huffman-v1",
+  "cases": [
+    "retain",
+    "drop"
+  ],
+  "logicalReferenceCountsOnly": true,
+  "physicalReleaseObservable": false,
+  "files": {
+    "retention/main-retain.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 4683,
+      "declaredBytes": 4633,
+      "actualDecodedBytes": 4633,
+      "sha256": "e89cd88ae4330792df2b335cf51dba301d7ce4dd31aba469337a9b3c43958f2b",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 82,
+          "length": 4579,
+          "abcSHA256": "9096036f0a70acddc4fa6e030db52d0db54688d3eda4680e7822fc1cc0172f00"
+        },
+        {
+          "code": 76,
+          "length": 16,
+          "symbols": [
+            [
+              0,
+              "SceneParent"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "retention/main-drop.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 4683,
+      "declaredBytes": 4633,
+      "actualDecodedBytes": 4633,
+      "sha256": "e89cd88ae4330792df2b335cf51dba301d7ce4dd31aba469337a9b3c43958f2b",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 82,
+          "length": 4579,
+          "abcSHA256": "9096036f0a70acddc4fa6e030db52d0db54688d3eda4680e7822fc1cc0172f00"
+        },
+        {
+          "code": 76,
+          "length": 16,
+          "symbols": [
+            [
+              0,
+              "SceneParent"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "retention/prefix-a.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 47210307,
+      "declaredBytes": 50331648,
+      "actualDecodedBytes": 50331648,
+      "sha256": "66868fdfd97f0045ba21c325d09b8c30109ab1404292298f0558ad32861806c7",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 50330863,
+          "payloadSHA256": "3397f0e7d652c0f66df00431fe58bedc9ea108a755dbf400d85233ec66d4113b"
+        },
+        {
+          "code": 82,
+          "length": 725,
+          "abcSHA256": "9d030bca8ca2ddc00bc173fac7365965c071836a2d606e027c12c1f9f5661333"
+        },
+        {
+          "code": 76,
+          "length": 16,
+          "symbols": [
+            [
+              0,
+              "PrefixChild"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "retention/prefix-b.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 41973695,
+      "declaredBytes": 46137344,
+      "actualDecodedBytes": 46137344,
+      "sha256": "ce14a5375b22649b74f5d62106c36416f484714583517868d6b85c307f4d4edb",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 46136559,
+          "payloadSHA256": "605644d988c4e4c6f05992cd9927569b31f62a76bd96033c47d2cda0698f9295"
+        },
+        {
+          "code": 82,
+          "length": 725,
+          "abcSHA256": "9d030bca8ca2ddc00bc173fac7365965c071836a2d606e027c12c1f9f5661333"
+        },
+        {
+          "code": 76,
+          "length": 16,
+          "symbols": [
+            [
+              0,
+              "PrefixChild"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "retention/old.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 12630171,
+      "declaredBytes": 13668527,
+      "actualDecodedBytes": 13668527,
+      "sha256": "af3c30b0f6811b9b246bfa82a9a1294d884970233e481835131bc2769e693d7c",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 13630706,
+          "payloadSHA256": "1ac4f8218ef784b636a48fd600709528260437d4ae05570ef5c92e28155bf322"
+        },
+        {
+          "code": 36,
+          "length": 36751,
+          "decodedPixelsSHA256": "5aaa70354419800805932b0e486c96d1d494f0b680f5afd46df6845c2ba388b2",
+          "decodedPixelBytes": 4194304,
+          "centersARGB": [
+            [
+              255,
+              255,
+              0,
+              0
+            ],
+            [
+              255,
+              0,
+              255,
+              0
+            ],
+            [
+              255,
+              0,
+              0,
+              255
+            ],
+            [
+              255,
+              255,
+              255,
+              255
+            ]
+          ]
+        },
+        {
+          "code": 82,
+          "length": 991,
+          "abcSHA256": "061ebaf9dd9def92a36bf6ec44ae1c6400d03e4c75e1e7d507b885c9cfdc6915"
+        },
+        {
+          "code": 76,
+          "length": 29,
+          "symbols": [
+            [
+              0,
+              "SceneChild"
+            ],
+            [
+              2,
+              "SceneBitmap"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    },
+    "retention/new.swf": {
+      "signature": "CWS",
+      "version": 15,
+      "compressedBytes": 45165019,
+      "declaredBytes": 50368687,
+      "actualDecodedBytes": 50368687,
+      "sha256": "40b6fcd90674d5618091a2739a62b328e0919daec5935d6456dfcdc506e7c6cd",
+      "tags": [
+        {
+          "code": 69,
+          "length": 4
+        },
+        {
+          "code": 87,
+          "length": 50330866,
+          "payloadSHA256": "a7119fda2ac01ad89713bcd5bb8a9bb21fe3ccd55729b651a55eeda534314962"
+        },
+        {
+          "code": 36,
+          "length": 36751,
+          "decodedPixelsSHA256": "542b29ba3d905c5db7623b9f8b11c8502917cf795995292d559a6ec5f57eae25",
+          "decodedPixelBytes": 4194304,
+          "centersARGB": [
+            [
+              255,
+              0,
+              255,
+              255
+            ],
+            [
+              255,
+              255,
+              0,
+              255
+            ],
+            [
+              255,
+              255,
+              255,
+              0
+            ],
+            [
+              255,
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        {
+          "code": 82,
+          "length": 991,
+          "abcSHA256": "061ebaf9dd9def92a36bf6ec44ae1c6400d03e4c75e1e7d507b885c9cfdc6915"
+        },
+        {
+          "code": 76,
+          "length": 29,
+          "symbols": [
+            [
+              0,
+              "SceneChild"
+            ],
+            [
+              2,
+              "SceneBitmap"
+            ]
+          ]
+        },
+        {
+          "code": 1,
+          "length": 0
+        },
+        {
+          "code": 0,
+          "length": 0
+        }
+      ]
+    }
+  },
+  "totals": {
+    "compressedBytes": 146988558,
+    "actualDecodedBytes": 160515472
+  }
+}

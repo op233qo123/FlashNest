@@ -1,0 +1,73 @@
+name: FlashNest bounded synthetic retention scene transition diagnostic (not acceptance)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-native-retention-scene-diagnostic
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: macos-14
+    timeout-minutes: 40
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Require exact final engine, App, simulator harness and no-IPA recipe
+        run: python3 experiments/final-composite/scripts/validate_binding.py native
+      - name: Require existing pinned Xcode and iOS simulator, no fallback download
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          test "$(xcodebuild -version | head -1)" = 'Xcode 16.2'
+          xcrun simctl list runtimes --json > simulator-runtimes.json
+          python3 - <<'PY'
+          import json
+          rows=json.load(open('simulator-runtimes.json'))['runtimes']
+          assert any(r.get('isAvailable') and r.get('version')=='18.2' for r in rows), 'Exact iOS18.2 unavailable; do not substitute'
+          PY
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Install pinned native staging dependency in isolated environment
+        run: |
+          set -euo pipefail
+          cd experiments/final-composite
+          python3 -m venv validation-venv
+          validation-venv/bin/python -m pip install --require-virtualenv PyYAML==6.0.3 pillow==12.1.0
+          validation-venv/bin/python -c 'from PIL import Image; import PIL, yaml; assert PIL.__version__ == "12.1.0"; assert yaml.__version__ == "6.0.3"'
+      - name: Install exact authenticated XcodeGen tool without global changes
+        run: |
+          set -euo pipefail
+          cd experiments/final-composite
+          mkdir pinned-tools
+          curl --fail --location --retry 2 --max-time 120 https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip -o pinned-tools/xcodegen.zip
+          echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  pinned-tools/xcodegen.zip' | shasum -a 256 --check
+          unzip -q pinned-tools/xcodegen.zip -d pinned-tools
+          test -x pinned-tools/xcodegen/bin/xcodegen
+      - name: Run two bounded synthetic retention scene transition, no private assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd experiments/final-composite
+          validation-venv/bin/python scripts/stage_validation_runtime.py
+          validation-venv/bin/python scripts/stage_validation_inputs.py
+          validation-venv/bin/python scripts/validate_final_app.py --app validation-app
+          validation-venv/bin/python scripts/run_native_retention_scene_diagnostic.py
+      - name: Bound native synthetic evidence
+        id: native-budget
+        if: always()
+        run: python3 experiments/final-composite/scripts/evidence_budget.py experiments/final-composite/evidence
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.native-budget.outputs.allowed == 'true'
+        with:
+          name: FlashNest-synthetic-retention-scene-diagnostic-not-acceptance
+          path: experiments/final-composite/evidence/native-retention-scene-diagnostic
+          retention-days: 1
+          if-no-files-found: warn

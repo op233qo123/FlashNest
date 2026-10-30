@@ -489,6 +489,10 @@
       "bytes": 9349,
       "sha256": "28012382d810e114877d553ec96b042eaa688e680a65f0de13dabb301eb4d34e"
     },
+    "scripts/run_native_retention_scene_diagnostic.py": {
+      "bytes": 11724,
+      "sha256": "942bc70121cd05d38d75da75ec183500845db66a321a9fefaeec9dee547aece2"
+    },
     "scripts/run_native_scene_loader_diagnostic.py": {
       "bytes": 11317,
       "sha256": "f816096667a52036303ecdabc8679a1314c704ae334547553dbab9266d0ad0fd"
@@ -1001,6 +1005,18 @@
       "bytes": 5699,
       "sha256": "67205b1d9a082838e972608d6d23fc8b1c9efc6b7b4fe7a57e41af8e0c0c670a"
     },
+    "validation-harness/native-retention-scene-diagnostic/NativeSceneLoaderUITests.swift": {
+      "bytes": 13942,
+      "sha256": "855ad8ab0c68b01fea1a5244b00cec09cb92400fda8581def4f41316f98862e7"
+    },
+    "validation-harness/native-retention-scene-diagnostic/SamplingHost.swift": {
+      "bytes": 11391,
+      "sha256": "153a189da21bba4275ae9eededd60dd3ac3fd1e9ccfda3dff29cd0c7d92b73ec"
+    },
+    "validation-harness/native-retention-scene-diagnostic/stage_scene_host.py": {
+      "bytes": 4571,
+      "sha256": "79c44f32e9fd96e6086293c9a4209f7e091d78e58d2597afd5b6d3a5d280c035"
+    },
     "validation-harness/native-sampling-validation/Host/SamplingHost.swift": {
       "bytes": 15063,
       "sha256": "9f9dcbb55d007d94a4f198a2eb9a6f928d2eba53ac5b68eca36054541575e8d5"
@@ -1393,6 +1409,102 @@
       "bytes": 4417,
       "sha256": "50daf8bc7d032a4c61e35cf3a7af794441cffc1dcf02df0746382ba7644151bf"
     },
+    "validation-harness/native-scene-retention-diagnostic/PLAN.md": {
+      "bytes": 1836,
+      "sha256": "1322d823e996dfbfbbff3c1af9b9a7344d66d1b1252b643a71e7c690c118c6eb"
+    },
+    "validation-harness/native-scene-retention-diagnostic/README.md": {
+      "bytes": 4239,
+      "sha256": "4d884c678ea3b11bdb84c74d18ba84304ca8c7f0b9cf8b709416be9e122f965f"
+    },
+    "validation-harness/native-scene-retention-diagnostic/abc/PrefixChild.abc": {
+      "bytes": 720,
+      "sha256": "9d030bca8ca2ddc00bc173fac7365965c071836a2d606e027c12c1f9f5661333"
+    },
+    "validation-harness/native-scene-retention-diagnostic/abc/SceneChild.abc": {
+      "bytes": 986,
+      "sha256": "061ebaf9dd9def92a36bf6ec44ae1c6400d03e4c75e1e7d507b885c9cfdc6915"
+    },
+    "validation-harness/native-scene-retention-diagnostic/abc/SceneParent.abc": {
+      "bytes": 4574,
+      "sha256": "9096036f0a70acddc4fa6e030db52d0db54688d3eda4680e7822fc1cc0172f00"
+    },
+    "validation-harness/native-scene-retention-diagnostic/as/PrefixChild.as": {
+      "bytes": 342,
+      "sha256": "da48841e1f70be0c3d5adb27883a70698fe164d1f34688e0b036cd03bf809a7e"
+    },
+    "validation-harness/native-scene-retention-diagnostic/as/SceneBitmap.as": {
+      "bytes": 173,
+      "sha256": "78881ae437c5f79191cbd1c62b011b941aa742add642fc31ce01ffa1b4dee3f4"
+    },
+    "validation-harness/native-scene-retention-diagnostic/as/SceneChild.as": {
+      "bytes": 580,
+      "sha256": "4916a879c46d3ecc8273ebec48e7d756dc240e8a4d87aadedb6f5eb428d07e86"
+    },
+    "validation-harness/native-scene-retention-diagnostic/as/SceneParent.as": {
+      "bytes": 6989,
+      "sha256": "b78ac2e5718c92d74443731960bfb5ca54721523595c37d4605d506d31770668"
+    },
+    "validation-harness/native-scene-retention-diagnostic/baseline-fixture-manifest.json": {
+      "bytes": 4988,
+      "sha256": "56c11028855855710ec696b7eef62a67177ff4a87eaa633c52c09b88abb59a04"
+    },
+    "validation-harness/native-scene-retention-diagnostic/bitmap-fixture-manifest.json": {
+      "bytes": 4371,
+      "sha256": "aaa9542d9fe884e034cdaffe87f9c1c818f97b23464140d5ebea910c0d643496"
+    },
+    "validation-harness/native-scene-retention-diagnostic/compile_abc.py": {
+      "bytes": 1402,
+      "sha256": "95def5719748cca009796630eaffa32f61c0c1fd5f2b5adb38ddde7db712cb89"
+    },
+    "validation-harness/native-scene-retention-diagnostic/compiler-provenance.json": {
+      "bytes": 1072,
+      "sha256": "6b37c414b20e86a1256738bca26026703a075d3b9780d52cae0830e3f1086bd7"
+    },
+    "validation-harness/native-scene-retention-diagnostic/core-smoke.log": {
+      "bytes": 6156,
+      "sha256": "ffaf1ad3b588bd8edbd0251c1f52d66d2de0d06a47de749f9ba8af13a82eb075"
+    },
+    "validation-harness/native-scene-retention-diagnostic/fixture-manifest.json": {
+      "bytes": 7379,
+      "sha256": "3e52427ab38082ba9dee9dda6a4f280af2f0ac6cb5a10111a9e8f0ff3d9cf0a7"
+    },
+    "validation-harness/native-scene-retention-diagnostic/generate_fixtures.py": {
+      "bytes": 8965,
+      "sha256": "22fb7fc5f7410a4e342a3c4822b3dc14420e406cc78b1ca1c5934bbd5ffed8ca"
+    },
+    "validation-harness/native-scene-retention-diagnostic/local-core-evidence.json": {
+      "bytes": 10435,
+      "sha256": "204b8059d21b335f3a4a75beab9433c99414dd37ff540309be45531ab108695b"
+    },
+    "validation-harness/native-scene-retention-diagnostic/observer.js": {
+      "bytes": 2838,
+      "sha256": "a8eac1251ee5f2da03d13ba972c0fda1fc0fa4198bd48704522f6cac3c6f4ea9"
+    },
+    "validation-harness/native-scene-retention-diagnostic/pixel_oracle.py": {
+      "bytes": 4741,
+      "sha256": "e80dea1d25eb0aecb865086202a2ef4fd430c7dbd7baf606f9a27733f5bda975"
+    },
+    "validation-harness/native-scene-retention-diagnostic/run_core_smoke.py": {
+      "bytes": 3902,
+      "sha256": "3a02ecf94910cee1e914e925700fa2da25c51d09b28a32f5f2d2d83d279eadec"
+    },
+    "validation-harness/native-scene-retention-diagnostic/tests/test_observer.js": {
+      "bytes": 3686,
+      "sha256": "82e412168c513e68381e979d0ba1f5e91831a075e919e383e2e1040bbe108c23"
+    },
+    "validation-harness/native-scene-retention-diagnostic/tests/test_retention.py": {
+      "bytes": 4088,
+      "sha256": "a6159af41767c196f0057f4b2769867c728c0f5f6df685e7b540efb1112127bc"
+    },
+    "validation-harness/native-scene-retention-diagnostic/verify_as.py": {
+      "bytes": 3178,
+      "sha256": "03f048e751d42e33ae3c57e10ac0a7bafd38f00fef015226b9651b6dd54aa32c"
+    },
+    "validation-harness/native-scene-retention-diagnostic/verify_phases.py": {
+      "bytes": 14849,
+      "sha256": "7749ebe33dc9dc336c2878c3456fd8a07edf1a7ae2a9992bec21174114e3098a"
+    },
     "validation-harness/zip-native-validation/payload/experiments/zip-selection/README.md": {
       "bytes": 4949,
       "sha256": "278e2dea670173cf08c988442085e9f8afe989f443dbdda67e22cc09c354e7a3"
@@ -1643,6 +1755,6 @@
       ]
     }
   },
-  "reason": "Explicitly authorized single sized-bitmap same-WK transition diagnostic only. Product and engine unchanged; original binary bytes retained, actual old/new pixels and draw required. No native/full198, VRAM, texImage or original-crash resolution claim.",
+  "reason": "Explicit user authorization: publish the exact 30 reviewed synthetic diagnostic files and run one two-arm retained-versus-dropped prefix diagnostic. Product/engine unchanged; no private assets, new IPA, native acceptance or original-crash resolution claim.",
   "schemaVersion": 1
 }

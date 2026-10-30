@@ -1,0 +1,80 @@
+
+running 2 tests
+test retention_main-drop.swf   ... FAILED
+test retention_main-retain.swf ... FAILED
+
+failures:
+
+---- retention_main-drop.swf ----
+assertion failed: `(ruffle_actual == flash_expected)`
+
+Diff < left / right > :
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":1,"timeMs":198,"bytesTotal":-1,"phase":"parent.ready"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":2,"timeMs":1089,"bytesTotal":-1,"phase":"prefix-a.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":3,"timeMs":1089,"bytesTotal":-1,"phase":"prefix-b.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":4,"timeMs":1090,"bytesTotal":-1,"phase":"prefix-a.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":5,"timeMs":1090,"bytesTotal":-1,"phase":"prefix-a.complete"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":6,"timeMs":1090,"bytesTotal":-1,"phase":"prefix-b.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":7,"timeMs":1090,"bytesTotal":-1,"phase":"prefix-b.complete"}
+<SCENE_PHASE {"attachedPrefixLoaders":2,"bytesLoaded":-1,"unloadCalls":0,"nullAssignments":0,"liveContentRefs":2,"bytesTotal":-1,"timeMs":1091,"removeCalls":0,"phase":"prefixes.ready","sequence":8,"unsubscribeCalls":0,"liveLoaderRefs":2}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":9,"timeMs":1092,"bytesTotal":-1,"phase":"old.open"}
+<SCENE_PHASE {"bytesLoaded":12630171,"sequence":10,"timeMs":1220,"bytesTotal":12630171,"phase":"old.progress-end"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":11,"timeMs":1403,"bytesTotal":-1,"phase":"old.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":12,"timeMs":1403,"bytesTotal":-1,"phase":"old.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":13,"timeMs":1404,"bytesTotal":-1,"phase":"old.complete"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":14,"timeMs":1404,"bytesTotal":-1,"phase":"old.awaiting-space"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":15,"timeMs":1416,"bytesTotal":-1,"phase":"transition.key"}
+<SCENE_PHASE {"attachedPrefixLoaders":0,"bytesLoaded":-1,"unloadCalls":2,"nullAssignments":4,"liveContentRefs":0,"bytesTotal":-1,"timeMs":1416,"removeCalls":2,"phase":"prefixes.references-dropped","sequence":16,"unsubscribeCalls":8,"liveLoaderRefs":0}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":17,"timeMs":1417,"bytesTotal":-1,"phase":"before-unload"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":18,"timeMs":1417,"bytesTotal":-1,"phase":"old.unload-event"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":19,"timeMs":1417,"bytesTotal":-1,"phase":"returned-unload"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":20,"timeMs":1417,"bytesTotal":-1,"phase":"new.open"}
+<SCENE_PHASE {"bytesLoaded":45165019,"sequence":21,"timeMs":1912,"bytesTotal":45165019,"phase":"new.progress-end"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":22,"timeMs":2096,"bytesTotal":-1,"phase":"new.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":23,"timeMs":2096,"bytesTotal":-1,"phase":"new.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":24,"timeMs":2097,"bytesTotal":-1,"phase":"new.complete"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":25,"timeMs":2097,"bytesTotal":-1,"phase":"parent.done"}
+<
+
+
+
+---- retention_main-retain.swf ----
+assertion failed: `(ruffle_actual == flash_expected)`
+
+Diff < left / right > :
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":1,"timeMs":204,"bytesTotal":-1,"phase":"parent.ready"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":2,"timeMs":1103,"bytesTotal":-1,"phase":"prefix-a.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":3,"timeMs":1104,"bytesTotal":-1,"phase":"prefix-b.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":4,"timeMs":1104,"bytesTotal":-1,"phase":"prefix-a.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":5,"timeMs":1105,"bytesTotal":-1,"phase":"prefix-a.complete"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":6,"timeMs":1105,"bytesTotal":-1,"phase":"prefix-b.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":7,"timeMs":1105,"bytesTotal":-1,"phase":"prefix-b.complete"}
+<SCENE_PHASE {"attachedPrefixLoaders":2,"bytesLoaded":-1,"unloadCalls":0,"nullAssignments":0,"liveContentRefs":2,"bytesTotal":-1,"timeMs":1106,"removeCalls":0,"phase":"prefixes.ready","sequence":8,"unsubscribeCalls":0,"liveLoaderRefs":2}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":9,"timeMs":1106,"bytesTotal":-1,"phase":"old.open"}
+<SCENE_PHASE {"bytesLoaded":12630171,"sequence":10,"timeMs":1233,"bytesTotal":12630171,"phase":"old.progress-end"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":11,"timeMs":1408,"bytesTotal":-1,"phase":"old.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":12,"timeMs":1409,"bytesTotal":-1,"phase":"old.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":13,"timeMs":1409,"bytesTotal":-1,"phase":"old.complete"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":14,"timeMs":1409,"bytesTotal":-1,"phase":"old.awaiting-space"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":15,"timeMs":1419,"bytesTotal":-1,"phase":"transition.key"}
+<SCENE_PHASE {"attachedPrefixLoaders":2,"bytesLoaded":-1,"unloadCalls":0,"nullAssignments":0,"liveContentRefs":2,"bytesTotal":-1,"timeMs":1420,"removeCalls":0,"phase":"prefixes.retained","sequence":16,"unsubscribeCalls":0,"liveLoaderRefs":2}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":17,"timeMs":1420,"bytesTotal":-1,"phase":"before-unload"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":18,"timeMs":1420,"bytesTotal":-1,"phase":"old.unload-event"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":19,"timeMs":1420,"bytesTotal":-1,"phase":"returned-unload"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":20,"timeMs":1421,"bytesTotal":-1,"phase":"new.open"}
+<SCENE_PHASE {"bytesLoaded":45165019,"sequence":21,"timeMs":1915,"bytesTotal":45165019,"phase":"new.progress-end"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":22,"timeMs":2107,"bytesTotal":-1,"phase":"new.first-frame"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":23,"timeMs":2107,"bytesTotal":-1,"phase":"new.init"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":24,"timeMs":2107,"bytesTotal":-1,"phase":"new.complete"}
+<SCENE_PHASE {"bytesLoaded":-1,"sequence":25,"timeMs":2108,"bytesTotal":-1,"phase":"parent.done"}
+<
+
+
+
+
+failures:
+    retention_main-drop.swf
+    retention_main-retain.swf
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 5 filtered out; finished in 2.17s
+

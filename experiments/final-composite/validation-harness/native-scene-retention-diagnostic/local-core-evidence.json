@@ -1,0 +1,412 @@
+{
+  "originalOutcome": "FAILED: intentionally empty Flash golden",
+  "semanticVerificationPassed": true,
+  "nullRendererNotNativePixelProof": true,
+  "physicalReleaseObservable": false,
+  "rootURLWrapperRequired": true,
+  "secondAddedToStageControl": true,
+  "wrapperHashes": {
+    "retain": {
+      "sourceSHA256": "416eecf6f09e7c69822b71f40475ae266e77adb70413bcf225221208097508ff",
+      "abcSHA256": "833ded62622e9b594ca15f17bb1cb1fc7d2dd26911c3ae15d9e5c3c0b8e63b4c",
+      "swfSHA256": "b0276134d6929cde74539bb71f9099ba29563da53cb9464ae920af2a5c5ec4e3"
+    },
+    "drop": {
+      "sourceSHA256": "d374ae2b1bb0c9d1384c844d9a73fcbf57f2b0f61a7c54b3640dc0638ecd48ce",
+      "abcSHA256": "a82782e1a18c0a87854a53d6e64274541f96702094c045da1cb85acbe0a5f538",
+      "swfSHA256": "246b4fc49a47cea9613189f7568cacc12ba2700b9b8bce99dcd435a4af1d164c"
+    }
+  },
+  "binarySHA256": "fc15ee30b578a1c479bcb168d68fd4f61489b62036597b927725e196d5508bfc",
+  "logSHA256": "ffaf1ad3b588bd8edbd0251c1f52d66d2de0d06a47de749f9ba8af13a82eb075",
+  "cases": {
+    "retain": {
+      "phases": [
+        {
+          "bytesLoaded": -1,
+          "sequence": 1,
+          "timeMs": 204,
+          "bytesTotal": -1,
+          "phase": "parent.ready"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 2,
+          "timeMs": 1103,
+          "bytesTotal": -1,
+          "phase": "prefix-a.first-frame"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 3,
+          "timeMs": 1104,
+          "bytesTotal": -1,
+          "phase": "prefix-b.first-frame"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 4,
+          "timeMs": 1104,
+          "bytesTotal": -1,
+          "phase": "prefix-a.init"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 5,
+          "timeMs": 1105,
+          "bytesTotal": -1,
+          "phase": "prefix-a.complete"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 6,
+          "timeMs": 1105,
+          "bytesTotal": -1,
+          "phase": "prefix-b.init"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 7,
+          "timeMs": 1105,
+          "bytesTotal": -1,
+          "phase": "prefix-b.complete"
+        },
+        {
+          "attachedPrefixLoaders": 2,
+          "bytesLoaded": -1,
+          "unloadCalls": 0,
+          "nullAssignments": 0,
+          "liveContentRefs": 2,
+          "bytesTotal": -1,
+          "timeMs": 1106,
+          "removeCalls": 0,
+          "phase": "prefixes.ready",
+          "sequence": 8,
+          "unsubscribeCalls": 0,
+          "liveLoaderRefs": 2
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 9,
+          "timeMs": 1106,
+          "bytesTotal": -1,
+          "phase": "old.open"
+        },
+        {
+          "bytesLoaded": 12630171,
+          "sequence": 10,
+          "timeMs": 1233,
+          "bytesTotal": 12630171,
+          "phase": "old.progress-end"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 11,
+          "timeMs": 1408,
+          "bytesTotal": -1,
+          "phase": "old.first-frame"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 12,
+          "timeMs": 1409,
+          "bytesTotal": -1,
+          "phase": "old.init"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 13,
+          "timeMs": 1409,
+          "bytesTotal": -1,
+          "phase": "old.complete"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 14,
+          "timeMs": 1409,
+          "bytesTotal": -1,
+          "phase": "old.awaiting-space"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 15,
+          "timeMs": 1419,
+          "bytesTotal": -1,
+          "phase": "transition.key"
+        },
+        {
+          "attachedPrefixLoaders": 2,
+          "bytesLoaded": -1,
+          "unloadCalls": 0,
+          "nullAssignments": 0,
+          "liveContentRefs": 2,
+          "bytesTotal": -1,
+          "timeMs": 1420,
+          "removeCalls": 0,
+          "phase": "prefixes.retained",
+          "sequence": 16,
+          "unsubscribeCalls": 0,
+          "liveLoaderRefs": 2
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 17,
+          "timeMs": 1420,
+          "bytesTotal": -1,
+          "phase": "before-unload"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 18,
+          "timeMs": 1420,
+          "bytesTotal": -1,
+          "phase": "old.unload-event"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 19,
+          "timeMs": 1420,
+          "bytesTotal": -1,
+          "phase": "returned-unload"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 20,
+          "timeMs": 1421,
+          "bytesTotal": -1,
+          "phase": "new.open"
+        },
+        {
+          "bytesLoaded": 45165019,
+          "sequence": 21,
+          "timeMs": 1915,
+          "bytesTotal": 45165019,
+          "phase": "new.progress-end"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 22,
+          "timeMs": 2107,
+          "bytesTotal": -1,
+          "phase": "new.first-frame"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 23,
+          "timeMs": 2107,
+          "bytesTotal": -1,
+          "phase": "new.init"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 24,
+          "timeMs": 2107,
+          "bytesTotal": -1,
+          "phase": "new.complete"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 25,
+          "timeMs": 2108,
+          "bytesTotal": -1,
+          "phase": "parent.done"
+        }
+      ],
+      "singleSyntheticSpacePair": true
+    },
+    "drop": {
+      "phases": [
+        {
+          "bytesLoaded": -1,
+          "sequence": 1,
+          "timeMs": 198,
+          "bytesTotal": -1,
+          "phase": "parent.ready"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 2,
+          "timeMs": 1089,
+          "bytesTotal": -1,
+          "phase": "prefix-a.first-frame"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 3,
+          "timeMs": 1089,
+          "bytesTotal": -1,
+          "phase": "prefix-b.first-frame"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 4,
+          "timeMs": 1090,
+          "bytesTotal": -1,
+          "phase": "prefix-a.init"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 5,
+          "timeMs": 1090,
+          "bytesTotal": -1,
+          "phase": "prefix-a.complete"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 6,
+          "timeMs": 1090,
+          "bytesTotal": -1,
+          "phase": "prefix-b.init"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 7,
+          "timeMs": 1090,
+          "bytesTotal": -1,
+          "phase": "prefix-b.complete"
+        },
+        {
+          "attachedPrefixLoaders": 2,
+          "bytesLoaded": -1,
+          "unloadCalls": 0,
+          "nullAssignments": 0,
+          "liveContentRefs": 2,
+          "bytesTotal": -1,
+          "timeMs": 1091,
+          "removeCalls": 0,
+          "phase": "prefixes.ready",
+          "sequence": 8,
+          "unsubscribeCalls": 0,
+          "liveLoaderRefs": 2
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 9,
+          "timeMs": 1092,
+          "bytesTotal": -1,
+          "phase": "old.open"
+        },
+        {
+          "bytesLoaded": 12630171,
+          "sequence": 10,
+          "timeMs": 1220,
+          "bytesTotal": 12630171,
+          "phase": "old.progress-end"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 11,
+          "timeMs": 1403,
+          "bytesTotal": -1,
+          "phase": "old.first-frame"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 12,
+          "timeMs": 1403,
+          "bytesTotal": -1,
+          "phase": "old.init"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 13,
+          "timeMs": 1404,
+          "bytesTotal": -1,
+          "phase": "old.complete"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 14,
+          "timeMs": 1404,
+          "bytesTotal": -1,
+          "phase": "old.awaiting-space"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 15,
+          "timeMs": 1416,
+          "bytesTotal": -1,
+          "phase": "transition.key"
+        },
+        {
+          "attachedPrefixLoaders": 0,
+          "bytesLoaded": -1,
+          "unloadCalls": 2,
+          "nullAssignments": 4,
+          "liveContentRefs": 0,
+          "bytesTotal": -1,
+          "timeMs": 1416,
+          "removeCalls": 2,
+          "phase": "prefixes.references-dropped",
+          "sequence": 16,
+          "unsubscribeCalls": 8,
+          "liveLoaderRefs": 0
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 17,
+          "timeMs": 1417,
+          "bytesTotal": -1,
+          "phase": "before-unload"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 18,
+          "timeMs": 1417,
+          "bytesTotal": -1,
+          "phase": "old.unload-event"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 19,
+          "timeMs": 1417,
+          "bytesTotal": -1,
+          "phase": "returned-unload"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 20,
+          "timeMs": 1417,
+          "bytesTotal": -1,
+          "phase": "new.open"
+        },
+        {
+          "bytesLoaded": 45165019,
+          "sequence": 21,
+          "timeMs": 1912,
+          "bytesTotal": 45165019,
+          "phase": "new.progress-end"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 22,
+          "timeMs": 2096,
+          "bytesTotal": -1,
+          "phase": "new.first-frame"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 23,
+          "timeMs": 2096,
+          "bytesTotal": -1,
+          "phase": "new.init"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 24,
+          "timeMs": 2097,
+          "bytesTotal": -1,
+          "phase": "new.complete"
+        },
+        {
+          "bytesLoaded": -1,
+          "sequence": 25,
+          "timeMs": 2097,
+          "bytesTotal": -1,
+          "phase": "parent.done"
+        }
+      ],
+      "singleSyntheticSpacePair": true
+    }
+  }
+}
