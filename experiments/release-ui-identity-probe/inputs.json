@@ -1,0 +1,17 @@
+{
+  "baseInputsSHA256": "f579172a78e05cc26f8a8a27646144399005e5760fbcbf0ecd5582a8cdf393d3",
+  "diagnosticOnly": true,
+  "dispatchAllowed": true,
+  "dispatchReason": "Authorized necessary diagnostic-only retry of the existing selected tests; original assertions and timeouts unchanged; no Release build, IPA or public release.",
+  "schemaVersion": 1,
+  "selectedReleaseGatePassed": false,
+  "sourceFiles": {
+    "IdentityProbe.swift": "922c4f9f07c3541f80ef2937857d619f4a7f46e1f1367bcc4dea7cf1e371323e",
+    "README.md": "7205a42ecbd29504d3309e9b4bd62d99fdd28f029e7a6f50c8308b5244cfa292",
+    "collect_evidence.py": "ee5df3804ca429b3c9bfbe9a952f0ceb4ce0b4cf9045d02e71ea5a39ec64f9f4",
+    "overlay.py": "5469d022d579f19cd9aab7d5b241e34dbea86c70594b1cc9e631163cc0d18b31",
+    "run_probe.py": "4303392cec964a563f63a0cec03f49eb517d99a71a7873672a2456aa28115865",
+    "test_overlay.py": "96be1f3eb91aab4dcac56889da34487f13d180df73f21c5c09c780a432429fd6",
+    "workflow.yml": "8840e4d03be7dd604f5ae5f8332914473cf41c2fb0d80520b69747fdcd01f68e"
+  }
+}
