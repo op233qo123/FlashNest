@@ -1,0 +1,89 @@
+{
+  "schema": "texture-lifetime-engine-lock-v1",
+  "artifactId": 13031330054,
+  "artifactBytes": 24568795,
+  "artifactSHA256": "e29bb886db50dda890ecb10e5de4c444af2dce937b3b40acc0e413c6f50b701d",
+  "runId": 41168894684,
+  "headSHA": "b9bfe3e79e76a6d8fe23987066c07fb158d58c5e",
+  "prefix": "image-memory-engines/baseline/",
+  "selectedWasmSHA256": "0fabc6602d29091438c307ca715cf0973641b93cd2d7513798865cb8e1c3f054",
+  "runtimeFiles": {
+    "5572693b75d695bf0991.wasm": {
+      "bytes": 14219654,
+      "sha256": "0fabc6602d29091438c307ca715cf0973641b93cd2d7513798865cb8e1c3f054"
+    },
+    "LICENSE_APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "LICENSE_MIT": {
+      "bytes": 1097,
+      "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c"
+    },
+    "README.md": {
+      "bytes": 2328,
+      "sha256": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde"
+    },
+    "core.ruffle.b37b03400c42af4f2df8.js": {
+      "bytes": 114899,
+      "sha256": "1643fa872c336e5a920a5ab5f0e89d8d0f19f6fe3af9dbd6812e94832d7c6c70"
+    },
+    "core.ruffle.b37b03400c42af4f2df8.js.map": {
+      "bytes": 414390,
+      "sha256": "03b11ddd18b4d49adc88f1e502bdf8ff12bdfd1d994306d39088954e1e690d38"
+    },
+    "core.ruffle.b66cd8f7f9bc4f6102a5.js": {
+      "bytes": 108488,
+      "sha256": "97583a8ea68de971dde69fd12c8aa86a3ac2c5e4556b29d675dec292cb840d1c"
+    },
+    "core.ruffle.b66cd8f7f9bc4f6102a5.js.map": {
+      "bytes": 387146,
+      "sha256": "c9b4002a0eaaacbe97803e255cdda4b1ed6074583b7f9ecccbf11ab8afde57d1"
+    },
+    "f1db9d71e25be3505249.wasm": {
+      "bytes": 14246300,
+      "sha256": "87874aba45cac4b3c4a08e10e853966b324b8fad8d113fcfe4649a05bdffe318"
+    },
+    "package.json": {
+      "bytes": 418,
+      "sha256": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89"
+    },
+    "ruffle.js": {
+      "bytes": 468519,
+      "sha256": "2151d8850b72d96302d4061aad62ba749ab9b3c7bf9bfdb49813964a2a4d95fe"
+    },
+    "ruffle.js.map": {
+      "bytes": 716395,
+      "sha256": "2130f3c4fbfbf53b6d149ad62b0a6f2dc0b7db313afe257e3649c089ae08740f"
+    }
+  },
+  "baselineProvenance": {
+    "baseSourceLockSHA256": "7200650c24fe505844ea676c02c44a42dd2ee7bc484344e775e4458d84566494",
+    "bindingSHA256": "3da216d9d09125b3dfc57b31be45da70e905198b94730ba1617617ac323bf4d0",
+    "coreJSTests": 63,
+    "experimentalOnly": true,
+    "nativeAcceptance": false,
+    "patchSHA256": "176aa8b59419d97d5b66e30ba7184c5f01c193fcff3856a09bb01bf88c7ef63e",
+    "physicalDeviceAcceptance": false,
+    "run": {
+      "GITHUB_RUN_ATTEMPT": "1",
+      "GITHUB_RUN_ID": "41168894684",
+      "GITHUB_SHA": "b9bfe3e79e76a6d8fe23987066c07fb158d58c5e",
+      "ImageOS": "ubuntu24",
+      "ImageVersion": "20261026.354.1"
+    },
+    "runtimeInventorySHA256": "a0b242992a8ba44d9d3e4efa95439d437afd7cded6e5830dbb76e2626e3b73dc",
+    "sourceSHA256": "3fb156b2ece7185be638fbbc894bb7734f536602a16c5e6a87be395b2ce65ed6",
+    "toolVersions": {
+      "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+      "node": "v24.22.1",
+      "npm": "11.19.1",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "wasmBindgen": "wasm-bindgen 0.2.127",
+      "wasmOpt": "wasm-opt version 129 (version_129)"
+    },
+    "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+    "variant": "baseline"
+  }
+}

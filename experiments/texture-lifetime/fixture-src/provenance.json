@@ -1,0 +1,56 @@
+{
+  "compilerSource": "https://github.com/ruffle-rs/ruffle/blob/89a7049965f3090e706265670df309a5128233ac/tools/asc/asc.jar",
+  "compilerSHA256": "4dc2aef13198cfa0692b2f2dda3cce10890277066d7c5aa2ac3e9c9f9a2c462e",
+  "playerglobalSourceCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "playerglobalSourcesGitBlobVerified": 618,
+  "playerglobalImportSHA256": "bacacb58df8390161c34e68f9e69406b9f1c9f6103bdacd3162034f42cce1eb3",
+  "compilerFlags": [
+    "-AS3",
+    "-import",
+    "playerglobal_avm2.abc"
+  ],
+  "files": [
+    {
+      "file": "as/TextureChild.as",
+      "sha256": "01d5169924b698a8c56350251aea9e43228b81a9e07cf9ff449e1422ae2e6aee",
+      "bytes": 206
+    },
+    {
+      "file": "as/TextureLoaderRelease.as",
+      "sha256": "22d3dd80e9609459f464329b234d63a0e3b1dcd7b1e27f5a465f0d5d5d54b46c",
+      "bytes": 2908
+    },
+    {
+      "file": "as/TextureLoaderRetain.as",
+      "sha256": "c4a4832cd0ee5c0f436eb39b6797d87bc342fa4027a58e1277269c79e97b665f",
+      "bytes": 2896
+    },
+    {
+      "file": "as/TextureRoot.as",
+      "sha256": "d9d90ad23ebc0cbd4b78ad7a76351a437e5d889e750dfa9b36b6858317f26308",
+      "bytes": 1379
+    },
+    {
+      "file": "abc/TextureChild.abc",
+      "sha256": "086b8712988ab3a47cf545bbf8e3074d6cbf8cffe0e605863c080c09d1e6ff73",
+      "bytes": 641
+    },
+    {
+      "file": "abc/TextureLoaderRelease.abc",
+      "sha256": "8d36449b50e4ae78f5c5172a4334e335c7f372d122d6f37311b3d987aaa1b64a",
+      "bytes": 2601
+    },
+    {
+      "file": "abc/TextureLoaderRetain.abc",
+      "sha256": "9e8cdf4723585116e5e1dad4665f095960591897ee04ea6dfd61ba8261dd7025",
+      "bytes": 2590
+    },
+    {
+      "file": "abc/TextureRoot.abc",
+      "sha256": "183994d963819107031d46e332a7735dc46de8aa339422eece279db32e82593d",
+      "bytes": 1507
+    }
+  ],
+  "runtimeValidation": "pending CI; static/tag/source checks only",
+  "privateInputs": false
+}

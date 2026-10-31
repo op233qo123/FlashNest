@@ -1,0 +1,43 @@
+<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:white}#host{width:320px;height:240px}ruffle-player{display:block;width:100%;height:100%}button{position:absolute;left:330px;top:0}</style><div id="host"></div><button id="play">Play</button><script src="/instrumentation.js"></script><script>
+'use strict';
+window.evidence={traces:[],errors:[],keys:[],overflow:false,wasmInstantiations:0,memoryUnsupported:0,phaseEvents:[],timings:{}};
+const tracker=TextureLifetime.install(window,{cap:16000});
+const memoryRefs=[],seenMemories=new WeakSet();
+function observeWasm(result){
+ const instance=result?.instance||result; evidence.wasmInstantiations++; let found=false;
+ for(const value of Object.values(instance?.exports||{}))if(value instanceof WebAssembly.Memory){found=true;if(!seenMemories.has(value)){seenMemories.add(value);if(typeof WeakRef==='function')memoryRefs.push(new WeakRef(value));else evidence.memoryUnsupported++;}}
+ if(!found)evidence.memoryUnsupported++;return result;
+}
+for(const name of ['instantiate','instantiateStreaming']){const original=WebAssembly[name];if(original)WebAssembly[name]=function(...args){return Reflect.apply(original,this,args).then(observeWasm)}}
+window.memorySnapshot=()=>memoryRefs.map((ref,id)=>{const memory=ref.deref();return memory?{id,reachable:true,bytes:memory.buffer.byteLength,pages:memory.buffer.byteLength/65536}:{id,reachable:false}});
+const originalContext=HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext=function(type,...args){const context=Reflect.apply(originalContext,this,[type,...args]);if(context&&/^webgl2?$/.test(type))tracker.register(context,type,this);return context};
+const originalLog=console.log;console.log=function(...args){const match=String(args[0]).match(/New Ruffle instance created .*\| Used renderer: ([^)]+)\)/);if(match){evidence.actualRenderer=match[1];if(window.attachTraceObserver)window.attachTraceObserver('renderer-created')}return Reflect.apply(originalLog,console,args)};
+window.addEventListener('error',()=>evidence.errors.push('windowerror'));
+window.addEventListener('unhandledrejection',()=>evidence.errors.push('unhandledrejection'));
+document.addEventListener('keydown',event=>{if(evidence.keys.length<1000)evidence.keys.push({key:event.key,trusted:event.isTrusted});else evidence.overflow=true},true);
+window.RufflePlayer={config:{autoplay:'off',unmuteOverlay:'hidden',warnOnUnsupportedContent:false}};
+const script=document.createElement('script');script.src='/runtime/ruffle.js';document.head.append(script);script.onload=()=>window.runtimeReady=true;script.onerror=()=>evidence.errors.push('runtime-load');
+window.phase=function(name){if(evidence.phaseEvents.length<1000)evidence.phaseEvents.push({name:String(name).slice(0,100),time:performance.now(),memories:window.memorySnapshot(),summary:tracker.summary()});else evidence.overflow=true};
+window.start=async function(fixture){
+ evidence.timings.start=performance.now();window.phase('before-player-create');
+ const player=RufflePlayer.newest().createPlayer();window.player=player;player.tabIndex=0;document.getElementById('host').append(player);
+ const api=player.ruffle();window.api=api;
+ const traceObserver=message=>{if(evidence.traces.length<2000){const text=String(message).slice(0,500);evidence.traces.push(text);window.phase('trace-before-paint:'+text);}else evidence.overflow=true};
+ window.attachTraceObserver=source=>{api.traceObserver=traceObserver;evidence.traceAttached=true;if(source==='renderer-created')evidence.instanceTraceAttachments=(evidence.instanceTraceAttachments||0)+1};
+ await api.load({url:'/fixtures/'+fixture,preferredRenderer:'webgl',autoplay:'off',unmuteOverlay:'hidden',allowScriptAccess:false,scale:'noScale',align:'topLeft',backgroundColor:'#ffffff'});
+ window.attachTraceObserver();evidence.timings.loadResolved=performance.now();window.phase('load-resolved');
+ document.getElementById('play').onclick=()=>{api.resume();player.focus();window.phase('resume-requested')};
+};
+window.snapshot=()=>({actualRenderer:evidence.actualRenderer,traceAttached:evidence.traceAttached===true,instanceTraceAttachments:evidence.instanceTraceAttachments||0,traces:evidence.traces.slice(),errors:evidence.errors.slice(),keys:evidence.keys.slice(),overflow:evidence.overflow,wasmInstantiations:evidence.wasmInstantiations,memoryUnsupported:evidence.memoryUnsupported,memories:window.memorySnapshot(),memoryScope:'Weakly observed exported linear capacity, not live allocation or RSS; unavailable after collection is not proof of physical release.',timings:{...evidence.timings},phaseEvents:evidence.phaseEvents.map(x=>({...x})),gl:tracker.snapshot()});
+window.settled=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+window.removePlayer=async()=>{
+ window.phase('before-player-remove');
+ // DOM removal invokes the custom element lifecycle. Do not retain player/API
+ // closures or WASM memory solely for diagnostics after this request.
+ document.getElementById('play').onclick=null;
+ window.player?.remove();window.player=null;window.api=null;window.attachTraceObserver=null;
+ await window.settled();window.phase('after-player-remove');
+};
+window.targetFrameObserved=()=>{const s=tracker.snapshot();return s.textures.some(t=>t.target512Uploads>0)&&s.contexts.some(c=>(c.calls.drawElements||0)+(c.calls.drawArrays||0)>0)};
+</script>

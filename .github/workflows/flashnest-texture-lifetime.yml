@@ -1,0 +1,64 @@
+name: FlashNest texture lifetime diagnostics (no product changes)
+on:
+  push:
+    branches: [experiment/image-memory-webgl-20261031]
+    paths:
+      - 'experiments/texture-lifetime/**'
+      - '.github/workflows/flashnest-texture-lifetime.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-texture-lifetime
+  cancel-in-progress: false
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      PREP: experiments/texture-lifetime
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Check diagnostic-only source and fixture contract
+        run: |
+          python3 "$PREP/scripts/check_package.py"
+          node "$PREP/browser/test_page.cjs"
+      - name: Require sandboxed Chrome WebGL without security overrides
+        run: |
+          python3 -m venv browser-venv
+          browser-venv/bin/pip install --require-virtualenv -r "$PREP/browser/requirements.txt"
+          browser-venv/bin/python "$PREP/scripts/preflight.py"
+      - name: Reuse hash-pinned accepted baseline engine, no compilation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13031330054 > "$RUNNER_TEMP/engine-artifact.json"
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13031330054/zip > "$RUNNER_TEMP/engine.zip"
+          python3 "$PREP/scripts/stage_engine.py" "$RUNNER_TEMP/engine.zip" "$RUNNER_TEMP/engine-artifact.json" texture-lifetime-runtime/runtime
+      - name: Measure bounded real texture API lifecycle and WASM capacity
+        timeout-minutes: 15
+        run: |
+          browser-venv/bin/python "$PREP/browser/run.py" --runtime texture-lifetime-runtime/runtime --fixtures "$PREP/fixtures" --out texture-lifetime-evidence/browser
+      - name: Bound diagnostic evidence before upload
+        id: budget
+        if: always()
+        run: |
+          mkdir -p texture-lifetime-evidence
+          if test -f texture-lifetime-runtime/runtime-receipt.json; then cp texture-lifetime-runtime/runtime-receipt.json texture-lifetime-evidence/; fi
+          python3 "$PREP/scripts/budget.py" texture-lifetime-evidence
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.budget.outputs.allowed == 'true'
+        with:
+          name: FlashNest-texture-lifetime-diagnostic-not-IPA
+          path: texture-lifetime-evidence
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: true

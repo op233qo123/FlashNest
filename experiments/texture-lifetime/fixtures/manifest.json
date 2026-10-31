@@ -1,0 +1,203 @@
+{
+  "schema": "neutral-texture-lifetime-v1",
+  "privateInputs": false,
+  "pillow": "13.0.0",
+  "bitmapSize": [
+    512,
+    512
+  ],
+  "shapeSize": [
+    64,
+    64
+  ],
+  "stage": [
+    320,
+    240
+  ],
+  "fps": 24,
+  "files": [
+    {
+      "file": "root-16.swf",
+      "bytes": 332799,
+      "sha256": "eaef9f8c1ac7f9db252eaa800ceb5e21539226438c2ec411a77211a6dd26712c"
+    },
+    {
+      "file": "root-64.swf",
+      "bytes": 1325995,
+      "sha256": "b5224684fd1556e6019cf7cc2dcf3e186f26f675beaea3dd5299b2fe07331388"
+    },
+    {
+      "file": "texture-child.swf",
+      "bytes": 21574,
+      "sha256": "a9f5ca5829cf912ce8939c2dbd2f38d69819d3d07a875d84d9de99d06dfec7b7"
+    },
+    {
+      "file": "loader-release.swf",
+      "bytes": 2674,
+      "sha256": "60c668c8a82ddf1bccc7a8dc8a1dca844847d957cf20729e26879a8aa9615cff"
+    },
+    {
+      "file": "loader-retain.swf",
+      "bytes": 2662,
+      "sha256": "0dab31190b4f79718de12948453b0371952661f66ffa139bcf57f93f97f8c4a0"
+    }
+  ],
+  "cases": [
+    {
+      "name": "root-16",
+      "file": "root-16.swf",
+      "avm": "AVM2",
+      "uniqueImages": 16,
+      "cycles": 4,
+      "steps": [
+        {
+          "label": "ready",
+          "trace": "TEXTURE_LIFETIME root-16 ready",
+          "visible": false
+        },
+        {
+          "label": "cycle-1",
+          "trace": "TEXTURE_LIFETIME root-16 cycle=1",
+          "key": "s",
+          "visible": true
+        },
+        {
+          "label": "cycle-2",
+          "trace": "TEXTURE_LIFETIME root-16 cycle=2",
+          "key": "r",
+          "visible": true
+        },
+        {
+          "label": "cycle-3",
+          "trace": "TEXTURE_LIFETIME root-16 cycle=3",
+          "key": "r",
+          "visible": true
+        },
+        {
+          "label": "cycle-4",
+          "trace": "TEXTURE_LIFETIME root-16 cycle=4",
+          "key": "r",
+          "visible": true
+        },
+        {
+          "label": "empty",
+          "trace": "TEXTURE_LIFETIME root-16 empty",
+          "key": "u",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "name": "root-64",
+      "file": "root-64.swf",
+      "avm": "AVM2",
+      "uniqueImages": 64,
+      "cycles": 2,
+      "steps": [
+        {
+          "label": "ready",
+          "trace": "TEXTURE_LIFETIME root-64 ready",
+          "visible": false
+        },
+        {
+          "label": "cycle-1",
+          "trace": "TEXTURE_LIFETIME root-64 cycle=1",
+          "key": "s",
+          "visible": true
+        },
+        {
+          "label": "cycle-2",
+          "trace": "TEXTURE_LIFETIME root-64 cycle=2",
+          "key": "r",
+          "visible": true
+        },
+        {
+          "label": "empty",
+          "trace": "TEXTURE_LIFETIME root-64 empty",
+          "key": "u",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "name": "loader-release",
+      "file": "loader-release.swf",
+      "avm": "AVM2",
+      "loadCycles": 6,
+      "retainedReferences": 0,
+      "steps": [
+        {
+          "label": "ready",
+          "trace": "TEXTURE_LIFETIME loader-release ready",
+          "visible": false
+        },
+        {
+          "label": "unloaded-six",
+          "trace": "TEXTURE_LIFETIME loader-release complete",
+          "key": "s",
+          "visible": false
+        },
+        {
+          "label": "retained-rehang",
+          "trace": "TEXTURE_LIFETIME loader-release retained=0",
+          "key": "r",
+          "visible": false
+        },
+        {
+          "label": "dropped",
+          "trace": "TEXTURE_LIFETIME loader-release dropped",
+          "key": "u",
+          "visible": false
+        },
+        {
+          "label": "normal-frames",
+          "trace": "TEXTURE_LIFETIME loader-release done",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "name": "loader-retain",
+      "file": "loader-retain.swf",
+      "avm": "AVM2",
+      "loadCycles": 6,
+      "retainedReferences": 3,
+      "steps": [
+        {
+          "label": "ready",
+          "trace": "TEXTURE_LIFETIME loader-retain ready",
+          "visible": false
+        },
+        {
+          "label": "unloaded-six",
+          "trace": "TEXTURE_LIFETIME loader-retain complete",
+          "key": "s",
+          "visible": false
+        },
+        {
+          "label": "retained-rehang",
+          "trace": "TEXTURE_LIFETIME loader-retain retained=3",
+          "key": "r",
+          "visible": true
+        },
+        {
+          "label": "dropped",
+          "trace": "TEXTURE_LIFETIME loader-retain dropped",
+          "key": "u",
+          "visible": false
+        },
+        {
+          "label": "normal-frames",
+          "trace": "TEXTURE_LIFETIME loader-retain done",
+          "visible": false
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "No forced GC or explicit BitmapData.dispose.",
+    "Root definitions remain alive at empty phase until player teardown.",
+    "JS deleteTexture requests are not physical GPU release proof."
+  ],
+  "protocol": "Trusted s/r/u keydown drives each stable phase. Root holds each resource four ENTER_FRAME ticks; cycle marker stops progression. Loader shows/unloads six child instances, R reattaches retained3 or0, U drops references then120 normal frames. Loaded and unloaded markers recorded for all6 cycles."
+}
