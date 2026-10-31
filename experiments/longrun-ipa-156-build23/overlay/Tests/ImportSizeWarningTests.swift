@@ -97,7 +97,7 @@ final class ImportSizeWarningTests: XCTestCase {
         let source = try archive(entries: [("main.swf", Data("FWSfixture12".utf8))])
         var value = importer(); value.sizeApproval = try warning(value, source).approval
         let zip = try Archive(url: source, accessMode: .update)
-        try zip.addEntry(with: "new.dat", type: .file, uncompressedSize: 1) { _, _ in Data([1]) }
+        try zip.addEntry(with: "new.dat", type: .file, uncompressedSize: Int64(1)) { _, _ in Data([1]) }
         XCTAssertThrowsError(try value.stageAndCommit(source)) { XCTAssertTrue($0 is PackageError) }
         try assertEmpty()
     }
