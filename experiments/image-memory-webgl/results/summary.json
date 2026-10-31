@@ -1,0 +1,67 @@
+{
+  "IPABuilt": false,
+  "allCanvasRGBAAndFullTextureHashesMatch": true,
+  "browser": "Chrome 156.0.8078.47",
+  "browserArtifact": {
+    "bytes": 64197,
+    "id": 13027862395,
+    "sha256": "9afe62c282e623f633eb4e1a07f71fb7ae97d5f440a0eb3c758505606cb4ca1a"
+  },
+  "browserCommit": "e4931e218ddc36e05e8bb33c692d00fa999e6d94",
+  "browserRun": 41162734046,
+  "browserRunConclusion": "success with explicit context-recovery limitation",
+  "buildCommit": "d59b8f3876a57e8ed74ed3b732e103588d3fd298",
+  "buildRun": 41160325754,
+  "buildRunConclusion": "failure: browser capture ordering; both engine builds and receipts succeeded",
+  "cacheAsBitmapRebuild": "not_run",
+  "contextRecovery": {
+    "extensionSupported": true,
+    "lostEventBoth": true,
+    "pixelsRecoveredBoth": false,
+    "restoredEventBoth": false,
+    "scope": "Controlled single-instance synthetic case; not WebContent termination or iOS"
+  },
+  "engineArtifact": {
+    "bytes": 24499928,
+    "id": 13028170023,
+    "sha256": "d8e7d381a0734d055cc82c080c5022b4de0597197bfbf12f71010fabd1184da6"
+  },
+  "mainOrReleaseModified": false,
+  "nativeAcceptance": false,
+  "pages": 10,
+  "productPatchSHA256": "6412a1c8a5b57f0f6dd513805df8725da889d36df86350eb0ad0e1d3e15e2799",
+  "recommendation": "Keep experimental only; no stable full-engine memory improvement across large samples; investigate loading/texture staging before adoption",
+  "sandbox": true,
+  "scope": "Focused synthetic desktop WebGL parity, not native acceptance",
+  "shownWasmPagesBaselineCandidate": {
+    "1024opaque": [
+      420,
+      420
+    ],
+    "1024pattern": [
+      420,
+      420
+    ],
+    "511pattern": [
+      297,
+      297
+    ],
+    "512pattern": [
+      299,
+      282
+    ],
+    "64pattern": [
+      254,
+      254
+    ]
+  },
+  "statesPerPage": [
+    "ready",
+    "shown",
+    "redrawn",
+    "masked",
+    "hit"
+  ],
+  "timing": "Single instrumented observation, not speed benchmark/adoption evidence",
+  "unsafeSwiftShaderOptIn": false
+}

@@ -1,0 +1,29 @@
+{
+  "baseSourceLockSHA256": "7200650c24fe505844ea676c02c44a42dd2ee7bc484344e775e4458d84566494",
+  "bindingSHA256": "638f24357c3ceefb9d6841d6a2b7bc0141effae93b13c220c2ba809807986eb8",
+  "coreJSTests": 63,
+  "experimentalOnly": true,
+  "nativeAcceptance": false,
+  "patchSHA256": "6412a1c8a5b57f0f6dd513805df8725da889d36df86350eb0ad0e1d3e15e2799",
+  "physicalDeviceAcceptance": false,
+  "run": {
+    "GITHUB_RUN_ATTEMPT": "1",
+    "GITHUB_RUN_ID": "41160325754",
+    "GITHUB_SHA": "d59b8f3876a57e8ed74ed3b732e103588d3fd298",
+    "ImageOS": "ubuntu24",
+    "ImageVersion": "20261026.354.1"
+  },
+  "runtimeInventorySHA256": "a4256c37dd02643dff399775caac484a8a5026956d90e231a991e1d5ec696aff",
+  "sourceSHA256": "d4462d7c8d45e62ea8808b0a673f788606cbe3f2779be89450f8fcf8fa0861fd",
+  "toolVersions": {
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+    "node": "v24.22.1",
+    "npm": "11.19.1",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+    "wasmBindgen": "wasm-bindgen 0.2.127",
+    "wasmOpt": "wasm-opt version 129 (version_129)"
+  },
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "variant": "candidate"
+}
