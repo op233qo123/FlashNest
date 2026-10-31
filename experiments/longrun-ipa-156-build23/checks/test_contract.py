@@ -36,4 +36,23 @@ methods=[]
 for name in classes:
  methods.extend((name,m) for m in re.findall(r'\bfunc (test\w+)\(',read('Tests/'+name+'.swift')))
 assert len(methods)==25 and len(set(methods))==25, methods
-print(json.dumps({'staticContractPassed':True,'expectedNativeTests':len(methods),'nativeTestsExecutedHere':False,'physicalDeviceCertified':False}))
+print(json.dumps({'staticContractPassed':True,'originalDiagnosticMethods':len(methods),'nativeTestsExecutedHere':False,'physicalDeviceCertified':False}))
+
+# Import-size policy remains an explicit decision, never a global unsafe bypass.
+importer=read('App/Import/PackageImporter.swift');preflight=read('App/Import/ImportSizeWarning.swift')
+library=read('App/Models/LibraryStore.swift');appmain=read('App/FlashNestApp.swift')
+assert importer.index('sizePreflight(source)') < importer.index('stageApproved(source')
+assert 'if let warning = inspection.warning, sizeApproval == nil { throw warning }' in importer
+assert 'sizeApproval != inspection.approval' in importer and 'original.sizePreflight(source).approval == inspection.approval' in importer
+assert 'bytes <= maximum - size' in importer and 'guard size == expectedSize' in importer
+assert 'bufferSize: 65536' in importer and 'read(upToCount: 65536)' in importer
+assert 'entry.uncompressedSize / max(entry.compressedSize, 1) <= limits.compressionRatio' in preflight
+assert 'ZIPIntegrity.expectedEntryCount' in preflight and 'ImportPathRegistry' in preflight
+assert 'addingReportingOverflow' in preflight and 'addingReportingOverflow' in read('App/Import/ImportControl.swift')
+assert 'requestSizeConfirmation(warning, operation: operation)' in library
+assert 'pending.id == id' in library and 'pending.operation == importOperation' in library
+assert 'withTaskCancellationHandler' in library and 'finishSizeConfirmation(allow: false)' in library
+for path in ('App/Views/LibraryView.swift','App/Views/LocalImportInboxView.swift'):
+ assert '.importSizeWarning(library:' in read(path)
+assert appmain.index('#if DEBUG') < appmain.index('--flashnest-import-size-warning-ui-test') < appmain.index('#endif')
+print(json.dumps({'importWarningStaticContractPassed':True,'actualNativeExecution':False}))

@@ -23,6 +23,12 @@ def config():
  need(x['baselineSourceCommit']=='985f25c44ead766b2c4f9bd77b82e7b92bf95cc0' and x['frozenSourceCommit']=='9bc000e37695696f2427b25fe08efe4993bf22e5','Wrong baseline source commits')
  need(set(x['recipeFiles'])=={'package.py','run_focused_tests.py','workflow.yml','README.md','checks/test_long_run.js','checks/test_contract.py','checks/test_package.py'},'Incomplete recipe closure')
  need(x['version']=='1.5.6' and x['build']=='23' and x['bundleID']=='com.flashnest.app','Wrong package identity')
+ need(x.get('packageRevision')=='import-warning-diagnostic','Wrong build23 revision')
+ required={'LongRunDiagnosticsTests','LongRunSessionTests','LoadingPhaseDiagnosticsTests','LoopbackLoadPhaseTests','PackageImporterTests','ImportAliasTests','LocalImportInboxTests','ImportFlowTests','DocumentPickerDelegateTests','ImportSizeWarningTests','ImportSizeConfirmationFlowTests'}
+ need(required.issubset(set(x['testClasses'])) and len(x['testClasses'])==len(set(x['testClasses'])),'Required native import/diagnostic classes missing or duplicated')
+ need(set(x['testSourceFiles'])==set(x['testClasses']),'Native source mapping differs')
+ need(x['uiTestClasses']==['ImportSizeWarningUITests'] and x['uiTestSourceFiles']=={'ImportSizeWarningUITests':'UITests/ImportSizeWarningUITests.swift'},'Required UI source mapping differs')
+ need(x['expectedUITests']==[['ImportSizeWarningUITests','testContinueAlertImportsInsteadOfBeingCancelledByDismissal'],['ImportSizeWarningUITests','testCancelAlertKeepsLibraryAndAllowsNewConfirmation']],'Required actual UI methods differ')
  for key in ['diagnosticOptInDefault','automaticUpload','cacheEvictionEnabled','engineProductChanges','originalCrashResolved','fullGatePassed','physicalDeviceCertified']:
   need(x[key] is False,'Invalid claim/behavior '+key)
  for p,h in x['recipeFiles'].items():need(sha((ROOT/p).read_bytes())==h,'Recipe hash mismatch '+p)
@@ -72,6 +78,7 @@ def stage(source,recipe,out):
 
 def verify(ipa,app,out,record):
  x=config();staged=load(out/'staging.json')
+ need(ipa.name=='FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned.ipa','Wrong import-warning revision filename')
  # Reuse frozen strict IPA path/Mach-O checks, not prior release waiver or prior tests.
  release,y,_,_=load_release(Path(os.environ['RECIPE_CHECKOUT']).resolve(),x);c=release.c
  c.verify_sources(app,staged['diagnosticSourceFiles'])
@@ -79,6 +86,13 @@ def verify(ipa,app,out,record):
  need(raw_info.count(anchor)==1 and sha(raw_info.replace(anchor,b'<key>CFBundleVersion</key>\n\t<string>19</string>'))=='b71b74d803b9a68e58a77e1043cbdcb07888606b513fecb8000651d73990085f','Generated Info.plist differs')
  test=load(out/'focused-tests/verification.json');need(test['diagnosticTestsPassed'] is True and test['fullGatePassed'] is False,'Missing actual focused native pass')
  need(test['sourceFiles']==staged['diagnosticSourceFiles'],'Native test source binding differs')
+ need(test['expected']==x['expectedNativeTests'],'Native selected methods differ')
+ for k,v in {'totalTestCount':len(x['expectedNativeTests']),'passedTests':len(x['expectedNativeTests']),'failedTests':0,'skippedTests':0,'expectedFailures':0}.items():need(type(test['counts'].get(k)) is int and test['counts'][k]==v,'Native count mismatch '+k)
+ ui=load(out/'focused-tests/ui-verification.json');need(ui['importConfirmationUIPassed'] is True and ui['fullGatePassed'] is False,'Missing actual UI confirmation pass')
+ need(ui['sourceFiles']==staged['diagnosticSourceFiles'] and ui['expected']==x['expectedUITests'],'UI source/test binding differs')
+ need(ui.get('fixtureSourceInstalled',{}).get('installedOnTestDevice') is True,'Missing installed fixture evidence')
+ for receipt in (test,ui):need(receipt.get('runID')==os.environ.get('GITHUB_RUN_ID') and receipt.get('head')==os.environ.get('GITHUB_SHA'),'Test run/head differs')
+ for k,v in {'totalTestCount':len(x['expectedUITests']),'passedTests':len(x['expectedUITests']),'failedTests':0,'skippedTests':0,'expectedFailures':0}.items():need(type(ui['counts'].get(k)) is int and ui['counts'][k]==v,'UI count mismatch '+k)
  with tempfile.TemporaryDirectory() as temp:
   with zipfile.ZipFile(ipa) as z:c.safe_ipa_members(z.infolist());need(z.testzip() is None,'IPA CRC');z.extractall(temp)
   bundle=Path(temp)/'Payload/FlashNest.app';c.verify_outer_payload(bundle)
@@ -86,9 +100,10 @@ def verify(ipa,app,out,record):
   expected={'CFBundleIdentifier':x['bundleID'],'CFBundleShortVersionString':x['version'],'CFBundleVersion':x['build'],'DTPlatformName':'iphoneos','CFBundleExecutable':'FlashNest','MinimumOSVersion':'17.0','DTSDKName':'iphoneos18.2'}
   for k,v in expected.items():need(info.get(k)==v,'Actual IPA identity differs '+k)
   macho=c.device_macho((bundle/'FlashNest').read_bytes())
+  need(b'--flashnest-import-size-warning-ui-test' not in (bundle/'FlashNest').read_bytes(),'DEBUG import warning harness entry present in Release')
   need(files(bundle/'Web')==files(app/'App/Resources/Web'),'IPA Web bytes differ')
   need(files(bundle/'Web/runtime')==x['runtimeFiles'],'IPA engine changed')
-  dump(record,{'schemaVersion':1,'kind':x['kind'],'version':x['version'],'build':x['build'],'unsigned':True,'ipaSHA256':sha(ipa.read_bytes()),'ipaBytes':ipa.stat().st_size,'packagingCommit':os.environ.get('GITHUB_SHA'),'packagingRunID':os.environ.get('GITHUB_RUN_ID'),'baselineSourceCommit':x['baselineSourceCommit'],'appSourceFiles':staged['diagnosticSourceFiles'],'runtimeFiles':x['runtimeFiles'],'webFiles':files(bundle/'Web'),'nativeFocusedTests':test,'deviceExecutable':macho,'diagnosticOptInDefault':False,'automaticUpload':False,'originalCrashResolved':False,'fullGatePassed':False,'physicalDeviceCertified':False})
+  dump(record,{'schemaVersion':1,'kind':x['kind'],'packageRevision':'import-warning-diagnostic','version':x['version'],'build':x['build'],'unsigned':True,'ipaSHA256':sha(ipa.read_bytes()),'ipaBytes':ipa.stat().st_size,'packagingCommit':os.environ.get('GITHUB_SHA'),'packagingRunID':os.environ.get('GITHUB_RUN_ID'),'baselineSourceCommit':x['baselineSourceCommit'],'appSourceFiles':staged['diagnosticSourceFiles'],'runtimeFiles':x['runtimeFiles'],'webFiles':files(bundle/'Web'),'nativeFocusedTests':test,'importConfirmationUI':ui,'deviceExecutable':macho,'diagnosticOptInDefault':False,'automaticUpload':False,'originalCrashResolved':False,'fullGatePassed':False,'physicalDeviceCertified':False})
  print('Actual build23 diagnostic IPA verified; not full native or physical-device acceptance')
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('action',choices=['preflight','stage','verify']);p.add_argument('--source-checkout',type=Path);p.add_argument('--recipe-checkout',type=Path);p.add_argument('--output',type=Path);p.add_argument('--app',type=Path);p.add_argument('--ipa',type=Path);p.add_argument('--record',type=Path);a=p.parse_args()

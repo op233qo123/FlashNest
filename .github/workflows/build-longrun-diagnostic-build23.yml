@@ -1,4 +1,4 @@
-name: Build FlashNest long-run diagnostic test IPA build23
+name: Build FlashNest import-warning diagnostic test IPA build23
 on:
   push:
     branches: [experiment/longrun-diagnostic-build23]
@@ -66,7 +66,7 @@ jobs:
           mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
           cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
           xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
-      - name: Focused actual native diagnostics tests; not full-game acceptance
+      - name: Focused actual native import and diagnostics tests; not full-game acceptance
         env:
           RECIPE_CHECKOUT: ${{ github.workspace }}/recipe
         run: python3 "$DIAGNOSTIC_RECIPE/run_focused_tests.py" diagnostic-package/app diagnostic-package/focused-tests
@@ -81,22 +81,26 @@ jobs:
         run: |
           set -euo pipefail
           mkdir diagnostic-package/artifacts
-          bash diagnostic-package/app/scripts/package_unsigned.sh diagnostic-package/app/build/Build/Products/Release-iphoneos/FlashNest.app diagnostic-package/artifacts/FlashNest-1.5.6-build23-longrun-diagnostic-unsigned.ipa
-          python3 "$DIAGNOSTIC_RECIPE/package.py" verify --ipa diagnostic-package/artifacts/FlashNest-1.5.6-build23-longrun-diagnostic-unsigned.ipa --app diagnostic-package/app --output diagnostic-package --record diagnostic-package/artifacts/diagnostic-provenance.json
+          bash diagnostic-package/app/scripts/package_unsigned.sh diagnostic-package/app/build/Build/Products/Release-iphoneos/FlashNest.app diagnostic-package/artifacts/FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned.ipa
+          python3 "$DIAGNOSTIC_RECIPE/package.py" verify --ipa diagnostic-package/artifacts/FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned.ipa --app diagnostic-package/app --output diagnostic-package --record diagnostic-package/artifacts/diagnostic-provenance.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: FlashNest-1.5.6-build23-longrun-diagnostic-unsigned
+          name: FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned
           path: diagnostic-package/artifacts/
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: FlashNest-build23-diagnostic-test-evidence
+          name: FlashNest-build23-import-warning-diagnostic-test-evidence
           path: |
             diagnostic-package/staging.json
             diagnostic-package/focused-tests/focused.log
             diagnostic-package/focused-tests/summary.json
             diagnostic-package/focused-tests/verification.json
+            diagnostic-package/focused-tests/fixture-source-build.log
+            diagnostic-package/focused-tests/ui.log
+            diagnostic-package/focused-tests/ui-summary.json
+            diagnostic-package/focused-tests/ui-verification.json
           if-no-files-found: warn
           retention-days: 7

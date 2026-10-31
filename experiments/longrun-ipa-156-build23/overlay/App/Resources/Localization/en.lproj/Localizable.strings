@@ -396,3 +396,21 @@
 "Share long-run record" = "Share long-run record";
 "Long-run records could not be saved locally." = "Long-run records could not be saved locally.";
 "Clear long-run records" = "Clear long-run records";
+
+"Large import warning" = "Large import warning";
+
+"Continue import" = "Continue import";
+
+"Import size: %@ total; largest file: %@. Warning thresholds: %@ per file or %@ total." = "Import size: %@ total; largest file: %@. Warning thresholds: %@ per file or %@ total.";
+
+"Large imports need additional free storage and may take a long time. Importing or running this game may fail because of available storage or memory. The original files are not changed. Continue importing?" = "Large imports need additional free storage and may take a long time. Importing or running this game may fail because of available storage or memory. The original files are not changed. Continue importing?";
+
+"Source changed after confirmation. Select it again." = "Source changed after confirmation. Select it again.";
+
+"%lld bytes" = "%lld bytes";
+"Import source changed. Select it again and review its size." = "Import source changed. Select it again and review its size.";
+"Source changed after review. Select it again." = "Source changed after review. Select it again.";
+"Source changed before copying. Select it again." = "Source changed before copying. Select it again.";
+"Import source grew beyond its reviewed size. Select it again." = "Import source grew beyond its reviewed size. Select it again.";
+"Source size changed during copying. Select it again." = "Source size changed during copying. Select it again.";
+"ZIP output exceeds its reviewed size" = "ZIP output exceeds its reviewed size";

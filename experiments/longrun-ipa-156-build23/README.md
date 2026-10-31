@@ -1,50 +1,21 @@
-# FlashNest 1.5.6 build23 long-run diagnostic test package
+# FlashNest 1.5.6 build23 — import-warning diagnostic TEST IPA
 
-This is an unsigned, default-off diagnostic test IPA. It is not a formal Release,
-a crash fix, a cache eviction policy, or a physical-device certification.
-The accepted 1.5.6/build22 engine's twelve runtime files remain byte-identical.
-No experimental alpha decoder, scale-1 shape reuse, or root-cache policy is added.
+This is a rebuild of the default-OFF long-run diagnostic test package, not a new formal release. It retains version 1.5.6/build23 and uses a distinct `FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned.ipa` filename and artifact names to distinguish it from the prior build23 diagnostic package.
 
-## Source and packaging identity
+## Reviewed scope
 
-The root repository App is not the accepted build22 App. Staging reconstructs the
-207-file build22 source from frozen source commit
-`9bc000e37695696f2427b25fe08efe4993bf22e5`, its exact build20 diagnostic overlays,
-the explicitly enabled sampling preference gate, and original candidate engine
-archive `40998892881`. It verifies every source hash against the release recipe
-at `985f25c44ead766b2c4f9bd77b82e7b92bf95cc0`, then applies only reviewed build23
-overlay files. This does not inherit an old UI-test waiver as a new test result.
+The import revision replaces the prior 256 MiB per-file and 1 GiB per-package hard byte rejection with a user warning and explicit continuation choice. Large imports are not automatically confirmed. Cancellation must leave library/source data unchanged. Confirmation permits the warned byte size; it does not waive ZIP path traversal, unsafe entry, symlink, entry-count, compression-ratio/bomb or other structural safety checks. The warning is not a promise that available storage or runtime memory is sufficient. Exact product policy and UX are source- and test-bound in the overlay, not implied by this document alone.
 
-The source reconstruction needs the pinned historical vendor archive and pinned
-candidate archive. An unavailable or mismatched artifact fails closed; no
-substitute engine is silently accepted. The old composite archive is recovered
-from exact committed mirror parts and checked by its original full digest.
+The engine remains the same 12 pinned accepted runtime files from build22. No new image-decoder, texture eviction, JPEG-drop, alpha or scale policy is bundled. Long-running diagnostics stay opt-in and default OFF, local bounded scalar records only; no automatic upload or game paths/names/URLs/save/image/raw-buffer payloads. WebGL counters are API observations, not physical GPU/CPU memory measurements. Internal Flash scene transitions are not universally observed. Existing resource limits and process termination do not by themselves prove OOM.
 
-## Diagnostic scope and privacy
+## Reproducible staging
 
-The added observer is opt-in. It records only bounded scalar samples and fixed
-native lifecycle/marker event types in anonymous local sessions. It does not
-record game names, URLs, paths, save contents, pixel bytes, free-form traces, or
-error text. There is no automatic upload. Export is an explicit user action.
-It cannot universally detect Flash scene transitions. Heartbeat gaps can arise
-from scheduling/background throttling and do not establish a crash cause.
-Texture API counts and byte estimates are not physical GPU allocation; missing
-WASM capacity coverage is reported as unsupported, not guessed.
-Only WebGL is observed: at most four contexts and 16,384 lifetime tracked
-textures. Overflow means incomplete coverage; unique deletion counts may be
-lower bounds. Counts do not prove resources were physically freed.
-The separate older load-phase observer keeps its original first-64-request /
-first-256-event limit; only the new long-run recorder rolls indefinitely
-within its last-120-events per session / two-session bound.
+`package.py` first validates the immutable build22 release recipe and its exact 207-file source/runtime closure, reconstructs that baseline from pinned source and original archive bytes, then applies the hash-bound reviewed build23 overlay. It rejects runtime overlays, unsafe paths, extra source entries and mismatched hashes. The source checkout remains frozen commit `9bc000e37695696f2427b25fe08efe4993bf22e5`; baseline release commit is `985f25c44ead766b2c4f9bd77b82e7b92bf95cc0`.
 
-## Acceptance
+Recipe modifications must refresh `recipeFiles` and overlay hashes in `inputs.json`. Dispatch requires the separately authorized `dispatchAllowed` flag. This recipe does not modify main, tags, formal Releases, credentials or security settings.
 
-The workflow uses Xcode 16.2 and iOS 18.2, runs reviewed JavaScript/source checks
-and selected actual simulator XCTest methods, and then builds a Release arm64
-unsigned IPA. Selected method identities/counts, no skips, tested source hashes,
-and actual packaged runtime/Web bytes are verified. Passing these focused tests
-is not complete application regression, long-term game validation, context-loss
-recovery, or real iPhone acceptance. Prior observed UI/context limitations remain.
+## Evidence boundaries
 
-The workflow cannot change main, create a tag or Release, or publish an App Store
-build. It uploads only the requested test artifact and synthetic test evidence.
+CI uses Xcode16.2 / iOS18.2 SE3 simulator and unsigned arm64 device packaging. Selected native tests include the original 25 diagnostic methods plus explicitly enumerated import policy/flow regressions. A separate FlashNestUI lane on the same simulator verifies actual confirmation taps with actual Files cross-container synthetic fixtures from the separately built/installed FlashNestFixtureSource app and a DEBUG-only reduced warning threshold; this is not all-provider or real large-file end-to-end coverage. Both unit and UI receipts must pass before packaging. The Release executable must not contain the DEBUG harness launch argument. `testSourceFiles` maps class names to files; class-aware Swift method extraction prevents a second XCTestCase in the same file being wrongly attributed to the first. Each selected method must actually pass; missing, skipped, unexpected or failed cases fail the gate. No prior UI waiver is reused. Simulator cleanup and per-unit-test180-second and per-UI-test420-second limits remain enabled.
+
+Static/Node/Python controls are separate from actual native execution. The final receipt binds the selected XCTest pass and IPA Web/runtime bytes to the staged source. `fullGatePassed`, `physicalDeviceCertified` and `originalCrashResolved` remain false; no prior or new focused test result establishes complete game compatibility or resolution of the long-run crash. Real-device import confirmation and long-running reproduction remain user validation steps.

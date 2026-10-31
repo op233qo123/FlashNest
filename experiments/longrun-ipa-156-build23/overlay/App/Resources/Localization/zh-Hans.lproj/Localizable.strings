@@ -396,3 +396,21 @@
 "Share long-run record" = "分享长期运行记录";
 "Long-run records could not be saved locally." = "无法在本地保存长期运行记录。";
 "Clear long-run records" = "清除长期运行记录";
+
+"Large import warning" = "大文件导入提醒";
+
+"Continue import" = "继续导入";
+
+"Import size: %@ total; largest file: %@. Warning thresholds: %@ per file or %@ total." = "导入大小：合计 %@；最大单个文件 %@。提醒阈值：单文件 %@ 或总计 %@。";
+
+"Large imports need additional free storage and may take a long time. Importing or running this game may fail because of available storage or memory. The original files are not changed. Continue importing?" = "大文件导入需要额外的可用存储空间，可能耗时较长。受可用存储空间或内存影响，导入或运行游戏仍可能失败。原始文件不会被修改。是否继续导入？";
+
+"Source changed after confirmation. Select it again." = "确认后源文件发生了变化，请重新选择。";
+
+"%lld bytes" = "%lld 字节";
+"Import source changed. Select it again and review its size." = "导入源文件或大小已发生变化，请重新选择并确认。";
+"Source changed after review. Select it again." = "导入源文件或大小已发生变化，请重新选择并确认。";
+"Source changed before copying. Select it again." = "导入源文件或大小已发生变化，请重新选择并确认。";
+"Import source grew beyond its reviewed size. Select it again." = "导入源文件或大小已发生变化，请重新选择并确认。";
+"Source size changed during copying. Select it again." = "导入源文件或大小已发生变化，请重新选择并确认。";
+"ZIP output exceeds its reviewed size" = "导入源文件或大小已发生变化，请重新选择并确认。";
