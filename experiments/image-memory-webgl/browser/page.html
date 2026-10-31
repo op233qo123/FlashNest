@@ -1,0 +1,60 @@
+<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:white}#host{width:320px;height:240px}ruffle-player{display:block;width:100%;height:100%}button{position:absolute;left:330px;top:0}</style><div id="host"></div><button id="play">Play</button><script>
+'use strict';
+const query=new URLSearchParams(location.search),arm=query.get('arm');
+if(!['baseline','candidate'].includes(arm))throw Error('arm');
+window.evidence={traces:[],errors:[],keys:[],contexts:[],calls:[],overflow:false,contextEvents:[],wasmInstantiations:0,memoryUnsupported:0,timings:{}};
+const wasmMemories=[];
+function observeWasm(result){ const instance=result?.instance||result; evidence.wasmInstantiations++; let found=false; for(const value of Object.values(instance?.exports||{})){if(value instanceof WebAssembly.Memory){found=true;if(!wasmMemories.includes(value))wasmMemories.push(value)}} if(!found)evidence.memoryUnsupported++; return result;}
+for(const name of ["instantiate","instantiateStreaming"]){const original=WebAssembly[name];if(original)WebAssembly[name]=function(...args){return Reflect.apply(original,this,args).then(observeWasm)}}
+window.memorySnapshot=()=>wasmMemories.map(m=>({bytes:m.buffer.byteLength,pages:m.buffer.byteLength/65536}));
+const liveContexts=[];const pendingUploadHashes=[];const uploadHashes=[];
+const originalLog=console.log;console.log=function(...args){const match=String(args[0]).match(/New Ruffle instance created .*\| Used renderer: ([^)]+)\)/);if(match){evidence.actualRenderer=match[1];if(window.attachTraceObserver)window.attachTraceObserver('renderer-created')}return Reflect.apply(originalLog,console,args)};
+const contexts=new WeakMap();
+const originalContext=HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext=function(type,...args){
+ const context=Reflect.apply(originalContext,this,[type,...args]);
+ if(context&&/^webgl2?$/.test(type)&&!contexts.has(context)){
+  const id=evidence.contexts.length;contexts.set(context,id);evidence.contexts.push({id,type});
+  liveContexts.push({context,canvas:this});
+  this.addEventListener('webglcontextlost',e=>{evidence.contextEvents.push({type:'lost',id,time:performance.now()})});
+  this.addEventListener('webglcontextrestored',()=>evidence.contextEvents.push({type:'restored',id,time:performance.now()}));
+ }return context;
+};
+for(const ctor of [window.WebGLRenderingContext,window.WebGL2RenderingContext]){
+ if(!ctor)continue;
+ for(const name of ['texImage2D','texSubImage2D','compressedTexImage2D','compressedTexSubImage2D','texImage3D','texSubImage3D','drawElements','drawArrays']){
+  const original=ctor.prototype[name];if(!original||original.phaseWrapped)continue;
+  const wrapper=function(...args){
+   const result=Reflect.apply(original,this,args),id=contexts.get(this);
+   if(id!==undefined){
+    let width=null,height=null;
+    if(name==='texImage2D'){if(args.length===9){width=args[3];height=args[4]}else if(args.length===6){width=args[5]?.width;height=args[5]?.height}}
+    if(name==='texSubImage2D'){if(args.length===9){width=args[4];height=args[5]}else if(args.length===7){width=args[6]?.width;height=args[6]?.height}}
+    if(['compressedTexImage2D','texImage3D'].includes(name)){width=args[3];height=args[4]}
+    if(['compressedTexSubImage2D','texSubImage3D'].includes(name)){width=args[name==='texSubImage3D'?5:4];height=args[name==='texSubImage3D'?6:5]}
+    if((name==='texImage2D'||name==='texSubImage2D') && width>=64 && height>=64){const bytes=args[args.length-1];if(ArrayBuffer.isView(bytes)&&bytes.byteLength===width*height*4){if(uploadHashes.length>=32){evidence.overflow=true;}else{const entry={id,name,width,height,bytes:bytes.byteLength};uploadHashes.push(entry);pendingUploadHashes.push(crypto.subtle.digest('SHA-256',bytes).then(hash=>{entry.sha256=Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('')}));}}}
+    if(evidence.calls.length<20000)evidence.calls.push({id,name,width:Number.isFinite(width)?width:null,height:Number.isFinite(height)?height:null});else evidence.overflow=true;
+   }return result;
+  };wrapper.phaseWrapped=true;ctor.prototype[name]=wrapper;
+ }
+}
+window.addEventListener('error',()=>evidence.errors.push('windowerror'));
+window.addEventListener('unhandledrejection',()=>evidence.errors.push('unhandledrejection'));
+document.addEventListener('keydown',e=>{if(evidence.keys.length<16)evidence.keys.push({key:e.key,trusted:e.isTrusted})},true);
+window.RufflePlayer={config:{autoplay:'off',unmuteOverlay:'hidden',warnOnUnsupportedContent:false}};
+const script=document.createElement('script');script.src='/'+arm+'/ruffle.js';document.head.append(script);
+script.onload=()=>window.runtimeReady=true;script.onerror=()=>evidence.errors.push('runtime-load');
+window.start=async function(fixture){
+ evidence.timings.start=performance.now();
+ const p=RufflePlayer.newest().createPlayer();window.player=p;p.tabIndex=0;document.getElementById('host').append(p);
+ const api=p.ruffle();window.api=api;
+ const traceObserver=message=>{if(evidence.traces.length<128)evidence.traces.push(String(message).slice(0,500));else evidence.overflow=true};
+ window.attachTraceObserver=source=>{api.traceObserver=traceObserver;evidence.traceAttached=true;if(source==='renderer-created')evidence.instanceTraceAttachments=(evidence.instanceTraceAttachments||0)+1};
+ await api.load({url:'/fixtures/'+fixture,preferredRenderer:'webgl',autoplay:'off',unmuteOverlay:'hidden',allowScriptAccess:false,scale:'noScale',align:'topLeft',backgroundColor:'#ffffff'});
+ window.attachTraceObserver();evidence.timings.loadResolved=performance.now();
+ document.getElementById('play').onclick=()=>{api.resume();p.focus()};
+};
+window.snapshot=async()=>{await Promise.all(pendingUploadHashes);return ({actualRenderer:evidence.actualRenderer,traceAttached:evidence.traceAttached===true,instanceTraceAttachments:evidence.instanceTraceAttachments||0,traces:evidence.traces.slice(),errors:evidence.errors.slice(),keys:evidence.keys.slice(),contexts:evidence.contexts.slice(),calls:evidence.calls.slice(),overflow:evidence.overflow,contextEvents:evidence.contextEvents.slice(),wasmInstantiations:evidence.wasmInstantiations,memoryUnsupported:evidence.memoryUnsupported,memories:window.memorySnapshot(),timings:{...evidence.timings},uploadHashes:uploadHashes.map(x=>({...x}))});};
+window.controlledLoss=()=>{const chosen=liveContexts[0];const ext=chosen?.context.getExtension('WEBGL_lose_context');if(!ext)return false;window.restoreControlledContext=()=>ext.restoreContext();ext.loseContext();return true;};
+window.settled=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+</script>

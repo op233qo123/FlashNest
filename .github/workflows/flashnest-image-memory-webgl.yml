@@ -1,0 +1,109 @@
+name: FlashNest image decode memory WebGL experiment (not IPA)
+on:
+  push:
+    branches: [experiment/image-memory-webgl-20261031]
+    paths:
+      - 'experiments/image-memory-webgl/**'
+      - '.github/workflows/flashnest-image-memory-webgl.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flashnest-image-memory-webgl
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+      CARGO_BUILD_JOBS: 1
+      CARGO_INCREMENTAL: 0
+      PYTHONDONTWRITEBYTECODE: '1'
+      CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+      PREP: experiments/image-memory-webgl
+      OLD: experiments/lazy-graphic-engine
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Verify public-only experiment contract before build
+        run: python3 "$PREP/scripts/check_experiment.py"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Require sandboxed official Chrome before expensive compilation
+        run: |
+          set -euo pipefail
+          python3 -m venv browser-venv
+          browser-venv/bin/pip install --require-virtualenv -r "$OLD/browser/requirements.txt"
+          mkdir -p "$PREP/evidence"
+          browser-venv/bin/python "$PREP/scripts/browser_preflight.py"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ruffle-rs/ruffle
+          ref: 89a7049965f3090e706265670df309a5128233ac
+          path: .image-memory-source
+          persist-credentials: false
+      - name: Reconstruct exact released source, preserving lazy Graphic
+        run: python3 "$OLD/scripts/stage_engine.py" .image-memory-source --engine-gate
+      - name: Install original pinned build toolchain
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          npm install --global npm@11.19.1
+          rustup toolchain install 1.99.1 --profile minimal --component rust-src --target wasm32-unknown-unknown
+          sudo apt-get update
+          sudo apt-get install -y clang-18 libclang-18-dev libssl-dev pkg-config
+          cargo install --locked wasm-bindgen-cli --version 0.2.127
+          curl --fail --location --retry 2 --max-time 180 https://github.com/WebAssembly/binaryen/releases/download/version_129/binaryen-version_129-x86_64-linux.tar.gz -o "$RUNNER_TEMP/binaryen.tar.gz"
+          echo "50b9fa62b9abea752da92ec57e0c555fee578760cd237c40107957715d2976ba  $RUNNER_TEMP/binaryen.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/binaryen"
+          tar -xzf "$RUNNER_TEMP/binaryen.tar.gz" -C "$RUNNER_TEMP/binaryen" --strip-components=1
+          echo "$RUNNER_TEMP/binaryen/bin" >> "$GITHUB_PATH"
+          curl --fail --location --retry 2 --max-time 180 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.13_9.tar.gz' -o "$RUNNER_TEMP/jre.tar.gz"
+          echo "a535a1df9c6284d9618872984e026ae0352d1f7e9e0605425c0e6114f47351dd  $RUNNER_TEMP/jre.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/jre"
+          tar -xzf "$RUNNER_TEMP/jre.tar.gz" -C "$RUNNER_TEMP/jre" --strip-components=1
+          echo "$RUNNER_TEMP/jre/bin" >> "$GITHUB_PATH"
+          mkdir -p toolchain-evidence
+          dpkg-query -W clang-18 libclang-18-dev libssl-dev pkg-config > toolchain-evidence/system-packages.txt
+          printf '%s\n' "image=${ImageOS:-unknown}/${ImageVersion:-unknown}" > toolchain-evidence/image.txt
+      - name: Locked frontend dependencies and existing license checks
+        run: |
+          set -euo pipefail
+          cd .image-memory-source/web
+          npm ci
+          cd "$GITHUB_WORKSPACE"
+          python3 "$OLD/app/scripts/test_licenses.py"
+      - name: Build exact-source baseline and candidate with same dual WASM recipe
+        timeout-minutes: 120
+        run: bash "$PREP/scripts/build_pair.sh" "$PREP" .image-memory-source image-memory-engines
+      - name: Run bounded synthetic WebGL comparison
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          browser-venv/bin/python "$PREP/browser/test_static.py"
+          node "$PREP/browser/test_page.cjs"
+          python3 "$PREP/scripts/prepare_browser.py" image-memory-engines image-memory-browser-contract.json
+          browser-venv/bin/python "$PREP/browser/run.py" --contract image-memory-browser-contract.json --baseline image-memory-engines/baseline/runtime --candidate image-memory-engines/candidate/runtime --fixtures "$PREP/fixtures" --out image-memory-browser-evidence
+      - name: Bound experimental outputs
+        id: budget
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p image-memory-upload
+          if test -d image-memory-engines; then cp -R image-memory-engines image-memory-upload/; fi
+          if test -d image-memory-browser-evidence; then cp -R image-memory-browser-evidence image-memory-upload/; fi
+          if test -d "$PREP/evidence"; then cp -R "$PREP/evidence" image-memory-upload/preflight; fi
+          if test -f image-memory-browser-contract.json; then cp image-memory-browser-contract.json image-memory-upload/; fi
+          if test -d toolchain-evidence; then cp -R toolchain-evidence image-memory-upload/; fi
+          python3 "$OLD/scripts/evidence_budget.py" image-memory-upload --max-bytes 268435456
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.budget.outputs.allowed == 'true'
+        with:
+          name: FlashNest-image-memory-WebGL-experiment-not-IPA
+          path: image-memory-upload
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: true

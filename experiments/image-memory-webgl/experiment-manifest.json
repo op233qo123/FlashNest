@@ -1,0 +1,167 @@
+{
+  "IPARequested": false,
+  "files": {
+    ".github/workflows/flashnest-image-memory-webgl.yml": {
+      "bytes": 5860,
+      "sha256": "b7263315075f8b7e230987655aea2fb64da9109d85b1bb831ff98326db8132d9"
+    },
+    "experiments/image-memory-webgl/README.md": {
+      "bytes": 2544,
+      "sha256": "967d1d7bf4f316071eed99488b13f66335ac44fde62d56d56229cbc7bf4b7b34"
+    },
+    "experiments/image-memory-webgl/browser/README.md": {
+      "bytes": 4802,
+      "sha256": "1cba0e37a5fc12fa32f8fe171460f11e509e30e175cb89ff2011dcde4fd5e90a"
+    },
+    "experiments/image-memory-webgl/browser/generate_fixtures.py": {
+      "bytes": 3003,
+      "sha256": "9c0fb19079efa47baf82fa2bb2cabada36347b3a67a1ef6eacbefaa21514d5b0"
+    },
+    "experiments/image-memory-webgl/browser/harness-manifest.json": {
+      "bytes": 1541,
+      "sha256": "4180c5cb26b086652883c5e7601e69a7bf05477b4398f2ccd00692e71d2e0313"
+    },
+    "experiments/image-memory-webgl/browser/page.html": {
+      "bytes": 6648,
+      "sha256": "9b4c9dc00f249d137f86475b3e6fe5401b4175491c43158caa638b3a7d218691"
+    },
+    "experiments/image-memory-webgl/browser/prepare_contract.py": {
+      "bytes": 1277,
+      "sha256": "1897f44f31cabed694175d7fcb57c71c6d8d92e74fb502cfd6bccfffe2d29e39"
+    },
+    "experiments/image-memory-webgl/browser/requirements.txt": {
+      "bytes": 89,
+      "sha256": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574"
+    },
+    "experiments/image-memory-webgl/browser/run.py": {
+      "bytes": 10539,
+      "sha256": "7631be499cefa953620e51e232b801269739a4b87f3f710490fb23f786875383"
+    },
+    "experiments/image-memory-webgl/browser/test_page.cjs": {
+      "bytes": 3535,
+      "sha256": "3fe1ba309a50a8870be2386faf3ebf5bb9fe7f992474f39934a19ad0801eca41"
+    },
+    "experiments/image-memory-webgl/browser/test_static.py": {
+      "bytes": 1694,
+      "sha256": "6cddf25890ef37670fa941e2137a16317ecfb63feb0e3df6d5561877479d6964"
+    },
+    "experiments/image-memory-webgl/fixtures/manifest.json": {
+      "bytes": 2758,
+      "sha256": "3d16d70e3c2b00bf9259a7b71d3ecdd5ec5103cd0c707ab0f799a9fc33812ac2"
+    },
+    "experiments/image-memory-webgl/fixtures/neutral-jpeg3-1024-opaque.swf": {
+      "bytes": 65392,
+      "sha256": "f72a6356fb53ce92845ddbca04e347553ba4e29f489ab1df5b1e0a9ce535763c"
+    },
+    "experiments/image-memory-webgl/fixtures/neutral-jpeg3-1024-pattern.swf": {
+      "bytes": 69473,
+      "sha256": "3535f9de3936945e9c6d501e5880b9de4a4ac15883f4fc7ea9ee526b499ac708"
+    },
+    "experiments/image-memory-webgl/fixtures/neutral-jpeg3-511-pattern.swf": {
+      "bytes": 43305,
+      "sha256": "e77cccbfb815f2b0c69fbe5c3a15b71ba36b4bb3873344f01b2e50d52ff7214d"
+    },
+    "experiments/image-memory-webgl/fixtures/neutral-jpeg3-512-pattern.swf": {
+      "bytes": 24402,
+      "sha256": "bbd35c5fe555bb9447ae25e76b8aee90edcc045c73ab7d153a2e4aa15548d538"
+    },
+    "experiments/image-memory-webgl/fixtures/neutral-jpeg3-64-pattern.swf": {
+      "bytes": 3532,
+      "sha256": "07e1ab98a42aacbb5916e02634f5f9b5927393912fff433edadc2a485a411533"
+    },
+    "experiments/image-memory-webgl/local-validation/README.md": {
+      "bytes": 4138,
+      "sha256": "4ca8257b94563ca77e41321f3420cf0255ef2e38e63c8679454b15a821521a08"
+    },
+    "experiments/image-memory-webgl/local-validation/fixture-hashes.json": {
+      "bytes": 10535,
+      "sha256": "59bc631539460b831760758c4315ae11b18460ef2f8ad4ad3fc9e7b939375b73"
+    },
+    "experiments/image-memory-webgl/local-validation/generate.py": {
+      "bytes": 1475,
+      "sha256": "7072445f3eb596bc9df0ef7853a494ffeaeaf492317bb66f9b2d34e08bab13ae"
+    },
+    "experiments/image-memory-webgl/local-validation/harness/Cargo.lock": {
+      "bytes": 20083,
+      "sha256": "bd0af015bee782b22db691ddac445890806ab3c7cb7e5f595d439949c4037c82"
+    },
+    "experiments/image-memory-webgl/local-validation/harness/Cargo.toml": {
+      "bytes": 172,
+      "sha256": "7b60daa1fc09d7e01659519d79f8c543480a93a001c626131d7dd392fe48384e"
+    },
+    "experiments/image-memory-webgl/local-validation/harness/src/lib.rs": {
+      "bytes": 3237,
+      "sha256": "adcfefb900b7d11180bd6a684df381a06f76c31a3923f5f7a8d304f74d614d0a"
+    },
+    "experiments/image-memory-webgl/local-validation/host-results.json": {
+      "bytes": 24743,
+      "sha256": "5f012225c981eb8709a8eef2c747bf209c60a2090ec92d3d3b383dee2ee89581"
+    },
+    "experiments/image-memory-webgl/local-validation/host_test.py": {
+      "bytes": 1262,
+      "sha256": "b06437680b5397473c2a689f6a7841de3bbbe93d8d8f371bfb39d631ad0e2da9"
+    },
+    "experiments/image-memory-webgl/local-validation/lock-proof.json": {
+      "bytes": 212,
+      "sha256": "9c6545587e42faaf084001952553d1fb40a6e509eb14f61503058cbb59ebd69d"
+    },
+    "experiments/image-memory-webgl/local-validation/manifest.json": {
+      "bytes": 2134,
+      "sha256": "e2f771fc7d51e5fcf48f0979eac99306f8b0eb98b9195676fe95acfc4979f92d"
+    },
+    "experiments/image-memory-webgl/local-validation/render-test-summary.txt": {
+      "bytes": 3769,
+      "sha256": "1c17d1f69c7bba378637623fcb5c12ed7fce55b36e47136c175d4cddd15f28c6"
+    },
+    "experiments/image-memory-webgl/local-validation/run.mjs": {
+      "bytes": 3304,
+      "sha256": "0a573e968b99c737c9a2ddca1a36b13749623c4383a3011fb8df74b81b20db52"
+    },
+    "experiments/image-memory-webgl/local-validation/source-review.md": {
+      "bytes": 4411,
+      "sha256": "54aa8e637a780f0cf763cdcde8b84321d8eca56896c91fac4b30c1bf1cb0d5cf"
+    },
+    "experiments/image-memory-webgl/local-validation/toolchain-receipt.json": {
+      "bytes": 1288,
+      "sha256": "d33aacb5a58927672f9a95f30d27aba4f80a41e57adeb877f3b1eee0d6d0fed7"
+    },
+    "experiments/image-memory-webgl/local-validation/wasm-results.json": {
+      "bytes": 77360,
+      "sha256": "bcac56e62b701cd3150b70b01d605c2198b60791c6f369083c26a64ab72aeef0"
+    },
+    "experiments/image-memory-webgl/product.patch": {
+      "bytes": 5191,
+      "sha256": "6412a1c8a5b57f0f6dd513805df8725da889d36df86350eb0ad0e1d3e15e2799"
+    },
+    "experiments/image-memory-webgl/scripts/browser_preflight.py": {
+      "bytes": 3112,
+      "sha256": "2fd75c9fc04a5b5c4c7789808e26227f7c6e28151127ae6895dc47362cf921cd"
+    },
+    "experiments/image-memory-webgl/scripts/build_pair.sh": {
+      "bytes": 1746,
+      "sha256": "89c81d9ea1ecae18eba70ea0cda977fa7b44e3fd83aeb15e658d5b3ef3a068dc"
+    },
+    "experiments/image-memory-webgl/scripts/check_experiment.py": {
+      "bytes": 1420,
+      "sha256": "97f9aa994ff350fa203c7ff4a375e85d50d231751fd23ccb7246138d5acd1803"
+    },
+    "experiments/image-memory-webgl/scripts/evidence_budget.py": {
+      "bytes": 1819,
+      "sha256": "2f2f5c9735e014819917532f9158f91d9af3ab7e7db10a40abece5a4ff2a6445"
+    },
+    "experiments/image-memory-webgl/scripts/prepare_browser.py": {
+      "bytes": 2004,
+      "sha256": "db77dd72d7d61b227aed6b77e995973b872474a3f9bb93d1f28f4934f3212f2a"
+    },
+    "experiments/image-memory-webgl/scripts/receipt.py": {
+      "bytes": 4461,
+      "sha256": "2295d3c419ffb24003f13c4059aa3fcb4877cb3470909550ccefdaa3891c6bc8"
+    },
+    "experiments/image-memory-webgl/source-binding.json": {
+      "bytes": 563,
+      "sha256": "638f24357c3ceefb9d6841d6a2b7bc0141effae93b13c220c2ba809807986eb8"
+    }
+  },
+  "nativeAcceptance": false,
+  "schema": 1
+}

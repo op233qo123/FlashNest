@@ -1,0 +1,9 @@
+[package]
+name="image_decode_probe"
+version="0.1.0"
+edition="2024"
+[lib]
+crate-type=["cdylib","rlib"]
+[dependencies]
+ruffle_render={path="../candidate/render"}
+[workspace]

@@ -1,0 +1,16 @@
+{
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "baselineCommit": "985f25c44ead766b2c4f9bd77b82e7b92bf95cc0",
+  "reconstructedCandidate": true,
+  "baseline": {
+    "bytes": 22318,
+    "sha256": "48d77f9bd593d5346257cec1bbef3f3c5aa708ea40cdd593719f9212eb932bc6"
+  },
+  "candidate": {
+    "bytes": 26675,
+    "sha256": "203f5b84a5668c4a5343ec342baa5d9c0865cf7f3ab9fecb0d5a7331be85cc53"
+  },
+  "patchSHA256": "6412a1c8a5b57f0f6dd513805df8725da889d36df86350eb0ad0e1d3e15e2799",
+  "sourcePath": "render/src/utils.rs",
+  "thresholdPixels": 262144
+}

@@ -1,0 +1,74 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4138,
+      "sha256": "4ca8257b94563ca77e41321f3420cf0255ef2e38e63c8679454b15a821521a08"
+    },
+    {
+      "path": "fixture-hashes.json",
+      "bytes": 10535,
+      "sha256": "59bc631539460b831760758c4315ae11b18460ef2f8ad4ad3fc9e7b939375b73"
+    },
+    {
+      "path": "generate.py",
+      "bytes": 1475,
+      "sha256": "7072445f3eb596bc9df0ef7853a494ffeaeaf492317bb66f9b2d34e08bab13ae"
+    },
+    {
+      "path": "harness/Cargo.lock",
+      "bytes": 20083,
+      "sha256": "bd0af015bee782b22db691ddac445890806ab3c7cb7e5f595d439949c4037c82"
+    },
+    {
+      "path": "harness/Cargo.toml",
+      "bytes": 172,
+      "sha256": "7b60daa1fc09d7e01659519d79f8c543480a93a001c626131d7dd392fe48384e"
+    },
+    {
+      "path": "harness/src/lib.rs",
+      "bytes": 3237,
+      "sha256": "adcfefb900b7d11180bd6a684df381a06f76c31a3923f5f7a8d304f74d614d0a"
+    },
+    {
+      "path": "host-results.json",
+      "bytes": 24743,
+      "sha256": "5f012225c981eb8709a8eef2c747bf209c60a2090ec92d3d3b383dee2ee89581"
+    },
+    {
+      "path": "host_test.py",
+      "bytes": 1262,
+      "sha256": "b06437680b5397473c2a689f6a7841de3bbbe93d8d8f371bfb39d631ad0e2da9"
+    },
+    {
+      "path": "lock-proof.json",
+      "bytes": 212,
+      "sha256": "9c6545587e42faaf084001952553d1fb40a6e509eb14f61503058cbb59ebd69d"
+    },
+    {
+      "path": "render-test-summary.txt",
+      "bytes": 3769,
+      "sha256": "1c17d1f69c7bba378637623fcb5c12ed7fce55b36e47136c175d4cddd15f28c6"
+    },
+    {
+      "path": "run.mjs",
+      "bytes": 3304,
+      "sha256": "0a573e968b99c737c9a2ddca1a36b13749623c4383a3011fb8df74b81b20db52"
+    },
+    {
+      "path": "source-review.md",
+      "bytes": 4411,
+      "sha256": "54aa8e637a780f0cf763cdcde8b84321d8eca56896c91fac4b30c1bf1cb0d5cf"
+    },
+    {
+      "path": "toolchain-receipt.json",
+      "bytes": 1288,
+      "sha256": "d33aacb5a58927672f9a95f30d27aba4f80a41e57adeb877f3b1eee0d6d0fed7"
+    },
+    {
+      "path": "wasm-results.json",
+      "bytes": 77360,
+      "sha256": "bcac56e62b701cd3150b70b01d605c2198b60791c6f369083c26a64ab72aeef0"
+    }
+  ]
+}

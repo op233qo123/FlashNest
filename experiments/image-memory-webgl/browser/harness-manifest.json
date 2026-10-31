@@ -1,0 +1,19 @@
+{
+  "files": {
+    "browser/README.md": "1cba0e37a5fc12fa32f8fe171460f11e509e30e175cb89ff2011dcde4fd5e90a",
+    "browser/generate_fixtures.py": "9c0fb19079efa47baf82fa2bb2cabada36347b3a67a1ef6eacbefaa21514d5b0",
+    "browser/page.html": "9b4c9dc00f249d137f86475b3e6fe5401b4175491c43158caa638b3a7d218691",
+    "browser/prepare_contract.py": "1897f44f31cabed694175d7fcb57c71c6d8d92e74fb502cfd6bccfffe2d29e39",
+    "browser/requirements.txt": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574",
+    "browser/run.py": "7631be499cefa953620e51e232b801269739a4b87f3f710490fb23f786875383",
+    "browser/test_page.cjs": "3fe1ba309a50a8870be2386faf3ebf5bb9fe7f992474f39934a19ad0801eca41",
+    "browser/test_static.py": "6cddf25890ef37670fa941e2137a16317ecfb63feb0e3df6d5561877479d6964",
+    "fixtures/manifest.json": "3d16d70e3c2b00bf9259a7b71d3ecdd5ec5103cd0c707ab0f799a9fc33812ac2",
+    "fixtures/neutral-jpeg3-1024-opaque.swf": "f72a6356fb53ce92845ddbca04e347553ba4e29f489ab1df5b1e0a9ce535763c",
+    "fixtures/neutral-jpeg3-1024-pattern.swf": "3535f9de3936945e9c6d501e5880b9de4a4ac15883f4fc7ea9ee526b499ac708",
+    "fixtures/neutral-jpeg3-511-pattern.swf": "e77cccbfb815f2b0c69fbe5c3a15b71ba36b4bb3873344f01b2e50d52ff7214d",
+    "fixtures/neutral-jpeg3-512-pattern.swf": "bbd35c5fe555bb9447ae25e76b8aee90edcc045c73ab7d153a2e4aa15548d538",
+    "fixtures/neutral-jpeg3-64-pattern.swf": "07e1ab98a42aacbb5916e02634f5f9b5927393912fff433edadc2a485a411533"
+  },
+  "scope": "local static and mock JS checks only; actual browser pending"
+}
