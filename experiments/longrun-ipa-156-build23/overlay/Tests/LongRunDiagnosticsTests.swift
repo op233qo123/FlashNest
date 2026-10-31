@@ -119,6 +119,17 @@ final class LongRunDiagnosticsTests: XCTestCase {
         let file = root.appendingPathComponent("long-run.json")
         XCTAssertLessThan(try Data(contentsOf: file).count, LongRunDiagnostics.maximumBytes)
         try store.clear(); XCTAssertEqual(store.read(), [])
+        let nested = root.appendingPathComponent("new/diagnostics", isDirectory: true)
+        let nestedStore = LongRunDiagnostics(root: nested)
+        var snapshot = LongRunSnapshot(session: UUID(), wkEpoch: 1)
+        XCTAssertTrue(snapshot.record(.sessionStart, at: date))
+        // Both read and write walk every ancestor through /. This regresses
+        // Darwin's deletingLastPathComponent-at-root /../../... behavior.
+        try nestedStore.record(snapshot)
+        XCTAssertEqual(nestedStore.read(), [snapshot])
+        try nestedStore.clear()
+        XCTAssertEqual(nestedStore.read(), [])
+        XCTAssertTrue(FileManager.default.fileExists(atPath: nested.appendingPathComponent("long-run.json").path))
     }
     func testMaximumNormalCheckpointFitsHardLimit() throws {
         let root = try temporaryRoot(); let store = LongRunDiagnostics(root: root)

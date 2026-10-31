@@ -328,7 +328,7 @@
       "before": "a87b089dc63228eb9151e81ed376cd9ee194b4a0c4bf76372e9711e3d05a0a4f"
     },
     "App/Player/LongRunDiagnostics.swift": {
-      "after": "3f9528df7b5139e667ca233b5478cee17fa822edfe754fb60c8376ef152e9014",
+      "after": "41b28b689032381367a8e07fdf05ef6555351097de8005f4e1cfc434b723e3cb",
       "before": null
     },
     "App/Player/PlayerSession.swift": {
@@ -356,11 +356,11 @@
       "before": "cb2f9bd96aadf599f1dffde561656f23370bb4388c7ea7c096ca8f62e5baa904"
     },
     "Tests/LongRunDiagnosticsTests.swift": {
-      "after": "66d0c925f52bdadf1ded9db05b00139f4b6447ce7f5f12ab48b74ae4c51fa92c",
+      "after": "a917ee6abf21de1e8762ee76d5d0786e71cc3508292afb069949a810df892878",
       "before": null
     },
     "Tests/LongRunSessionTests.swift": {
-      "after": "3237236e717b99cb063be9d8554739d21176a016c7f8dbca1ca3b43b430671ef",
+      "after": "29d8ee97fe4346e63010b40bb332d608931ce850e542ec87ce30f1b424644ae9",
       "before": null
     },
     "project.yml": {

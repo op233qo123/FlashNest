@@ -227,8 +227,16 @@ final class LongRunDiagnostics {
                 let missing = e.domain == NSCocoaErrorDomain && (e.code == NSFileReadNoSuchFileError || e.code == NSFileNoSuchFileError)
                 if !(allowMissing && missing) { throw error }
             }
+            // Foundation on Darwin may represent deleting the final component
+            // of file:/// as file:///.. rather than returning the same URL.
+            // Inspect root once, then stop BEFORE asking for its parent.
+            if path.path == "/" { break }
             let parent = path.deletingLastPathComponent()
-            if parent.path == path.path { break }
+            // Fail closed if URL semantics ever cease to make strict progress.
+            // Do not resolve symlinks: each ancestor must still be inspected.
+            guard parent.path.hasPrefix("/"), parent.path.utf8.count < path.path.utf8.count else {
+                throw CocoaError(.fileWriteInvalidFileName)
+            }
             path = parent
         }
     }

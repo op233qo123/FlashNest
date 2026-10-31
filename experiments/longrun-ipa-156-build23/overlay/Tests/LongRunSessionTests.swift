@@ -159,10 +159,18 @@ import WebKit
     }
     private func waitForSample(_ store: LongRunDiagnostics, session: PlayerSession, deadline: Date) async throws {
         let end = min(deadline, Date().addingTimeInterval(15))
-        while store.read().first?.lastSample == nil && session.failure == nil && Date() < end {
+        while store.read().first?.lastSample == nil && session.failure == nil && !session.longRunPersistenceFailed && Date() < end {
             try await Task.sleep(nanoseconds: 50_000_000)
         }
-        guard store.read().first?.lastSample != nil && session.failure == nil else { throw Failure.invalid("Bounded native long-run observer sample did not arrive") }
+        guard !session.longRunPersistenceFailed else {
+            throw Failure.invalid("Native long-run checkpoint persistence failed before a readable sample arrived")
+        }
+        guard session.failure == nil else {
+            throw Failure.invalid("Player failed while awaiting the long-run observer sample")
+        }
+        guard store.read().first?.lastSample != nil else {
+            throw Failure.invalid("Bounded native long-run observer sample did not arrive; no persistence failure was reported")
+        }
     }
     private func configurationState(_ view: WKWebView) async throws -> String {
         let script = "(Object.prototype.hasOwnProperty.call(window,'__FlashNestLongRunConfig')?'present':'absent')+':'+(Object.prototype.hasOwnProperty.call(window,'__FlashNestLongRunObserver')?'present':'absent')"
