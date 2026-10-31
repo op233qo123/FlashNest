@@ -1,0 +1,670 @@
+{
+  "passed": true,
+  "scope": "Bounded synthetic desktop sandboxed Chrome WebGL API requests. No cache policy changes, no forced GC. Not iPhone, GPU residency, RSS, or user-crash proof.",
+  "rows": [
+    {
+      "case": "root-16",
+      "states": [
+        {
+          "label": "ready",
+          "wasmPages": [
+            265
+          ],
+          "actualTargetRGBAUploadTextureIds": 0,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 3,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 0
+        },
+        {
+          "label": "cycle-1",
+          "wasmPages": [
+            309
+          ],
+          "actualTargetRGBAUploadTextureIds": 16,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 16,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 16777216,
+          "allTextureSummary": {
+            "createdReturnedObjects": 19,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 17,
+            "knownExpectedBaseRGBA8Bytes": 17084416,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 16,
+            "target512ExpectedBaseRGBA8Bytes": 16777216
+          },
+          "totalTargetTexImageCalls": 16
+        },
+        {
+          "label": "cycle-2",
+          "wasmPages": [
+            309
+          ],
+          "actualTargetRGBAUploadTextureIds": 16,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 16,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 16777216,
+          "allTextureSummary": {
+            "createdReturnedObjects": 19,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 17,
+            "knownExpectedBaseRGBA8Bytes": 17084416,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 16,
+            "target512ExpectedBaseRGBA8Bytes": 16777216
+          },
+          "totalTargetTexImageCalls": 16
+        },
+        {
+          "label": "cycle-3",
+          "wasmPages": [
+            309
+          ],
+          "actualTargetRGBAUploadTextureIds": 16,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 16,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 16777216,
+          "allTextureSummary": {
+            "createdReturnedObjects": 19,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 17,
+            "knownExpectedBaseRGBA8Bytes": 17084416,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 16,
+            "target512ExpectedBaseRGBA8Bytes": 16777216
+          },
+          "totalTargetTexImageCalls": 16
+        },
+        {
+          "label": "cycle-4",
+          "wasmPages": [
+            309
+          ],
+          "actualTargetRGBAUploadTextureIds": 16,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 16,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 16777216,
+          "allTextureSummary": {
+            "createdReturnedObjects": 19,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 17,
+            "knownExpectedBaseRGBA8Bytes": 17084416,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 16,
+            "target512ExpectedBaseRGBA8Bytes": 16777216
+          },
+          "totalTargetTexImageCalls": 16
+        },
+        {
+          "label": "empty",
+          "wasmPages": [
+            309
+          ],
+          "actualTargetRGBAUploadTextureIds": 16,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 16,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 16777216,
+          "allTextureSummary": {
+            "createdReturnedObjects": 19,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 17,
+            "knownExpectedBaseRGBA8Bytes": 17084416,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 16,
+            "target512ExpectedBaseRGBA8Bytes": 16777216
+          },
+          "totalTargetTexImageCalls": 16
+        },
+        {
+          "label": "natural-idle",
+          "wasmPages": [
+            309
+          ],
+          "actualTargetRGBAUploadTextureIds": 16,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 16,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 16777216,
+          "allTextureSummary": {
+            "createdReturnedObjects": 19,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 17,
+            "knownExpectedBaseRGBA8Bytes": 17084416,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 16,
+            "target512ExpectedBaseRGBA8Bytes": 16777216
+          },
+          "totalTargetTexImageCalls": 16
+        },
+        {
+          "label": "removed-2raf",
+          "wasmPages": [
+            309
+          ],
+          "actualTargetRGBAUploadTextureIds": 16,
+          "targetDeleteRequestedUnique": 16,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 19,
+            "deleteRequestedUnique": 18,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 16
+        },
+        {
+          "label": "removed-idle",
+          "wasmPages": [
+            309
+          ],
+          "actualTargetRGBAUploadTextureIds": 16,
+          "targetDeleteRequestedUnique": 16,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 19,
+            "deleteRequestedUnique": 18,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 16
+        }
+      ],
+      "failure": null
+    },
+    {
+      "case": "root-64",
+      "states": [
+        {
+          "label": "ready",
+          "wasmPages": [
+            295
+          ],
+          "actualTargetRGBAUploadTextureIds": 0,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 3,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 0
+        },
+        {
+          "label": "cycle-1",
+          "wasmPages": [
+            339
+          ],
+          "actualTargetRGBAUploadTextureIds": 64,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 64,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 67108864,
+          "allTextureSummary": {
+            "createdReturnedObjects": 67,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 65,
+            "knownExpectedBaseRGBA8Bytes": 67416064,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 64,
+            "target512ExpectedBaseRGBA8Bytes": 67108864
+          },
+          "totalTargetTexImageCalls": 64
+        },
+        {
+          "label": "cycle-2",
+          "wasmPages": [
+            339
+          ],
+          "actualTargetRGBAUploadTextureIds": 64,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 64,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 67108864,
+          "allTextureSummary": {
+            "createdReturnedObjects": 67,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 65,
+            "knownExpectedBaseRGBA8Bytes": 67416064,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 64,
+            "target512ExpectedBaseRGBA8Bytes": 67108864
+          },
+          "totalTargetTexImageCalls": 64
+        },
+        {
+          "label": "empty",
+          "wasmPages": [
+            339
+          ],
+          "actualTargetRGBAUploadTextureIds": 64,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 64,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 67108864,
+          "allTextureSummary": {
+            "createdReturnedObjects": 67,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 65,
+            "knownExpectedBaseRGBA8Bytes": 67416064,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 64,
+            "target512ExpectedBaseRGBA8Bytes": 67108864
+          },
+          "totalTargetTexImageCalls": 64
+        },
+        {
+          "label": "natural-idle",
+          "wasmPages": [
+            339
+          ],
+          "actualTargetRGBAUploadTextureIds": 64,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 64,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 67108864,
+          "allTextureSummary": {
+            "createdReturnedObjects": 67,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 65,
+            "knownExpectedBaseRGBA8Bytes": 67416064,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 64,
+            "target512ExpectedBaseRGBA8Bytes": 67108864
+          },
+          "totalTargetTexImageCalls": 64
+        },
+        {
+          "label": "removed-2raf",
+          "wasmPages": [
+            339
+          ],
+          "actualTargetRGBAUploadTextureIds": 64,
+          "targetDeleteRequestedUnique": 64,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 67,
+            "deleteRequestedUnique": 66,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 64
+        },
+        {
+          "label": "removed-idle",
+          "wasmPages": [
+            339
+          ],
+          "actualTargetRGBAUploadTextureIds": 64,
+          "targetDeleteRequestedUnique": 64,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 67,
+            "deleteRequestedUnique": 66,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 64
+        }
+      ],
+      "failure": null
+    },
+    {
+      "case": "loader-release",
+      "states": [
+        {
+          "label": "ready",
+          "wasmPages": [
+            253
+          ],
+          "actualTargetRGBAUploadTextureIds": 0,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 3,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 0
+        },
+        {
+          "label": "unloaded-six",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 6,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 9,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 6
+        },
+        {
+          "label": "retained-rehang",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 6,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 9,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 6
+        },
+        {
+          "label": "dropped",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 6,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 9,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 6
+        },
+        {
+          "label": "normal-frames",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 6,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 9,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 6
+        },
+        {
+          "label": "natural-idle",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 6,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 9,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 6
+        },
+        {
+          "label": "removed-2raf",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 6,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 9,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 6
+        },
+        {
+          "label": "removed-idle",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 6,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 9,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 6
+        }
+      ],
+      "failure": null
+    },
+    {
+      "case": "loader-retain",
+      "states": [
+        {
+          "label": "ready",
+          "wasmPages": [
+            253
+          ],
+          "actualTargetRGBAUploadTextureIds": 0,
+          "targetDeleteRequestedUnique": 0,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 3,
+            "deleteRequestedUnique": 2,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 0
+        },
+        {
+          "label": "unloaded-six",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 6,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 9,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 6
+        },
+        {
+          "label": "retained-rehang",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 9,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 3,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 3145728,
+          "allTextureSummary": {
+            "createdReturnedObjects": 12,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 4,
+            "knownExpectedBaseRGBA8Bytes": 3452928,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 3,
+            "target512ExpectedBaseRGBA8Bytes": 3145728
+          },
+          "totalTargetTexImageCalls": 9
+        },
+        {
+          "label": "dropped",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 9,
+          "targetDeleteRequestedUnique": 6,
+          "targetWithoutDeleteRequest": 3,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 3145728,
+          "allTextureSummary": {
+            "createdReturnedObjects": 12,
+            "deleteRequestedUnique": 8,
+            "notDeleteRequested": 4,
+            "knownExpectedBaseRGBA8Bytes": 3452928,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 3,
+            "target512ExpectedBaseRGBA8Bytes": 3145728
+          },
+          "totalTargetTexImageCalls": 9
+        },
+        {
+          "label": "normal-frames",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 9,
+          "targetDeleteRequestedUnique": 9,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 12,
+            "deleteRequestedUnique": 11,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 9
+        },
+        {
+          "label": "natural-idle",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 9,
+          "targetDeleteRequestedUnique": 9,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 12,
+            "deleteRequestedUnique": 11,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 9
+        },
+        {
+          "label": "removed-2raf",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 9,
+          "targetDeleteRequestedUnique": 9,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 12,
+            "deleteRequestedUnique": 11,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 9
+        },
+        {
+          "label": "removed-idle",
+          "wasmPages": [
+            300
+          ],
+          "actualTargetRGBAUploadTextureIds": 9,
+          "targetDeleteRequestedUnique": 9,
+          "targetWithoutDeleteRequest": 0,
+          "expectedTargetBaseRGBA8BytesWithoutDeleteRequest": 0,
+          "allTextureSummary": {
+            "createdReturnedObjects": 12,
+            "deleteRequestedUnique": 11,
+            "notDeleteRequested": 1,
+            "knownExpectedBaseRGBA8Bytes": 307200,
+            "unknownBaseSizeObjects": 0,
+            "target512NotDeleteRequested": 0,
+            "target512ExpectedBaseRGBA8Bytes": 0
+          },
+          "totalTargetTexImageCalls": 9
+        }
+      ],
+      "failure": null
+    }
+  ]
+}
