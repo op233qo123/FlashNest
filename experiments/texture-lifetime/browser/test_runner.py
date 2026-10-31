@@ -15,4 +15,11 @@ class Identity(unittest.TestCase):
   for key,value in [('path','/other/x.wasm'),('status',404),('requestId','other')]:
    w=copy.deepcopy(self.w);w[0][key]=value
    with self.assertRaises(AssertionError):m.verify_wasm_identity(w,self.q,self.l,'http://127.0.0.1:1')
+class FixtureRoute(unittest.TestCase):
+ def test_named_child_alias(self):
+  runtime=pathlib.Path('/tmp/runtime');fixtures=pathlib.Path('/tmp/fixtures')
+  self.assertEqual(m.resolve_path('/texture-child.swf?cycle=1',runtime,fixtures),fixtures/'texture-child.swf')
+  self.assertEqual(m.resolve_path('/fixtures/texture-child.swf?cycle=2',runtime,fixtures),fixtures/'texture-child.swf')
+  for path in ['/other.swf','/fixtures/../../escape','/runtime/../escape']:
+   with self.assertRaises((AssertionError,KeyError,ValueError)):m.resolve_path(path,runtime,fixtures)
 if __name__=='__main__':unittest.main()

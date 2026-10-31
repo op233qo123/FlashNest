@@ -23,6 +23,17 @@ def verify_wasm_identity(wasm,served_requests,lock,origin):
   w['servedSHA256']=served[-1]['sha256'];w['servedBytes']=served[-1]['bytes']
   w['identityEvidence']='Browser response URL/status bound to exact loopback HTTP response bytes; no Response.body copy'
 
+def resolve_path(raw_path,runtime,fixtures):
+ path=unquote(urlparse(raw_path).path)
+ if path=='/':return ROOT/'page.html'
+ if path=='/instrumentation.js':return ROOT/'instrumentation.js'
+ # Only the named synthetic child alias is permitted at the document base.
+ if path=='/texture-child.swf':return fixtures/'texture-child.swf'
+ arm,rel=path.lstrip('/').split('/',1)
+ base={'runtime':runtime,'fixtures':fixtures}[arm]
+ p=(base/rel).resolve();assert p.is_relative_to(base)
+ return p
+
 def run(a):
  from playwright.sync_api import sync_playwright
  from PIL import Image
@@ -34,10 +45,7 @@ def run(a):
   def do_GET(self):
    try:
     path=unquote(urlparse(self.path).path)
-    if path=='/':p=ROOT/'page.html'
-    elif path=='/instrumentation.js':p=ROOT/'instrumentation.js'
-    else:
-     arm,rel=path.lstrip('/').split('/',1);base=routes[arm];p=(base/rel).resolve();assert p.is_relative_to(base)
+    p=resolve_path(self.path,runtime,fixtures)
     data=p.read_bytes();request_id=uuid.uuid4().hex;self.send_response(200);self.send_header('X-Diagnostic-Request-ID',request_id);self.send_header('Content-Type',{'.js':'text/javascript','.wasm':'application/wasm','.html':'text/html'}.get(p.suffix,'application/octet-stream'));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(data)
     requests.append({'path':path,'bytes':len(data),'status':200,'requestId':request_id,**({'sha256':sha(data)} if p.suffix=='.wasm' else {})})
    except Exception:self.send_error(404);requests.append({'path':self.path,'status':404})
