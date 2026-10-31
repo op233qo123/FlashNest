@@ -117,7 +117,8 @@ import SwiftUI
         if previousLoadingPhaseSummary?.isEmpty == true { previousLoadingPhaseSummary = nil }
         loadingPhaseSummary = nil; loadingPhaseSnapshot = nil; loadingPhasePersistenceFailed = false
         longRunTimer?.cancel(); longRunTimer = nil
-        previousLongRunSummary = longRunStore.read().map(\.summary).joined(separator: "\n\n")
+        let previousLongRunSnapshots = longRunStore.read()
+        previousLongRunSummary = previousLongRunSnapshots.map(\.summary).joined(separator: "\n\n")
         if previousLongRunSummary?.isEmpty == true { previousLongRunSummary = nil }
         longRunSummary = nil; longRunSnapshot = nil; longRunPersistenceFailed = false
         longRunLastAcceptedUptime = nil; longRunLastMarkerUptime = nil; longRunLastNoisyEventUptime = nil
@@ -152,6 +153,9 @@ import SwiftUI
         let attempt = UUID()
         generation = attempt
         if longRunDiagnosticsEnabled && !storageOnly {
+            // Keep displayed/exported history within the same two-session bound as disk.
+            previousLongRunSummary = previousLongRunSnapshots.prefix(1).map(\.summary).joined(separator: "\n\n")
+            if previousLongRunSummary?.isEmpty == true { previousLongRunSummary = nil }
             longRunEpoch = min(longRunEpoch + 1, 9_999_999)
             longRunSnapshot = LongRunSnapshot(session: attempt, wkEpoch: longRunEpoch)
             longRunLastSampleUptime = ProcessInfo.processInfo.systemUptime

@@ -35,6 +35,14 @@ import WebKit
     func testOptInClearAndCurrentWKTerminationBoundary() async throws {
         executionTimeAllowance = 150
         try await withHarness { session, package, content, controller, store, deadline in
+            let oldestID = UUID(), recentID = UUID()
+            for id in [oldestID, recentID] {
+                var previous = LongRunSnapshot(session: id, wkEpoch: 1)
+                XCTAssertTrue(previous.record(.sessionStart))
+                XCTAssertTrue(previous.record(.stopped))
+                try store.record(previous)
+            }
+            XCTAssertEqual(store.read().map(\.session), [recentID, oldestID])
             session.longRunDiagnosticsEnabled = true
             let old = try await self.open(session, package: package, content: content,
                 controller: controller, deadline: deadline)
@@ -43,6 +51,10 @@ import WebKit
             XCTAssertEqual(enabledConfiguration, "present:present")
             let first = try XCTUnwrap(store.read().first)
             XCTAssertNotNil(first.lastSample, "Real document-start observer must post a valid snapshot")
+            let export = try XCTUnwrap(session.longRunExport)
+            XCTAssertTrue(export.contains(first.session.uuidString))
+            XCTAssertTrue(export.contains(recentID.uuidString))
+            XCTAssertFalse(export.contains(oldestID.uuidString), "Active plus previous export must retain at most two sessions")
             session.markLongRunObservation()
             XCTAssertEqual(store.read().first?.events.last?.kind, .userMarker)
             // Clear while the real page is alive, then attempt a valid delayed
