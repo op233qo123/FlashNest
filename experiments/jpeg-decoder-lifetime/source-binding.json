@@ -1,0 +1,16 @@
+{
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac",
+  "baselineCommit": "985f25c44ead766b2c4f9bd77b82e7b92bf95cc0",
+  "reconstructedCandidate": true,
+  "baseline": {
+    "bytes": 22318,
+    "sha256": "48d77f9bd593d5346257cec1bbef3f3c5aa708ea40cdd593719f9212eb932bc6"
+  },
+  "candidate": {
+    "bytes": 22337,
+    "sha256": "a41df56a2c81c95a01e34545d316aeca5bcffdf53895a7d3a3214e4b7ac500f7"
+  },
+  "patchSHA256": "176aa8b59419d97d5b66e30ba7184c5f01c193fcff3856a09bb01bf88c7ef63e",
+  "sourcePath": "render/src/utils.rs",
+  "optimization": "drop JPEG decoder immediately after successful decode; no alpha algorithm changes"
+}

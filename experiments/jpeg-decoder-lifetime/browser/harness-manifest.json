@@ -1,0 +1,23 @@
+{
+  "files": {
+    "browser/README.md": "8bbf30541b83847143b61a30cd1aa7cd51ab5c42151b2e3a3b4007c56fe837f4",
+    "browser/generate_fixtures.py": "29aee943c6b32e8e0ff633d02fa67042c894f2a01b82675ee41a366d78e6dea6",
+    "browser/page.html": "04a796ec01328d410f690b8e87a6d5ed75c25286abf0961d1b760787bb0c4986",
+    "browser/prepare_contract.py": "1897f44f31cabed694175d7fcb57c71c6d8d92e74fb502cfd6bccfffe2d29e39",
+    "browser/requirements.txt": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574",
+    "browser/run.py": "aec145e055f975649772f1a399ab0f98725b50ff16d23b3f535265a8651aff03",
+    "browser/test_page.cjs": "0583c2be61536b1c872716484d7396e8bddbebcc7c958b91f9545698ac143c88",
+    "browser/test_static.py": "46b9ba325b4b8269b087492075126d7b53c321916ef6887dde52898926a66db2",
+    "fixtures/manifest.json": "adea46034f0d388afb36dbbb6504eb1244c84ecaf8baee4cd5f520ac9bf50bf2",
+    "fixtures/neutral-jpeg3-1024-opaque.swf": "f72a6356fb53ce92845ddbca04e347553ba4e29f489ab1df5b1e0a9ce535763c",
+    "fixtures/neutral-jpeg3-1024-pattern.swf": "3535f9de3936945e9c6d501e5880b9de4a4ac15883f4fc7ea9ee526b499ac708",
+    "fixtures/neutral-jpeg3-1024-progressive-l-sub0-pattern.swf": "6266ca4d00db3c769873afc7cd9b1e558bede78e8687df210cb447aac744e496",
+    "fixtures/neutral-jpeg3-1024-progressive-rgb-sub0-pattern.swf": "d728aafb4e9a66e97f021d9c1fea537b9d320cb2f323966b97e48e8f0238edeb",
+    "fixtures/neutral-jpeg3-1024-progressive-rgb-sub2-pattern.swf": "006a923a6fd7370311bca379623766b89ad0e4379871192314f89189ebb30238",
+    "fixtures/neutral-jpeg3-511-pattern.swf": "e77cccbfb815f2b0c69fbe5c3a15b71ba36b4bb3873344f01b2e50d52ff7214d",
+    "fixtures/neutral-jpeg3-512-pattern.swf": "bbd35c5fe555bb9447ae25e76b8aee90edcc045c73ab7d153a2e4aa15548d538",
+    "fixtures/neutral-jpeg3-512-progressive-rgb-sub2-pattern.swf": "c3f3dd85b52bf85161e17cec209c8906ce0944cd2892fb555fc481444e4621e7",
+    "fixtures/neutral-jpeg3-64-pattern.swf": "07e1ab98a42aacbb5916e02634f5f9b5927393912fff433edadc2a485a411533"
+  },
+  "scope": "local static and mock JS checks passed; actual standalone decoder-lifetime WebGL run pending"
+}

@@ -1,0 +1,64 @@
+warning: profile package spec `h263-rs` in profile `dev` did not match any packages
+warning: profile package spec `nihav_codec_support` in profile `dev` did not match any packages
+warning: profile package spec `nihav_core` in profile `dev` did not match any packages
+warning: profile package spec `nihav_duck` in profile `dev` did not match any packages
+   Compiling ruffle_render v0.7.1 (/workspace/scratch/bbe5ec6ec106/loading-texture-investigation/decoder-drop/unit-source/render)
+    Finished `release` profile [optimized] target(s) in 2.33s
+     Running unittests src/lib.rs (loading-texture-investigation/decoder-drop/harness/target/release/deps/ruffle_render-bcbe396a79454301)
+
+running 52 tests
+test bitmap::atlas::test::allocate_returns_none_when_atlas_does_not_have_enough_space ... ok
+test bitmap::atlas::test::allocate_returns_non_overlapping_regions ... ok
+test bitmap::atlas::test::allocate_returns_region_containing_requested_size ... ok
+test bitmap::atlas::test::allocate_whole_atlas_returns_exact_bounds ... ok
+test bitmap::atlas::test::allocate_returns_none_when_atlas_is_full ... ok
+test bitmap::atlas::test::allocate_without_clear_can_contain_leftover_data ... ok
+test bitmap::atlas::test::allocate_with_clear_zeroes_reused_space ... ok
+test bitmap::atlas::test::clear_zeroes_pixel_data_in_region ... ok
+test bitmap::atlas::test::cloned_atlas_shares_underlying_state ... ok
+test bitmap::atlas::test::debug_format_includes_dimensions_and_format ... ok
+test bitmap::atlas::test::dropping_region_frees_space_for_reuse ... ok
+test bitmap::atlas::test::handle_is_cached_across_calls ... ok
+test bitmap::atlas::test::handle_returns_none_and_does_not_retry_after_registration_failure ... ok
+test bitmap::atlas::test::handle_pushes_update_texture_for_changes_after_registration ... ok
+test bitmap::atlas::test::handle_unions_multiple_dirty_regions_into_one_update ... ok
+test bitmap::atlas::test::set_region_writes_pixels_at_given_offset ... ok
+test bitmap::atlas::test::region_shares_allocator_state_with_originating_atlas ... ok
+test bitmap::atlas::test::handle_registers_bitmap_on_first_use_without_separate_update ... ok
+test bitmap::atlas::test::new_creates_zeroed_bitmap_with_correct_format_and_size ... ok
+test bitmap::atlas::test::leaked_region_does_not_free_space_for_reuse ... ok
+test bitmap::atlas::test::to_rgba_does_not_mutate_original_atlas_bitmap ... ok
+test bitmap::test::clamp_with_intersection ... ok
+test bitmap::atlas::test::set_region_panics_when_source_exceeds_region_bounds - should panic ... ok
+test bitmap::test::clear_region ... ok
+test bitmap::test::clear_region_flush_with_bottom_right_edge ... ok
+test bitmap::test::clear_region_full_size ... ok
+test bitmap::test::clear_region_out_of_bounds_x - should panic ... ok
+test bitmap::test::clear_region_out_of_bounds_y - should panic ... ok
+test bitmap::test::clear_region_zero_sized ... ok
+test bitmap::test::intersects ... ok
+test bitmap::test::set_region ... ok
+test bitmap::test::set_region_different_formats - should panic ... ok
+test bitmap::test::set_region_flush_with_bottom_right_edge ... ok
+test bitmap::test::set_region_full_size ... ok
+test bitmap::test::set_region_out_of_bounds_x - should panic ... ok
+test bitmap::test::set_region_out_of_bounds_y - should panic ... ok
+test matrix::tests::multiply_matrices ... ok
+test matrix::tests::multiply_twips_complex ... ok
+test bitmap::test::set_region_zero_sized_source ... ok
+test matrix::tests::multiply_identity_matrix ... ok
+test matrix::tests::inverse_matrix ... ok
+test matrix::tests::inverse_identity_matrix ... ok
+test matrix::tests::multiply_twips_identity_matrix ... ok
+test matrix::tests::inverse_uninvertible_matrices ... ok
+test matrix::tests::multiply_twips_rotation ... ok
+test matrix::tests::multiply_twips_scale ... ok
+test matrix::tests::multiply_twips_translate ... ok
+test matrix::tests::test_round_to_i32 ... ok
+test shape_utils::tests::basic_shape ... ok
+test shape_utils::tests::test_winding_number_curve ... ok
+test shape_utils::tests::flipped_edges ... ok
+test shape_utils::tests::test_winding_number_line ... ok
+
+test result: ok. 52 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

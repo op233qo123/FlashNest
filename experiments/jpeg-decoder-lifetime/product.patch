@@ -1,0 +1,12 @@
+diff --git a/render/src/utils.rs b/render/src/utils.rs
+index 571eaa7..5b31fb0 100644
+--- a/render/src/utils.rs
++++ b/render/src/utils.rs
+@@ -195,6 +195,7 @@ fn decode_jpeg(jpeg_data: &[u8], alpha_data: Option<&[u8]>) -> Result<Bitmap<'st
+         .expect("info() should always return Some if read_info returned Ok");
+     validate_size(metadata.width, metadata.height)?;
+     let decoded_data = decoder.decode()?;
++    drop(decoder);
+ 
+     let decoded_data = match metadata.pixel_format {
+         jpeg_decoder::PixelFormat::RGB24 => decoded_data,
