@@ -10,7 +10,7 @@ A bounded synthetic run can establish whether API requests plateau or are repeat
 
 ## Source and runtime binding
 
-`engine-lock.json` pins the completed CI artifact ZIP, run/commit, baseline provenance and all12 runtime file sizes/hashes. `stage_engine.py` extracts only that baseline after all checks, not the other experimental engine. Actual downloaded WASM response bytes are checked again in the browser run. No engine recompilation is needed.
+`engine-lock.json` pins the completed CI artifact ZIP, run/commit, baseline provenance and all12 runtime file sizes/hashes. `stage_engine.py` extracts only that baseline after all checks, not the other experimental engine. Actual browser WASM response URL/status is bound to the SHA256 of the exact bytes served by the loopback HTTP server. This avoids an unavailable DevTools body read for streamed WASM without substituting a different engine. No engine recompilation is needed.
 
 ## Reproduction
 
@@ -22,4 +22,4 @@ The fixture manifest specifies actual execution coverage and exact trace/key pha
 
 Four AVM2 cases use actual Flash `MovieClip` and `Loader` APIs:16 distinct root images for4 traversals;64 distinct root images for2 traversals;6 child load/unload cycles without retained references; and6 cycles retaining3 child references, followed by reattachment and release. Images are512² and displayed64². The root is cleared but stays alive before final player removal. Loader reference release is followed by120 normal frames, then a bounded idle interval. No global leak-freedom or physical freeing assertion is inferred from this bounded observation.
 
-The runner requires every expected per-resource/per-cycle trace, all Loader complete/unload markers, retained-object ping markers, trusted keyboard inputs, actual WebGL renderer selection, actual pinned WASM bytes, and nonblank visible phase screenshots. Lifecycle and capacity outcomes remain observations, not assertions that force a preferred plateau/deletion result.
+The runner requires every expected per-resource/per-cycle trace, all Loader complete/unload markers, retained-object ping markers, trusted keyboard inputs, actual WebGL renderer selection, actual selected WASM response bound to pinned served bytes, and nonblank visible phase screenshots. Lifecycle and capacity outcomes remain observations, not assertions that force a preferred plateau/deletion result.

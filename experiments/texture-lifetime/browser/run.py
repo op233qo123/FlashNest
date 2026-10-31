@@ -1,5 +1,5 @@
 """Pure diagnostics of accepted runtime: API requests are not physical GPU memory."""
-import argparse,hashlib,http.server,json,pathlib,threading,time
+import argparse,hashlib,http.server,json,pathlib,threading,time,uuid
 from urllib.parse import urlparse,unquote
 ROOT=pathlib.Path(__file__).resolve().parent
 PACKAGE=ROOT.parent
@@ -12,6 +12,16 @@ def validate(runtime,fixtures):
  for row in manifest['files']:
   data=(fixtures/row['file']).read_bytes();assert len(data)==row['bytes'] and sha(data)==row['sha256']
  return lock,manifest
+
+def verify_wasm_identity(wasm,served_requests,lock,origin):
+ assert wasm,'No actual browser WASM response observed'
+ for w in wasm:
+  assert w['origin']==origin and w['path']=='/runtime/'+w['name'] and w['status']==200 and w.get('requestId'),'Unexpected WASM response'
+  served=[q for q in served_requests if q['path']==w['path'] and q.get('requestId')==w['requestId'] and q.get('status')==200 and q.get('sha256')]
+  assert served and all(q['sha256']==lock['selectedWasmSHA256'] for q in served),'Selected served WASM bytes mismatch'
+  assert lock['runtimeFiles'][w['name']]['sha256']==lock['selectedWasmSHA256']
+  w['servedSHA256']=served[-1]['sha256'];w['servedBytes']=served[-1]['bytes']
+  w['identityEvidence']='Browser response URL/status bound to exact loopback HTTP response bytes; no Response.body copy'
 
 def run(a):
  from playwright.sync_api import sync_playwright
@@ -28,8 +38,8 @@ def run(a):
     elif path=='/instrumentation.js':p=ROOT/'instrumentation.js'
     else:
      arm,rel=path.lstrip('/').split('/',1);base=routes[arm];p=(base/rel).resolve();assert p.is_relative_to(base)
-    data=p.read_bytes();self.send_response(200);self.send_header('Content-Type',{'.js':'text/javascript','.wasm':'application/wasm','.html':'text/html'}.get(p.suffix,'application/octet-stream'));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(data)
-    requests.append({'path':path,'bytes':len(data),'status':200})
+    data=p.read_bytes();request_id=uuid.uuid4().hex;self.send_response(200);self.send_header('X-Diagnostic-Request-ID',request_id);self.send_header('Content-Type',{'.js':'text/javascript','.wasm':'application/wasm','.html':'text/html'}.get(p.suffix,'application/octet-stream'));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(data)
+    requests.append({'path':path,'bytes':len(data),'status':200,'requestId':request_id,**({'sha256':sha(data)} if p.suffix=='.wasm' else {})})
    except Exception:self.send_error(404);requests.append({'path':self.path,'status':404})
   def log_message(self,*args):pass
  server=http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler);threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -42,9 +52,9 @@ def run(a):
     for case in manifest['cases']:
      context=browser.new_context(viewport={'width':400,'height':280},device_scale_factor=1)
      context.route('**/*',lambda route: route.continue_() if urlparse(route.request.url).hostname=='127.0.0.1' else route.abort())
-     page=context.new_page();page.set_default_timeout(45000);wasm=[]
+     page=context.new_page();page.set_default_timeout(45000);wasm=[];request_start=len(requests)
      def response_seen(response):
-      if urlparse(response.url).path.endswith('.wasm'):wasm.append({'name':pathlib.PurePosixPath(urlparse(response.url).path).name,'sha256':sha(response.body())})
+      if urlparse(response.url).path.endswith('.wasm'):wasm.append({'path':urlparse(response.url).path,'name':pathlib.PurePosixPath(urlparse(response.url).path).name,'status':response.status,'origin':f'{urlparse(response.url).scheme}://{urlparse(response.url).netloc}','requestId':response.headers.get('x-diagnostic-request-id')})
      page.on('response',response_seen)
      row={'case':case['name'],'fixture':case['file'],'states':[],'wasm':wasm};result['rows'].append(row)
      def capture(label,visible=False):
@@ -76,7 +86,7 @@ def run(a):
       page.wait_for_timeout(1500);capture('natural-idle')
       page.evaluate('window.removePlayer()');capture('removed-2raf')
       page.wait_for_timeout(1500);capture('removed-idle')
-      assert wasm and all(w['sha256']==lock['selectedWasmSHA256'] for w in wasm)
+      verify_wasm_identity(wasm,requests[request_start:],lock,f'http://127.0.0.1:{server.server_port}')
       final=row['states'][-1]
       expected_keys=[{'key':s['key'],'trusted':True} for s in case['steps'] if s.get('key')]
       assert final['keys']==expected_keys,'Trusted keyboard protocol mismatch'

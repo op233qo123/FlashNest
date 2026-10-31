@@ -30,6 +30,7 @@ jobs:
         run: |
           python3 "$PREP/scripts/check_package.py"
           node "$PREP/browser/test_page.cjs"
+          python3 "$PREP/browser/test_runner.py"
       - name: Require sandboxed Chrome WebGL without security overrides
         run: |
           python3 -m venv browser-venv
