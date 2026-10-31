@@ -27,6 +27,10 @@ class RecipeControls(unittest.TestCase):
   self.x['expectedUITests']=[];self.rejected()
  def test_revision_mismatch_rejected(self):
   self.x['packageRevision']='old-longrun';self.rejected()
+ def test_observer_revision_mismatch_rejected(self):
+  self.x['observerRevision']=1;self.rejected()
+ def test_schema_mismatch_rejected(self):
+  self.x['diagnosticSchema']=True;self.rejected()
  def test_recipe_omission_rejected(self):self.x['recipeFiles'].pop('README.md');self.rejected()
  def test_recipe_tamper_rejected(self):
   f=self.root/'README.md';f.write_text(f.read_text()+'\nchanged');self.rejected()

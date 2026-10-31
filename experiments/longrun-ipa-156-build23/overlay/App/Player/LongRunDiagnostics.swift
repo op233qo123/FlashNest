@@ -25,7 +25,25 @@ struct LongRunSample: Codable, Equatable {
     var hookFailures: Int
     var sendFailures: Int
 
+    /// Missing only in checkpoints written by observer revision 1.
+    var schema: Int? = nil
+    var texImage2DNullishRequests: Int? = nil
+    var texImage2DViewRequests: Int? = nil
+    var texImage2DOtherRequests: Int? = nil
+    var framebufferCreateRequests: Int? = nil
+    var framebufferDeleteRequests: Int? = nil
+    var framebufferTexture2DRequests: Int? = nil
+    var renderbufferCreateRequests: Int? = nil
+    var renderbufferDeleteRequests: Int? = nil
+    var renderbufferStorageRequests: Int? = nil
+    var renderbufferStorageMultisampleRequests: Int? = nil
+    var effectiveSchema: Int { schema ?? 1 }
+    static let v2Keys: Set<String> = ["texImage2DNullishRequests", "texImage2DViewRequests", "texImage2DOtherRequests", "framebufferCreateRequests", "framebufferDeleteRequests", "framebufferTexture2DRequests", "renderbufferCreateRequests", "renderbufferDeleteRequests", "renderbufferStorageRequests", "renderbufferStorageMultisampleRequests"]
+    private var v2Counters: [Int?] { [texImage2DNullishRequests, texImage2DViewRequests, texImage2DOtherRequests, framebufferCreateRequests, framebufferDeleteRequests, framebufferTexture2DRequests, renderbufferCreateRequests, renderbufferDeleteRequests, renderbufferStorageRequests, renderbufferStorageMultisampleRequests] }
+
     var isValid: Bool {
+        (effectiveSchema == 1 ? v2Counters.allSatisfy { $0 == nil } :
+            effectiveSchema == 2 && v2Counters.allSatisfy { $0.map { (0...Self.counterLimit).contains($0) } == true }) &&
         (1...Self.counterLimit).contains(seq) && (0...Self.elapsedLimit).contains(webElapsedMs) &&
         (0...4).contains(contexts) && counters.allSatisfy { (0...Self.counterLimit).contains($0) } &&
         texturesDeleted <= texturesCreated &&
@@ -34,10 +52,10 @@ struct LongRunSample: Codable, Equatable {
     }
     private var counters: [Int] {
         [contextLost, contextRestored, texturesCreated, texturesDeleted, textureUploads,
-         unknownUploads, hookFailures, sendFailures, drawCalls]
+         unknownUploads, hookFailures, sendFailures, drawCalls] + v2Counters.compactMap { $0 }
     }
     func follows(_ previous: LongRunSample) -> Bool {
-        seq > previous.seq && webElapsedMs >= previous.webElapsedMs && contexts >= previous.contexts &&
+        effectiveSchema == previous.effectiveSchema && seq > previous.seq && webElapsedMs >= previous.webElapsedMs && contexts >= previous.contexts &&
         zip(counters, previous.counters).allSatisfy { $0.0 >= $0.1 } &&
         !(previous.overflow && !overflow) &&
         (previous.textureBytesEstimate == nil ||
@@ -45,21 +63,22 @@ struct LongRunSample: Codable, Equatable {
         // WASM capacity may refer to a replaced instance, so it need not be monotonic.
     }
     static func client(_ body: [String: Any], session: UUID, wkEpoch: Int) -> LongRunSample? {
-        let required: Set<String> = ["type", "schema", "session", "wkEpoch", "seq", "webElapsedMs", "contexts",
+        var required: Set<String> = ["type", "schema", "session", "wkEpoch", "seq", "webElapsedMs", "contexts",
             "contextLost", "contextRestored", "texturesCreated", "texturesDeleted", "textureUploads",
             "unknownUploads", "drawCalls", "overflow", "hookFailures", "sendFailures"]
         let optional: Set<String> = ["textureBytesEstimate", "wasmBytes"]
-        guard required.isSubset(of: Set(body.keys)), Set(body.keys).isSubset(of: required.union(optional)),
-              body["type"] as? String == "longRunDiagnostics",
-              body["session"] as? String == session.uuidString else { return nil }
         func integer(_ key: String, maximum: Int) -> Int? {
             guard let value = body[key] as? NSNumber, CFGetTypeID(value) != CFBooleanGetTypeID(),
                   value.doubleValue.isFinite, value.doubleValue.rounded() == value.doubleValue,
                   value.doubleValue >= 0, value.doubleValue <= Double(maximum) else { return nil }
             return value.intValue
         }
-        guard integer("schema", maximum: 1) == 1,
-              integer("wkEpoch", maximum: 9_999_999) == wkEpoch,
+        guard let schema = integer("schema", maximum: 2), (1...2).contains(schema) else { return nil }
+        if schema == 2 { required.formUnion(v2Keys) }
+        guard required.isSubset(of: Set(body.keys)), Set(body.keys).isSubset(of: required.union(optional)),
+              body["type"] as? String == "longRunDiagnostics",
+              body["session"] as? String == session.uuidString else { return nil }
+        guard integer("wkEpoch", maximum: 9_999_999) == wkEpoch,
               let seq = integer("seq", maximum: counterLimit), seq > 0,
               let elapsed = integer("webElapsedMs", maximum: elapsedLimit),
               let contexts = integer("contexts", maximum: 4),
@@ -77,12 +96,35 @@ struct LongRunSample: Codable, Equatable {
         for key in optional where body[key] != nil {
             guard integer(key, maximum: byteLimit) != nil else { return nil }
         }
-        let value = LongRunSample(seq: seq, webElapsedMs: elapsed, contexts: contexts,
+        var value = LongRunSample(seq: seq, webElapsedMs: elapsed, contexts: contexts,
             contextLost: lost, contextRestored: restored, texturesCreated: created,
             texturesDeleted: deleted, textureUploads: uploads, drawCalls: draws,
             textureBytesEstimate: integer("textureBytesEstimate", maximum: byteLimit),
             unknownUploads: unknown, wasmBytes: integer("wasmBytes", maximum: byteLimit),
             overflow: overflowNumber.boolValue, hookFailures: hooks, sendFailures: sends)
+        value.schema = schema
+        if schema == 2 {
+            guard let texImage2DNullishRequests = integer("texImage2DNullishRequests", maximum: counterLimit) else { return nil }
+            value.texImage2DNullishRequests = texImage2DNullishRequests
+            guard let texImage2DViewRequests = integer("texImage2DViewRequests", maximum: counterLimit) else { return nil }
+            value.texImage2DViewRequests = texImage2DViewRequests
+            guard let texImage2DOtherRequests = integer("texImage2DOtherRequests", maximum: counterLimit) else { return nil }
+            value.texImage2DOtherRequests = texImage2DOtherRequests
+            guard let framebufferCreateRequests = integer("framebufferCreateRequests", maximum: counterLimit) else { return nil }
+            value.framebufferCreateRequests = framebufferCreateRequests
+            guard let framebufferDeleteRequests = integer("framebufferDeleteRequests", maximum: counterLimit) else { return nil }
+            value.framebufferDeleteRequests = framebufferDeleteRequests
+            guard let framebufferTexture2DRequests = integer("framebufferTexture2DRequests", maximum: counterLimit) else { return nil }
+            value.framebufferTexture2DRequests = framebufferTexture2DRequests
+            guard let renderbufferCreateRequests = integer("renderbufferCreateRequests", maximum: counterLimit) else { return nil }
+            value.renderbufferCreateRequests = renderbufferCreateRequests
+            guard let renderbufferDeleteRequests = integer("renderbufferDeleteRequests", maximum: counterLimit) else { return nil }
+            value.renderbufferDeleteRequests = renderbufferDeleteRequests
+            guard let renderbufferStorageRequests = integer("renderbufferStorageRequests", maximum: counterLimit) else { return nil }
+            value.renderbufferStorageRequests = renderbufferStorageRequests
+            guard let renderbufferStorageMultisampleRequests = integer("renderbufferStorageMultisampleRequests", maximum: counterLimit) else { return nil }
+            value.renderbufferStorageMultisampleRequests = renderbufferStorageMultisampleRequests
+        }
         return value.isValid ? value : nil
     }
 }
@@ -102,6 +144,29 @@ struct LongRunEvent: Codable, Equatable {
     }
 }
 
+/// Captured from native bundle metadata once, never supplied by the page.
+struct LongRunBuildIdentity: Codable, Equatable {
+    let appVersion: String
+    let appBuild: String
+    let diagnosticSchema: Int
+    let observerRevision: Int
+    static func sanitized(_ value: Any?) -> String {
+        guard let text = value as? String, !text.isEmpty, text.utf8.count <= 32,
+              text.utf8.allSatisfy({ (48...57).contains($0) || (65...90).contains($0) ||
+                  (97...122).contains($0) || [45, 46, 95].contains($0) }) else { return "unknown" }
+        return text
+    }
+    static var current: LongRunBuildIdentity {
+        LongRunBuildIdentity(appVersion: sanitized(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")),
+            appBuild: sanitized(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")),
+            diagnosticSchema: 2, observerRevision: 2)
+    }
+    var isValid: Bool {
+        diagnosticSchema == 2 && observerRevision == 2 &&
+        Self.sanitized(appVersion) == appVersion && Self.sanitized(appBuild) == appBuild
+    }
+}
+
 struct LongRunSnapshot: Codable, Equatable {
     static let eventLimit = 120
     let session: UUID
@@ -114,6 +179,7 @@ struct LongRunSnapshot: Codable, Equatable {
     var events: [LongRunEvent] = []
     var lastSample: LongRunSample? = nil
     var terminated = false
+    var buildIdentity: LongRunBuildIdentity? = nil
 
     mutating func noteRejectedMessage() {
         guard !terminated else { return }
@@ -124,12 +190,13 @@ struct LongRunSnapshot: Codable, Equatable {
         else { rejected += 1 }
     }
     var isValid: Bool {
-        guard (1...9_999_999).contains(wkEpoch),
+        guard buildIdentity?.isValid != false, (1...9_999_999).contains(wkEpoch),
               [observed, evicted, rejected, sequenceGaps].allSatisfy({ (0...LongRunSample.counterLimit).contains($0) }),
               events.count <= Self.eventLimit, events.allSatisfy(\.isValid),
               observed >= events.count, evicted <= observed,
               countersSaturated || observed == evicted + events.count,
-              lastSample?.isValid != false else { return false }
+              lastSample?.isValid != false,
+              buildIdentity == nil || lastSample == nil || lastSample?.effectiveSchema == buildIdentity?.diagnosticSchema else { return false }
         let terminalCount = events.filter { $0.kind == .webProcessTerminated }.count
         guard terminated ? terminalCount == 1 && events.last?.kind == .webProcessTerminated : terminalCount == 0 else { return false }
         var previous: LongRunSample?
@@ -146,6 +213,7 @@ struct LongRunSnapshot: Codable, Equatable {
     @discardableResult mutating func receive(_ body: [String: Any], at date: Date = Date()) -> Bool {
         guard !terminated else { return false }
         guard let sample = LongRunSample.client(body, session: session, wkEpoch: wkEpoch),
+              buildIdentity == nil || sample.effectiveSchema == buildIdentity?.diagnosticSchema,
               lastSample.map({ sample.follows($0) }) ?? true,
               LongRunEvent(kind: .sample, receivedAt: date, sample: sample).isValid else { reject(); return false }
         let previousSequence = lastSample?.seq ?? 0
@@ -175,8 +243,10 @@ struct LongRunSnapshot: Codable, Equatable {
         return true
     }
     var summary: String {
-        let header = "session=\(session.uuidString) wkEpoch=\(wkEpoch) observed=\(observed) retained=\(events.count) evicted=\(evicted) rejected=\(rejected) sequenceGaps=\(sequenceGaps) countersSaturated=\(countersSaturated) terminationCallback=\(terminated) clock=hostProcessingTime"
-        let limits = "Limits: rolling last 120 events, two sessions; sampling may be delayed/suspended. Manual markers are not automatic Flash scene detection. WebGL only; at most 4 contexts and 16384 lifetime tracked textures. Overflow means coverage is incomplete and the deletion counter may be a lower bound. Upload/delete counters are API observations, not GPU allocation/release. Texture bytes are cumulative upload estimates, not resident or physical GPU memory. WASM measurement is unavailable in this build. Missing events do not establish the failure stage."
+        let identity = buildIdentity.map { "appVersion=\($0.appVersion) appBuild=\($0.appBuild) diagnosticSchema=\($0.diagnosticSchema) observerRevision=\($0.observerRevision)" }
+            ?? "appVersion=unknown appBuild=unknown diagnosticSchema=\(lastSample.map { String($0.effectiveSchema) } ?? "unknown") observerRevision=unknown"
+        let header = identity + " session=\(session.uuidString) wkEpoch=\(wkEpoch) observed=\(observed) retained=\(events.count) evicted=\(evicted) rejected=\(rejected) sequenceGaps=\(sequenceGaps) countersSaturated=\(countersSaturated) terminationCallback=\(terminated) clock=hostProcessingTime"
+        let limits = "Limits: rolling last 120 events, two sessions; sampling may be delayed/suspended. Manual markers are not automatic Flash scene detection. WebGL only; at most 4 contexts and 16384 lifetime tracked textures. Overflow means coverage is incomplete and the deletion counter may be a lower bound. Only available successfully hooked APIs are observed; normal return is not GL success. texturesCreated counts observed objects and texturesDeleted counts unique recognized delete requests. Framebuffer/renderbuffer create requests include null returns; their delete requests include null and repeated arguments. These are not successful allocations, GPU bytes, live resource balances or releases. texImage2D categories describe argument forms, not texture residency. Texture bytes are cumulative upload estimates, not resident or physical GPU memory. WASM measurement is unavailable in this build. Missing events do not establish the failure stage."
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]; encoder.dateEncodingStrategy = .iso8601
         let rows = events.compactMap { event in (try? encoder.encode(event)).flatMap { String(data: $0, encoding: .utf8) } }
         return ([header, limits] + rows).joined(separator: "\n")

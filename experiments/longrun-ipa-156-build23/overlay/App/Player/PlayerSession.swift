@@ -157,7 +157,7 @@ import SwiftUI
             previousLongRunSummary = previousLongRunSnapshots.prefix(1).map(\.summary).joined(separator: "\n\n")
             if previousLongRunSummary?.isEmpty == true { previousLongRunSummary = nil }
             longRunEpoch = min(longRunEpoch + 1, 9_999_999)
-            longRunSnapshot = LongRunSnapshot(session: attempt, wkEpoch: longRunEpoch)
+            longRunSnapshot = LongRunSnapshot(session: attempt, wkEpoch: longRunEpoch, buildIdentity: .current)
             longRunLastSampleUptime = ProcessInfo.processInfo.systemUptime
             recordLongRun(.sessionStart)
         }

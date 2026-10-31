@@ -51,6 +51,9 @@ import WebKit
             XCTAssertEqual(enabledConfiguration, "present:present")
             let first = try XCTUnwrap(store.read().first)
             XCTAssertNotNil(first.lastSample, "Real document-start observer must post a valid snapshot")
+            XCTAssertEqual(first.lastSample?.effectiveSchema, 2)
+            XCTAssertEqual(first.buildIdentity?.observerRevision, 2)
+            XCTAssertEqual(first.buildIdentity?.diagnosticSchema, 2)
             let export = try XCTUnwrap(session.longRunExport)
             XCTAssertTrue(export.contains(first.session.uuidString))
             XCTAssertTrue(export.contains(recentID.uuidString))
@@ -110,7 +113,7 @@ import WebKit
         sample.webElapsedMs += 10_000
         let data = try JSONEncoder().encode(sample)
         var value = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
-        value["type"] = "longRunDiagnostics"; value["schema"] = 1
+        value["type"] = "longRunDiagnostics"; value["schema"] = sample.effectiveSchema
         value["session"] = snapshot.session.uuidString; value["wkEpoch"] = snapshot.wkEpoch
         return value
     }

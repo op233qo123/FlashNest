@@ -23,7 +23,8 @@ def config():
  need(x['baselineSourceCommit']=='985f25c44ead766b2c4f9bd77b82e7b92bf95cc0' and x['frozenSourceCommit']=='9bc000e37695696f2427b25fe08efe4993bf22e5','Wrong baseline source commits')
  need(set(x['recipeFiles'])=={'package.py','run_focused_tests.py','workflow.yml','README.md','checks/test_long_run.js','checks/test_contract.py','checks/test_package.py'},'Incomplete recipe closure')
  need(x['version']=='1.5.6' and x['build']=='23' and x['bundleID']=='com.flashnest.app','Wrong package identity')
- need(x.get('packageRevision')=='import-warning-diagnostic','Wrong build23 revision')
+ need(x.get('packageRevision')=='diagnostic-v2-import-warning','Wrong build23 revision')
+ need(x.get('observerRevision')==2 and type(x.get('observerRevision')) is int and x.get('diagnosticSchema')==2 and type(x.get('diagnosticSchema')) is int,'Wrong diagnostic observer/schema revision')
  required={'LongRunDiagnosticsTests','LongRunSessionTests','LoadingPhaseDiagnosticsTests','LoopbackLoadPhaseTests','PackageImporterTests','ImportAliasTests','LocalImportInboxTests','ImportFlowTests','DocumentPickerDelegateTests','ImportSizeWarningTests','ImportSizeConfirmationFlowTests'}
  need(required.issubset(set(x['testClasses'])) and len(x['testClasses'])==len(set(x['testClasses'])),'Required native import/diagnostic classes missing or duplicated')
  need(set(x['testSourceFiles'])==set(x['testClasses']),'Native source mapping differs')
@@ -78,7 +79,7 @@ def stage(source,recipe,out):
 
 def verify(ipa,app,out,record):
  x=config();staged=load(out/'staging.json')
- need(ipa.name=='FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned.ipa','Wrong import-warning revision filename')
+ need(ipa.name=='FlashNest-1.5.6-build23-diagnostic-v2-import-warning-unsigned.ipa','Wrong import-warning revision filename')
  # Reuse frozen strict IPA path/Mach-O checks, not prior release waiver or prior tests.
  release,y,_,_=load_release(Path(os.environ['RECIPE_CHECKOUT']).resolve(),x);c=release.c
  c.verify_sources(app,staged['diagnosticSourceFiles'])
@@ -103,7 +104,9 @@ def verify(ipa,app,out,record):
   need(b'--flashnest-import-size-warning-ui-test' not in (bundle/'FlashNest').read_bytes(),'DEBUG import warning harness entry present in Release')
   need(files(bundle/'Web')==files(app/'App/Resources/Web'),'IPA Web bytes differ')
   need(files(bundle/'Web/runtime')==x['runtimeFiles'],'IPA engine changed')
-  dump(record,{'schemaVersion':1,'kind':x['kind'],'packageRevision':'import-warning-diagnostic','version':x['version'],'build':x['build'],'unsigned':True,'ipaSHA256':sha(ipa.read_bytes()),'ipaBytes':ipa.stat().st_size,'packagingCommit':os.environ.get('GITHUB_SHA'),'packagingRunID':os.environ.get('GITHUB_RUN_ID'),'baselineSourceCommit':x['baselineSourceCommit'],'appSourceFiles':staged['diagnosticSourceFiles'],'runtimeFiles':x['runtimeFiles'],'webFiles':files(bundle/'Web'),'nativeFocusedTests':test,'importConfirmationUI':ui,'deviceExecutable':macho,'diagnosticOptInDefault':False,'automaticUpload':False,'originalCrashResolved':False,'fullGatePassed':False,'physicalDeviceCertified':False})
+  observer=(bundle/'Web/long-run-diagnostics.js').read_text();need("type: 'longRunDiagnostics', schema: 2" in observer,'Bundled observer is not schema2')
+  native=(app/'App/Player/LongRunDiagnostics.swift').read_text();need('diagnosticSchema: 2, observerRevision: 2' in native and 'CFBundleShortVersionString' in native and 'CFBundleVersion' in native,'Native build identity source missing')
+  dump(record,{'schemaVersion':1,'kind':x['kind'],'packageRevision':'diagnostic-v2-import-warning','observerRevision':2,'diagnosticSchema':2,'version':x['version'],'build':x['build'],'unsigned':True,'ipaSHA256':sha(ipa.read_bytes()),'ipaBytes':ipa.stat().st_size,'packagingCommit':os.environ.get('GITHUB_SHA'),'packagingRunID':os.environ.get('GITHUB_RUN_ID'),'baselineSourceCommit':x['baselineSourceCommit'],'appSourceFiles':staged['diagnosticSourceFiles'],'runtimeFiles':x['runtimeFiles'],'webFiles':files(bundle/'Web'),'nativeFocusedTests':test,'importConfirmationUI':ui,'deviceExecutable':macho,'diagnosticOptInDefault':False,'automaticUpload':False,'originalCrashResolved':False,'fullGatePassed':False,'physicalDeviceCertified':False})
  print('Actual build23 diagnostic IPA verified; not full native or physical-device acceptance')
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('action',choices=['preflight','stage','verify']);p.add_argument('--source-checkout',type=Path);p.add_argument('--recipe-checkout',type=Path);p.add_argument('--output',type=Path);p.add_argument('--app',type=Path);p.add_argument('--ipa',type=Path);p.add_argument('--record',type=Path);a=p.parse_args()

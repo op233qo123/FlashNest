@@ -35,7 +35,7 @@ classes=('LongRunDiagnosticsTests','LongRunSessionTests','LoadingPhaseDiagnostic
 methods=[]
 for name in classes:
  methods.extend((name,m) for m in re.findall(r'\bfunc (test\w+)\(',read('Tests/'+name+'.swift')))
-assert len(methods)==25 and len(set(methods))==25, methods
+assert len(methods)==29 and len(set(methods))==29, methods
 print(json.dumps({'staticContractPassed':True,'originalDiagnosticMethods':len(methods),'nativeTestsExecutedHere':False,'physicalDeviceCertified':False}))
 
 # Import-size policy remains an explicit decision, never a global unsafe bypass.

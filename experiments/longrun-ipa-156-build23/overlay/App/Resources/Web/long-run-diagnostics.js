@@ -18,6 +18,10 @@
     const states = [], replacements = [], listeners = [];
     const totals = { contextLost: 0, contextRestored: 0, texturesCreated: 0, texturesDeleted: 0,
       textureUploads: 0, textureBytesEstimate: 0, unknownUploads: 0, drawCalls: 0,
+      texImage2DNullishRequests: 0, texImage2DViewRequests: 0, texImage2DOtherRequests: 0,
+      framebufferCreateRequests: 0, framebufferDeleteRequests: 0, framebufferTexture2DRequests: 0,
+      renderbufferCreateRequests: 0, renderbufferDeleteRequests: 0,
+      renderbufferStorageRequests: 0, renderbufferStorageMultisampleRequests: 0,
       hookFailures: 0, sendFailures: 0 };
     let active = true, overflow = false, seq = 0, elapsed = 0, timer = null, textureMetadataCount = 0;
     const clock = () => {
@@ -57,6 +61,19 @@
       // callbacks are inert after stop and do not retain the canvas/context.
       if (typeof env.WeakRef === 'function') listeners.push({ canvas: new env.WeakRef(canvas), lost, restored });
     }
+    function classifyTexImage2D(args) {
+      // Overload shape only: never inspect source properties, pixels or byteLength.
+      // Numeric PBO offsets and DOM-source overloads remain deliberately 'other'.
+      let dimensions = args.length === 9 || args.length === 10;
+      // Conservative scalar shape check, not WebGL validity/success validation.
+      for (let i = 0; dimensions && i < 8; i++) {
+        dimensions = Number.isSafeInteger(args[i]) && args[i] >= 0;
+      }
+      if (dimensions && args.length === 10) dimensions = Number.isSafeInteger(args[9]) && args[9] >= 0;
+      if (dimensions && (args[8] === null || args[8] === undefined)) add('texImage2DNullishRequests');
+      else if (dimensions && ArrayBuffer.isView(args[8])) add('texImage2DViewRequests');
+      else add('texImage2DOtherRequests');
+    }
     function upload(name, args) {
       add('textureUploads');
       // Only numeric, base-level 2D RGBA8 request dimensions. Never read source
@@ -86,11 +103,20 @@
     }
     const uploadNames = ['texImage2D', 'texSubImage2D', 'texStorage2D', 'compressedTexImage2D',
       'compressedTexSubImage2D', 'texImage3D', 'texSubImage3D', 'texStorage3D', 'copyTexImage2D', 'copyTexSubImage2D'];
+    // These count requests that return normally, NOT successful allocations,
+    // unique resources, attachments, current ownership or physical memory.
+    const resourceRequests = {
+      createFramebuffer: 'framebufferCreateRequests', deleteFramebuffer: 'framebufferDeleteRequests',
+      framebufferTexture2D: 'framebufferTexture2DRequests',
+      createRenderbuffer: 'renderbufferCreateRequests', deleteRenderbuffer: 'renderbufferDeleteRequests',
+      renderbufferStorage: 'renderbufferStorageRequests',
+      renderbufferStorageMultisample: 'renderbufferStorageMultisampleRequests'
+    };
     const drawNames = ['drawArrays', 'drawElements', 'drawArraysInstanced', 'drawElementsInstanced'];
     try {
     for (const ctor of [env.WebGLRenderingContext, env.WebGL2RenderingContext]) {
       if (!ctor) continue;
-      for (const name of ['createTexture', 'deleteTexture', ...uploadNames, ...drawNames]) {
+      for (const name of ['createTexture', 'deleteTexture', ...uploadNames, ...drawNames, ...Object.keys(resourceRequests)]) {
         replace(ctor.prototype, name, original => function (...args) {
           // Original receiver/args/result/throw are preserved. No GL getError,
           // finishing, flushing, preventDefault, or recovery call is introduced.
@@ -108,7 +134,11 @@
               const t = object(args[0]) ? textureMap.get(args[0]) : undefined;
               if (t && t.context === s.id && !t.deleted) { t.deleted = true; add('texturesDeleted'); }
             } else if (drawNames.includes(name)) add('drawCalls');
-            else upload(name, args);
+            else if (resourceRequests[name]) add(resourceRequests[name]);
+            else {
+              if (name === 'texImage2D') classifyTexImage2D(args);
+              upload(name, args);
+            }
           });
           return result;
         });
@@ -131,7 +161,7 @@
         if (!Number.isFinite(raw) || raw < elapsed) overflow = true;
         else elapsed = Math.min(raw, ELAPSED_MAX);
         if (raw > ELAPSED_MAX) overflow = true;
-        const body = { type: 'longRunDiagnostics', schema: 1, session, wkEpoch: epoch,
+        const body = { type: 'longRunDiagnostics', schema: 2, session, wkEpoch: epoch,
           seq: ++seq, webElapsedMs: elapsed, contexts: states.length, ...totals, overflow };
         // wasmBytes is deliberately absent: the unchanged bundled engine does
         // not safely expose Memory. No instantiate/Promise interception is used.

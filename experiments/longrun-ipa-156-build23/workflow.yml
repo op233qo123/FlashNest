@@ -1,4 +1,4 @@
-name: Build FlashNest import-warning diagnostic test IPA build23
+name: Build FlashNest diagnostic v2 import-warning test IPA build23
 on:
   push:
     branches: [experiment/longrun-diagnostic-build23]
@@ -81,18 +81,18 @@ jobs:
         run: |
           set -euo pipefail
           mkdir diagnostic-package/artifacts
-          bash diagnostic-package/app/scripts/package_unsigned.sh diagnostic-package/app/build/Build/Products/Release-iphoneos/FlashNest.app diagnostic-package/artifacts/FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned.ipa
-          python3 "$DIAGNOSTIC_RECIPE/package.py" verify --ipa diagnostic-package/artifacts/FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned.ipa --app diagnostic-package/app --output diagnostic-package --record diagnostic-package/artifacts/diagnostic-provenance.json
+          bash diagnostic-package/app/scripts/package_unsigned.sh diagnostic-package/app/build/Build/Products/Release-iphoneos/FlashNest.app diagnostic-package/artifacts/FlashNest-1.5.6-build23-diagnostic-v2-import-warning-unsigned.ipa
+          python3 "$DIAGNOSTIC_RECIPE/package.py" verify --ipa diagnostic-package/artifacts/FlashNest-1.5.6-build23-diagnostic-v2-import-warning-unsigned.ipa --app diagnostic-package/app --output diagnostic-package --record diagnostic-package/artifacts/diagnostic-provenance.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: FlashNest-1.5.6-build23-import-warning-diagnostic-unsigned
+          name: FlashNest-1.5.6-build23-diagnostic-v2-import-warning-unsigned
           path: diagnostic-package/artifacts/
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: FlashNest-build23-import-warning-diagnostic-test-evidence
+          name: FlashNest-build23-diagnostic-v2-import-warning-test-evidence
           path: |
             diagnostic-package/staging.json
             diagnostic-package/focused-tests/focused.log

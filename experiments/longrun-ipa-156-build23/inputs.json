@@ -214,6 +214,7 @@
   "bundleID": "com.flashnest.app",
   "cacheEvictionEnabled": false,
   "diagnosticOptInDefault": false,
+  "diagnosticSchema": 2,
   "dispatchAllowed": true,
   "engineProductChanges": false,
   "expectedNativeTests": [
@@ -272,6 +273,22 @@
     [
       "LongRunDiagnosticsTests",
       "testUnknownPayloadIsNotPersistedOrExported"
+    ],
+    [
+      "LongRunDiagnosticsTests",
+      "testSchemaTwoStrictAllowlistAndEveryNewCounterBounds"
+    ],
+    [
+      "LongRunDiagnosticsTests",
+      "testSchemaTwoCountersMonotonicAndSessionCannotChangeSchema"
+    ],
+    [
+      "LongRunDiagnosticsTests",
+      "testLegacyCheckpointWithoutSchemaOrBuildMetadataRemainsReadable"
+    ],
+    [
+      "LongRunDiagnosticsTests",
+      "testNativeBuildIdentityIsBoundedPersistedAndNotReplacedOnExport"
     ],
     [
       "LongRunSessionTests",
@@ -495,6 +512,7 @@
   "frozenSourceCommit": "9bc000e37695696f2427b25fe08efe4993bf22e5",
   "fullGatePassed": false,
   "kind": "EXPERIMENTAL-LONGRUN-DIAGNOSTIC",
+  "observerRevision": 2,
   "originalCrashResolved": false,
   "overlay": {
     "App/FlashNestApp.swift": {
@@ -526,11 +544,11 @@
       "before": "ec03e5e52044f0b562c659f480042c26437174e2270023082336610d49e913ac"
     },
     "App/Player/LongRunDiagnostics.swift": {
-      "after": "41b28b689032381367a8e07fdf05ef6555351097de8005f4e1cfc434b723e3cb",
+      "after": "6162d9aefce6969a0cddcc4f79815e2717f59b566b46d3358e697ed9416a745b",
       "before": null
     },
     "App/Player/PlayerSession.swift": {
-      "after": "2d348bef979d82a6c55d909cc9c38aaa8fc2a662d5342baf879c8d0d92d40565",
+      "after": "16db68ab205e8e0ffd9a6e273a45bcec4b5b6b9d0547af95c055fdd35a6cca72",
       "before": "3214e7c5cb0e7e71b655cacf63c0a3e591d8d1cdbad72b4b9b4a26ceb19da120"
     },
     "App/Resources/Localization/en.lproj/Localizable.strings": {
@@ -546,7 +564,7 @@
       "before": "dc644cc31bdfd20428af68b5343b223f1573dc4c360bd34162bc52a046f8ece4"
     },
     "App/Resources/Web/long-run-diagnostics.js": {
-      "after": "dbc588dfa4bc6622fc542fb52786237fc210dc7921f8de26bfcf37541d64e1dd",
+      "after": "f9cbd98b7edb416ad8f184fdf4e193f1b4cb10b99cef9dbdbf2ea17a1b631a2b",
       "before": null
     },
     "App/Views/ImportSizeWarningView.swift": {
@@ -574,11 +592,11 @@
       "before": null
     },
     "Tests/LongRunDiagnosticsTests.swift": {
-      "after": "a917ee6abf21de1e8762ee76d5d0786e71cc3508292afb069949a810df892878",
+      "after": "9d6b726af15cb8200d949530e386c505b34403a0ed33f2df58b2fe6f6fd51a66",
       "before": null
     },
     "Tests/LongRunSessionTests.swift": {
-      "after": "8da91d8f137704b4e2fccb7b89db4a842563205adf1c0eb047668ac484182e86",
+      "after": "b7fd5f718248a3723d18e0aa336bdb7549d50c407825ad780ddec4bc079a1a09",
       "before": null
     },
     "Tests/PackageImporterTests.swift": {
@@ -594,16 +612,16 @@
       "before": "91546034a47119dd5811a396c427043dba597d69703c58a1a91596bb4c8b3958"
     }
   },
-  "packageRevision": "import-warning-diagnostic",
+  "packageRevision": "diagnostic-v2-import-warning",
   "physicalDeviceCertified": false,
   "recipeFiles": {
-    "README.md": "c27d901a76297ccb39d931d51036603bc9293f2330a9d87c885d49e2c5adaafb",
-    "checks/test_contract.py": "eeb4ff0de590b2a910b8acf60e7af1a79b4044792ae47174c8cbff5837cfe3e4",
-    "checks/test_long_run.js": "82d73cbb3af343dfa3cd59fd431d33ab23b693a6069135627d617abfca496f4b",
-    "checks/test_package.py": "b0e00e8dc97fb3e9dcd99fc2202f92fb73353d487c3f1853093b379e15ce9027",
-    "package.py": "8ff12778a53b49b47ea5b1206a55d774c9d3eb238588fecbe38c6be970bcba5d",
+    "README.md": "978f7d94cd3ba41bf7b5946c12f7ff2768e41aa5bb7e18085679e9ee4233cbbd",
+    "checks/test_contract.py": "1079d2624fd53fe3db030a7818aa7d70a477d14b9f1bb2d41934606636be9a39",
+    "checks/test_long_run.js": "b9e6670ef46c014353526f4ce15e357507c397361bebd0dd9591f35f08be975a",
+    "checks/test_package.py": "84921b8533866ee94132046859b0d9226c435de386d5133cba4f3694436bc531",
+    "package.py": "7c173b7fbdab00c37127ca755b62cec78137fa6bdf7b2d86a59f23b01fc9dbc8",
     "run_focused_tests.py": "7744230657d12ef81cb8422b729848c10f39930008fa16b24f8b4faebdd327a8",
-    "workflow.yml": "b52664c959724a0d789faed758fa8575d4767dbfb05220db2e69714c68374c50"
+    "workflow.yml": "ab9a8d39156d0953b136a973d251ca674ba27d916e659a2c0ad00079ed8df29b"
   },
   "releaseRecipeFiles": {
     "README.md": "c38551af326980d50ef660b877a2ad1c2e08a3405d87286c0f75e31c07810b12",

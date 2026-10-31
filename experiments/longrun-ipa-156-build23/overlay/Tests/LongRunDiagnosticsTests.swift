@@ -11,6 +11,12 @@ final class LongRunDiagnosticsTests: XCTestCase {
          "textureBytesEstimate": 16_777_216, "unknownUploads": 0,
          "overflow": false, "hookFailures": 0, "sendFailures": 0]
     }
+    private func v2Body(_ session: UUID, seq: Int = 1) -> [String: Any] {
+        var value = body(session, seq: seq)
+        value["schema"] = 2
+        for key in LongRunSample.v2Keys { value[key] = seq }
+        return value
+    }
     private func temporaryRoot() throws -> URL {
         let url = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -134,16 +140,25 @@ final class LongRunDiagnosticsTests: XCTestCase {
     func testMaximumNormalCheckpointFitsHardLimit() throws {
         let root = try temporaryRoot(); let store = LongRunDiagnostics(root: root)
         for _ in 0..<2 {
-            let id = UUID(); var snapshot = LongRunSnapshot(session: id, wkEpoch: 9_999_999)
+            let id = UUID(); var snapshot = LongRunSnapshot(session: id, wkEpoch: 9_999_999,
+                buildIdentity: LongRunBuildIdentity(appVersion: String(repeating: "V", count: 32),
+                    appBuild: String(repeating: "B", count: 32), diagnosticSchema: 2, observerRevision: 2))
             for seq in 1...300 {
-                var value = body(id, epoch: 9_999_999, seq: seq)
+                var value = body(id, epoch: 9_999_999, seq: LongRunSample.counterLimit - 300 + seq)
                 for key in ["contextLost", "contextRestored", "texturesCreated", "texturesDeleted", "textureUploads", "drawCalls", "unknownUploads", "hookFailures", "sendFailures"] { value[key] = LongRunSample.counterLimit }
+                value["schema"] = 2
+                for key in LongRunSample.v2Keys { value[key] = LongRunSample.counterLimit }
                 value["textureBytesEstimate"] = LongRunSample.byteLimit
                 value["wasmBytes"] = LongRunSample.byteLimit
                 value["webElapsedMs"] = LongRunSample.elapsedLimit
                 value["overflow"] = true
                 XCTAssertTrue(snapshot.receive(value, at: date))
             }
+            snapshot.observed = LongRunSample.counterLimit
+            snapshot.evicted = LongRunSample.counterLimit
+            snapshot.rejected = LongRunSample.counterLimit
+            snapshot.sequenceGaps = LongRunSample.counterLimit
+            snapshot.countersSaturated = true
             XCTAssertTrue(snapshot.record(.webProcessTerminated, at: date))
             try store.record(snapshot)
         }
@@ -192,4 +207,92 @@ final class LongRunDiagnosticsTests: XCTestCase {
         XCTAssertFalse(snapshot.summary.contains("SECRET"))
         XCTAssertFalse(String(decoding: try Data(contentsOf: root.appendingPathComponent("long-run.json")), as: UTF8.self).contains("SECRET"))
     }
+    func testSchemaTwoStrictAllowlistAndEveryNewCounterBounds() throws {
+        let id = UUID(), valid = v2Body(UUID())
+        var value = valid; value["session"] = id.uuidString
+        XCTAssertNotNil(LongRunSample.client(value, session: id, wkEpoch: 1))
+        var requests = value
+        requests["framebufferCreateRequests"] = 0; requests["framebufferDeleteRequests"] = 9
+        requests["renderbufferCreateRequests"] = 0; requests["renderbufferDeleteRequests"] = 9
+        XCTAssertNotNil(LongRunSample.client(requests, session: id, wkEpoch: 1), "Request counts are not live resource balances")
+        for key in LongRunSample.v2Keys {
+            var missing = value; missing.removeValue(forKey: key)
+            XCTAssertNil(LongRunSample.client(missing, session: id, wkEpoch: 1), key)
+            for invalid in [true, -1, 0.5, Double.infinity, Double.nan, 2_147_483_648.0, "1", NSNull()] as [Any] {
+                var bad = value; bad[key] = invalid
+                XCTAssertNil(LongRunSample.client(bad, session: id, wkEpoch: 1), key)
+            }
+            var legacy = body(id); legacy[key] = 0
+            XCTAssertNil(LongRunSample.client(legacy, session: id, wkEpoch: 1), key)
+        }
+        for key in ["appVersion", "appBuild", "observerRevision", "url", "framebufferBytes"] {
+            var bad = value; bad[key] = "untrusted"
+            XCTAssertNil(LongRunSample.client(bad, session: id, wkEpoch: 1))
+        }
+        for version in [true, 0, 3, 1.5] as [Any] {
+            var bad = value; bad["schema"] = version
+            XCTAssertNil(LongRunSample.client(bad, session: id, wkEpoch: 1))
+        }
+    }
+    func testSchemaTwoCountersMonotonicAndSessionCannotChangeSchema() throws {
+        let id = UUID()
+        for key in LongRunSample.v2Keys {
+            var snapshot = LongRunSnapshot(session: id, wkEpoch: 1)
+            XCTAssertTrue(snapshot.receive(v2Body(id), at: date))
+            var decreased = v2Body(id, seq: 2); decreased[key] = 0
+            XCTAssertFalse(snapshot.receive(decreased, at: date), key)
+            XCTAssertTrue(snapshot.receive(v2Body(id, seq: 2), at: date))
+        }
+        var legacy = LongRunSnapshot(session: id, wkEpoch: 1)
+        XCTAssertTrue(legacy.receive(body(id), at: date))
+        XCTAssertFalse(legacy.receive(v2Body(id, seq: 2), at: date))
+        var current = LongRunSnapshot(session: id, wkEpoch: 1, buildIdentity: .current)
+        XCTAssertFalse(current.receive(body(id), at: date))
+        XCTAssertTrue(current.receive(v2Body(id), at: date))
+        XCTAssertFalse(current.receive(body(id, seq: 2), at: date))
+        XCTAssertTrue(current.record(.webProcessTerminated, at: date))
+        XCTAssertFalse(current.receive(v2Body(id, seq: 2), at: date))
+    }
+    func testLegacyCheckpointWithoutSchemaOrBuildMetadataRemainsReadable() throws {
+        let id = UUID(); var snapshot = LongRunSnapshot(session: id, wkEpoch: 1)
+        XCTAssertTrue(snapshot.receive(body(id), at: date))
+        let root = try temporaryRoot(), store = LongRunDiagnostics(root: root)
+        var raw = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(snapshot)) as? [String: Any])
+        raw.removeValue(forKey: "buildIdentity")
+        var last = try XCTUnwrap(raw["lastSample"] as? [String: Any]); last.removeValue(forKey: "schema")
+        raw["lastSample"] = last
+        var events = try XCTUnwrap(raw["events"] as? [[String: Any]])
+        events[0]["sample"] = last; raw["events"] = events
+        try JSONSerialization.data(withJSONObject: [raw]).write(to: root.appendingPathComponent("long-run.json"))
+        let restored = try XCTUnwrap(store.read().first)
+        XCTAssertNil(restored.buildIdentity)
+        XCTAssertEqual(restored.lastSample?.effectiveSchema, 1)
+        XCTAssertNil(restored.lastSample?.texImage2DNullishRequests)
+        XCTAssertNil(restored.lastSample?.framebufferDeleteRequests)
+        XCTAssertNil(restored.lastSample?.renderbufferStorageRequests)
+        XCTAssertTrue(restored.summary.contains("appBuild=unknown"))
+        XCTAssertTrue(restored.summary.contains("observerRevision=unknown"))
+    }
+    func testNativeBuildIdentityIsBoundedPersistedAndNotReplacedOnExport() throws {
+        XCTAssertEqual(LongRunBuildIdentity.sanitized("1.5.6"), "1.5.6")
+        XCTAssertEqual(LongRunBuildIdentity.sanitized("23"), "23")
+        for input in ["line\nbreak", "https://invalid", String(repeating: "x", count: 33), "", 23] as [Any] {
+            XCTAssertEqual(LongRunBuildIdentity.sanitized(input), "unknown")
+        }
+        let stamp = LongRunBuildIdentity(appVersion: "test-old", appBuild: "test-23",
+            diagnosticSchema: 2, observerRevision: 2)
+        let root = try temporaryRoot(), store = LongRunDiagnostics(root: root)
+        var snapshot = LongRunSnapshot(session: UUID(), wkEpoch: 1, buildIdentity: stamp)
+        XCTAssertTrue(snapshot.receive(v2Body(snapshot.session), at: date))
+        try store.record(snapshot)
+        let restored = try XCTUnwrap(store.read().first)
+        XCTAssertEqual(restored.buildIdentity, stamp)
+        XCTAssertTrue(restored.summary.contains("appVersion=test-old appBuild=test-23 diagnosticSchema=2 observerRevision=2"))
+        var invalid = snapshot
+        invalid.buildIdentity = LongRunBuildIdentity(appVersion: "unsafe\nvalue", appBuild: "23", diagnosticSchema: 2, observerRevision: 2)
+        XCTAssertThrowsError(try store.record(invalid))
+        invalid = snapshot; invalid.lastSample?.schema = 1
+        XCTAssertFalse(invalid.isValid)
+    }
+
 }
