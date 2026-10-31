@@ -44,3 +44,7 @@ python browser/run.py --contract contract.json --baseline baseline/runtime --can
 Committed fixture bytes were generated with Pillow13.0.0 / JPEG codec6.2; CI consumes the committed bytes and checks their hashes. Regeneration under a different Pillow/codec is not assumed byte-identical. The pinned runtime Pillow12.1.0 is used only for screenshot checking.
 
 The output directory must not exist. `result.json` is written on success and failure, alongside a bounded screenshot set. Existing evidence is never overwritten. Actual browser execution is pending CI; syntax/unit/static results are not browser results.
+
+## Render-order correction
+
+Run41160325754 exposed a measurement race: a shown trace occurred before the bitmap upload, while the later screenshot already contained the rendered pixels. The runner now waits, with the normal25-second timeout, for an actual target-size texture upload followed by a draw on the same WebGL context. It then captures the screenshot before awaiting the scalar/hash snapshot. Missing rendering still times out and independent nonblank/pixel gates remain unchanged. A late-upload unit case verifies that a rendered screenshot cannot be paired with an earlier observation. Previously downloaded evidence remains unchanged.

@@ -8,7 +8,8 @@ const wasm={Memory:WebAssembly.Memory,instantiate:async()=>{instantiated++;retur
 const c={URLSearchParams,location:{search:'?arm=baseline'},HTMLCanvasElement:Canvas,WebGLRenderingContext:GL,WebGL2RenderingContext:class extends GL{},WebAssembly:wasm,crypto:crypto.webcrypto,performance,document:{addEventListener(){},createElement(){return {}},head:{append(){}},getElementById(){return {}}},console};c.window=c;c.addEventListener=()=>{};vm.runInNewContext(code,c);
 (async()=>{
  assert.equal(canvas.getContext('webgl'),gl);const bytes=new Uint8Array(64*64*4).map((_,i)=>i%251);
- assert.equal(gl.texImage2D(1,0,2,64,64,0,3,4,bytes),17);assert.equal(gl.last[8],bytes);assert.equal(gl.drawElements(1,2,3,4),19);
+ assert.equal(gl.drawElements(1,2,3,4),19);assert.equal(c.targetFrameObserved(64,64),false);
+ assert.equal(gl.texImage2D(1,0,2,64,64,0,3,4,bytes),17);assert.equal(gl.last[8],bytes);assert.equal(c.targetFrameObserved(64,64),false);assert.equal(gl.drawElements(1,2,3,4),19);assert.equal(c.targetFrameObserved(64,64),true);assert.equal(c.targetFrameObserved(512,512),false);
  await c.WebAssembly.instantiate(new Uint8Array());assert.equal(instantiated,1);
  let s=await c.snapshot();assert.equal(s.memories[0].bytes,65536);assert.equal(s.uploadHashes[0].sha256,crypto.createHash('sha256').update(bytes).digest('hex'));assert.equal(s.uploadHashes[0].bytes,bytes.byteLength);
  const backing=new Uint8Array(bytes.length+97).fill(255);const offsetView=backing.subarray(37,37+bytes.length);offsetView.set(bytes);assert.equal(offsetView.byteOffset,37);

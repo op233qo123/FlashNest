@@ -24,6 +24,11 @@ def check_pixels(image,state):
   assert any(p[:3]!=(255,255,255) for p in crop.getdata())
  if state in ['masked','hit']:assert image.getpixel((44,36))==(255,255,255,255),'Mask boundary missing'
 def image_uploads(state,size):return sum(c['width']==size and c['height']==size and 'Image' in c['name'] for c in state['calls'])
+def capture_after_paint(page,path):
+ # Screenshot completes before observation, so a render triggered while capturing
+ # cannot leave a pre-render upload/memory snapshot paired with a rendered PNG.
+ page.locator('#host').screenshot(path=str(path))
+ return page.evaluate('window.snapshot()')
 def run(a):
  from playwright.sync_api import sync_playwright
  from PIL import Image
@@ -60,14 +65,16 @@ def run(a):
         if key:
          assert page.evaluate('document.activeElement===window.player'),'Player lost focus'
          page.keyboard.press(key)
-        page.wait_for_function('(text)=>evidence.traces.some(t=>t.includes(text))',arg=trace);page.evaluate('window.settled()');elapsed=(time.perf_counter()-began)*1000
-        observation=page.evaluate('window.snapshot()');assert not observation['errors'] and not observation['overflow'];assert observation['contexts']
+        page.wait_for_function('(text)=>evidence.traces.some(t=>t.includes(text))',arg=trace)
+        if state=='shown':page.wait_for_function('(size)=>window.targetFrameObserved(size[0],size[1])',arg=[fixture['width'],fixture['height']])
+        page.evaluate('window.settled()');elapsed=(time.perf_counter()-began)*1000
+        filename=f"{fixture['file']}-{arm}-{state}.png";observation=capture_after_paint(page,out/filename);pixels=Image.open(out/filename).convert('RGBA');check_pixels(pixels,state)
+        assert not observation['errors'] and not observation['overflow'];assert observation['contexts']
         assert not observation['contextEvents'],'Unexpected context loss before controlled test'
         assert 'webgl' in observation.get('actualRenderer','').lower(),'Wrong renderer'
         assert observation.get('traceAttached') and observation.get('instanceTraceAttachments')==1
         assert any(c['name'] in ['drawArrays','drawElements'] for c in observation['calls'])
         assert observation['memories'],'No actual exported WASM memory observed; do not substitute JS memory'
-        filename=f"{fixture['file']}-{arm}-{state}.png";page.locator('#host').screenshot(path=str(out/filename));pixels=Image.open(out/filename).convert('RGBA');check_pixels(pixels,state)
         observation.update(state=state,png=filename,rgbaSHA256=digest(pixels.tobytes()),trustedKeyToSettledWallMs=elapsed if key else None);row['states'].append(observation)
        assert wasm and all(w['sha256']==contract['runtimes'][arm]['selectedWasmSHA256'] for w in wasm),'Wrong actual selected WASM'
        assert row['states'][-1]['keys']==[{'key':k,'trusted':True} for _,k,_ in STATES if k]
@@ -86,8 +93,9 @@ def run(a):
         page.wait_for_function("evidence.contextEvents.some(e=>e.type==='lost')");page.wait_for_timeout(100);page.evaluate('window.restoreControlledContext()')
         try:page.wait_for_function("evidence.contextEvents.some(e=>e.type==='restored')",timeout=5000);recovery['restoredEvent']=True
         except Exception:recovery['restoredEvent']=False
-        page.wait_for_timeout(500);page.evaluate('window.settled()');recovery['observation']=page.evaluate('window.snapshot()');assert not recovery['observation']['overflow'],'Controlled recovery exceeded observation budget'
-        filename=f"{fixture['file']}-{arm}-controlled-restored.png";page.locator('#host').screenshot(path=str(out/filename));pixels=Image.open(out/filename).convert('RGBA');recovery['rgbaSHA256']=digest(pixels.tobytes());recovery['png']=filename
+        page.wait_for_timeout(500);page.evaluate('window.settled()')
+        filename=f"{fixture['file']}-{arm}-controlled-restored.png";recovery['observation']=capture_after_paint(page,out/filename);assert not recovery['observation']['overflow'],'Controlled recovery exceeded observation budget'
+        pixels=Image.open(out/filename).convert('RGBA');recovery['rgbaSHA256']=digest(pixels.tobytes());recovery['png']=filename
         recovery['pixelsRecovered']=recovery['rgbaSHA256']==row['states'][-1]['rgbaSHA256'];recovery['successful']=recovery['restoredEvent'] and recovery['pixelsRecovered'] and not recovery['observation']['errors']
       except Exception as exc:
        row['failure']=type(exc).__name__+': '+str(exc)[:1500]

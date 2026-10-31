@@ -19,3 +19,13 @@ print('5 synthetic SWF structure/JPEG/alpha/ABC/hash cases passed')
 page=(ROOT/'page.html').read_text();runner=(ROOT/'run.py').read_text();assert 'chromium_sandbox=True' in runner and '--no-sandbox' not in runner and '--disable-web-security' not in runner
 assert "contextEvents:evidence.contextEvents.slice()" in page and 'm.buffer.byteLength' in page
 print('Sandbox and observation source contracts passed; actual browser not run')
+
+# A late upload during screenshot must appear in the paired observation.
+from run import capture_after_paint
+class FakePage:
+ def __init__(self):self.calls=[];self.uploads=0
+ def locator(self,selector):assert selector=='#host';return self
+ def screenshot(self,path):self.calls.append('screenshot');self.uploads=1
+ def evaluate(self,script):assert script=='window.snapshot()';self.calls.append('snapshot');return {'uploads':self.uploads}
+fake=FakePage();assert capture_after_paint(fake,ROOT/'unused.png')=={'uploads':1};assert fake.calls==['screenshot','snapshot']
+print('Late render capture ordering regression passed')

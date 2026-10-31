@@ -1,0 +1,19 @@
+{
+  "archiveBytes": 24499928,
+  "archiveSHA256": "d8e7d381a0734d055cc82c080c5022b4de0597197bfbf12f71010fabd1184da6",
+  "artifactID": 13028170023,
+  "commit": "d59b8f3876a57e8ed74ed3b732e103588d3fd298",
+  "engines": {
+    "baseline": {
+      "provenanceSHA256": "28d496e671a28c8958a4169844f6b66026f9f19e642c238b1be3eee8602edfdc",
+      "runtimeInventorySHA256": "a0b242992a8ba44d9d3e4efa95439d437afd7cded6e5830dbb76e2626e3b73dc",
+      "sourceManifestSHA256": "3fb156b2ece7185be638fbbc894bb7734f536602a16c5e6a87be395b2ce65ed6"
+    },
+    "candidate": {
+      "provenanceSHA256": "c82165e7a1aa36e1875a9ddd0699e6cda57db39d1fb1e6f4d6d9dce2384a0a1c",
+      "runtimeInventorySHA256": "a4256c37dd02643dff399775caac484a8a5026956d90e231a991e1d5ec696aff",
+      "sourceManifestSHA256": "d4462d7c8d45e62ea8808b0a673f788606cbe3f2779be89450f8fcf8fa0861fd"
+    }
+  },
+  "runID": 41160325754
+}

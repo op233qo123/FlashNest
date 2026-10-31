@@ -56,5 +56,6 @@ window.start=async function(fixture){
 };
 window.snapshot=async()=>{await Promise.all(pendingUploadHashes);return ({actualRenderer:evidence.actualRenderer,traceAttached:evidence.traceAttached===true,instanceTraceAttachments:evidence.instanceTraceAttachments||0,traces:evidence.traces.slice(),errors:evidence.errors.slice(),keys:evidence.keys.slice(),contexts:evidence.contexts.slice(),calls:evidence.calls.slice(),overflow:evidence.overflow,contextEvents:evidence.contextEvents.slice(),wasmInstantiations:evidence.wasmInstantiations,memoryUnsupported:evidence.memoryUnsupported,memories:window.memorySnapshot(),timings:{...evidence.timings},uploadHashes:uploadHashes.map(x=>({...x}))});};
 window.controlledLoss=()=>{const chosen=liveContexts[0];const ext=chosen?.context.getExtension('WEBGL_lose_context');if(!ext)return false;window.restoreControlledContext=()=>ext.restoreContext();ext.loseContext();return true;};
+window.targetFrameObserved=(width,height)=>{let upload=-1,context=-1;for(let i=0;i<evidence.calls.length;i++){const c=evidence.calls[i];if(c.width===width&&c.height===height&&c.name.includes('Image')){upload=i;context=c.id;}if(upload>=0&&i>upload&&c.id===context&&(c.name==='drawElements'||c.name==='drawArrays'))return true;}return false;};
 window.settled=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 </script>

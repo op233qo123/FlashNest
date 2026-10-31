@@ -2,28 +2,28 @@
   "IPARequested": false,
   "files": {
     ".github/workflows/flashnest-image-memory-webgl.yml": {
-      "bytes": 5860,
-      "sha256": "b7263315075f8b7e230987655aea2fb64da9109d85b1bb831ff98326db8132d9"
+      "bytes": 3749,
+      "sha256": "570539326fa5acf534d91494987586c21a1f79880e6d4d3bb1e5d53f4a595448"
     },
     "experiments/image-memory-webgl/README.md": {
-      "bytes": 2544,
-      "sha256": "967d1d7bf4f316071eed99488b13f66335ac44fde62d56d56229cbc7bf4b7b34"
+      "bytes": 3538,
+      "sha256": "7dceed1621e07588cd4ee2eaef4afa8a96fc4d744d3774d1c3201318b44455fd"
     },
     "experiments/image-memory-webgl/browser/README.md": {
-      "bytes": 4802,
-      "sha256": "1cba0e37a5fc12fa32f8fe171460f11e509e30e175cb89ff2011dcde4fd5e90a"
+      "bytes": 5451,
+      "sha256": "199998871bc00983df197cec6216ca402b6a7d87160522fd91f1304cb44bbd19"
     },
     "experiments/image-memory-webgl/browser/generate_fixtures.py": {
       "bytes": 3003,
       "sha256": "9c0fb19079efa47baf82fa2bb2cabada36347b3a67a1ef6eacbefaa21514d5b0"
     },
     "experiments/image-memory-webgl/browser/harness-manifest.json": {
-      "bytes": 1541,
-      "sha256": "4180c5cb26b086652883c5e7601e69a7bf05477b4398f2ccd00692e71d2e0313"
+      "bytes": 1576,
+      "sha256": "b063eec48de4a464a4c7ed71b3d6853b95390f51d7e997d6acfe96412d2641b0"
     },
     "experiments/image-memory-webgl/browser/page.html": {
-      "bytes": 6648,
-      "sha256": "9b4c9dc00f249d137f86475b3e6fe5401b4175491c43158caa638b3a7d218691"
+      "bytes": 6990,
+      "sha256": "04a796ec01328d410f690b8e87a6d5ed75c25286abf0961d1b760787bb0c4986"
     },
     "experiments/image-memory-webgl/browser/prepare_contract.py": {
       "bytes": 1277,
@@ -34,16 +34,16 @@
       "sha256": "b7b6e58f9fcff5f9a841a5326b4225a7709cb8fbf3e665956f8a12c591fd4574"
     },
     "experiments/image-memory-webgl/browser/run.py": {
-      "bytes": 10539,
-      "sha256": "7631be499cefa953620e51e232b801269739a4b87f3f710490fb23f786875383"
+      "bytes": 10885,
+      "sha256": "b65242aa419b48dd79685c125fe0a8176687613e9e16eaa0d3c133f4fb8d1338"
     },
     "experiments/image-memory-webgl/browser/test_page.cjs": {
-      "bytes": 3535,
-      "sha256": "3fe1ba309a50a8870be2386faf3ebf5bb9fe7f992474f39934a19ad0801eca41"
+      "bytes": 3776,
+      "sha256": "0583c2be61536b1c872716484d7396e8bddbebcc7c958b91f9545698ac143c88"
     },
     "experiments/image-memory-webgl/browser/test_static.py": {
-      "bytes": 1694,
-      "sha256": "6cddf25890ef37670fa941e2137a16317ecfb63feb0e3df6d5561877479d6964"
+      "bytes": 2315,
+      "sha256": "db16c941a968cfe06981b332059cff119425561204f607b9e37087afcb44a768"
     },
     "experiments/image-memory-webgl/fixtures/manifest.json": {
       "bytes": 2758,
@@ -133,6 +133,10 @@
       "bytes": 5191,
       "sha256": "6412a1c8a5b57f0f6dd513805df8725da889d36df86350eb0ad0e1d3e15e2799"
     },
+    "experiments/image-memory-webgl/reuse-lock.json": {
+      "bytes": 879,
+      "sha256": "7d8e81a9e2b0d18be2a49f1759b60fae2538744493c30844b4e1e6a41a45bc09"
+    },
     "experiments/image-memory-webgl/scripts/browser_preflight.py": {
       "bytes": 3112,
       "sha256": "2fd75c9fc04a5b5c4c7789808e26227f7c6e28151127ae6895dc47362cf921cd"
@@ -150,12 +154,16 @@
       "sha256": "2f2f5c9735e014819917532f9158f91d9af3ab7e7db10a40abece5a4ff2a6445"
     },
     "experiments/image-memory-webgl/scripts/prepare_browser.py": {
-      "bytes": 2004,
-      "sha256": "db77dd72d7d61b227aed6b77e995973b872474a3f9bb93d1f28f4934f3212f2a"
+      "bytes": 2498,
+      "sha256": "be8ab4274269e553be0cc14505e6916901bda412d43777cbff65d452da66778e"
     },
     "experiments/image-memory-webgl/scripts/receipt.py": {
       "bytes": 4461,
       "sha256": "2295d3c419ffb24003f13c4059aa3fcb4877cb3470909550ccefdaa3891c6bc8"
+    },
+    "experiments/image-memory-webgl/scripts/stage_reuse.py": {
+      "bytes": 2335,
+      "sha256": "8d147fc97b6896d19fdd43e2f7be9216c43a2d77f90a557f1bfe550d4099a5c1"
     },
     "experiments/image-memory-webgl/source-binding.json": {
       "bytes": 563,

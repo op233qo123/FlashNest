@@ -19,3 +19,9 @@ The earlier local candidate was not persisted when its execution workspace was r
 WASM exported-memory capacity is not peak allocator usage, JS heap, GPU memory, iOS RSS or WebKit memory. Instrumented key-to-settled timings include browser scheduling and diagnostic work; they are descriptive, not a mobile benchmark. A focused WebGL pass is not native acceptance and does not authorize release.
 
 Generated engine and browser evidence is retained as a bounded CI artifact, including failures when available. No IPA is built.
+
+## Focused retry using the existing engines
+
+Run 41160325754 successfully built both engines and verified their complete source/runtime receipts. Its browser gate failed because the `shown` JSON snapshot preceded the paint captured by its screenshot: the candidate 512² snapshot had no target upload, but the subsequent same-stage screenshot already matched baseline and the next snapshot had the matching full RGBA upload. The failed run remains failed; this observation does not replace a fresh browser pass.
+
+The current workflow reuses artifact 13028170023 from that run, checking its exact ZIP digest/size, original commit, both provenance/source manifests and every runtime byte. It does not rebuild or modify the product patch. The browser fix waits boundedly for the actual target upload/draw and captures image/state in the corrected order. The new result must still satisfy all pixel, upload, renderer and lifetime observations. No application release or IPA follows automatically.
