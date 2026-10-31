@@ -2,6 +2,10 @@
   "nativeAcceptance": false,
   "IPARequested": false,
   "files": {
+    ".github/workflows/flashnest-jpeg-decoder-lifetime.yml": {
+      "bytes": 5872,
+      "sha256": "c94e04fa7fdc060f21069cd5937478efc597e53ba1e901ba24f9e0d4bfc6641d"
+    },
     "experiments/jpeg-decoder-lifetime/README.md": {
       "bytes": 2413,
       "sha256": "a7ffefdbdf0055490f215f3e3afde2535e79f7e43c6edfb8f085f989b965d4ff"
@@ -106,6 +110,34 @@
       "bytes": 549,
       "sha256": "176aa8b59419d97d5b66e30ba7184c5f01c193fcff3856a09bb01bf88c7ef63e"
     },
+    "experiments/jpeg-decoder-lifetime/results/README.md": {
+      "bytes": 3102,
+      "sha256": "298d88832731845b2ba0f9d6a40c86ddc52912abc39a0d230f74849e6634e061"
+    },
+    "experiments/jpeg-decoder-lifetime/results/baseline-provenance.json": {
+      "bytes": 1429,
+      "sha256": "e981cecee419f1d825a836052967b1957fd9f9eb00754edef231effcbc9f9fe8"
+    },
+    "experiments/jpeg-decoder-lifetime/results/baseline-runtime-files.json": {
+      "bytes": 1644,
+      "sha256": "a0b242992a8ba44d9d3e4efa95439d437afd7cded6e5830dbb76e2626e3b73dc"
+    },
+    "experiments/jpeg-decoder-lifetime/results/browser-41168894684.zip": {
+      "bytes": 115472,
+      "sha256": "e245fecb19b9efc164c524fca08691a7c8bf45b6fddca5244bef227930443d6d"
+    },
+    "experiments/jpeg-decoder-lifetime/results/candidate-provenance.json": {
+      "bytes": 1430,
+      "sha256": "5d82e84c346fe9af0772f612bbd386d7784678347ec8f766565d26c2ae0fd6ba"
+    },
+    "experiments/jpeg-decoder-lifetime/results/candidate-runtime-files.json": {
+      "bytes": 1644,
+      "sha256": "01e1c251effa97fd1c2557f8a7758466323db30527f288b4c0b7745ded8d2e1d"
+    },
+    "experiments/jpeg-decoder-lifetime/results/summary.json": {
+      "bytes": 6410,
+      "sha256": "f6b290221ae58d3b470f61077b75b84f4e5ea344ed33e5a192b4bfaa56c726aa"
+    },
     "experiments/jpeg-decoder-lifetime/scripts/browser_preflight.py": {
       "bytes": 3112,
       "sha256": "2fd75c9fc04a5b5c4c7789808e26227f7c6e28151127ae6895dc47362cf921cd"
@@ -118,6 +150,10 @@
       "bytes": 1426,
       "sha256": "ac899bb91b04c08143c8d1f392f4bb9e424e024871e53ea5d086c1d72828573a"
     },
+    "experiments/jpeg-decoder-lifetime/scripts/evidence_budget.py": {
+      "bytes": 1819,
+      "sha256": "2f2f5c9735e014819917532f9158f91d9af3ab7e7db10a40abece5a4ff2a6445"
+    },
     "experiments/jpeg-decoder-lifetime/scripts/prepare_browser.py": {
       "bytes": 2009,
       "sha256": "8fe687846df0a4ee16d7c837c5e839b2cd1e552467757feba9216972d4bfb00f"
@@ -129,14 +165,6 @@
     "experiments/jpeg-decoder-lifetime/source-binding.json": {
       "bytes": 637,
       "sha256": "3da216d9d09125b3dfc57b31be45da70e905198b94730ba1617617ac323bf4d0"
-    },
-    ".github/workflows/flashnest-jpeg-decoder-lifetime.yml": {
-      "bytes": 5872,
-      "sha256": "c94e04fa7fdc060f21069cd5937478efc597e53ba1e901ba24f9e0d4bfc6641d"
-    },
-    "experiments/jpeg-decoder-lifetime/scripts/evidence_budget.py": {
-      "bytes": 1819,
-      "sha256": "2f2f5c9735e014819917532f9158f91d9af3ab7e7db10a40abece5a4ff2a6445"
     }
   }
 }

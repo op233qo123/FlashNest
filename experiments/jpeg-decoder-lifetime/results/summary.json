@@ -1,0 +1,319 @@
+{
+  "runID": 41168894684,
+  "commit": "b9bfe3e79e76a6d8fe23987066c07fb158d58c5e",
+  "conclusion": "success",
+  "classification": "pixel_and_loading_parity_with_context_recovery_limitation",
+  "pages": 18,
+  "visualStates": 90,
+  "scope": "Desktop Chrome sandboxed WebGL; WASM linear memory capacity, not peak allocation, RSS, native GPU memory or iOS",
+  "browserVersion": "156.0.8078.47",
+  "sandboxRequested": true,
+  "artifactID": 13031330054,
+  "artifactSHA256": "e29bb886db50dda890ecb10e5de4c444af2dce937b3b40acc0e413c6f50b701d",
+  "rows": [
+    {
+      "fixture": "neutral-jpeg3-64-pattern.swf",
+      "baselinePages": [
+        253,
+        254,
+        254,
+        254,
+        254
+      ],
+      "candidatePages": [
+        253,
+        254,
+        254,
+        254,
+        254
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 0
+    },
+    {
+      "fixture": "neutral-jpeg3-511-pattern.swf",
+      "baselinePages": [
+        254,
+        297,
+        297,
+        297,
+        297
+      ],
+      "candidatePages": [
+        254,
+        297,
+        297,
+        297,
+        297
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 0
+    },
+    {
+      "fixture": "neutral-jpeg3-512-pattern.swf",
+      "baselinePages": [
+        253,
+        299,
+        299,
+        299,
+        299
+      ],
+      "candidatePages": [
+        253,
+        299,
+        299,
+        299,
+        299
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 0
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-pattern.swf",
+      "baselinePages": [
+        255,
+        420,
+        420,
+        420,
+        420
+      ],
+      "candidatePages": [
+        255,
+        420,
+        420,
+        420,
+        420
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 0
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-opaque.swf",
+      "baselinePages": [
+        255,
+        420,
+        420,
+        420,
+        420
+      ],
+      "candidatePages": [
+        255,
+        420,
+        420,
+        420,
+        420
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 0
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-rgb-sub0-pattern.swf",
+      "baselinePages": [
+        254,
+        519,
+        519,
+        519,
+        519
+      ],
+      "candidatePages": [
+        254,
+        454,
+        454,
+        454,
+        454
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 65
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-rgb-sub2-pattern.swf",
+      "baselinePages": [
+        254,
+        474,
+        474,
+        474,
+        474
+      ],
+      "candidatePages": [
+        254,
+        441,
+        441,
+        441,
+        441
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 33
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-l-sub0-pattern.swf",
+      "baselinePages": [
+        253,
+        482,
+        482,
+        482,
+        482
+      ],
+      "candidatePages": [
+        253,
+        451,
+        451,
+        451,
+        451
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 31
+    },
+    {
+      "fixture": "neutral-jpeg3-512-progressive-rgb-sub2-pattern.swf",
+      "baselinePages": [
+        253,
+        311,
+        311,
+        311,
+        311
+      ],
+      "candidatePages": [
+        253,
+        302,
+        302,
+        302,
+        302
+      ],
+      "states": [
+        "ready",
+        "shown",
+        "redrawn",
+        "masked",
+        "hit"
+      ],
+      "pixelParity": true,
+      "pagesSavedAfterDraw": 9
+    }
+  ],
+  "contextRecovery": [
+    {
+      "fixture": "neutral-jpeg3-1024-pattern.swf",
+      "arm": "baseline",
+      "supported": true,
+      "restoredEvent": false,
+      "pixelsRecovered": false,
+      "successful": false
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-pattern.swf",
+      "arm": "candidate",
+      "supported": true,
+      "restoredEvent": false,
+      "pixelsRecovered": false,
+      "successful": false
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-rgb-sub0-pattern.swf",
+      "arm": "baseline",
+      "supported": true,
+      "restoredEvent": false,
+      "pixelsRecovered": false,
+      "successful": false
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-rgb-sub0-pattern.swf",
+      "arm": "candidate",
+      "supported": true,
+      "restoredEvent": false,
+      "pixelsRecovered": false,
+      "successful": false
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-rgb-sub2-pattern.swf",
+      "arm": "baseline",
+      "supported": true,
+      "restoredEvent": false,
+      "pixelsRecovered": false,
+      "successful": false
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-rgb-sub2-pattern.swf",
+      "arm": "candidate",
+      "supported": true,
+      "restoredEvent": false,
+      "pixelsRecovered": false,
+      "successful": false
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-l-sub0-pattern.swf",
+      "arm": "baseline",
+      "supported": true,
+      "restoredEvent": false,
+      "pixelsRecovered": false,
+      "successful": false
+    },
+    {
+      "fixture": "neutral-jpeg3-1024-progressive-l-sub0-pattern.swf",
+      "arm": "candidate",
+      "supported": true,
+      "restoredEvent": false,
+      "pixelsRecovered": false,
+      "successful": false
+    }
+  ],
+  "longSessionSoak": "not_run",
+  "explicitCacheAsBitmapRebuild": "not_run",
+  "nativeAcceptance": false,
+  "IPARequested": false
+}

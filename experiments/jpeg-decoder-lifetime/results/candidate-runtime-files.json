@@ -1,0 +1,50 @@
+{
+  "39f4fb79c7f5c5306c52.wasm": {
+    "bytes": 14246345,
+    "sha256": "07bfa8d1f18ab8a71a99d076ab8a31404d0323b0f2442440704b9064962b27f0"
+  },
+  "71f2eb00f5552cb57aff.wasm": {
+    "bytes": 14219677,
+    "sha256": "a94f7d01c0a55da4d193e722712a17800b4bfffa39a6f2ef1bdfc5512836bdc8"
+  },
+  "LICENSE_APACHE": {
+    "bytes": 9723,
+    "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+  },
+  "LICENSE_MIT": {
+    "bytes": 1097,
+    "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c"
+  },
+  "README.md": {
+    "bytes": 2328,
+    "sha256": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde"
+  },
+  "core.ruffle.b37b03400c42af4f2df8.js": {
+    "bytes": 114899,
+    "sha256": "1643fa872c336e5a920a5ab5f0e89d8d0f19f6fe3af9dbd6812e94832d7c6c70"
+  },
+  "core.ruffle.b37b03400c42af4f2df8.js.map": {
+    "bytes": 414390,
+    "sha256": "03b11ddd18b4d49adc88f1e502bdf8ff12bdfd1d994306d39088954e1e690d38"
+  },
+  "core.ruffle.b66cd8f7f9bc4f6102a5.js": {
+    "bytes": 108488,
+    "sha256": "97583a8ea68de971dde69fd12c8aa86a3ac2c5e4556b29d675dec292cb840d1c"
+  },
+  "core.ruffle.b66cd8f7f9bc4f6102a5.js.map": {
+    "bytes": 387146,
+    "sha256": "c9b4002a0eaaacbe97803e255cdda4b1ed6074583b7f9ecccbf11ab8afde57d1"
+  },
+  "package.json": {
+    "bytes": 418,
+    "sha256": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89"
+  },
+  "ruffle.js": {
+    "bytes": 468519,
+    "sha256": "b04b5ff6daaa531bfcf4184183e0c98589cc9053ee3a5411d257cb5797f49426"
+  },
+  "ruffle.js.map": {
+    "bytes": 716395,
+    "sha256": "2130f3c4fbfbf53b6d149ad62b0a6f2dc0b7db313afe257e3649c089ae08740f"
+  }
+}
