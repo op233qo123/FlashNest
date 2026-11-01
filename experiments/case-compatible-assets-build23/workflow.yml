@@ -31,6 +31,7 @@ jobs:
           cmp "$CASE_RECIPE/workflow.yml" recipe/.github/workflows/validate-case-compatible-assets-build23.yml
           python3 "$CASE_RECIPE/experiment.py" preflight
           python3 "$CASE_RECIPE/test_ios_runner.py"
+          python3 "$CASE_RECIPE/test_native_reference.py"
           test "$(xcodebuild -version | head -1)" = 'Xcode 16.2'
           test "$(xcrun --sdk iphonesimulator --show-sdk-version)" = '18.2'
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -61,7 +62,7 @@ jobs:
           set -euo pipefail
           python3 -m venv "$RUNNER_TEMP/case-browser"
           "$RUNNER_TEMP/case-browser/bin/pip" install playwright==1.51.0
-          "$RUNNER_TEMP/case-browser/bin/python" -m playwright install chromium
+          test -x "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
       - name: Actual unchanged Ruffle default24 and explicit controls; synthetic clocks separately labelled
         id: fps
         if: ${{ !cancelled() && steps.browser_tools.outcome == 'success' }}
@@ -69,23 +70,28 @@ jobs:
           set -euo pipefail
           "$RUNNER_TEMP/case-browser/bin/python" "$CASE_RECIPE/fps/run_fps.py" --runtime case-stage/app/App/Resources/Web/runtime --inputs baseline-recipe/experiments/longrun-ipa-156-build23/inputs.json --output case-stage/evidence/fps-result.json
           python3 "$CASE_RECIPE/experiment.py" verify --output case-stage
-      - name: Generate Xcode project using authenticated XcodeGen bytes and locked dependencies
-        id: project
+      - name: Preserve focused fixture evidence before the independent iOS lane
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: ${{ !cancelled() && steps.stage.outcome == 'success' }}
-        working-directory: case-stage/app
+        with:
+          name: FlashNest-case-compatible-assets-build23-focused-evidence
+          path: |
+            case-stage/case-staging.json
+            case-stage/evidence/*.json
+            case-stage/evidence/*.txt
+            case-stage/evidence/*.log
+            case-stage/evidence/*.plist
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Verify unchanged candidate against pinned prior 76 plus 2 native execution evidence
+        id: ios
+        if: ${{ !cancelled() && steps.stage.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          curl --fail --location --retry 2 --max-time 120 https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
-          echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  '"$RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
-          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-case"
-          "$RUNNER_TEMP/xcodegen-case/xcodegen/bin/xcodegen" generate
-          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
-          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
-      - name: Actual iOS18.2 selected server import diagnostic and confirmation UI regressions
-        id: ios
-        if: ${{ !cancelled() && steps.project.outcome == 'success' }}
-        run: python3 "$CASE_RECIPE/run_ios_tests.py" --app case-stage/app --output case-stage/evidence/ios --baseline-checkout baseline-recipe --stage-receipt case-stage/case-staging.json
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13085011484/zip > case-stage/native-reference.zip
+          python3 "$CASE_RECIPE/verify_native_reference.py" --archive case-stage/native-reference.zip --app case-stage/app --stage-receipt case-stage/case-staging.json --baseline-checkout baseline-recipe --output case-stage/evidence/native-reference.json
       - name: Require both timing and native gates with unchanged final source identity
         if: ${{ !cancelled() && steps.stage.outcome == 'success' }}
         run: |

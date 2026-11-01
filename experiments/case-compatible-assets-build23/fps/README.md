@@ -9,12 +9,19 @@ The minimal ABC writer is adapted from the repository's original frame-order
 fixture writer. `make_fixture.py` deterministically produces the input at runtime;
 no compiler or binary download is needed.
 
-Run with Python 3, Playwright, and Chromium installed:
+Run with Python 3, Playwright, and Google Chrome installed:
 
 ```sh
 python run_fps.py --runtime /path/to/verified/runtime \
   --inputs /path/to/build23/inputs.json --output /path/to/fps-result.json
 ```
+
+The default selects installed Google Chrome's full new-headless browser rather
+than Playwright's separate headless shell. The macOS CI headless shell failed to
+create WebGL and fell back to Canvas2D; this was a test-environment failure, not
+a passing WebGL result. No GPU-driver switches or unsafe SwiftShader opt-in are
+added. Actual WebGL remains mandatory. GPU vendor/renderer strings are recorded
+when exposed, but physical GPU behavior is not certified.
 
 Optional `--chromium /path/to/chromium` selects a system executable. Chromium's
 sandbox is explicitly enabled; do not disable it to obtain a pass. Use an

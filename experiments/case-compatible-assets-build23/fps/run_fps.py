@@ -13,6 +13,7 @@ def main():
     p.add_argument('--inputs',type=pathlib.Path,required=True,help='Exact build23 inputs.json')
     p.add_argument('--output',type=pathlib.Path,required=True)
     p.add_argument('--chromium',default=None)
+    p.add_argument('--channel',choices=('chrome','chromium'),default='chrome',help='Full browser channel, never headless_shell')
     args=p.parse_args(); config=json.loads(args.inputs.read_text()); expected=config['runtimeFiles']
     actual={f.relative_to(args.runtime).as_posix():sha(f.read_bytes()) for f in args.runtime.rglob('*') if f.is_file()}
     assert len(expected)==12 and actual==expected,'Runtime must exactly match 12-file build23 input inventory'
@@ -28,16 +29,20 @@ def main():
         try:
             with sync_playwright() as pw:
                 # Playwright defaults this to False; keep Chromium's sandbox on.
-                options={'headless':True,'chromium_sandbox':True}
-                if args.chromium:options['executable_path']=args.chromium
+                # Use the installed full Chrome/new-headless browser, not Playwright's
+                # headless_shell. The macOS runner's shell could not create WebGL.
+                # Do not opt into unsafe SwiftShader or alter GPU/sandbox policies.
+                options={'channel':args.channel,'headless':True,'chromium_sandbox':True}
+                if args.chromium:
+                    options.pop('channel'); options['executable_path']=args.chromium
                 browser=pw.chromium.launch(**options)
                 try:
                     session=browser.new_browser_cdp_session()
                     command_line=session.send('Browser.getBrowserCommandLine')['arguments']
-                    forbidden=('--no-sandbox','--disable-setuid-sandbox','--disable-gpu-sandbox')
+                    forbidden=('--no-sandbox','--disable-setuid-sandbox','--disable-gpu-sandbox','--enable-unsafe-swiftshader')
                     assert not any(arg.split('=')[0] in forbidden for arg in command_line),'Browser sandbox disabled'
                     sandbox={'requested':True,'effectiveCommandLine':command_line,
-                        'forbiddenFlagsAbsent':True,'browserVersion':browser.version,
+                        'forbiddenFlagsAbsent':True,'browserVersion':browser.version,'requestedChannel':options.get('channel','explicit-executable'),
                         'playwrightVersion':importlib.metadata.version('playwright')}
                     session.detach()
                     for scheduler,hz,override in [('wall',None,None),('wall',None,24),('wall',None,48),('synthetic',60,None),('synthetic',120,None)]:
@@ -89,7 +94,8 @@ def main():
                         assert fetched and all(expected.get(w['name'])==w['sha256'] for w in fetched),'Actual WASM response differs'
                         metadata=page.evaluate('player.ruffle().metadata')
                         assert metadata and metadata.get('frameRate')==24,('Wrong fixture header metadata',metadata)
-                        row.update(wasmResponses=fetched,metadata=metadata,actualRenderer=renderer,passed=True)
+                        row.update(wasmResponses=fetched,metadata=metadata,actualRenderer=renderer,
+                            graphics=page.evaluate('graphicsInfo()'),physicalGPUCertified=False,passed=True)
                         rows.append(row); context.close()
                 except Exception as error:
                     snapshot=None
@@ -98,6 +104,7 @@ def main():
                             snapshot=page.evaluate("""() => ({probe:window.probe ? {...probe,ticks:probe.ticks.slice(-12)} : null,
                                 metadata:window.player?.ruffle().metadata || null,
                                 actualRenderer:window.actualRenderer?.() || null,
+                                graphics:window.graphicsInfo?.() || null,
                                 playing:window.player?.ruffle().isPlaying ?? null,
                                 documentState:document.readyState})""")
                         except Exception as snapshot_error:snapshot={'snapshotError':str(snapshot_error)[:1000]}

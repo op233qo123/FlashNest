@@ -3,6 +3,13 @@
   "baselineInputsSHA256": "c9fb9ccd4cffc3bdfcf538e38db56c10d82f396cb9903da049cb01ebf379b427",
   "ipaBuildAllowed": false,
   "kind": "EXPERIMENTAL-UNIQUE-CASE-ASSETS",
+  "nativeReference": {
+    "artifactID": 13085011484,
+    "bytes": 119270,
+    "head": "11c3fb4ad9cca3a3673ded55cd5ffd0df9271188",
+    "runID": "41309016865",
+    "sha256": "f8879550f57bbec7b15f6d1190ca19081cada08c81faca2a4e00cef70d18cc66"
+  },
   "overlay": {
     "App/Server/HTTPProtocol.swift": {
       "after": "a826ec509fb7bf8cc58e85cee9643e9754a83ed15c6bf3f0abf9a89cb2578ada",
@@ -14,20 +21,22 @@
     }
   },
   "recipeFiles": {
-    "README.md": "1937d5d44dacd6432e312d1f5f6a18fa57f53c29f4bb1676f0828896a997d2bc",
+    "README.md": "e9333034a1d3f2a76de8048adffe79cf1e57dfadc1615f55a7b78e107ce18a1f",
     "experiment.py": "dba69b42ca206f2a512c7b363542859bbc46c500dfc99f23ed83afb9ccb5f04c",
-    "fps/README.md": "730fdf3a839c980f7f6043d37b666fb1d9c1235dbadb80b6caf8513c158d25d0",
+    "fps/README.md": "e10d1a4ee3ca95f10e1fd5fef271e31372d9f99a2e408ebf2dd06d1cf6854d03",
     "fps/make_fixture.py": "6e88981256e83c10d2178835bebdc4ce7dfda5cc19f619d2b15b3c2ec71ee588",
-    "fps/probe.html": "2aa0aa40ecda31da4f01617bf8ee6e9b52179d1b4bf58661c4f9df3461043ac4",
-    "fps/run_fps.py": "0333dbb28597e87d441ea6b7ba16c26c9e546a1ba8efa421ab379d452e8f162e",
+    "fps/probe.html": "77196f6b2df0cc8fcd1036322a194e4a3fb3aebe609ad630d43aff8af27e3d14",
+    "fps/run_fps.py": "423d45ceb28847ceeec1ad8dfabcbf754bea48ac1cbc9d6f9607e483e03a29c5",
     "overlay/App/Server/HTTPProtocol.swift": "a826ec509fb7bf8cc58e85cee9643e9754a83ed15c6bf3f0abf9a89cb2578ada",
     "overlay/App/Server/LoopbackServer.swift": "071bf15bddba2e2c8977d6dce7a362afc53d8d1781e9cfd120f64259d622810d",
     "path-tests/CaseCompatibilityFixture.swift": "7ddddbd6ef70ad6c3b2e01997a02a06beb5608db84adcc6bbfdf18c7cf37f7dd",
     "path-tests/main.swift": "57bae2813ea69f8efa34b4c632073cd3e5a190c34e47a68d1253b477402f7692",
-    "path-tests/run_native_tests.sh": "9ff09ad59b13a8ec65ddab0587b3989b305349a21f4ff5aa4ba2fe73e0a2286c",
+    "path-tests/run_native_tests.sh": "7c59c4a9fb5b190ded5f8a116a718817d72a2ff1ee089ab434818ba17463ebed",
     "run_ios_tests.py": "3bcb16416e931ea26c73cf38ce89542047fa239ffe7fe59df1897727baeeb884",
     "test_ios_runner.py": "955ca6a89d6d25cd6624b8be13ff35e6e72fd7a08f2f6c49e6bd9b7bfb5106d6",
-    "workflow.yml": "e82ca9a628a3c4f6da4cc0044f762d79fe1a88a5a5026f1db02f21f7daca852d"
+    "test_native_reference.py": "8c4262da17105f7ce01dba55978b64b56a1773cfcad323bed97390d7d3ee1b56",
+    "verify_native_reference.py": "6063b2113c82bdd42ec4d001a6377c73ada86539b191256db6bdc6d3affac33b",
+    "workflow.yml": "526aa0c880ace471b3810ac5559f71b235f39ef29bde74b6bb4e1b6562d051aa"
   },
   "runtimeChanged": false,
   "schemaVersion": 1,

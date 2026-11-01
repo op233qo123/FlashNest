@@ -6,13 +6,25 @@ const query = new URLSearchParams(location.search);
 const synthetic = query.get('scheduler') === 'synthetic';
 window.probe = {ticks: [], traces:[], ready:false, loaded:false, observerInstalled:false, error:null, synthetic, raf:0, virtualTime:0};
 const contexts = new WeakMap();
+const liveContexts = new WeakMap();
 const originalGetContext = HTMLCanvasElement.prototype.getContext;
 HTMLCanvasElement.prototype.getContext = function(kind, ...args) {
   const context=originalGetContext.call(this,kind,...args);
-  if(context) contexts.set(this,kind);
+  if(context) {contexts.set(this,kind);liveContexts.set(this,context);}
   return context;
 };
 window.actualRenderer = () => contexts.get(window.player?.shadowRoot?.querySelector('canvas')) || null;
+window.graphicsInfo = () => {
+  const context=liveContexts.get(window.player?.shadowRoot?.querySelector('canvas'));
+  if(!context || typeof context.getParameter!=='function') return null;
+  const debug=context.getExtension('WEBGL_debug_renderer_info');
+  const unmaskedRenderer=debug ? context.getParameter(debug.UNMASKED_RENDERER_WEBGL) : null;
+  return {vendor:context.getParameter(context.VENDOR),renderer:context.getParameter(context.RENDERER),
+    version:context.getParameter(context.VERSION),unmaskedRenderer,
+    unmaskedVendor:debug ? context.getParameter(debug.UNMASKED_VENDOR_WEBGL) : null,
+    softwareRendererReported:unmaskedRenderer ? /SwiftShader|llvmpipe|softpipe|Software Renderer|Microsoft Basic/i.test(unmaskedRenderer) : null,
+    physicalGPUCertified:false};
+};
 window.addEventListener('unhandledrejection', event => {probe.error=String(event.reason);});
 if (synthetic) {
   let nextID = 1;

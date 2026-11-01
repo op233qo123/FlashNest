@@ -16,11 +16,12 @@ trap cleanup EXIT
 if [ "$(uname -s)" = Darwin ]; then
   # macOS CI's normal APFS volume is frequently case insensitive. An APFSX
   # disk image, plus the Swift two-distinct-files assertion, prevents falsepass.
-  # 64 MiB can be below the selected APFS/container-layout minimum. Sparse
+  # Use the exact filesystem name listed by this runner hdiutil create -help;
+  # the diskutil shorthand APFSX is not accepted by hdiutil here. Sparse
   # virtual capacity is bounded at 1 GiB; actual allocation grows with writes.
   # Keep APFSX and the independent case-sensitivity assertion, never downgrade.
   hdiutil create -help > "$EVIDENCE/hdiutil-create-help.txt" 2>&1 || true
-  if ! hdiutil create -size 1g -type SPARSE -fs APFSX -volname FlashNestCaseTests "$WORK/case.sparseimage" > "$EVIDENCE/hdiutil-create.log" 2>&1; then
+  if ! hdiutil create -size 1g -type SPARSE -fs "Case-sensitive APFS" -volname FlashNestCaseTests "$WORK/case.sparseimage" > "$EVIDENCE/hdiutil-create.log" 2>&1; then
     cat "$EVIDENCE/hdiutil-create.log" >&2
     exit 1
   fi
