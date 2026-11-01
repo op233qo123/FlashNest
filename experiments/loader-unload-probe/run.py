@@ -73,9 +73,9 @@ def main():
             with sync_playwright() as pw:
                 browser=pw.chromium.launch(channel='chrome',headless=True,chromium_sandbox=True,ignore_default_args=UNSAFE)
                 try:
-                    cdp=browser.new_browser_cdp_session();flags=cdp.send('Browser.getBrowserCommandLine')['arguments'];cdp.detach()
+                    cdp=browser.new_browser_cdp_session();flags=cdp.send('Browser.getBrowserCommandLine')['arguments'];gpu=cdp.send('SystemInfo.getInfo')['gpu'];cdp.detach()
                     assert not any(f.split('=')[0] in FORBIDDEN for f in flags),'Unsafe effective browser flag'
-                    result['browser']={'version':browser.version,'sandboxRequested':True,'effectiveCommandLine':flags}
+                    result['browser']={'version':browser.version,'sandboxRequested':True,'effectiveCommandLine':flags,'gpu':gpu}
                     for arm in ('attached-control','moved-removed'):
                         row={'arm':arm,'responses':[],'requests':[],'requestFailures':[],'errors':[],'console':[],'remoteRequests':[]};result['rows'].append(row)
                         context=browser.new_context();page=context.new_page()

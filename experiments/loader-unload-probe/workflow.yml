@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   probe:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 20
     env:
       PYTHONDONTWRITEBYTECODE: '1'
@@ -28,6 +28,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p probe-evidence
+          sw_vers > probe-evidence/runner-os.txt
+          uname -m >> probe-evidence/runner-os.txt
+          system_profiler SPDisplaysDataType -json > probe-evidence/runner-displays.json
           cmp "$PROBE_RECIPE/workflow.yml" recipe/.github/workflows/validate-loader-unload-probe.yml
           python3 "$PROBE_RECIPE/test_stage_runtime.py"
           python3 -m venv probe-venv
