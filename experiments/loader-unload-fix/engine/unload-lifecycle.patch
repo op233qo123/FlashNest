@@ -1,0 +1,89 @@
+--- a/core/src/avm2/object/loaderinfo_object.rs
++++ b/core/src/avm2/object/loaderinfo_object.rs
+@@ -78,6 +78,14 @@
+     /// The loaded stream that this gets its info from.
+     loaded_stream: RefLock<LoaderStream<'gc>>,
+ 
++    /// Changes whenever the stream is replaced, even for another load of the
++    /// same URL/movie. Unload callbacks may synchronously reuse this LoaderInfo.
++    stream_generation: Cell<u64>,
++
++    /// Consume UNLOAD before calling script without hiding its old stream from
++    /// that callback. A recursive unload may clean up, but cannot dispatch twice.
++    unloaded_generation: Cell<Option<u64>>,
++
+     loader: Option<StageObject<'gc>>,
+ 
+     /// Whether or not we've fired our 'init' event
+@@ -120,6 +128,8 @@
+             LoaderInfoObjectData {
+                 base,
+                 loaded_stream: RefLock::new(LoaderStream::NotYetLoaded(movie, root_clip, is_stage)),
++                stream_generation: Cell::new(0),
++                unloaded_generation: Cell::new(None),
+                 loader,
+                 init_event_fired: Cell::new(false),
+                 complete_event_fired: Cell::new(false),
+@@ -285,6 +295,9 @@
+ 
+     pub fn set_loader_stream(&self, stream: LoaderStream<'gc>, mc: &Mutation<'gc>) {
+         *unlock!(Gc::write(mc, self.0), LoaderInfoObjectData, loaded_stream).borrow_mut() = stream;
++        self.0
++            .stream_generation
++            .set(self.0.stream_generation.get().wrapping_add(1));
+     }
+ 
+     pub fn set_content_type(self, content_type: ContentType) {
+@@ -303,22 +316,42 @@
+             .as_container()
+             .unwrap();
+ 
+-        let content = loader.child_by_index(0);
+-        // Capture before unload/remove callbacks, which may change the child.
++        // LoaderInfo owns the loaded root's identity independently of its
++        // display-list parent. Script can move/remove that root before unload.
++        // Do not retain a RefLock borrow across any script callback.
++        let content = match &*self.loader_stream() {
++            LoaderStream::Swf(_, root) | LoaderStream::NotYetLoaded(_, Some(root), _) => {
++                Some(*root)
++            }
++            LoaderStream::NotYetLoaded(_, None, _) => None,
++        };
++        let generation = self.0.stream_generation.get();
+         let unloaded_movie = content.map(|child| child.movie());
+ 
+-        if content.is_some() {
++        // Pending dummy/failed loads do not expose loaded content. Exposed
++        // content remains eligible after reparenting, including before INIT
++        // when an ADDED callback unloads the newly inserted root.
++        if content.is_some()
++            && self.expose_content()
++            && self.0.unloaded_generation.get() != Some(generation)
++        {
++            self.0.unloaded_generation.set(Some(generation));
+             let unload_evt = EventObject::bare_default_event(context, "unload");
+             Avm2::dispatch_event(context, unload_evt, self.into());
+         }
+ 
+-        // Reset properties
+-        let movie = &context.root_swf;
+-        let empty_swf = Arc::new(SwfMovie::empty(movie.version(), Some(movie.url().into())));
+-        let loader_stream = LoaderStream::NotYetLoaded(empty_swf, None, false);
+-        self.set_loader_stream(loader_stream, context.gc());
+-        self.set_errored(false);
+-        self.reset_init_and_complete_events();
++        // Preserve the old callback-visible stream, then reset only if it is
++        // still ours. A nested unload/load may already have replaced it and
++        // reset the old init/complete flags; never overwrite the new lifecycle.
++        if self.0.stream_generation.get() == generation {
++            let movie = &context.root_swf;
++            let empty_swf = Arc::new(SwfMovie::empty(movie.version(), Some(movie.url().into())));
++            let loader_stream = LoaderStream::NotYetLoaded(empty_swf, None, false);
++            self.set_loader_stream(loader_stream, context.gc());
++            self.set_errored(false);
++            self.reset_init_and_complete_events();
++            self.0.expose_content.set(false);
++        }
+ 
+         // Remove the Loader's content element if it exists.
+         if let Some(child) = content {

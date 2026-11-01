@@ -1,0 +1,26 @@
+{
+  "acceptedBuildSourceCommit": "6d3e4322293972a28ab2cdf129ee6398f40f0f37",
+  "acceptedSourceLockSHA256": "7200650c24fe505844ea676c02c44a42dd2ee7bc484344e775e4458d84566494",
+  "browserAcceptance": false,
+  "engineBuildExecuted": false,
+  "flashReferenceCertified": false,
+  "ipaBuildAllowed": false,
+  "modifiedSourceFiles": {
+    "core/src/avm2/object/loaderinfo_object.rs": {
+      "after": {
+        "bytes": 14501,
+        "sha256": "cf9e042288fcf59a963e57c213a8b41d079fb7c476063ba63089d48f2ee35d43"
+      },
+      "before": {
+        "bytes": 12730,
+        "sha256": "e71aa0b769e4aea84a0aacef5b3f599167faab7ea278af92b63461e68b22b027"
+      }
+    }
+  },
+  "patch": {
+    "path": "unload-lifecycle.patch",
+    "sha256": "7d7c51fee0949ec6b9cbcff37870fe789d441607f072e74a2bda64e41c68b26c"
+  },
+  "schemaVersion": 1,
+  "upstreamCommit": "89a7049965f3090e706265670df309a5128233ac"
+}

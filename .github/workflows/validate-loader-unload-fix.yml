@@ -1,0 +1,189 @@
+name: Experimental Loader unload lifecycle engine and regression (no IPA)
+on:
+  push:
+    branches: [experiment/case-compatible-assets-build23]
+    paths:
+      - 'experiments/loader-unload-fix/**'
+      - '.github/workflows/validate-loader-unload-fix.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-loader-unload-fix
+  cancel-in-progress: false
+jobs:
+  engine:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+      CARGO_BUILD_JOBS: 1
+      CARGO_INCREMENTAL: 0
+      CC: clang-18
+      CXX: clang++-18
+      LIBCLANG_PATH: /usr/lib/llvm-18/lib
+      PYTHONDONTWRITEBYTECODE: '1'
+      CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+      PREP: experiments/loader-unload-fix
+      ACCEPTED_RECIPE: ${{ github.workspace }}/.accepted-recipe/experiments/lazy-graphic-engine
+      STAGE_EVIDENCE: ${{ github.workspace }}/unload-source-stage
+      APP_SOURCE: ${{ github.workspace }}/.accepted-recipe/experiments/lazy-graphic-engine/app
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 6d3e4322293972a28ab2cdf129ee6398f40f0f37
+          path: .accepted-recipe
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ruffle-rs/ruffle
+          ref: 89a7049965f3090e706265670df309a5128233ac
+          path: .unload-source
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.22.1
+      - name: Reconstruct and verify exact final reviewed source
+        run: python3 "$PREP/build/stage.py" --source .unload-source --accepted .accepted-recipe --engine "$PREP/engine" --out "$STAGE_EVIDENCE"
+      - name: Install original pinned build toolchain
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.1 --profile minimal --component rust-src --component rustfmt --target wasm32-unknown-unknown
+          sudo apt-get update
+          sudo apt-get install -y clang-18 libclang-18-dev libssl-dev pkg-config
+          cargo install --locked wasm-bindgen-cli --version 0.2.127
+          curl --fail --location --retry 2 --max-time 180 https://github.com/WebAssembly/binaryen/releases/download/version_129/binaryen-version_129-x86_64-linux.tar.gz -o "$RUNNER_TEMP/binaryen.tar.gz"
+          echo "50b9fa62b9abea752da92ec57e0c555fee578760cd237c40107957715d2976ba  $RUNNER_TEMP/binaryen.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/binaryen"
+          tar -xzf "$RUNNER_TEMP/binaryen.tar.gz" -C "$RUNNER_TEMP/binaryen" --strip-components=1
+          echo "$RUNNER_TEMP/binaryen/bin" >> "$GITHUB_PATH"
+          curl --fail --location --retry 2 --max-time 180 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.13_9.tar.gz' -o "$RUNNER_TEMP/jre.tar.gz"
+          echo "a535a1df9c6284d9618872984e026ae0352d1f7e9e0605425c0e6114f47351dd  $RUNNER_TEMP/jre.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/jre"
+          tar -xzf "$RUNNER_TEMP/jre.tar.gz" -C "$RUNNER_TEMP/jre" --strip-components=1
+          echo "$RUNNER_TEMP/jre/bin" >> "$GITHUB_PATH"
+          mkdir -p toolchain-evidence
+          dpkg-query -W clang-18 libclang-18-dev libssl-dev pkg-config > toolchain-evidence/system-packages.txt
+          printf '%s\n' "image=${ImageOS:-unknown}/${ImageVersion:-unknown}" > toolchain-evidence/image.txt
+      - name: Locked frontend dependencies and complete license preflight
+        run: |
+          set -euo pipefail
+          cd .unload-source/web
+          npm ci
+          cd "$GITHUB_WORKSPACE"
+          python3 "$APP_SOURCE/scripts/test_licenses.py"
+      - name: Execute real bounded core regressions
+        timeout-minutes: 50
+        run: python3 "$PREP/build/core_tests.py" --source .unload-source --out unload-core-tests
+      - name: Build actual extensions and MVP with JPEG-XR and wasm-opt
+        timeout-minutes: 65
+        run: bash "$PREP/build/build.sh" .unload-source unload-candidate-engine
+      - name: Bind bounded core evidence into candidate artifact
+        run: |
+          cp -R unload-core-tests unload-candidate-engine/core-tests
+          cp -R toolchain-evidence unload-candidate-engine/toolchain-evidence
+          python3 "$PREP/build/check_upload.py" unload-candidate-engine
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-unload-candidate-engine-not-IPA
+          path: unload-candidate-engine
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          name: FlashNest-unload-engine-failure-evidence
+          path: |
+            unload-source-stage
+            unload-core-tests
+            unload-candidate-engine/*.log
+            toolchain-evidence
+          if-no-files-found: warn
+          retention-days: 7
+  browser:
+    needs: engine
+    runs-on: macos-15
+    timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PREP: recipe/experiments/loader-unload-fix
+      BASE_RECIPE: recipe/experiments/loader-unload-probe
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - name: Verify focused recipe and sandboxed Chrome tooling
+        run: |
+          set -euo pipefail
+          mkdir -p unload-browser-evidence
+          sw_vers > unload-browser-evidence/runner-os.txt
+          uname -m >> unload-browser-evidence/runner-os.txt
+          system_profiler SPDisplaysDataType -json > unload-browser-evidence/runner-displays.json
+          cmp "$PREP/workflow.yml" recipe/.github/workflows/validate-loader-unload-fix.yml
+          python3 "$PREP/integration/test_stage_candidate.py"
+          python3 "$BASE_RECIPE/test_stage_runtime.py"
+          python3 -m venv probe-venv
+          probe-venv/bin/python -m pip install 'playwright==1.51.0' 'Pillow==11.1.0'
+          probe-venv/bin/python "$PREP/probe/test_validate.py"
+          test -x '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --version > unload-browser-evidence/chrome-version.txt
+      - name: Fetch exact baseline and same-run candidate artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13085283710 > unload-browser-evidence/baseline-artifact.json
+          gh api "repos/op233qo123/FlashNest/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" > unload-browser-evidence/run-artifacts.json
+          python3 - <<'PY'
+          import json,os
+          base=json.load(open('unload-browser-evidence/baseline-artifact.json'))
+          assert base['id']==13085283710 and base['expired'] is False
+          assert base['workflow_run']['id']==41311276578 and base['workflow_run']['head_sha']=='7d8a9e205c1451da86b74cf6cc0ca0fe6dfab186'
+          rows=json.load(open('unload-browser-evidence/run-artifacts.json'))['artifacts']
+          candidates=[a for a in rows if a['name']=='FlashNest-unload-candidate-engine-not-IPA']
+          assert len(candidates)==1
+          a=candidates[0]
+          assert a['expired'] is False and a['workflow_run']['id']==int(os.environ['GITHUB_RUN_ID']) and a['workflow_run']['head_sha']==os.environ['GITHUB_SHA']
+          open('candidate-artifact-id.txt','w').write(str(a['id']))
+          open('unload-browser-evidence/candidate-artifact.json','w').write(json.dumps(a,indent=2)+'\n')
+          PY
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13085283710/zip > baseline-artifact.zip
+          gh api "repos/op233qo123/FlashNest/actions/artifacts/$(cat candidate-artifact-id.txt)/zip" > candidate-artifact.zip
+      - name: Validate complete source-bound artifacts and stage only runtime closures
+        run: |
+          set -euo pipefail
+          python3 "$BASE_RECIPE/stage_runtime.py" --archive baseline-artifact.zip --output baseline-runtime --receipt unload-browser-evidence/baseline-stage.json
+          python3 - <<'PYDIGEST'
+          import json,hashlib
+          from pathlib import Path
+          meta=json.load(open('unload-browser-evidence/candidate-artifact.json'))
+          if meta.get('digest'):
+              assert meta['digest']=='sha256:'+hashlib.sha256(Path('candidate-artifact.zip').read_bytes()).hexdigest()
+          PYDIGEST
+          python3 "$PREP/integration/stage_candidate.py" --archive candidate-artifact.zip --output candidate-runtime --lock-output candidate-runtime-lock.json --receipt unload-browser-evidence/candidate-stage.json --delta "$PREP/engine/source-lock.json"
+      - name: Execute identical neutral regressions on accepted baseline and candidate
+        run: |
+          set -euo pipefail
+          set +e
+          probe-venv/bin/python "$PREP/probe/run.py" --runtime-root baseline-runtime --runtime-lock "$BASE_RECIPE/runtime-lock.json" --expect baseline --output unload-browser-evidence/baseline.json
+          baseline_status=$?
+          probe-venv/bin/python "$PREP/probe/run.py" --runtime-root candidate-runtime --runtime-lock candidate-runtime-lock.json --expect candidate --output unload-browser-evidence/candidate.json
+          candidate_status=$?
+          set -e
+          test "$baseline_status" -eq 0
+          test "$candidate_status" -eq 0
+          python3 "$PREP/integration/compare.py" --evidence unload-browser-evidence --recipe "$PREP"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-unload-baseline-candidate-regression-evidence
+          path: unload-browser-evidence/
+          if-no-files-found: warn
+          retention-days: 7
