@@ -43,6 +43,11 @@ do not prove WKWebView/iOS behavior. No timing result here establishes the cause
 of a particular game's speed anomaly.
 
 No product `frameRate` is changed. The probe uses compatible WebGL and the app's
-network restrictions, but plays automatically solely for measurement. All browser
+network restrictions. Playback starts only after `load()` creates the instance,
+the trace observer is installed, and `loadeddata` confirms the fixture arrived.
+This matters because the pinned Ruffle observer setter does not retain an
+observer assigned before instance creation. Failed runs also write a bounded
+diagnostic receipt (probe state, traces, console, metadata and actual WASM hashes)
+at the requested output path rather than hiding a startup failure. All browser
 requests are restricted to the temporary loopback origin. Browser contexts and
 the temporary server are destroyed at completion.

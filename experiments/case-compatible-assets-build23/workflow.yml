@@ -101,6 +101,9 @@ jobs:
           path: |
             case-stage/case-staging.json
             case-stage/evidence/*.json
+            case-stage/evidence/*.txt
+            case-stage/evidence/*.log
+            case-stage/evidence/*.plist
             case-stage/evidence/ios/*.json
             case-stage/evidence/ios/*.log
           if-no-files-found: warn

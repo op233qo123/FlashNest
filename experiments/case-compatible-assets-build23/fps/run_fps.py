@@ -16,7 +16,7 @@ def main():
     args=p.parse_args(); config=json.loads(args.inputs.read_text()); expected=config['runtimeFiles']
     actual={f.relative_to(args.runtime).as_posix():sha(f.read_bytes()) for f in args.runtime.rglob('*') if f.is_file()}
     assert len(expected)==12 and actual==expected,'Runtime must exactly match 12-file build23 input inventory'
-    rows=[]
+    rows=[]; sandbox=None; page=None; errors=[]; fetched=[]; remote=[]; console=[]; scheduler=None; hz=None; override=None
     with tempfile.TemporaryDirectory() as tmp:
         root=pathlib.Path(tmp); shutil.copytree(args.runtime,root/'runtime')
         shutil.copyfile(ROOT/'probe.html',root/'probe.html'); fixture=make_swf(); (root/'neutral-24fps.swf').write_bytes(fixture)
@@ -41,14 +41,17 @@ def main():
                         'playwrightVersion':importlib.metadata.version('playwright')}
                     session.detach()
                     for scheduler,hz,override in [('wall',None,None),('wall',None,24),('wall',None,48),('synthetic',60,None),('synthetic',120,None)]:
-                        context=browser.new_context(); page=context.new_page(); errors=[]; fetched=[]; remote=[]
+                        context=browser.new_context(); page=context.new_page(); errors=[]; fetched=[]; remote=[]; console=[]
                         def route(request):
                             if not request.request.url.startswith(origin+'/'):
                                 remote.append(request.request.url);request.abort()
                             else:request.continue_()
                         context.route('**/*',route)
                         page.on('pageerror',lambda error:errors.append(str(error)))
-                        page.on('console',lambda message:errors.append(message.text) if message.type=='error' else None)
+                        def on_console(message):
+                            if len(console)<80:console.append({'type':message.type,'text':message.text[:1000]})
+                            if message.type=='error':errors.append(message.text[:1000])
+                        page.on('console',on_console)
                         page.on('response',lambda response:fetched.append({'name':response.url.rsplit('/',1)[-1],'sha256':sha(response.body())}) if response.url.endswith('.wasm') else None)
                         url=origin+'/probe.html?scheduler='+scheduler+(f'&override={override}' if override else '')
                         page.goto(url)
@@ -88,6 +91,27 @@ def main():
                         assert metadata and metadata.get('frameRate')==24,('Wrong fixture header metadata',metadata)
                         row.update(wasmResponses=fetched,metadata=metadata,actualRenderer=renderer,passed=True)
                         rows.append(row); context.close()
+                except Exception as error:
+                    snapshot=None
+                    if page is not None:
+                        try:
+                            snapshot=page.evaluate("""() => ({probe:window.probe ? {...probe,ticks:probe.ticks.slice(-12)} : null,
+                                metadata:window.player?.ruffle().metadata || null,
+                                actualRenderer:window.actualRenderer?.() || null,
+                                playing:window.player?.ruffle().isPlaying ?? null,
+                                documentState:document.readyState})""")
+                        except Exception as snapshot_error:snapshot={'snapshotError':str(snapshot_error)[:1000]}
+                    failure={'schema':'neutral-frame-cadence-v1','passed':False,'error':str(error)[:2000],
+                        'stage':{'scheduler':scheduler,'syntheticHz':hz,'override':override},
+                        'completedRows':rows,'snapshot':snapshot,'console':console,'errors':errors[:40],
+                        'remoteRequests':remote[:40],'wasmResponses':fetched,'sandbox':sandbox,
+                        'runtimeFiles':expected,'inputsSHA256':sha(args.inputs.read_bytes()),
+                        'fixtureSHA256':sha(fixture),'sourceFiles':{name:sha((ROOT/name).read_bytes()) for name in ('make_fixture.py','probe.html','run_fps.py')},
+                        'privateGameInputs':False,'productFrameRateChanged':False}
+                    args.output.parent.mkdir(parents=True,exist_ok=True)
+                    args.output.write_text(json.dumps(failure,indent=2)+'\n')
+                    print(json.dumps({'passed':False,'output':str(args.output),'error':str(error)[:500]}))
+                    raise
                 finally:browser.close()
         finally:server.shutdown();server.server_close();thread.join()
     defaults=[r for r in rows if r['scheduler']=='real-browser-wallclock']

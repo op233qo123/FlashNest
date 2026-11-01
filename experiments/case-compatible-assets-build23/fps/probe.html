@@ -4,7 +4,7 @@
 'use strict';
 const query = new URLSearchParams(location.search);
 const synthetic = query.get('scheduler') === 'synthetic';
-window.probe = {ticks: [], ready:false, error:null, synthetic, raf:0, virtualTime:0};
+window.probe = {ticks: [], traces:[], ready:false, loaded:false, observerInstalled:false, error:null, synthetic, raf:0, virtualTime:0};
 const contexts = new WeakMap();
 const originalGetContext = HTMLCanvasElement.prototype.getContext;
 HTMLCanvasElement.prototype.getContext = function(kind, ...args) {
@@ -38,7 +38,11 @@ window.RufflePlayer = {config:{publicPath:'/runtime/',polyfills:false}};
 (async () => {
   const player=window.RufflePlayer.newest().createPlayer();
   window.player=player; document.body.append(player);
-  player.ruffle().traceObserver = message => {
+  const loaded = new Promise(resolve => player.addEventListener('loadeddata', () => {
+    probe.loaded=true; resolve();
+  }, {once:true}));
+  const observe = message => {
+    if(probe.traces.length<40) probe.traces.push(String(message).slice(0,500));
     if(message==='FPS_READY') probe.ready=true;
     const match=/^FPS_TICK (\d+)$/.exec(message);
     if(match) {
@@ -48,9 +52,16 @@ window.RufflePlayer = {config:{publicPath:'/runtime/',polyfills:false}};
   };
   const options={url:'/neutral-24fps.swf',base:location.origin+'/',publicPath:'/runtime/',
     allowScriptAccess:false,allowNetworking:'internal',openUrlMode:'deny',socketProxy:[],
-    autoplay:'on',unmuteOverlay:'hidden',backgroundExecutionMode:'none',upgradeToHttps:false,
+    autoplay:'off',unmuteOverlay:'hidden',backgroundExecutionMode:'none',upgradeToHttps:false,
     showSwfDownload:false,contextMenu:'off',logLevel:'warn',preferredRenderer:'webgl'};
   if(query.has('override')) options.frameRate=Number(query.get('override'));
   await player.ruffle().load(options);
+  // The pinned setter delegates only to this.instance?.set_trace_observer:
+  // assigning before load() creates the instance silently drops the observer.
+  // Keep playback off until it is installed, so the fixture's initial trace is observed.
+  player.ruffle().traceObserver = observe;
+  probe.observerInstalled=true;
+  await loaded;
+  player.ruffle().resume();
 })().catch(error => {probe.error=String(error);});
 </script>
