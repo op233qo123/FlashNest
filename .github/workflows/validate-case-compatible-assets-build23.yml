@@ -1,4 +1,4 @@
-name: Validate unique-case assets and neutral 24fps (experimental, no IPA)
+name: Build unique-case diagnostic-v2 import-warning TEST IPA (not release)
 on:
   push:
     branches: [experiment/case-compatible-assets-build23]
@@ -100,6 +100,35 @@ jobs:
           test '${{ steps.fps.outcome }}' = 'success'
           test '${{ steps.ios.outcome }}' = 'success'
           python3 "$CASE_RECIPE/experiment.py" verify --output case-stage
+      - name: Generate project using verified XcodeGen and locked dependencies
+        working-directory: case-stage/app
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 120 https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  '"$RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-case"
+          "$RUNNER_TEMP/xcodegen-case/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Build authorized unsigned Release device App
+        working-directory: case-stage/app
+        run: |
+          set -euo pipefail
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNest -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - name: Package and verify distinct experimental IPA bytes
+        run: |
+          set -euo pipefail
+          mkdir -p case-stage/artifacts
+          bash case-stage/app/scripts/package_unsigned.sh case-stage/app/build/Build/Products/Release-iphoneos/FlashNest.app case-stage/artifacts/FlashNest-1.5.6-build23-case-compatible-diagnostic-v2-import-warning-unsigned.ipa
+          python3 "$CASE_RECIPE/verify_ipa.py" --ipa case-stage/artifacts/FlashNest-1.5.6-build23-case-compatible-diagnostic-v2-import-warning-unsigned.ipa --app case-stage/app --stage-receipt case-stage/case-staging.json --native-reference case-stage/evidence/native-reference.json --native-archive case-stage/native-reference.zip --baseline-checkout baseline-recipe --path-evidence case-stage/evidence/path-result.json --fps-evidence case-stage/evidence/fps-result.json --output case-stage/artifacts/case-compatible-ipa-provenance.json
+      - name: Upload verified unsigned TEST IPA, not a release
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-1.5.6-build23-case-compatible-diagnostic-v2-import-warning-unsigned
+          path: case-stage/artifacts/
+          if-no-files-found: error
+          retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

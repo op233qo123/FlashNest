@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded experimental source overlay; never packages an IPA or changes the engine."""
+"""Bounded experimental source overlay for the explicitly authorized test IPA; engine unchanged."""
 import argparse, hashlib, json, os, shutil, subprocess
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent
@@ -22,7 +22,7 @@ def write(path, value):
 def config():
     c = read(ROOT/'inputs.json')
     need(c['baselineCommit']==BASE and c['sourceCommit']==SOURCE, 'Wrong source identity')
-    need(c['ipaBuildAllowed'] is False and c['runtimeChanged'] is False, 'Wrong experiment scope')
+    need(c['ipaBuildAllowed'] is True and c['runtimeChanged'] is False, 'Test IPA not authorized or engine scope changed')
     need(set(c['overlay'])=={'App/Server/HTTPProtocol.swift','App/Server/LoopbackServer.swift'}, 'Unexpected product changes')
     need(inventory(ROOT/'overlay')=={p:r['after'] for p,r in c['overlay'].items()}, 'Overlay bytes differ')
     actual = inventory(ROOT)

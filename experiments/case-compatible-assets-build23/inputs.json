@@ -1,7 +1,7 @@
 {
   "baselineCommit": "cc6c4bf285a201d9c1a827140662c54606027d10",
   "baselineInputsSHA256": "c9fb9ccd4cffc3bdfcf538e38db56c10d82f396cb9903da049cb01ebf379b427",
-  "ipaBuildAllowed": false,
+  "ipaBuildAllowed": true,
   "kind": "EXPERIMENTAL-UNIQUE-CASE-ASSETS",
   "nativeReference": {
     "artifactID": 13085011484,
@@ -21,8 +21,8 @@
     }
   },
   "recipeFiles": {
-    "README.md": "e9333034a1d3f2a76de8048adffe79cf1e57dfadc1615f55a7b78e107ce18a1f",
-    "experiment.py": "dba69b42ca206f2a512c7b363542859bbc46c500dfc99f23ed83afb9ccb5f04c",
+    "README.md": "0ff694324d5c7c6343cdade974a2764cf189fe47a44697c9abc489b9597668da",
+    "experiment.py": "56173112e5f0b932315185a262a981695d9d28b76af27b0ab7049e0f503e4ef3",
     "fps/README.md": "e10d1a4ee3ca95f10e1fd5fef271e31372d9f99a2e408ebf2dd06d1cf6854d03",
     "fps/make_fixture.py": "6e88981256e83c10d2178835bebdc4ce7dfda5cc19f619d2b15b3c2ec71ee588",
     "fps/probe.html": "77196f6b2df0cc8fcd1036322a194e4a3fb3aebe609ad630d43aff8af27e3d14",
@@ -35,8 +35,9 @@
     "run_ios_tests.py": "3bcb16416e931ea26c73cf38ce89542047fa239ffe7fe59df1897727baeeb884",
     "test_ios_runner.py": "955ca6a89d6d25cd6624b8be13ff35e6e72fd7a08f2f6c49e6bd9b7bfb5106d6",
     "test_native_reference.py": "8c4262da17105f7ce01dba55978b64b56a1773cfcad323bed97390d7d3ee1b56",
+    "verify_ipa.py": "53050d8a0ee558e035ee1b9d7884da261ac454e700fa01c8df741262231201aa",
     "verify_native_reference.py": "6063b2113c82bdd42ec4d001a6377c73ada86539b191256db6bdc6d3affac33b",
-    "workflow.yml": "526aa0c880ace471b3810ac5559f71b235f39ef29bde74b6bb4e1b6562d051aa"
+    "workflow.yml": "00074e2294d372c3ed5d5c5cc40667d5c18f372fabbd648f04f303557e01f66e"
   },
   "runtimeChanged": false,
   "schemaVersion": 1,
