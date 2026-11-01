@@ -1,0 +1,85 @@
+name: Validate neutral Loader unload mechanism (no IPA)
+on:
+  push:
+    branches: [experiment/case-compatible-assets-build23]
+    paths:
+      - 'experiments/loader-unload-probe/**'
+      - '.github/workflows/validate-loader-unload-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-neutral-loader-unload-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    runs-on: macos-14
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PROBE_RECIPE: recipe/experiments/loader-unload-probe
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - name: Verify focused recipe and tooling
+        run: |
+          set -euo pipefail
+          mkdir -p probe-evidence
+          cmp "$PROBE_RECIPE/workflow.yml" recipe/.github/workflows/validate-loader-unload-probe.yml
+          python3 "$PROBE_RECIPE/test_stage_runtime.py"
+          python3 -m venv probe-venv
+          probe-venv/bin/python -m pip install 'playwright==1.51.0'
+          probe-venv/bin/python "$PROBE_RECIPE/test_validate.py"
+          test -x '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --version > probe-evidence/chrome-version.txt
+      - name: Fetch exact existing artifact through GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13085283710 > probe-evidence/source-artifact.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open('probe-evidence/source-artifact.json'))
+          assert x['id']==13085283710 and x['expired'] is False
+          assert x['workflow_run']['id']==41311276578
+          assert x['workflow_run']['head_sha']=='7d8a9e205c1451da86b74cf6cc0ca0fe6dfab186'
+          PY
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13085283710/zip > existing-artifact.zip
+      - name: Validate archive provenance and extract only unchanged runtime
+        run: |
+          set -euo pipefail
+          python3 "$PROBE_RECIPE/stage_runtime.py" --archive existing-artifact.zip --output verified-runtime --receipt probe-evidence/runtime-stage.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['PROBE_RECIPE'])
+          source=json.loads((root/'runtime-source.json').read_text())
+          lock=json.loads((root/'runtime-lock.json').read_text())
+          assert source['runtimeFiles']==lock['runtimeFiles']
+          assert lock['runtimeFiles'][lock['selectedWasm']]==lock['selectedWasmSHA256']
+          PY
+      - name: Run neutral Loader chain in sandboxed system Chrome
+        run: |
+          set -euo pipefail
+          probe-venv/bin/python "$PROBE_RECIPE/run.py" --runtime-root verified-runtime --output probe-evidence/probe-result.json
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          receipt=json.load(open('probe-evidence/runtime-stage.json'))
+          actual={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in Path('verified-runtime').iterdir() if p.is_file()}
+          assert actual==receipt['runtimeFiles']
+          result=json.load(open('probe-evidence/probe-result.json'))
+          assert result['runtimeFiles']==actual and result['applicationPass'] is False
+          assert result['validationPassed'] is True
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-neutral-loader-unload-probe-evidence
+          path: probe-evidence/
+          if-no-files-found: warn
+          retention-days: 7

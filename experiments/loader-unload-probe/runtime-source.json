@@ -1,0 +1,95 @@
+{
+  "archiveBytes": 16015394,
+  "archiveSHA256": "1badec1808017e2c730bef8b6e8887efb6e240cf2003c4144f023776f79c30be",
+  "artifactHead": "7d8a9e205c1451da86b74cf6cc0ca0fe6dfab186",
+  "artifactID": 13085283710,
+  "artifactRunID": 41311276578,
+  "checksumFileSHA256": "b767bcc9e29e8a6086f4033de47a23a147c0d05ebc55722a871974e213ca9f33",
+  "ipaBytes": 16026029,
+  "ipaFilename": "FlashNest-1.5.6-build23-case-compatible-diagnostic-v2-import-warning-unsigned.ipa",
+  "ipaSHA256": "41955242fe7b6015867cf3816136c91e55d2342f9fd1462ed23d7998680a0648",
+  "privateGameDataIncluded": false,
+  "provenanceSHA256": "3f374f980ddd18c4dc266a748d9a9e8b3ce8c7af83f2fa15f5702c1d23521f1a",
+  "repository": "op233qo123/FlashNest",
+  "runtimeChanged": false,
+  "runtimeFiles": {
+    "5572693b75d695bf0991.wasm": "0fabc6602d29091438c307ca715cf0973641b93cd2d7513798865cb8e1c3f054",
+    "LICENSE_APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+    "LICENSE_MIT": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c",
+    "README.md": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde",
+    "core.ruffle.b37b03400c42af4f2df8.js": "1643fa872c336e5a920a5ab5f0e89d8d0f19f6fe3af9dbd6812e94832d7c6c70",
+    "core.ruffle.b37b03400c42af4f2df8.js.map": "03b11ddd18b4d49adc88f1e502bdf8ff12bdfd1d994306d39088954e1e690d38",
+    "core.ruffle.b66cd8f7f9bc4f6102a5.js": "97583a8ea68de971dde69fd12c8aa86a3ac2c5e4556b29d675dec292cb840d1c",
+    "core.ruffle.b66cd8f7f9bc4f6102a5.js.map": "c9b4002a0eaaacbe97803e255cdda4b1ed6074583b7f9ecccbf11ab8afde57d1",
+    "f1db9d71e25be3505249.wasm": "87874aba45cac4b3c4a08e10e853966b324b8fad8d113fcfe4649a05bdffe318",
+    "package.json": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89",
+    "ruffle.js": "2151d8850b72d96302d4061aad62ba749ab9b3c7bf9bfdb49813964a2a4d95fe",
+    "ruffle.js.map": "2130f3c4fbfbf53b6d149ad62b0a6f2dc0b7db313afe257e3649c089ae08740f"
+  },
+  "runtimeIdentity": {
+    "artifactArchiveSHA256": "2cb4022b1859156f2e28dcb5d499ebf01cbf13b386acb8467d34c147ed22d28d",
+    "buildRunID": 40998892881,
+    "buildSourceCommit": "6d3e4322293972a28ab2cdf129ee6398f40f0f37",
+    "experimentalVersionName": "FlashNest composite experimental 8700425d24ec",
+    "provenanceSHA256": "c4097881f8bc25c22e2eefaabb20664160ef8ce87ca11173d89c94a7ba4fd9f7",
+    "runtimeFiles": {
+      "5572693b75d695bf0991.wasm": {
+        "bytes": 14219654,
+        "sha256": "0fabc6602d29091438c307ca715cf0973641b93cd2d7513798865cb8e1c3f054"
+      },
+      "LICENSE_APACHE": {
+        "bytes": 9723,
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+      },
+      "LICENSE_MIT": {
+        "bytes": 1097,
+        "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c"
+      },
+      "README.md": {
+        "bytes": 2328,
+        "sha256": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde"
+      },
+      "core.ruffle.b37b03400c42af4f2df8.js": {
+        "bytes": 114899,
+        "sha256": "1643fa872c336e5a920a5ab5f0e89d8d0f19f6fe3af9dbd6812e94832d7c6c70"
+      },
+      "core.ruffle.b37b03400c42af4f2df8.js.map": {
+        "bytes": 414390,
+        "sha256": "03b11ddd18b4d49adc88f1e502bdf8ff12bdfd1d994306d39088954e1e690d38"
+      },
+      "core.ruffle.b66cd8f7f9bc4f6102a5.js": {
+        "bytes": 108488,
+        "sha256": "97583a8ea68de971dde69fd12c8aa86a3ac2c5e4556b29d675dec292cb840d1c"
+      },
+      "core.ruffle.b66cd8f7f9bc4f6102a5.js.map": {
+        "bytes": 387146,
+        "sha256": "c9b4002a0eaaacbe97803e255cdda4b1ed6074583b7f9ecccbf11ab8afde57d1"
+      },
+      "f1db9d71e25be3505249.wasm": {
+        "bytes": 14246300,
+        "sha256": "87874aba45cac4b3c4a08e10e853966b324b8fad8d113fcfe4649a05bdffe318"
+      },
+      "package.json": {
+        "bytes": 418,
+        "sha256": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89"
+      },
+      "ruffle.js": {
+        "bytes": 468519,
+        "sha256": "2151d8850b72d96302d4061aad62ba749ab9b3c7bf9bfdb49813964a2a4d95fe"
+      },
+      "ruffle.js.map": {
+        "bytes": 716395,
+        "sha256": "2130f3c4fbfbf53b6d149ad62b0a6f2dc0b7db313afe257e3649c089ae08740f"
+      }
+    },
+    "runtimeInventorySHA256": "4eb6f264ac091574078769bff43417a74826017b618c539ccc4ff69ac8c81ba1",
+    "runtimeKind": "flashnest-composite-experimental",
+    "schemaVersion": 3,
+    "sourceLockSHA256": "7200650c24fe505844ea676c02c44a42dd2ee7bc484344e775e4458d84566494",
+    "sourceSetSHA256": "8700425d24eca9d0fea72bc49fe2f2f3854a7965b75f24abeff19f867d4ed53a",
+    "upstreamBaseVersion": "0.7.1",
+    "upstreamSourceCommit": "89a7049965f3090e706265670df309a5128233ac"
+  },
+  "runtimeIdentitySHA256": "aab09ba9dd4dcf6dd3d8173692d2651a26c7018ab6c412cb83ba400f97a3541e",
+  "schema": 1
+}
