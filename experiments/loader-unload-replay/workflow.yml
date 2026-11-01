@@ -1,0 +1,86 @@
+name: Experimental Loader browser replay with exact prior engine (no IPA)
+on:
+  push:
+    branches: [experiment/case-compatible-assets-build23]
+    paths:
+      - 'experiments/loader-unload-replay/**'
+      - '.github/workflows/validate-loader-unload-replay.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-loader-unload-replay
+  cancel-in-progress: false
+jobs:
+  browser:
+    runs-on: macos-15
+    timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PREP: recipe/experiments/loader-unload-replay
+      ORIGINAL: recipe/experiments/loader-unload-fix
+      BASE_RECIPE: recipe/experiments/loader-unload-probe
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - name: Verify focused recipe and sandboxed Chrome tooling
+        run: |
+          set -euo pipefail
+          mkdir -p unload-browser-evidence
+          sw_vers > unload-browser-evidence/runner-os.txt
+          uname -m >> unload-browser-evidence/runner-os.txt
+          system_profiler SPDisplaysDataType -json > unload-browser-evidence/runner-displays.json
+          cmp "$PREP/workflow.yml" recipe/.github/workflows/validate-loader-unload-replay.yml
+          python3 "$PREP/verify_recipe.py" --original "$ORIGINAL"
+          python3 "$BASE_RECIPE/test_stage_runtime.py"
+          python3 -m venv probe-venv
+          probe-venv/bin/python -m pip install 'playwright==1.51.0' 'Pillow==11.1.0'
+          probe-venv/bin/python "$PREP/probe/test_validate.py"
+          test -x '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --version > unload-browser-evidence/chrome-version.txt
+      - name: Fetch pinned original baseline and candidate artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13085283710 > unload-browser-evidence/baseline-artifact.json
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368 > unload-browser-evidence/candidate-artifact.json
+          python3 - <<'PYMETA'
+          import json
+          base=json.load(open('unload-browser-evidence/baseline-artifact.json'))
+          assert base['id']==13085283710 and base['expired'] is False
+          assert base['workflow_run']['id']==41311276578 and base['workflow_run']['head_sha']=='7d8a9e205c1451da86b74cf6cc0ca0fe6dfab186'
+          candidate=json.load(open('unload-browser-evidence/candidate-artifact.json'))
+          assert candidate['id']==13089357368 and candidate['expired'] is False
+          assert candidate['workflow_run']['id']==41318527222 and candidate['workflow_run']['head_sha']=='3b0ab52a334336e6e6474e840e9c487e3f666f1d'
+          PYMETA
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13085283710/zip > baseline-artifact.zip
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368/zip > candidate-artifact.zip
+      - name: Validate complete source-bound artifacts and stage only runtime closures
+        run: |
+          set -euo pipefail
+          python3 "$BASE_RECIPE/stage_runtime.py" --archive baseline-artifact.zip --output baseline-runtime --receipt unload-browser-evidence/baseline-stage.json
+          python3 "$PREP/test_reuse.py" --archive candidate-artifact.zip --metadata unload-browser-evidence/candidate-artifact.json --original "$ORIGINAL"
+          python3 "$PREP/reuse_engine.py" --archive candidate-artifact.zip --metadata unload-browser-evidence/candidate-artifact.json --original "$ORIGINAL" --output candidate-runtime --lock-output candidate-runtime-lock.json --receipt unload-browser-evidence/candidate-stage.json
+      - name: Execute identical neutral regressions on accepted baseline and candidate
+        run: |
+          set -euo pipefail
+          set +e
+          probe-venv/bin/python "$PREP/probe/run.py" --runtime-root baseline-runtime --runtime-lock "$BASE_RECIPE/runtime-lock.json" --expect baseline --output unload-browser-evidence/baseline.json
+          baseline_status=$?
+          probe-venv/bin/python "$PREP/probe/run.py" --runtime-root candidate-runtime --runtime-lock candidate-runtime-lock.json --expect candidate --output unload-browser-evidence/candidate.json
+          candidate_status=$?
+          set -e
+          test "$baseline_status" -eq 0
+          test "$candidate_status" -eq 0
+          python3 "$PREP/compare.py" --evidence unload-browser-evidence --recipe "$PREP"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-unload-replay-regression-evidence
+          path: unload-browser-evidence/
+          if-no-files-found: warn
+          retention-days: 7

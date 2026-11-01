@@ -1,0 +1,31 @@
+{
+  "engineBuildHead": "3b0ab52a334336e6e6474e840e9c487e3f666f1d",
+  "engineBuildRun": 41318527222,
+  "fixtureFiles": {
+    "added-before-init.swf": "9d286cee37bc69f3b4f3297c8dfdb97cf15ca249e811d72bf293015220aed078",
+    "attached-fresh.swf": "3d5490c638617f8fc870e7c1d793e1a001cc7887661bb991b6f4d8c3ac6630f4",
+    "attached-same.swf": "71b0c2c64eb2096fad03c833dd29bb489050f12e46544c3b5bb969a3c7822ee6",
+    "failed-load.swf": "96e67107ad28698734929b1a1a364e567676ffa0d71e42597dbb397d71c29ba4",
+    "first.swf": "d6df252cec9df57f0f7dfe75329396a90568b33a803e6ca9adc24956e13acfe4",
+    "incomplete-load.swf": "1f6ea54ce242ed8d1735b7637ad26de94e621862600cb782d6be0cb20226828d",
+    "moved-kept-fresh.swf": "b46973176fb75cacf82a37051e02dc27d997ecae764b717dfa628ac1208c3cd2",
+    "moved-removed-fresh.swf": "1143a768d220882e6fa45e57a2d549af810c2c0b27bbff48a60ca5ce7aa5613c",
+    "moved-removed-same.swf": "0f5d540837a332927766d1735f4e15021b517db252415c6f8722aead9ceb8791",
+    "next.swf": "0fd738094cabcbd910be73d76d47dd4b152833fed9b15b6fd2f6046225b2cc36",
+    "no-load.swf": "1d143ca90cdb76835b655038092cfb91d32ae9bcfbc8a490af02f8e72979bc6c",
+    "recursive-unload.swf": "b84491abd64f3035a0c5bc38c5e226ecfe7ec28d63870ccb982496b6730dc58e",
+    "repeated-unload.swf": "b67ee4e3a48cf384d2f2216c3bf531d27c71551a1141244d6bab7607ab77735a",
+    "retained-script.swf": "323fae7f915cb22b6706a80465a053ea4f397f2ac29c51bacb7b9ddb32189cf8"
+  },
+  "newFixtureCoverageClaim": false,
+  "onlyClassificationChanged": true,
+  "originalBaselineBrowserReceiptSHA256": "4f041f389c1b64d1dcf84ee6b18a36dce1528fbf5646cb8b1f30f36c01774cab",
+  "originalBrowserValidationPassed": false,
+  "stableProbeFiles": {
+    "abc_fixture.py": "d1a74a81c98799a5f443b50942de0a095d82b447a23add6715ff74f1ef5799a3",
+    "make_probe.py": "b35761fdb0342f33b029896ca444c63121ec442f8d1d4e743076ce350c7d3ecf",
+    "probe.html": "a149f49239af0dee3c12f31136a94e56a1bdeb9d0350528898c06920cb095b06",
+    "run.py": "961ae48758e38b38d1b6cb92618b029c4b5902a797bd786806f9e6b93358aeee",
+    "runtime-lock.json": "a487ed5e7bf304b50898aa74e4b3675cfa3df872ceed2bc298d70b2f8bef8a99"
+  }
+}

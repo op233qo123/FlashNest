@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>Neutral Loader chain probe</title>
+<link rel="icon" href="data:,"><style>ruffle-player{width:160px;height:120px}</style>
+<script>
+const contexts=new WeakMap(),getContext=HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext=function(kind,...args){const c=getContext.call(this,kind,...args);if(c)contexts.set(this,kind);return c;};
+window.actualRenderer=()=>contexts.get(window.player?.shadowRoot?.querySelector('canvas'))||null;
+window.evidence={traces:[],error:null,loaded:false,observerInstalled:false,overflow:false};
+window.RufflePlayer={config:{publicPath:'runtime/',polyfills:false}};
+window.addEventListener('unhandledrejection',e=>{evidence.error=String(e.reason)});
+</script><body><script src="runtime/ruffle.js"></script><script>
+(async()=>{
+  const variant=new URLSearchParams(location.search).get('variant')||'attached-fresh';
+  if(!['attached-fresh', 'moved-removed-fresh', 'moved-kept-fresh', 'attached-same', 'moved-removed-same', 'recursive-unload', 'repeated-unload', 'no-load', 'incomplete-load', 'failed-load', 'retained-script','added-before-init'].includes(variant)) throw Error('Unknown neutral variant');
+  const player=RufflePlayer.newest().createPlayer();window.player=player;document.body.append(player);
+  const loaded=new Promise(resolve=>player.addEventListener('loadeddata',()=>{evidence.loaded=true;resolve()},{once:true}));
+  await player.ruffle().load({url:`fixtures/${variant}.swf`,base:new URL('fixtures/',location.href).href,
+    publicPath:new URL('runtime/',location.href).href,polyfills:false,autoplay:'off',
+    allowScriptAccess:false,allowNetworking:'internal',openUrlMode:'deny',socketProxy:[],
+    backgroundExecutionMode:'none',preferredRenderer:'webgl',logLevel:'warn',contextMenu:'off'});
+  player.ruffle().traceObserver=message=>{
+    if(evidence.traces.length<100)evidence.traces.push({message:String(message).slice(0,500),wall:performance.now()});
+    else evidence.overflow=true;
+  };
+  evidence.observerInstalled=true;await loaded;player.ruffle().resume();
+})().catch(error=>{evidence.error=String(error)});
+</script>
