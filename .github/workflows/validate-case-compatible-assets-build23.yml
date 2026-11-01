@@ -1,0 +1,107 @@
+name: Validate unique-case assets and neutral 24fps (experimental, no IPA)
+on:
+  push:
+    branches: [experiment/case-compatible-assets-build23]
+    paths:
+      - 'experiments/case-compatible-assets-build23/**'
+      - '.github/workflows/validate-case-compatible-assets-build23.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-case-compatible-assets-build23
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: macos-14
+    timeout-minutes: 80
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      PYTHONDONTWRITEBYTECODE: '1'
+      CASE_RECIPE: recipe/experiments/case-compatible-assets-build23
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - name: Verify reviewed experimental recipe and SDK
+        run: |
+          set -euo pipefail
+          cmp "$CASE_RECIPE/workflow.yml" recipe/.github/workflows/validate-case-compatible-assets-build23.yml
+          python3 "$CASE_RECIPE/experiment.py" preflight
+          python3 "$CASE_RECIPE/test_ios_runner.py"
+          test "$(xcodebuild -version | head -1)" = 'Xcode 16.2'
+          test "$(xcrun --sdk iphonesimulator --show-sdk-version)" = '18.2'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: cc6c4bf285a201d9c1a827140662c54606027d10
+          path: baseline-recipe
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 9bc000e37695696f2427b25fe08efe4993bf22e5
+          path: source-checkout
+          persist-credentials: false
+      - name: Reconstruct exact diagnostic v2 then apply two server changes
+        id: stage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 "$CASE_RECIPE/experiment.py" stage --baseline-checkout baseline-recipe --source-checkout source-checkout --output case-stage
+      - name: Actual Swift resolver tests on a verified case-sensitive filesystem
+        run: |
+          set -euo pipefail
+          mkdir -p case-stage/evidence
+          bash "$CASE_RECIPE/path-tests/run_native_tests.sh" "$PWD/case-stage/app/App/Server/HTTPProtocol.swift" "$PWD/case-stage/evidence/path-result.json"
+          python3 "$CASE_RECIPE/experiment.py" verify --output case-stage
+      - name: Prepare pinned sandboxed browser test tooling
+        id: browser_tools
+        if: ${{ !cancelled() && steps.stage.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/case-browser"
+          "$RUNNER_TEMP/case-browser/bin/pip" install playwright==1.51.0
+          "$RUNNER_TEMP/case-browser/bin/python" -m playwright install chromium
+      - name: Actual unchanged Ruffle default24 and explicit controls; synthetic clocks separately labelled
+        id: fps
+        if: ${{ !cancelled() && steps.browser_tools.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/case-browser/bin/python" "$CASE_RECIPE/fps/run_fps.py" --runtime case-stage/app/App/Resources/Web/runtime --inputs baseline-recipe/experiments/longrun-ipa-156-build23/inputs.json --output case-stage/evidence/fps-result.json
+          python3 "$CASE_RECIPE/experiment.py" verify --output case-stage
+      - name: Generate Xcode project using authenticated XcodeGen bytes and locked dependencies
+        id: project
+        if: ${{ !cancelled() && steps.stage.outcome == 'success' }}
+        working-directory: case-stage/app
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 120 https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  '"$RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-case"
+          "$RUNNER_TEMP/xcodegen-case/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Actual iOS18.2 selected server import diagnostic and confirmation UI regressions
+        id: ios
+        if: ${{ !cancelled() && steps.project.outcome == 'success' }}
+        run: python3 "$CASE_RECIPE/run_ios_tests.py" --app case-stage/app --output case-stage/evidence/ios --baseline-checkout baseline-recipe --stage-receipt case-stage/case-staging.json
+      - name: Require both timing and native gates with unchanged final source identity
+        if: ${{ !cancelled() && steps.stage.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          test '${{ steps.browser_tools.outcome }}' = 'success'
+          test '${{ steps.fps.outcome }}' = 'success'
+          test '${{ steps.ios.outcome }}' = 'success'
+          python3 "$CASE_RECIPE/experiment.py" verify --output case-stage
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-case-compatible-assets-build23-evidence
+          path: |
+            case-stage/case-staging.json
+            case-stage/evidence/*.json
+            case-stage/evidence/ios/*.json
+            case-stage/evidence/ios/*.log
+          if-no-files-found: warn
+          retention-days: 7

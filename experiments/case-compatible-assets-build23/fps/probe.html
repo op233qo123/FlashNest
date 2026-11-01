@@ -1,0 +1,56 @@
+<!doctype html><meta charset="utf-8"><title>Neutral frame cadence</title><link rel="icon" href="data:,">
+<style>body{margin:0}ruffle-player{width:160px;height:120px}</style>
+<script>
+'use strict';
+const query = new URLSearchParams(location.search);
+const synthetic = query.get('scheduler') === 'synthetic';
+window.probe = {ticks: [], ready:false, error:null, synthetic, raf:0, virtualTime:0};
+const contexts = new WeakMap();
+const originalGetContext = HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext = function(kind, ...args) {
+  const context=originalGetContext.call(this,kind,...args);
+  if(context) contexts.set(this,kind);
+  return context;
+};
+window.actualRenderer = () => contexts.get(window.player?.shadowRoot?.querySelector('canvas')) || null;
+window.addEventListener('unhandledrejection', event => {probe.error=String(event.reason);});
+if (synthetic) {
+  let nextID = 1;
+  const callbacks = new Map();
+  window.requestAnimationFrame = callback => {const id=nextID++; callbacks.set(id,callback); return id;};
+  window.cancelAnimationFrame = id => callbacks.delete(id);
+  window.advance = (hz, steps) => {
+    for(let i=0; i<steps; i++) {
+      probe.virtualTime += 1000/hz;
+      const batch = [...callbacks.values()]; callbacks.clear();
+      probe.raf++;
+      for(const callback of batch) callback(probe.virtualTime);
+    }
+  };
+} else {
+  const count = () => {probe.raf++; requestAnimationFrame(count);}; requestAnimationFrame(count);
+}
+window.RufflePlayer = {config:{publicPath:'/runtime/',polyfills:false}};
+</script>
+<body>
+<script src="/runtime/ruffle.js"></script>
+<script>
+(async () => {
+  const player=window.RufflePlayer.newest().createPlayer();
+  window.player=player; document.body.append(player);
+  player.ruffle().traceObserver = message => {
+    if(message==='FPS_READY') probe.ready=true;
+    const match=/^FPS_TICK (\d+)$/.exec(message);
+    if(match) {
+      if(probe.ticks.length>=5000) {probe.error='Unexpected event overflow';return;}
+      probe.ticks.push({count:Number(match[1]),wall:performance.now(),virtual:probe.virtualTime});
+    }
+  };
+  const options={url:'/neutral-24fps.swf',base:location.origin+'/',publicPath:'/runtime/',
+    allowScriptAccess:false,allowNetworking:'internal',openUrlMode:'deny',socketProxy:[],
+    autoplay:'on',unmuteOverlay:'hidden',backgroundExecutionMode:'none',upgradeToHttps:false,
+    showSwfDownload:false,contextMenu:'off',logLevel:'warn',preferredRenderer:'webgl'};
+  if(query.has('override')) options.frameRate=Number(query.get('override'));
+  await player.ruffle().load(options);
+})().catch(error => {probe.error=String(error);});
+</script>

@@ -1,0 +1,35 @@
+{
+  "baselineCommit": "cc6c4bf285a201d9c1a827140662c54606027d10",
+  "baselineInputsSHA256": "c9fb9ccd4cffc3bdfcf538e38db56c10d82f396cb9903da049cb01ebf379b427",
+  "ipaBuildAllowed": false,
+  "kind": "EXPERIMENTAL-UNIQUE-CASE-ASSETS",
+  "overlay": {
+    "App/Server/HTTPProtocol.swift": {
+      "after": "a826ec509fb7bf8cc58e85cee9643e9754a83ed15c6bf3f0abf9a89cb2578ada",
+      "before": "3e5c8806a10ad1de4fceee5bc8157d6f94aa1e79f3559bb96db9539eb2c5f0b4"
+    },
+    "App/Server/LoopbackServer.swift": {
+      "after": "071bf15bddba2e2c8977d6dce7a362afc53d8d1781e9cfd120f64259d622810d",
+      "before": "5017685d130ed536e969eea3b9ba2127f801b1249f98c8763416440e8e8c35dc"
+    }
+  },
+  "recipeFiles": {
+    "README.md": "1937d5d44dacd6432e312d1f5f6a18fa57f53c29f4bb1676f0828896a997d2bc",
+    "experiment.py": "dba69b42ca206f2a512c7b363542859bbc46c500dfc99f23ed83afb9ccb5f04c",
+    "fps/README.md": "307ceee3b8823a2c89bc3c9579a34595847c48a5b9a4128e013b6d98fe07f7ec",
+    "fps/make_fixture.py": "6e88981256e83c10d2178835bebdc4ce7dfda5cc19f619d2b15b3c2ec71ee588",
+    "fps/probe.html": "0c65a8dc48372637ca2bd368ff015d020b6ac07c21aad66dc9b447522bb47144",
+    "fps/run_fps.py": "5aa7db0a5deccf4ada6685a483e2bfc42fcf43a34b60c222f8051ae5d5cb6067",
+    "overlay/App/Server/HTTPProtocol.swift": "a826ec509fb7bf8cc58e85cee9643e9754a83ed15c6bf3f0abf9a89cb2578ada",
+    "overlay/App/Server/LoopbackServer.swift": "071bf15bddba2e2c8977d6dce7a362afc53d8d1781e9cfd120f64259d622810d",
+    "path-tests/CaseCompatibilityFixture.swift": "7ddddbd6ef70ad6c3b2e01997a02a06beb5608db84adcc6bbfdf18c7cf37f7dd",
+    "path-tests/main.swift": "57bae2813ea69f8efa34b4c632073cd3e5a190c34e47a68d1253b477402f7692",
+    "path-tests/run_native_tests.sh": "0cc34b93da1003b03c7be5d4b0c8dc343670c8349e5a07ee5d96bed3f4d7992f",
+    "run_ios_tests.py": "3bcb16416e931ea26c73cf38ce89542047fa239ffe7fe59df1897727baeeb884",
+    "test_ios_runner.py": "955ca6a89d6d25cd6624b8be13ff35e6e72fd7a08f2f6c49e6bd9b7bfb5106d6",
+    "workflow.yml": "0889560943af88212f051274b897d1ca118af51bf1449c91465b0573f2ad65eb"
+  },
+  "runtimeChanged": false,
+  "schemaVersion": 1,
+  "sourceCommit": "9bc000e37695696f2427b25fe08efe4993bf22e5"
+}
