@@ -8,12 +8,19 @@ class StageTests(unittest.TestCase):
   (self.root/'candidate-runtime-reference.json').write_text(json.dumps({'runtimeFiles':runtime}))
   self.overlay={'App/Resources/Web/Ruffle-MODIFICATIONS.md':{'before':'old','after':'new'}}
   (self.root/'resource-overlay.json').write_text(json.dumps(self.overlay));self.cfg={'additionalFiles':{'Tests/Probe.swift':'test'}};self.save()
-  self.case={'App/Main.swift':'product','App/Resources/Web/Ruffle-MODIFICATIONS.md':'old','App/Resources/Web/runtime/old.wasm':'oldruntime','Tests/Existing.swift':'existing'}
+  (self.root/'archive-replacement.json').write_text(json.dumps({'oldPath':'vendor/old.zip','before':'oldarchive','newPath':'vendor/new.zip','after':'newarchive'}))
+  self.case={'vendor/old.zip':'oldarchive','App/Main.swift':'product','App/Resources/Web/Ruffle-MODIFICATIONS.md':'old','App/Resources/Web/runtime/old.wasm':'oldruntime','Tests/Existing.swift':'existing'}
  def save(self):(self.root/'inputs.json').write_text(json.dumps(self.cfg))
  def tearDown(self):e.ROOT=self.old;self.tmp.cleanup()
  def test_exact_product_scope(self):
   result,runtime=e.effective_inventory(self.case)
-  self.assertEqual(result['App/Main.swift'],'product');self.assertEqual(result['Tests/Existing.swift'],'existing');self.assertEqual(result['Tests/Probe.swift'],'test');self.assertNotIn('App/Resources/Web/runtime/old.wasm',result);self.assertEqual(len(runtime),12);self.assertEqual(len(result),16)
+  self.assertEqual(result['App/Main.swift'],'product');self.assertEqual(result['Tests/Existing.swift'],'existing');self.assertEqual(result['Tests/Probe.swift'],'test');self.assertNotIn('App/Resources/Web/runtime/old.wasm',result);self.assertEqual(len(runtime),12);self.assertEqual(len(result),17)
+ def test_archive_preimage_rejected(self):
+  self.case['vendor/old.zip']='bad'
+  with self.assertRaises(ValueError):e.effective_inventory(self.case)
+ def test_archive_collision_rejected(self):
+  self.case['vendor/new.zip']='unexpected'
+  with self.assertRaises(ValueError):e.effective_inventory(self.case)
  def test_notice_preimage_rejected(self):
   self.case['App/Resources/Web/Ruffle-MODIFICATIONS.md']='bad'
   with self.assertRaises(ValueError):e.effective_inventory(self.case)

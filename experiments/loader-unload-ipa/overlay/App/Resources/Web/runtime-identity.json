@@ -1,0 +1,68 @@
+{
+  "acceptedSourceLockSHA256": "7200650c24fe505844ea676c02c44a42dd2ee7bc484344e775e4458d84566494",
+  "artifactArchiveSHA256": "dac0c326e29d2cfd354eb418000ac049fa7bdcfaa56b7693132f5799661d52c2",
+  "buildRunID": 41318527222,
+  "buildSourceCommit": "3b0ab52a334336e6e6474e840e9c487e3f666f1d",
+  "candidateDeltaSHA256": "c086aea1ec0a4430f15a230cb7ab8fd9479d27a226719316d1cd368e20a73c16",
+  "effectiveSourceStageSHA256": "09348b4a2c3df8aed4fe9526ad9149270fb0c71dd9190bd8a940d170ebf477c3",
+  "experimentalVersionName": "FlashNest composite experimental 2d7fbb4e26f7",
+  "provenanceSHA256": "921142a9d848511f152a129a8c34d73577ef00c37c0423915afdc25f353a0011",
+  "runtimeFiles": {
+    "36b3cbd33c368ba3e094.wasm": {
+      "bytes": 14244343,
+      "sha256": "65bfde20229c0ea07a944dbb6a61f8de438826ea8fa7c3dc98a7d5ab60cab685"
+    },
+    "81a207f7dca57201d407.wasm": {
+      "bytes": 14204675,
+      "sha256": "b65fd06f17f68b1c30417dc19cd406016f445c3ff7ff93c1ce9286527f65be7b"
+    },
+    "LICENSE_APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "LICENSE_MIT": {
+      "bytes": 1097,
+      "sha256": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c"
+    },
+    "README.md": {
+      "bytes": 2328,
+      "sha256": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde"
+    },
+    "core.ruffle.b37b03400c42af4f2df8.js": {
+      "bytes": 114899,
+      "sha256": "1643fa872c336e5a920a5ab5f0e89d8d0f19f6fe3af9dbd6812e94832d7c6c70"
+    },
+    "core.ruffle.b37b03400c42af4f2df8.js.map": {
+      "bytes": 414390,
+      "sha256": "6908db6111d775763a979c772b54a2cb450a0d9ea24d1937f2ef006279928e0a"
+    },
+    "core.ruffle.b66cd8f7f9bc4f6102a5.js": {
+      "bytes": 108488,
+      "sha256": "97583a8ea68de971dde69fd12c8aa86a3ac2c5e4556b29d675dec292cb840d1c"
+    },
+    "core.ruffle.b66cd8f7f9bc4f6102a5.js.map": {
+      "bytes": 387146,
+      "sha256": "5b3fc8490d7714667d08fd2c7c59efb08425cfe7f0be847a4f9bd44a437e58ed"
+    },
+    "package.json": {
+      "bytes": 418,
+      "sha256": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89"
+    },
+    "ruffle.js": {
+      "bytes": 468519,
+      "sha256": "659463197f43c2232ee6047d078c2b19e094a3feb63c6e86534b7799dad9e552"
+    },
+    "ruffle.js.map": {
+      "bytes": 716395,
+      "sha256": "5b01b95ac87730e011ef9cbc2793b48f2b5ac03102d6f234de6946e31f7c5144"
+    }
+  },
+  "runtimeInventorySHA256": "db8878b9986c89e121d17e59ecebca6f6058bcecf20b97fa2861489c14c85e8b",
+  "runtimeKind": "flashnest-composite-experimental",
+  "schemaVersion": 3,
+  "sourceLockRole": "candidate-delta-with-accepted-base",
+  "sourceLockSHA256": "c086aea1ec0a4430f15a230cb7ab8fd9479d27a226719316d1cd368e20a73c16",
+  "sourceSetSHA256": "2d7fbb4e26f75332ca226ea9f153f03eab48fc119fc9ea2b0d89c2eb1155abef",
+  "upstreamBaseVersion": "0.7.1",
+  "upstreamSourceCommit": "89a7049965f3090e706265670df309a5128233ac"
+}

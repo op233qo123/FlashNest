@@ -29,7 +29,8 @@ def config():
  need(c['ipaBuildAllowed'] is True and c['runtimeChanged'] is True,'Candidate integration not declared')
  actual=inventory(ROOT);need({p:h for p,h in actual.items() if p!='inputs.json'}==c['recipeFiles'],'Recipe closure mismatch')
  need(sha((ROOT/'case-inputs-reference.json').read_bytes())==CASE_INPUT_SHA,'Case input reference changed')
- need(set(read(ROOT/'resource-overlay.json'))=={'App/Resources/Web/Ruffle-MODIFICATIONS.md','App/Resources/Web/licenses.manifest.json'},'Notice-only overlay scope')
+ need(set(read(ROOT/'resource-overlay.json'))=={'App/Resources/Web/Ruffle-MODIFICATIONS.md','App/Resources/Web/licenses.manifest.json','App/Resources/Web/runtime-identity.json','runtime.lock.json','runtime.files.json','scripts/composite_runtime.py'},'Runtime metadata overlay scope')
+ need(read(ROOT/'archive-replacement.json')=={'oldPath':'vendor/ruffle-composite-40998892881.zip','before':'2cb4022b1859156f2e28dcb5d499ebf01cbf13b386acb8467d34c147ed22d28d','newPath':'vendor/ruffle-unload-candidate-41318527222.zip','after':'dac0c326e29d2cfd354eb418000ac049fa7bdcfaa56b7693132f5799661d52c2','bytes':15260480},'Exact candidate archive replacement scope')
  need(inventory(ROOT/'overlay')=={p:r['after'] for p,r in read(ROOT/'resource-overlay.json').items()},'Notice overlay mismatch')
  need(sha((ROOT/'candidate-runtime-reference.json').read_bytes())=='c449305e9ee292e4d2d7d255163e2fdf46ad5dac80dd41f9eab4c8236e7e49c6','Candidate runtime lock bytes')
  runtime=read(ROOT/'candidate-runtime-reference.json')
@@ -49,6 +50,7 @@ def effective_inventory(case_expected):
  expected.update({'App/Resources/Web/runtime/'+p:h for p,h in runtime.items()})
  for p,r in read(ROOT/'resource-overlay.json').items():
   need(case_expected[p]==r['before'],'Notice preimage mismatch');expected[p]=r['after']
+ a=read(ROOT/'archive-replacement.json');need(case_expected.get(a['oldPath'])==a['before'] and a['newPath'] not in case_expected,'Offline archive preimage/scope');del expected[a['oldPath']];expected[a['newPath']]=a['after']
  cfg=read(ROOT/'inputs.json')
  for p,h in cfg['additionalFiles'].items():need(p.startswith('Tests/') and p not in expected,'Test-only addition scope');expected[p]=h
  return expected,runtime
@@ -94,6 +96,7 @@ def stage(baseline,source,case,archive,metadata,output):
  need((output/'candidate-runtime-lock.json').read_bytes()==(ROOT/'candidate-runtime-reference.json').read_bytes(),'Actual candidate lock differs')
  shutil.rmtree(app/'App/Resources/Web/runtime');shutil.copytree(output/'candidate-runtime',app/'App/Resources/Web/runtime')
  for p in read(ROOT/'resource-overlay.json'):(app/p).write_bytes((ROOT/'overlay'/p).read_bytes())
+ replacement=read(ROOT/'archive-replacement.json');raw=archive.read_bytes();need(len(raw)==replacement['bytes'] and sha(raw)==replacement['after'],'Candidate offline archive identity');need(sha((app/replacement['oldPath']).read_bytes())==replacement['before'],'Old offline archive changed');(app/replacement['oldPath']).unlink();(app/replacement['newPath']).write_bytes(raw)
  with tempfile.TemporaryDirectory() as temp:
   temp=Path(temp);generated=temp/'Tests/UnloadWKSmokeTests.swift';manifest=temp/'source-manifest.json'
   subprocess.run(['python3',str(ROOT/'native-probe/generate_native_probe.py'),'--probe-root',str(case/'experiments/loader-unload-fix/probe'),'--runtime-lock',str(ROOT/'candidate-runtime-reference.json'),'--output-swift',str(generated),'--receipt',str(manifest)],check=True)

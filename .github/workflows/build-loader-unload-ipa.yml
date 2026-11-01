@@ -64,6 +64,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 "$PREP/stage.py" stage --baseline-checkout baseline-recipe --source-checkout source-checkout --case-checkout case-checkout --engine-archive engine-input/engine.zip --engine-metadata engine-input/metadata.json --output unload-stage
+      - name: Verify coherent candidate metadata and unchanged offline packaging gates
+        run: |
+          set -euo pipefail
+          mkdir -p unload-stage/evidence
+          python3 "$PREP/test_runtime_metadata.py" --app unload-stage/app | tee unload-stage/evidence/runtime-metadata.log
       - name: Actual case-sensitive resolver tests and candidate cadence controls
         run: |
           set -euo pipefail

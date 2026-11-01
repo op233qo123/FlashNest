@@ -1,10 +1,26 @@
 {
   "App/Resources/Web/Ruffle-MODIFICATIONS.md": {
-    "before": "f9e014fc40db157ae392f188ffb4af6148e58507757cd151533b9cb7b3b1b7de",
-    "after": "08e144182f01f60633c690679be749c47957752b7d2c9d3aa4e0d2c6af4c97ce"
+    "after": "08e144182f01f60633c690679be749c47957752b7d2c9d3aa4e0d2c6af4c97ce",
+    "before": "f9e014fc40db157ae392f188ffb4af6148e58507757cd151533b9cb7b3b1b7de"
   },
   "App/Resources/Web/licenses.manifest.json": {
-    "before": "c2cd5322d7984f82423286756335835251a7c20a915bae05ab652fb0579cadfd",
-    "after": "028c3df20751e61829bbf24be84df323ce7ac8d19a64bbd03d7c699464f2477c"
+    "after": "028c3df20751e61829bbf24be84df323ce7ac8d19a64bbd03d7c699464f2477c",
+    "before": "c2cd5322d7984f82423286756335835251a7c20a915bae05ab652fb0579cadfd"
+  },
+  "App/Resources/Web/runtime-identity.json": {
+    "after": "bf822afb0afa700b3c9662a10e1cf670bf12fdb825a0a430a8dd5ea189cde5e5",
+    "before": "aab09ba9dd4dcf6dd3d8173692d2651a26c7018ab6c412cb83ba400f97a3541e"
+  },
+  "runtime.files.json": {
+    "after": "25dcb7d4f54b22e7c55168662c65e3756b906d4683ed6b412c8392ca3a691dc5",
+    "before": "087f823ad68b243d5ecc0916fa213a4cbb3ec626c8272f6377360fbe58c950b6"
+  },
+  "runtime.lock.json": {
+    "after": "e72a9b5fbc419af4cddd775a83c95c4438703fb46c5450a8fad7f04422c9442c",
+    "before": "03f410c77bf34ed4d459ca4743410dd9fe92e5ad11895e452f72431b4e5931f5"
+  },
+  "scripts/composite_runtime.py": {
+    "after": "59b00901d16cc86f1931190cd7bb8a000193cf81c2b28f6ee8774108c6c30653",
+    "before": "bb7503fb88c792c07dc6c785dfc3bf6f3ba7d5822b2ff4bbdd776e09f0920b52"
   }
 }

@@ -1,0 +1,7 @@
+{
+  "after": "dac0c326e29d2cfd354eb418000ac049fa7bdcfaa56b7693132f5799661d52c2",
+  "before": "2cb4022b1859156f2e28dcb5d499ebf01cbf13b386acb8467d34c147ed22d28d",
+  "bytes": 15260480,
+  "newPath": "vendor/ruffle-unload-candidate-41318527222.zip",
+  "oldPath": "vendor/ruffle-composite-40998892881.zip"
+}
