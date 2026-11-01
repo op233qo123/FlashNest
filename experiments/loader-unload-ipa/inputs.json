@@ -1,0 +1,52 @@
+{
+  "additionalFiles": {
+    "Tests/UnloadWKSmokeTests.swift": "505d0136556082c6397df1e4bd3e959fee73b0b2ded8174f61cc25e79ffa491f"
+  },
+  "additionalNativeTests": [
+    [
+      "UnloadWKSmokeTests",
+      "testAttachedLoaderUnloadsAndContinuesInWKWebView"
+    ],
+    [
+      "UnloadWKSmokeTests",
+      "testMovedRemovedLoaderUnloadsAndContinuesInWKWebView"
+    ]
+  ],
+  "additionalTestSourceFiles": {
+    "UnloadWKSmokeTests": "Tests/UnloadWKSmokeTests.swift"
+  },
+  "baselineCommit": "cc6c4bf285a201d9c1a827140662c54606027d10",
+  "caseCommit": "c4cad276f1a79caffd012bcfcb6eb260a9e3492f",
+  "formalRelease": false,
+  "ipaBuildAllowed": true,
+  "kind": "EXPERIMENTAL-UNLOAD-DIAGNOSTIC-IPA",
+  "physicalDeviceCertified": false,
+  "recipeFiles": {
+    "README.md": "c8b9ba5c6eb5b4e4415d7793c21109ad3c4f9912c2be925af58e858a986c16e7",
+    "build/run_ios_tests.py": "85388f6dca11179770e9dc333adaba75c5469c37713d8f4a40d0ab954f73faa7",
+    "build/select_toolchain.py": "84f9e8f03685609f9fad72e03ef444e5e63e644579ba95b1c475248a43584bcd",
+    "build/test_build.py": "8c35c6f72c889711981068312386df221e3cbc80933c2fff5a5305f53c66c68a",
+    "build/verify_ipa.py": "7019cb03ef6f502fb9ac4a0ab33afcecfc1e3fd56eab06c769045553ce093e9e",
+    "build/workflow.yml": "0998930f16d91a8d9c485404899b9f831f5ea8cc79db7e134239933bbea6939e",
+    "candidate-runtime-reference.json": "c449305e9ee292e4d2d7d255163e2fdf46ad5dac80dd41f9eab4c8236e7e49c6",
+    "case-inputs-reference.json": "8c7b6aafcbcfbfa961d24c645f8d9e290a6ea5407b7c8d9948d879a6800b911c",
+    "fps-adapter.json": "b7fbcc4e610b14369776ebc5d2a35d82dc8d011c0f40f3d2a71ba7a73c1e3548",
+    "fps/make_fixture.py": "6e88981256e83c10d2178835bebdc4ce7dfda5cc19f619d2b15b3c2ec71ee588",
+    "fps/probe.html": "77196f6b2df0cc8fcd1036322a194e4a3fb3aebe609ad630d43aff8af27e3d14",
+    "fps/run_fps.py": "0f84632a6319c1819e32d1a2f905a80ee88b9ae799fda97848ba0c2a798ab98c",
+    "native-probe/README.md": "e7e49d15fcc1278005af7fab31a4314f3bf9023d7ed3023f036d80394468f37c",
+    "native-probe/UnloadWKSmokeTests.swift": "505d0136556082c6397df1e4bd3e959fee73b0b2ded8174f61cc25e79ffa491f",
+    "native-probe/UnloadWKSmokeTests.swift.in": "5c39fc53590a27483033362c215022e1c27229a36dea0eb42b7787644760670b",
+    "native-probe/generate_native_probe.py": "83ed661ef35b2e26b5acef2b6ae7020bac80ff992a3508d249e899fd43d40428",
+    "native-probe/source-manifest.json": "77839753dfcf990ac71e28799b18e4e39a1a9dd2b6aff40b39eaf6d732f99ab6",
+    "overlay/App/Resources/Web/Ruffle-MODIFICATIONS.md": "08e144182f01f60633c690679be749c47957752b7d2c9d3aa4e0d2c6af4c97ce",
+    "overlay/App/Resources/Web/licenses.manifest.json": "028c3df20751e61829bbf24be84df323ce7ac8d19a64bbd03d7c699464f2477c",
+    "resource-overlay.json": "c785bd1a7c6a9e5b055046d86fd04cb4cc13ba9c18191cf50531a6de5161b13a",
+    "stage.py": "294d30cd865081abc512c13b837a93768e9305a31c80cd559d66bdc755e4f28a",
+    "test_stage.py": "7571b325f27ec1b86bd6ad09a74d0b186dc78b52778cf8050e141427c9358697"
+  },
+  "reuseHelperSHA256": "8231a9535585bcfbc544a7b48d54bd8df4084fe72e82b02381ddbcda275f1056",
+  "runtimeChanged": true,
+  "schemaVersion": 1,
+  "sourceCommit": "9bc000e37695696f2427b25fe08efe4993bf22e5"
+}

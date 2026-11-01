@@ -1,0 +1,125 @@
+name: Experimental unload candidate diagnostic IPA (not release)
+on:
+  push:
+    branches: [experiment/case-compatible-assets-build23]
+    paths:
+      - 'experiments/loader-unload-ipa/**'
+      - '.github/workflows/build-loader-unload-ipa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-unload-diagnostic-ipa
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 100
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PREP: recipe/experiments/loader-unload-ipa
+      CASE: case-checkout/experiments/case-compatible-assets-build23
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: recipe
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: c4cad276f1a79caffd012bcfcb6eb260a9e3492f
+          path: case-checkout
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: cc6c4bf285a201d9c1a827140662c54606027d10
+          path: baseline-recipe
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 9bc000e37695696f2427b25fe08efe4993bf22e5
+          path: source-checkout
+          persist-credentials: false
+      - name: Verify recipe and select actual installed SDK and simulator
+        run: |
+          set -euo pipefail
+          cmp "$PREP/build/workflow.yml" recipe/.github/workflows/build-loader-unload-ipa.yml
+          python3 "$PREP/stage.py" preflight
+          python3 "$PREP/test_stage.py"
+          python3 "$PREP/build/test_build.py"
+          python3 "$PREP/build/select_toolchain.py" --output toolchain-evidence/toolchain.json
+          sw_vers > toolchain-evidence/macos.txt
+          uname -m >> toolchain-evidence/macos.txt
+      - name: Fetch exact accepted candidate engine
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir engine-input
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368 > engine-input/metadata.json
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368/zip > engine-input/engine.zip
+      - name: Reconstruct frozen diagnostic source and integrate reviewed candidate runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 "$PREP/stage.py" stage --baseline-checkout baseline-recipe --source-checkout source-checkout --case-checkout case-checkout --engine-archive engine-input/engine.zip --engine-metadata engine-input/metadata.json --output unload-stage
+      - name: Actual case-sensitive resolver tests and candidate cadence controls
+        run: |
+          set -euo pipefail
+          mkdir -p unload-stage/evidence
+          bash "$CASE/path-tests/run_native_tests.sh" "$PWD/unload-stage/app/App/Server/HTTPProtocol.swift" "$PWD/unload-stage/evidence/path-result.json"
+          python3 -m venv "$RUNNER_TEMP/unload-browser"
+          "$RUNNER_TEMP/unload-browser/bin/pip" install playwright==1.51.0
+          test -x '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+          "$RUNNER_TEMP/unload-browser/bin/python" "$PREP/fps/run_fps.py" --runtime unload-stage/app/App/Resources/Web/runtime --inputs unload-stage/cadence-inputs.json --output unload-stage/evidence/fps-result.json
+          python3 "$PREP/stage.py" verify --output unload-stage --baseline-checkout baseline-recipe
+      - name: Generate project with verified XcodeGen and locked dependencies
+        working-directory: unload-stage/app
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 120 https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  '"$RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-unload"
+          "$RUNNER_TEMP/xcodegen-unload/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Execute actual candidate native WebKit and UI tests (no prior native reuse)
+        run: |
+          set -euo pipefail
+          python3 "$PREP/build/run_ios_tests.py" --app unload-stage/app --output unload-stage/evidence/ios --baseline-checkout baseline-recipe --stage-receipt unload-stage/unload-staging.json --toolchain toolchain-evidence/toolchain.json
+          python3 "$PREP/stage.py" verify --output unload-stage --baseline-checkout baseline-recipe
+      - name: Build unsigned Release device App
+        working-directory: unload-stage/app
+        run: |
+          set -euo pipefail
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNest -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - name: Package and independently verify exact diagnostic IPA
+        run: |
+          set -euo pipefail
+          mkdir unload-stage/artifacts
+          bash unload-stage/app/scripts/package_unsigned.sh unload-stage/app/build/Build/Products/Release-iphoneos/FlashNest.app unload-stage/artifacts/FlashNest-1.5.6-build23-unload-fix-diagnostic-v2-import-warning-unsigned.ipa
+          python3 "$PREP/build/verify_ipa.py" --ipa unload-stage/artifacts/FlashNest-1.5.6-build23-unload-fix-diagnostic-v2-import-warning-unsigned.ipa --app unload-stage/app --stage-receipt unload-stage/unload-staging.json --native-dir unload-stage/evidence/ios --baseline-checkout baseline-recipe --case-checkout case-checkout --toolchain toolchain-evidence/toolchain.json --path-evidence unload-stage/evidence/path-result.json --fps-evidence unload-stage/evidence/fps-result.json --output unload-stage/artifacts/unload-ipa-provenance.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-1.5.6-build23-unload-fix-diagnostic-v2-import-warning-unsigned
+          path: unload-stage/artifacts/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-unload-diagnostic-ipa-evidence
+          path: |
+            toolchain-evidence/
+            unload-stage/*staging.json
+            unload-stage/engine-reuse.json
+            unload-stage/cadence-inputs.json
+            unload-stage/evidence/*.json
+            unload-stage/evidence/*.plist
+            unload-stage/evidence/*.log
+            unload-stage/evidence/ios/*.json
+            unload-stage/evidence/ios/*.log
+          if-no-files-found: warn
+          retention-days: 7

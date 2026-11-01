@@ -1,0 +1,10 @@
+{
+  "App/Resources/Web/Ruffle-MODIFICATIONS.md": {
+    "before": "f9e014fc40db157ae392f188ffb4af6148e58507757cd151533b9cb7b3b1b7de",
+    "after": "08e144182f01f60633c690679be749c47957752b7d2c9d3aa4e0d2c6af4c97ce"
+  },
+  "App/Resources/Web/licenses.manifest.json": {
+    "before": "c2cd5322d7984f82423286756335835251a7c20a915bae05ab652fb0579cadfd",
+    "after": "028c3df20751e61829bbf24be84df323ce7ac8d19a64bbd03d7c699464f2477c"
+  }
+}

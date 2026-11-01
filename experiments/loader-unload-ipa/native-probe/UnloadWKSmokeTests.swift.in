@@ -1,0 +1,203 @@
+#if DEBUG
+import XCTest
+import UIKit
+import WebKit
+import CryptoKit
+@testable import FlashNest
+
+/// Test-target-only neutral SWFs and observation. No production observer/resource changes.
+@MainActor final class UnloadWKSmokeTests: XCTestCase {
+    private static let runtimeFiles: [String: String] = __RUNTIME_FILES__
+    private static let fixtures: [String: (String, String)] = __FIXTURES__
+
+    func testAttachedLoaderUnloadsAndContinuesInWKWebView() async throws {
+        try await exercise(mode: "attached-fresh")
+    }
+    func testMovedRemovedLoaderUnloadsAndContinuesInWKWebView() async throws {
+        try await exercise(mode: "moved-removed-fresh")
+    }
+
+    private func digest(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func exercise(mode: String) async throws {
+        executionTimeAllowance = 180
+        let web = try XCTUnwrap(Bundle.main.url(forResource: "Web", withExtension: nil))
+        let runtime = web.appendingPathComponent("runtime", isDirectory: true)
+        let listed = try FileManager.default.contentsOfDirectory(at: runtime, includingPropertiesForKeys: [.isRegularFileKey])
+        XCTAssertEqual(Set(listed.map(\.lastPathComponent)), Set(Self.runtimeFiles.keys))
+        XCTAssertEqual(Self.runtimeFiles.count, 12)
+        for (name, expected) in Self.runtimeFiles {
+            let url = runtime.appendingPathComponent(name)
+            XCTAssertEqual(try url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile, true)
+            XCTAssertEqual(digest(try Data(contentsOf: url)), expected, "Bundled candidate runtime differs: \(name)")
+        }
+
+        let temporary = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let source = temporary.appendingPathComponent("neutral")
+        let library = temporary.appendingPathComponent("library")
+        try FileManager.default.createDirectory(at: source, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: temporary) }
+        var fixtureHashes: [String: String] = [:]
+        for (sourceName, destinationName) in [(mode + ".swf", "main.swf"), ("first.swf", "first.swf"), ("next.swf", "next.swf")] {
+            let fixture = try XCTUnwrap(Self.fixtures[sourceName])
+            let data = try XCTUnwrap(Data(base64Encoded: fixture.0))
+            XCTAssertEqual(digest(data), fixture.1)
+            try data.write(to: source.appendingPathComponent(destinationName))
+            fixtureHashes[sourceName] = fixture.1
+        }
+        var package = try PackageImporter(root: library).stageAndCommit(source)
+        // Importer sorts entries; explicitly choose the neutral root, not first.swf.
+        XCTAssertTrue(package.movies.contains("main.swf"))
+        package.selectedMovie = "main.swf"
+        let session = PlayerSession()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: { $0.isKeyWindow })
+        let window = UIWindow(windowScene: scene)
+        let controller = UIViewController()
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        controller.loadViewIfNeeded()
+        defer {
+            session.webView?.removeFromSuperview()
+            session.stop()
+            window.isHidden = true
+            previousWindow?.makeKey()
+        }
+        await session.start(package: package, contentRoot: library.appendingPathComponent(package.id.uuidString).appendingPathComponent("content"))
+        let view = try XCTUnwrap(session.webView)
+        view.frame = controller.view.bounds
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        controller.view.addSubview(view)
+        let startupDeadline = Date().addingTimeInterval(100)
+        while !session.isLoaded && Date() < startupDeadline {
+            if let failure = session.failure { XCTFail(failure); return }
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        XCTAssertTrue(session.isLoaded, "WKWebView did not load the actual neutral root SWF: \(session.diagnostics)")
+        guard session.isLoaded else { return }
+        XCTAssertFalse(view.isHidden)
+        XCTAssertNotNil(view.window)
+
+        // Require the actual loaded/paused player and enabled Start button on two
+        // successive main-loop observations before replacing the test observer.
+        var stableReady = 0
+        let readyDeadline = Date().addingTimeInterval(5)
+        while stableReady < 2 && Date() < readyDeadline {
+            let ready = (try await view.evaluateJavaScript("!document.getElementById('start').disabled && !!document.querySelector('ruffle-player').ruffle().metadata && document.querySelector('ruffle-player').ruffle().isPlaying === false") as? Bool) == true
+            stableReady = ready ? stableReady + 1 : 0
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        XCTAssertEqual(stableReady, 2, "Actual paused WK instance was not ready for the observer")
+        guard stableReady == 2 else { return }
+
+        // Install only after the actual Ruffle instance exists, before playback.
+        // Avoid production trace rate limiting without changing the app's shell.
+        _ = try await view.evaluateJavaScript("""
+        window.__unloadWK = {traces:[],errors:[],responses:[],overflow:false};
+        const probe = window.__unloadWK;
+        document.querySelector('ruffle-player').ruffle().traceObserver = message => {
+          if (probe.traces.length < 100) probe.traces.push(String(message)); else probe.overflow=true;
+        };
+        window.addEventListener('error', event => { if(probe.errors.length<20) probe.errors.push(String(event.message)); });
+        window.addEventListener('unhandledrejection', event => { if(probe.errors.length<20) probe.errors.push(String(event.reason)); });
+        for (const name of ['error','log']) {
+          const original = console[name];
+          console[name] = function(...args) {
+            if(name==='error' || args.some(value=>typeof value==='string' && value.includes('%cERROR%c'))) {
+              if(probe.errors.length<20) probe.errors.push(args.map(String).join(' ').slice(0,1000)); else probe.overflow=true;
+            }
+            return original.apply(console,args);
+          };
+        }
+        const oldFetch = window.fetch.bind(window);
+        window.fetch = async (...args) => {
+          const response = await oldFetch(...args);
+          const name = new URL(response.url).pathname.split('/').pop();
+          if(name?.endsWith('.swf') && probe.responses.length<10) probe.responses.push({name,status:response.status});
+          return response;
+        };
+        document.getElementById('start').click(); true;
+        """)
+        let transitionDeadline = Date().addingTimeInterval(30)
+        var completed = false
+        while Date() < transitionDeadline {
+            if let failure = session.failure { XCTFail(failure); return }
+            completed = (try await view.evaluateJavaScript("window.__unloadWK.traces.includes('NEXT_TOKEN true')") as? Bool) == true
+            if completed { break }
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        // Observe beyond completion for duplicate notification/late process failure.
+        let observationStart = ProcessInfo.processInfo.systemUptime
+        try await Task.sleep(nanoseconds: 5_500_000_000)
+        let raw = try await view.evaluateJavaScript("""
+        JSON.stringify((() => {
+          const player=document.querySelector('ruffle-player');
+          const canvas=player?.shadowRoot?.querySelector('canvas');
+          const gl=canvas && (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
+          return {...window.__unloadWK,metadata:player?.ruffle().metadata,
+            actualWebGL:!!gl,glVersion:gl ? gl.getParameter(gl.VERSION) : null,
+            wasm:performance.getEntriesByType('resource').map(r=>new URL(r.name).pathname.split('/').pop()).filter(n=>n?.endsWith('.wasm')),
+            documentHidden:document.hidden};
+        })());
+        """) as? String
+        let observationElapsed = ProcessInfo.processInfo.systemUptime - observationStart
+        let text = try XCTUnwrap(raw)
+        let data = try XCTUnwrap(text.data(using: .utf8))
+        let observation = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var receipt = observation
+        receipt["mode"] = mode
+        receipt["completionObserved"] = completed
+        if completed { receipt["observationSecondsAfterCompletion"] = observationElapsed }
+        else { receipt["observationSecondsAfterCompletion"] = NSNull() }
+        receipt["runtimeFiles"] = Self.runtimeFiles
+        receipt["fixtureFiles"] = fixtureHashes
+        receipt["scope"] = "Actual WKWebView neutral Loader smoke; not physical device or private game acceptance"
+        receipt["physicalDeviceCertified"] = false
+        receipt["productionFixtureShipping"] = false
+        let receiptData = try JSONSerialization.data(withJSONObject: receipt, options: [.sortedKeys])
+        let attachment = XCTAttachment(data: receiptData, uniformTypeIdentifier: "public.json")
+        attachment.name = "neutral-unload-wk-" + mode
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        print("FLASHNEST_UNLOAD_WK_EVIDENCE " + String(decoding: receiptData, as: UTF8.self))
+        XCTAssertNil(session.failure)
+        XCTAssertGreaterThanOrEqual(observationElapsed, 5.5)
+        XCTAssertTrue(completed, "WK continuation did not finish: \(text)")
+        let traces = try XCTUnwrap(observation["traces"] as? [String])
+        XCTAssertEqual(observation["overflow"] as? Bool, false)
+        XCTAssertEqual(observation["documentHidden"] as? Bool, false)
+        XCTAssertEqual(observation["actualWebGL"] as? Bool, true)
+        XCTAssertEqual(observation["errors"] as? [String], [])
+        for marker in ["FIRST_COMPLETE", "PRE_CONTENT_PARENT_LOADER true", "PRE_CONTENT_INFO_MATCH true", "PRE_FIRST_TOKEN true", "TRANSITION_ENTER_FRAME", "PRE_LOADER_PARENT_NULL true", "UNLOAD_BEGIN", "UNLOAD_INFO_MATCH true", "UNLOAD_LISTENER_REMOVED", "FRESH_LOADER_CREATED", "UNLOAD_END", "UNLOAD_CALL_RETURNED", "NEXT_CHILD_CONSTRUCTED", "NEXT_COMPLETE", "NEXT_CONTENT_PRESENT true", "NEXT_PARENT_LOADER true", "NEXT_INFO_MATCH true", "NEXT_LOADER_CONTENT_MATCH true", "NEXT_CHILD_COUNT_ONE true", "OLD_CHILD_NOT_IN_LOADER true", "NEXT_TOKEN true"] {
+            XCTAssertEqual(traces.filter { $0 == marker }.count, 1, "Marker differs: \(marker); \(text)")
+        }
+        XCTAssertEqual(traces.filter { $0 == "INIT" }.count, 2)
+        XCTAssertEqual(traces.filter { $0 == "INIT_INFO_MATCH true" }.count, 2)
+        XCTAssertEqual(traces.filter { $0 == "COMPLETE_INFO_MATCH true" }.count, 2)
+        XCTAssertFalse(traces.contains { $0.hasPrefix("LOAD_ERROR") || $0.hasSuffix(" false") })
+        if mode == "moved-removed-fresh" {
+            XCTAssertTrue(traces.contains("PRE_CONTENT_PARENT_HOLDER true"))
+            XCTAssertTrue(traces.contains("PRE_MOVED_PARENT_NULL true"))
+        } else { XCTAssertTrue(traces.contains("PRE_ATTACHED_CONTENT_PARENT_LOADER true")) }
+        let sequence = ["FIRST_COMPLETE", "TRANSITION_ENTER_FRAME", "PRE_LOADER_PARENT_NULL true", "UNLOAD_CALL_BEGIN", "UNLOAD_BEGIN", "UNLOAD_LISTENER_REMOVED", "NEXT_BEGIN", "REQUEST next.swf", "NEXT_LOAD_RETURNED", "UNLOAD_END", "UNLOAD_CALL_RETURNED", "NEXT_CHILD_CONSTRUCTED", "NEXT_COMPLETE"]
+        let indices = try sequence.map { try XCTUnwrap(traces.firstIndex(of: $0), "Missing \($0)") }
+        XCTAssertTrue(zip(indices, indices.dropFirst()).allSatisfy { pair in pair.0 < pair.1 })
+        let initIndices = traces.indices.filter { traces[$0] == "INIT" }
+        if initIndices.count == 2 {
+            let nextConstructed = try XCTUnwrap(traces.firstIndex(of: "NEXT_CHILD_CONSTRUCTED"))
+            let nextComplete = try XCTUnwrap(traces.firstIndex(of: "NEXT_COMPLETE"))
+            XCTAssertLessThan(nextConstructed, initIndices[1])
+            XCTAssertLessThan(initIndices[1], nextComplete)
+        }
+        let responses = try XCTUnwrap(observation["responses"] as? [[String: Any]])
+        XCTAssertEqual(responses.compactMap { $0["name"] as? String }, ["first.swf", "next.swf"])
+        XCTAssertTrue(responses.allSatisfy { ($0["status"] as? Int) == 200 })
+        let wasm = try XCTUnwrap(observation["wasm"] as? [String])
+        XCTAssertFalse(wasm.isEmpty, "No actual WK WASM resource observed")
+        XCTAssertTrue(wasm.allSatisfy { Self.runtimeFiles[$0] != nil && $0.hasSuffix(".wasm") })
+        try await session.closeWithoutSaving()
+    }
+}
+#endif

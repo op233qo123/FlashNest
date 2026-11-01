@@ -1,0 +1,18 @@
+{
+  "caseCommit": "c4cad276f1a79caffd012bcfcb6eb260a9e3492f",
+  "files": {
+    "make_fixture.py": {
+      "after": "6e88981256e83c10d2178835bebdc4ce7dfda5cc19f619d2b15b3c2ec71ee588",
+      "before": "6e88981256e83c10d2178835bebdc4ce7dfda5cc19f619d2b15b3c2ec71ee588"
+    },
+    "probe.html": {
+      "after": "77196f6b2df0cc8fcd1036322a194e4a3fb3aebe609ad630d43aff8af27e3d14",
+      "before": "77196f6b2df0cc8fcd1036322a194e4a3fb3aebe609ad630d43aff8af27e3d14"
+    },
+    "run_fps.py": {
+      "after": "0f84632a6319c1819e32d1a2f905a80ee88b9ae799fda97848ba0c2a798ab98c",
+      "before": "423d45ceb28847ceeec1ad8dfabcbf754bea48ac1cbc9d6f9607e483e03a29c5"
+    }
+  },
+  "onlyChange": "Remove unsafe Playwright default switches and reject those switches in effective command line; thresholds and fixtures unchanged"
+}

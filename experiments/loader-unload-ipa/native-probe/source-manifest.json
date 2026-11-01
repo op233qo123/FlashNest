@@ -1,0 +1,47 @@
+{
+  "schema": "neutral-wk-smoke-source-v1",
+  "sourcePath": "Tests/UnloadWKSmokeTests.swift",
+  "sourceSHA256": "505d0136556082c6397df1e4bd3e959fee73b0b2ded8174f61cc25e79ffa491f",
+  "runtimeLockSHA256": "c449305e9ee292e4d2d7d255163e2fdf46ad5dac80dd41f9eab4c8236e7e49c6",
+  "runtimeFiles": {
+    "36b3cbd33c368ba3e094.wasm": "65bfde20229c0ea07a944dbb6a61f8de438826ea8fa7c3dc98a7d5ab60cab685",
+    "81a207f7dca57201d407.wasm": "b65fd06f17f68b1c30417dc19cd406016f445c3ff7ff93c1ce9286527f65be7b",
+    "LICENSE_APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+    "LICENSE_MIT": "4de9338a7879c68e911742a7d691f0797ff1ef8d8a6fb978b0c711e258fe959c",
+    "README.md": "cdbeefd04e27a2fe80f735210fa4c054e376802eb43a16d9b6eeae78500f2bde",
+    "core.ruffle.b37b03400c42af4f2df8.js": "1643fa872c336e5a920a5ab5f0e89d8d0f19f6fe3af9dbd6812e94832d7c6c70",
+    "core.ruffle.b37b03400c42af4f2df8.js.map": "6908db6111d775763a979c772b54a2cb450a0d9ea24d1937f2ef006279928e0a",
+    "core.ruffle.b66cd8f7f9bc4f6102a5.js": "97583a8ea68de971dde69fd12c8aa86a3ac2c5e4556b29d675dec292cb840d1c",
+    "core.ruffle.b66cd8f7f9bc4f6102a5.js.map": "5b3fc8490d7714667d08fd2c7c59efb08425cfe7f0be847a4f9bd44a437e58ed",
+    "package.json": "822dd0fe6f6a84d4ab41351acd2a789aa9ef75b3fe454ab846c0858157c48d89",
+    "ruffle.js": "659463197f43c2232ee6047d078c2b19e094a3feb63c6e86534b7799dad9e552",
+    "ruffle.js.map": "5b01b95ac87730e011ef9cbc2793b48f2b5ac03102d6f234de6946e31f7c5144"
+  },
+  "fixtureFiles": {
+    "attached-fresh.swf": "3d5490c638617f8fc870e7c1d793e1a001cc7887661bb991b6f4d8c3ac6630f4",
+    "moved-removed-fresh.swf": "1143a768d220882e6fa45e57a2d549af810c2c0b27bbff48a60ca5ce7aa5613c",
+    "first.swf": "d6df252cec9df57f0f7dfe75329396a90568b33a803e6ca9adc24956e13acfe4",
+    "next.swf": "0fd738094cabcbd910be73d76d47dd4b152833fed9b15b6fd2f6046225b2cc36"
+  },
+  "generatorFiles": {
+    "generate_native_probe.py": "83ed661ef35b2e26b5acef2b6ae7020bac80ff992a3508d249e899fd43d40428",
+    "UnloadWKSmokeTests.swift.in": "5c39fc53590a27483033362c215022e1c27229a36dea0eb42b7787644760670b"
+  },
+  "fixtureGeneratorFiles": {
+    "abc_fixture.py": "d1a74a81c98799a5f443b50942de0a095d82b447a23add6715ff74f1ef5799a3",
+    "make_probe.py": "b35761fdb0342f33b029896ca444c63121ec442f8d1d4e743076ce350c7d3ecf"
+  },
+  "methods": [
+    [
+      "UnloadWKSmokeTests",
+      "testAttachedLoaderUnloadsAndContinuesInWKWebView"
+    ],
+    [
+      "UnloadWKSmokeTests",
+      "testMovedRemovedLoaderUnloadsAndContinuesInWKWebView"
+    ]
+  ],
+  "productSourcesChanged": false,
+  "runtimeExecuted": false,
+  "physicalDeviceCertified": false
+}
