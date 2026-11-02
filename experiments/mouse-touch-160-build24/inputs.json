@@ -121,7 +121,7 @@
       "before": "035c79d20fefcb16d4dba4e97ab6125506717b0fcf0514b24523dcf223d72257"
     },
     "App/Views/DraggablePlayerMenu.swift": {
-      "after": "2996dc74af61d02cc1616bd62957e0bb72494248023802ec458b136eeeb8b18f",
+      "after": "383907ace9d4ca4a8bafb8fe2f26399562ffc252383a15e7b69af56e93d543e9",
       "before": null
     },
     "App/Views/PlayerView.swift": {
@@ -181,7 +181,7 @@
     "overlay/App/Resources/Web/mouse-touch.js": "11a43f776f318567a0166930a88b5728f62153d8c39e90ccbf406bcb1aaa22e3",
     "overlay/App/Resources/Web/shell.css": "40fa90b39c3645a38218f4e6f4f2e21c803049776efe9821de67521faee5cc4c",
     "overlay/App/Resources/Web/shell.js": "2f6b1d0bfce8ba8f52610696889f7daa4493708d0ed687afb24c73fe98501932",
-    "overlay/App/Views/DraggablePlayerMenu.swift": "2996dc74af61d02cc1616bd62957e0bb72494248023802ec458b136eeeb8b18f",
+    "overlay/App/Views/DraggablePlayerMenu.swift": "383907ace9d4ca4a8bafb8fe2f26399562ffc252383a15e7b69af56e93d543e9",
     "overlay/App/Views/PlayerView.swift": "5fed34592c1ef01f1d3fd46144d203d3bb60bfb714f6745f323c7e72cbbf1790",
     "overlay/Tests/MouseTouchRuntimeTests.swift": "29ecbfa862081af818f4bd2a8e3c60ecb503f08cb5753e5bfcd2acb1ff0e2746",
     "overlay/Tests/TouchControlSettingsTests.swift": "6e67b11106ba55827e336880b71ed72a9b8170ce602eeb358705224fbd0d974e",

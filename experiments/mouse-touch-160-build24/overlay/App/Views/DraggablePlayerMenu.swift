@@ -20,12 +20,19 @@ struct DraggablePlayerMenu: View {
             .contentShape(Circle())
             // A recognized drag wins exclusively, even if it returns to its start.
             .gesture(DragGesture(minimumDistance: 8, coordinateSpace: .global)
-                .updating($translation) { value, state, _ in state = value.translation }
-                .onEnded { value in
-                    position = layout.normalized(CGPoint(x: origin.x + value.translation.width,
-                                                         y: origin.y + value.translation.height))
+                .exclusively(before: TapGesture())
+                .updating($translation) { value, state, _ in
+                    if case .first(let drag) = value { state = drag.translation }
                 }
-                .exclusively(before: TapGesture().onEnded { action() }))
+                .onEnded { value in
+                    switch value {
+                    case .first(let drag):
+                        position = layout.normalized(CGPoint(x: origin.x + drag.translation.width,
+                                                             y: origin.y + drag.translation.height))
+                    case .second:
+                        action()
+                    }
+                })
             .accessibilityLabel(L10n.text("Game menu"))
             .accessibilityHint(L10n.text("Drag to move. Tap to open the game menu."))
             .accessibilityIdentifier("player-menu")
