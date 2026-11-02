@@ -26,6 +26,12 @@ final class DraggablePlayerMenuUITests: XCTestCase {
         let menu = app.buttons["player-menu"].firstMatch
         XCTAssertTrue(menu.waitForExistence(timeout: 30))
         XCTAssertTrue(LibraryNavigation.wait { menu.isHittable })
+        // Check actual touch reachability before diagnosing drag recognition.
+        menu.tap()
+        XCTAssertTrue(app.buttons["player-resume"].firstMatch.waitForExistence(timeout: 10),
+                      "Initial menu tap did not open: value=\(String(describing: menu.value)), frame=\(menu.frame)")
+        app.buttons["player-resume"].firstMatch.tap()
+        XCTAssertTrue(LibraryNavigation.wait { menu.isHittable })
         // Do not start a gesture while the player's presentation is still settling.
         var lastFrame = CGRect.zero
         var stableReads = 0
@@ -41,6 +47,7 @@ final class DraggablePlayerMenuUITests: XCTestCase {
         menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: target)
         let moved = LibraryNavigation.wait { abs(menu.frame.midX - original.midX) > 30 }
+        print("MOUSE_MENU_CALLBACK value=\(String(describing: menu.value))")
         print("MOUSE_MENU_AFTER app=\(app.frame) menu=\(menu.frame) original=\(original)")
         if !moved { print("MOUSE_MENU_FAILURE_TREE\n\(app.debugDescription)") }
         XCTAssertTrue(moved, "Drag did not change horizontal menu position: before=\(original), after=\(menu.frame), app=\(app.frame)")

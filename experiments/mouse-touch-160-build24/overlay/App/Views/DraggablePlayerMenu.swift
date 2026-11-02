@@ -53,12 +53,16 @@ private struct PlayerMenuButton: UIViewRepresentable {
         button.accessibilityIdentifier = "player-menu"
         button.accessibilityLabel = L10n.text("Game menu")
         button.accessibilityHint = L10n.text("Drag to move. Tap to open the game menu.")
-        button.addTarget(context.coordinator, action: #selector(Coordinator.tapped), for: .touchUpInside)
+        button.addTarget(context.coordinator, action: #selector(Coordinator.tapped(_:)), for: .touchUpInside)
         let pan = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.panned(_:)))
         pan.minimumNumberOfTouches = 1
         pan.maximumNumberOfTouches = 1
         pan.cancelsTouchesInView = true
         button.addGestureRecognizer(pan)
+        #if DEBUG
+        button.accessibilityValue = "menu-touch-idle"
+        button.addTarget(context.coordinator, action: #selector(Coordinator.touchDown(_:)), for: .touchDown)
+        #endif
         return button
     }
 
@@ -72,12 +76,24 @@ private struct PlayerMenuButton: UIViewRepresentable {
         var parent: PlayerMenuButton
         init(_ parent: PlayerMenuButton) { self.parent = parent }
 
-        @objc func tapped() { parent.action() }
+        @objc func tapped(_ sender: UIButton) {
+            #if DEBUG
+            sender.accessibilityValue = "menu-touch-tapped"
+            #endif
+            parent.action()
+        }
+
+        #if DEBUG
+        @objc func touchDown(_ sender: UIButton) { sender.accessibilityValue = "menu-touch-down" }
+        #endif
 
         @objc func panned(_ gesture: UIPanGestureRecognizer) {
             // Window coordinates remain stable while the small button moves.
             let point = gesture.translation(in: gesture.view?.window)
             let delta = CGSize(width: point.x, height: point.y)
+            #if DEBUG
+            gesture.view?.accessibilityValue = "menu-pan-\(gesture.state.rawValue)-\(point.x)-\(point.y)"
+            #endif
             switch gesture.state {
             case .began, .changed: parent.changed(delta)
             case .ended: parent.ended(delta)
