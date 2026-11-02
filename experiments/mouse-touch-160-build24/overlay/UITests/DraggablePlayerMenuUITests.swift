@@ -96,3 +96,4 @@ final class DraggablePlayerMenuUITests: XCTestCase {
         XCTAssertLessThanOrEqual(frame.maxY, bounds.maxY, file: file, line: line)
     }
 }
+
