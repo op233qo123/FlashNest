@@ -157,7 +157,7 @@
       "before": null
     },
     "scripts/test_mouse_touch_runtime.py": {
-      "after": "dfc5f0d01c7ee4dace4742ab8c8ee46af77fc5829085e2b22cd20a2ac7663688",
+      "after": "6c7aed7f9aa2f517dd96589383a0ba8e6f648fb249e3357949b76c9eb267bcea",
       "before": null
     }
   },
@@ -190,7 +190,7 @@
     "overlay/scripts/mouse_touch_dom_fixture.html": "35501027bed134176c080918fd444b1de8152c5f35e229b6305c8e8aa7aa7eff",
     "overlay/scripts/test_mouse_shell_contract.js": "87918ac566e436aa82efc73ba0aa03890195e0107aa4efe3077b010d5229a78b",
     "overlay/scripts/test_mouse_touch.js": "cb7a7d97e29a3b6add09abb61e60d6827ca948b14d6b8e4a1d51c27ccd606ce3",
-    "overlay/scripts/test_mouse_touch_runtime.py": "dfc5f0d01c7ee4dace4742ab8c8ee46af77fc5829085e2b22cd20a2ac7663688",
+    "overlay/scripts/test_mouse_touch_runtime.py": "6c7aed7f9aa2f517dd96589383a0ba8e6f648fb249e3357949b76c9eb267bcea",
     "stage.py": "a57a6541f7af31e0f1dabb80c3395bc18f15840b8995f887dfa77cae34a0eb16",
     "test_stage.py": "18643c6640bf935d57a7a5b2cc773c6ae75bc39e0fca1e1022cb25d68785eb1c"
   },

@@ -4,7 +4,7 @@ No user assets, downloads or mocks. Launches sandboxed Chromium (never --no-sand
 This supplements, never substitutes for, native WKWebView/device touch testing.
 Run after staging the delivered app/runtime plus mouse-touch overlay.
 """
-import functools, hashlib, http.server, json, os, pathlib, shutil, struct, sys, tempfile, threading
+import functools, hashlib, http.server, json, os, pathlib, shutil, struct, sys, tempfile, threading, time
 from playwright.sync_api import sync_playwright
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 def action(op, body=b''):
@@ -27,11 +27,15 @@ def fixture():
     bits='01110'+''.join(format(x,'014b') for x in (0,6400,0,4800));bits+='0'*(-len(bits)%8)
     body=int(bits,2).to_bytes(len(bits)//8,'big')+struct.pack('<HH',4*256,1)+tag(9,bytes([30,70,100]))+tag(12,code)+tag(1)+tag(0)
     return b'FWS\x07'+struct.pack('<I',len(body)+8)+body
-def wait(page, expression, **kwargs):
-    try:return page.wait_for_function(expression, **kwargs)
-    except Exception:
-        print(json.dumps({'failureEvidence':page.evaluate("({raw:window.__raw,events:window.__dom,diagnostics:window.__diag})")}), file=sys.stderr)
-        raise
+def wait(page, expression, *, timeout=30000, arg=None):
+    # Poll through the automation protocol, not Playwright's in-page eval-based
+    # waitForFunction. The production CSP stays unchanged; bypass_csp is never set.
+    deadline=time.monotonic()+timeout/1000
+    while time.monotonic()<deadline:
+        if page.evaluate(expression, arg):return
+        time.sleep(0.05)
+    print(json.dumps({'failureEvidence':page.evaluate("({raw:window.__raw,events:window.__dom,diagnostics:window.__diag})")}), file=sys.stderr)
+    raise TimeoutError('Runtime condition did not become true: '+expression)
 class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*args): pass
 EVENT = """([type,id,x,y])=>{const c=document.querySelector('ruffle-player').shadowRoot.querySelector('canvas');c.dispatchEvent(new PointerEvent(type,{pointerId:id,pointerType:'touch',clientX:x,clientY:y,bubbles:true,composed:true,cancelable:true}));}"""
