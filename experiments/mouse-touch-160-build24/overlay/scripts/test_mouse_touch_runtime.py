@@ -40,12 +40,12 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*args): pass
 EVENT = """([type,id,x,y])=>{const c=document.querySelector('ruffle-player').shadowRoot.querySelector('canvas');c.dispatchEvent(new PointerEvent(type,{pointerId:id,pointerType:'touch',clientX:x,clientY:y,bubbles:true,composed:true,cancelable:true}));}"""
 with tempfile.TemporaryDirectory(prefix='flashnest-mouse-') as td:
-    web=pathlib.Path(td)/'web';shutil.copytree(ROOT/'App/Resources/Web',web)
+    web=pathlib.Path(td)/'fixture/web';shutil.copytree(ROOT/'App/Resources/Web',web)
     assert (web/'runtime/ruffle.js').exists(),'Stage the hash-verified delivered runtime first'
     runtime_files=json.loads((ROOT/'runtime.files.json').read_text())
     assert len(runtime_files)==12
     assert {p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (web/'runtime').iterdir() if p.is_file()}==runtime_files
-    game=pathlib.Path(td)/'games/11111111-1111-4111-8111-111111111111';game.mkdir(parents=True);(game/'main.swf').write_bytes(fixture())
+    game=pathlib.Path(td)/'fixture/games/11111111-1111-4111-8111-111111111111';game.mkdir(parents=True);(game/'main.swf').write_bytes(fixture())
     server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=td));threading.Thread(target=server.serve_forever,daemon=True).start()
     try:
         with sync_playwright() as p:
@@ -69,7 +69,7 @@ with tempfile.TemporaryDirectory(prefix='flashnest-mouse-') as td:
                         wasm[name]=hashlib.sha256(r.body()).hexdigest()
                 page.on('response',response)
                 page.add_init_script("window.__diag=[];window.webkit={messageHandlers:{flashnest:{postMessage:m=>window.__diag.push(m)}}}")
-                page.goto(f'http://127.0.0.1:{server.server_port}/web/index.html?package=11111111-1111-4111-8111-111111111111&entry=main.swf&mouseTouch=1&renderScale={sampling}')
+                page.goto(f'http://127.0.0.1:{server.server_port}/fixture/web/index.html?package=11111111-1111-4111-8111-111111111111&entry=main.swf&mouseTouch=1&renderScale={sampling}')
                 wait(page,"window.__diag.some(m=>m.type==='loaded')",timeout=60000)
                 page.get_by_role('button',name='Play / enable audio').click()
                 wait(page,"window.__diag.some(m=>m.message==='SWF: READY')",timeout=15000)
