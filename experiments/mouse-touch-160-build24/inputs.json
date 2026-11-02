@@ -1,0 +1,200 @@
+{
+  "additionalNativeTests": [
+    [
+      "UnloadWKSmokeTests",
+      "testAttachedLoaderUnloadsAndContinuesInWKWebView"
+    ],
+    [
+      "UnloadWKSmokeTests",
+      "testMovedRemovedLoaderUnloadsAndContinuesInWKWebView"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testDefaultControlsAreOneSixButtonSetWithVisibleTranslucentOverlay"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testLegacyPreferencesKeepCustomControlsAndDefaultMouseTouchOff"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testMenuRemainsInsideSafeAreaAcrossRotationAndExtremeDrags"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testOpacityAndStoredPositionsAreClamped"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testPreferencesRoundTripAndAreIsolatedByGame"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testAdditionalButtonsAreBoundedAndInvalidKeyPreferencesRecover"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testOrientationSpecificPositionsAndSafeAreaClamping"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testSameKeyHasIndependentOwnersAndOnlyLastReleaseSendsKeyUp"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testDirectionAndActionCanBeHeldTogetherAndCancelReleasesEachOnce"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testForegroundCannotRestartPlayerUnderSaveSheetEditorOrClose"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testInactiveAndBackgroundPreservePlayingOrManualPauseIntent"
+    ],
+    [
+      "TouchControlSettingsTests",
+      "testChangingHeldOwnerMappingReleasesOldKeyBeforeNewKey"
+    ],
+    [
+      "MouseTouchRuntimeTests",
+      "testDefaultOffToggleCornersClicksAndCancellationInBundledRuntime"
+    ],
+    [
+      "InputFocusRuntimeTests",
+      "testVirtualKeyRefocusesPlayerAfterChildSceneAndExternalBlur"
+    ]
+  ],
+  "additionalTestSourceFiles": {
+    "InputFocusRuntimeTests": "Tests/InputFocusRuntimeTests.swift",
+    "MouseTouchRuntimeTests": "Tests/MouseTouchRuntimeTests.swift",
+    "TouchControlSettingsTests": "Tests/TouchControlSettingsTests.swift",
+    "UnloadWKSmokeTests": "Tests/UnloadWKSmokeTests.swift"
+  },
+  "additionalUITestSourceFiles": {
+    "DraggablePlayerMenuUITests": "UITests/DraggablePlayerMenuUITests.swift"
+  },
+  "additionalUITests": [
+    [
+      "DraggablePlayerMenuUITests",
+      "testDragDoesNotOpenMenuAndTapWorksAfterRotationWithControlsHidden"
+    ]
+  ],
+  "build": "24",
+  "deliveredCommit": "9a93ade1c7dd79382a06ddcb7925282a2e7c5ea8",
+  "formalRelease": false,
+  "overlay": {
+    "App/Info-Debug.plist": {
+      "after": "6c57ff8e362f9be1fca060dbb373aaf0abdb21f3c58a8a0c107dc8076f938287",
+      "before": "90da4a56bd61313a80a0fc1f8e07d151ff8ce898f2cfc61bd5960e111df81c16"
+    },
+    "App/Player/PlayerSession.swift": {
+      "after": "47af270c45aafdc5b04520ee6a4d1a15b0a772456cab5bbce55c7c438bb71ea4",
+      "before": "16db68ab205e8e0ffd9a6e273a45bcec4b5b6b9d0547af95c055fdd35a6cca72"
+    },
+    "App/Player/Touch/TouchControlSettings.swift": {
+      "after": "42cd44cf55641371291dd5de4e990b56058ca2eb0b572661d2c256efbfbcc19a",
+      "before": "4018f22370a70b5a82146cf4b56fd61316d4cdb1da32c41c9f73fe7b7237c14a"
+    },
+    "App/Resources/Localization/en.lproj/Localizable.strings": {
+      "after": "371af44b3158ab5bc60a51281de2d57e00a940d83b1848b90b52e45f22ff0609",
+      "before": "2dc6542914f9e5d2151b29524edef18cf28ef38a81a7ca47d3c95054eece46e5"
+    },
+    "App/Resources/Localization/zh-Hans.lproj/Localizable.strings": {
+      "after": "1b968caf1e8afc990738bfd17ce8c6ad459bab00e2816b42eabe3468ffcbfa64",
+      "before": "e01e9c953ebe36e79761c07350415476235f491a37f811514ccee73aef9d93e2"
+    },
+    "App/Resources/Web/index.html": {
+      "after": "39ee9811d6be668325145ee6f06e4e490aa41cbf1569319f03e4cd7cb3d52d1b",
+      "before": "1dd192554d511b84546e9b6f770cedc038273032bf4f8949f93df161a9f91435"
+    },
+    "App/Resources/Web/mouse-touch.js": {
+      "after": "11a43f776f318567a0166930a88b5728f62153d8c39e90ccbf406bcb1aaa22e3",
+      "before": null
+    },
+    "App/Resources/Web/shell.css": {
+      "after": "40fa90b39c3645a38218f4e6f4f2e21c803049776efe9821de67521faee5cc4c",
+      "before": "4b359ebc5dd677a94f0b1d1ea65a41405008b323ca1cb0b0c7e8dcbf01c62773"
+    },
+    "App/Resources/Web/shell.js": {
+      "after": "2f6b1d0bfce8ba8f52610696889f7daa4493708d0ed687afb24c73fe98501932",
+      "before": "035c79d20fefcb16d4dba4e97ab6125506717b0fcf0514b24523dcf223d72257"
+    },
+    "App/Views/DraggablePlayerMenu.swift": {
+      "after": "2996dc74af61d02cc1616bd62957e0bb72494248023802ec458b136eeeb8b18f",
+      "before": null
+    },
+    "App/Views/PlayerView.swift": {
+      "after": "5fed34592c1ef01f1d3fd46144d203d3bb60bfb714f6745f323c7e72cbbf1790",
+      "before": "c307c2c03fae6ba5a5f79ac682c54cd009521ecb1e9761f7cc514315a10f5a91"
+    },
+    "Tests/MouseTouchRuntimeTests.swift": {
+      "after": "29ecbfa862081af818f4bd2a8e3c60ecb503f08cb5753e5bfcd2acb1ff0e2746",
+      "before": null
+    },
+    "Tests/TouchControlSettingsTests.swift": {
+      "after": "6e67b11106ba55827e336880b71ed72a9b8170ce602eeb358705224fbd0d974e",
+      "before": "622d63ea0dd9640e5892a160da254a60b2d2673c5551864b54df8a419e048c9c"
+    },
+    "UITests/DraggablePlayerMenuUITests.swift": {
+      "after": "0cf55dfa90f94f6676fc882abb5e6c3667c87de30d33307ea60ec8efb6a49a69",
+      "before": null
+    },
+    "project.yml": {
+      "after": "bf873570629e64287cdaea00b484d5ce709cd956cd27e55063a9d5895f6ee21c",
+      "before": "0624d22302d6bacec9d7313255a4d88b79002e5f37ce2372e10cafbf1626fecb"
+    },
+    "scripts/mouse_touch_dom_fixture.html": {
+      "after": "35501027bed134176c080918fd444b1de8152c5f35e229b6305c8e8aa7aa7eff",
+      "before": null
+    },
+    "scripts/test_mouse_shell_contract.js": {
+      "after": "87918ac566e436aa82efc73ba0aa03890195e0107aa4efe3077b010d5229a78b",
+      "before": null
+    },
+    "scripts/test_mouse_touch.js": {
+      "after": "cb7a7d97e29a3b6add09abb61e60d6827ca948b14d6b8e4a1d51c27ccd606ce3",
+      "before": null
+    },
+    "scripts/test_mouse_touch_runtime.py": {
+      "after": "dfc5f0d01c7ee4dace4742ab8c8ee46af77fc5829085e2b22cd20a2ac7663688",
+      "before": null
+    }
+  },
+  "recipeFiles": {
+    "README.md": "3a483449a88e2e94a4b416c7bc874add27daccbbf530cc5150cb5df5db26ce59",
+    "build/run_ios_tests.py": "466af7b63bde8913c6618fbb597ac9fbc251c0b8285fb6aa9c66a87859a271a8",
+    "build/select_toolchain.py": "1d8fc224d4321f5e1ac0f5a5c69a4d3298a6e5d5df3d310e39c31aaad0f940af",
+    "build/verify_ipa.py": "8982f7a74af8a7691d6d4924b4f0fe6bb1deb79ce8f9f6d2e2db16d477d21e08",
+    "build/workflow.yml": "cbbaddfcd6a2e28611aaab225024a0db4e2fcd753ae04037980a8ce178949085",
+    "case-inputs-reference.json": "8c7b6aafcbcfbfa961d24c645f8d9e290a6ea5407b7c8d9948d879a6800b911c",
+    "fps-adapter.json": "b7fbcc4e610b14369776ebc5d2a35d82dc8d011c0f40f3d2a71ba7a73c1e3548",
+    "fps/make_fixture.py": "6e88981256e83c10d2178835bebdc4ce7dfda5cc19f619d2b15b3c2ec71ee588",
+    "fps/probe.html": "77196f6b2df0cc8fcd1036322a194e4a3fb3aebe609ad630d43aff8af27e3d14",
+    "fps/run_fps.py": "0f84632a6319c1819e32d1a2f905a80ee88b9ae799fda97848ba0c2a798ab98c",
+    "overlay/App/Info-Debug.plist": "6c57ff8e362f9be1fca060dbb373aaf0abdb21f3c58a8a0c107dc8076f938287",
+    "overlay/App/Player/PlayerSession.swift": "47af270c45aafdc5b04520ee6a4d1a15b0a772456cab5bbce55c7c438bb71ea4",
+    "overlay/App/Player/Touch/TouchControlSettings.swift": "42cd44cf55641371291dd5de4e990b56058ca2eb0b572661d2c256efbfbcc19a",
+    "overlay/App/Resources/Localization/en.lproj/Localizable.strings": "371af44b3158ab5bc60a51281de2d57e00a940d83b1848b90b52e45f22ff0609",
+    "overlay/App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "1b968caf1e8afc990738bfd17ce8c6ad459bab00e2816b42eabe3468ffcbfa64",
+    "overlay/App/Resources/Web/index.html": "39ee9811d6be668325145ee6f06e4e490aa41cbf1569319f03e4cd7cb3d52d1b",
+    "overlay/App/Resources/Web/mouse-touch.js": "11a43f776f318567a0166930a88b5728f62153d8c39e90ccbf406bcb1aaa22e3",
+    "overlay/App/Resources/Web/shell.css": "40fa90b39c3645a38218f4e6f4f2e21c803049776efe9821de67521faee5cc4c",
+    "overlay/App/Resources/Web/shell.js": "2f6b1d0bfce8ba8f52610696889f7daa4493708d0ed687afb24c73fe98501932",
+    "overlay/App/Views/DraggablePlayerMenu.swift": "2996dc74af61d02cc1616bd62957e0bb72494248023802ec458b136eeeb8b18f",
+    "overlay/App/Views/PlayerView.swift": "5fed34592c1ef01f1d3fd46144d203d3bb60bfb714f6745f323c7e72cbbf1790",
+    "overlay/Tests/MouseTouchRuntimeTests.swift": "29ecbfa862081af818f4bd2a8e3c60ecb503f08cb5753e5bfcd2acb1ff0e2746",
+    "overlay/Tests/TouchControlSettingsTests.swift": "6e67b11106ba55827e336880b71ed72a9b8170ce602eeb358705224fbd0d974e",
+    "overlay/UITests/DraggablePlayerMenuUITests.swift": "0cf55dfa90f94f6676fc882abb5e6c3667c87de30d33307ea60ec8efb6a49a69",
+    "overlay/project.yml": "bf873570629e64287cdaea00b484d5ce709cd956cd27e55063a9d5895f6ee21c",
+    "overlay/scripts/mouse_touch_dom_fixture.html": "35501027bed134176c080918fd444b1de8152c5f35e229b6305c8e8aa7aa7eff",
+    "overlay/scripts/test_mouse_shell_contract.js": "87918ac566e436aa82efc73ba0aa03890195e0107aa4efe3077b010d5229a78b",
+    "overlay/scripts/test_mouse_touch.js": "cb7a7d97e29a3b6add09abb61e60d6827ca948b14d6b8e4a1d51c27ccd606ce3",
+    "overlay/scripts/test_mouse_touch_runtime.py": "dfc5f0d01c7ee4dace4742ab8c8ee46af77fc5829085e2b22cd20a2ac7663688",
+    "stage.py": "a57a6541f7af31e0f1dabb80c3395bc18f15840b8995f887dfa77cae34a0eb16",
+    "test_stage.py": "18643c6640bf935d57a7a5b2cc773c6ae75bc39e0fca1e1022cb25d68785eb1c"
+  },
+  "runtimeChanged": false,
+  "schemaVersion": 1,
+  "version": "1.6.0"
+}

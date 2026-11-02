@@ -1,0 +1,129 @@
+name: Experimental FlashNest 1.6.0 mouse touch IPA
+on:
+  push:
+    branches: [experiment/case-compatible-assets-build23]
+    paths:
+      - 'experiments/mouse-touch-160-build24/**'
+      - '.github/workflows/build-mouse-touch-160.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-mouse-touch-160
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 110
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PREP: recipe/experiments/mouse-touch-160-build24
+      CASE: case-checkout/experiments/case-compatible-assets-build23
+      FLASHNEST_DELIVERED_CHECKOUT: delivered-checkout
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {path: recipe, persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: 9a93ade1c7dd79382a06ddcb7925282a2e7c5ea8, path: delivered-checkout, persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: c4cad276f1a79caffd012bcfcb6eb260a9e3492f, path: case-checkout, persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: cc6c4bf285a201d9c1a827140662c54606027d10, path: baseline-recipe, persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: 9bc000e37695696f2427b25fe08efe4993bf22e5, path: source-checkout, persist-credentials: false}
+      - name: Verify new recipe and exact Xcode16.4 iOS18.5
+        run: |
+          set -euo pipefail
+          cmp "$PREP/build/workflow.yml" recipe/.github/workflows/build-mouse-touch-160.yml
+          python3 "$PREP/stage.py" preflight
+          python3 "$PREP/test_stage.py"
+          python3 "$PREP/build/select_toolchain.py" --output toolchain-evidence/toolchain.json
+      - name: Fetch exact delivered engine artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir engine-input
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368 > engine-input/metadata.json
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368/zip > engine-input/engine.zip
+      - name: Validate frozen delivered stage then apply explicit1.6 overlay
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 "$PREP/stage.py" stage --baseline-checkout baseline-recipe --source-checkout source-checkout --case-checkout case-checkout --engine-archive engine-input/engine.zip --engine-metadata engine-input/metadata.json --output mouse-stage
+          mkdir -p mouse-stage/evidence
+          python3 delivered-checkout/experiments/loader-unload-ipa/test_runtime_metadata.py --app mouse-stage/app | tee mouse-stage/evidence/runtime-metadata.log
+      - name: Local contracts and localization on exact staged App
+        run: |
+          set -euo pipefail
+          cd mouse-stage/app
+          node scripts/test_mouse_touch.js
+          node scripts/test_shell.js
+          node scripts/test_shell.js zh-Hans
+          node scripts/test_mouse_shell_contract.js
+          node scripts/test_mouse_shell_contract.js zh-Hans
+          python3 scripts/test_localization.py
+          python3 scripts/test_licenses.py
+      - name: Case resolver, unchanged engine cadence, actual mouse runtime matrix
+        env:
+          CHROMIUM_EXECUTABLE: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+        run: |
+          set -euo pipefail
+          bash "$CASE/path-tests/run_native_tests.sh" "$PWD/mouse-stage/app/App/Server/HTTPProtocol.swift" "$PWD/mouse-stage/evidence/path-result.json"
+          python3 -m venv "$RUNNER_TEMP/mouse-browser"
+          "$RUNNER_TEMP/mouse-browser/bin/pip" install playwright==1.51.0
+          test -x "$CHROMIUM_EXECUTABLE"
+          "$RUNNER_TEMP/mouse-browser/bin/python" "$PREP/fps/run_fps.py" --runtime mouse-stage/app/App/Resources/Web/runtime --inputs mouse-stage/cadence-inputs.json --output mouse-stage/evidence/fps-result.json
+          "$RUNNER_TEMP/mouse-browser/bin/python" mouse-stage/app/scripts/test_mouse_touch_runtime.py | tee mouse-stage/evidence/mouse-runtime.json
+          python3 "$PREP/stage.py" verify --output mouse-stage --baseline-checkout baseline-recipe
+      - name: Generate project with verified XcodeGen and locked dependencies
+        working-directory: mouse-stage/app
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 120 https://github.com/yonaskolb/XcodeGen/releases/download/2.42.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          echo 'a760b4bf97460341316a2c00d8c87b2946c6c2729eb57e9a72abb3ef7bc0ef82  '"$RUNNER_TEMP/xcodegen.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-mouse"
+          "$RUNNER_TEMP/xcodegen-mouse/xcodegen/bin/xcodegen" generate
+          mkdir -p FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved FlashNest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          xcodebuild -resolvePackageDependencies -project FlashNest.xcodeproj -scheme FlashNest -disableAutomaticPackageResolution
+      - name: Actual expanded native WebKit and import UI regressions
+        run: |
+          set -euo pipefail
+          python3 "$PREP/build/run_ios_tests.py" --app mouse-stage/app --output mouse-stage/evidence/ios --baseline-checkout baseline-recipe --stage-receipt mouse-stage/mouse-staging.json --toolchain toolchain-evidence/toolchain.json
+          python3 "$PREP/stage.py" verify --output mouse-stage --baseline-checkout baseline-recipe
+      - name: Build unsigned Release device App
+        working-directory: mouse-stage/app
+        run: |
+          set -euo pipefail
+          xcodebuild -project FlashNest.xcodeproj -scheme FlashNest -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - name: Package and independently verify experimental1.6 IPA
+        run: |
+          set -euo pipefail
+          mkdir mouse-stage/artifacts
+          bash mouse-stage/app/scripts/package_unsigned.sh mouse-stage/app/build/Build/Products/Release-iphoneos/FlashNest.app mouse-stage/artifacts/FlashNest-1.6.0-build24-mouse-touch-experimental-unsigned.ipa
+          python3 "$PREP/build/verify_ipa.py" --ipa mouse-stage/artifacts/FlashNest-1.6.0-build24-mouse-touch-experimental-unsigned.ipa --app mouse-stage/app --stage-receipt mouse-stage/mouse-staging.json --native-dir mouse-stage/evidence/ios --baseline-checkout baseline-recipe --case-checkout case-checkout --toolchain toolchain-evidence/toolchain.json --path-evidence mouse-stage/evidence/path-result.json --fps-evidence mouse-stage/evidence/fps-result.json --browser-evidence mouse-stage/evidence/mouse-runtime.json --output mouse-stage/artifacts/mouse-ipa-provenance.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: FlashNest-1.6.0-build24-mouse-touch-experimental-unsigned
+          path: mouse-stage/artifacts/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-mouse-touch-160-evidence
+          path: |
+            toolchain-evidence/
+            mouse-stage/*staging.json
+            mouse-stage/engine-reuse.json
+            mouse-stage/cadence-inputs.json
+            mouse-stage/evidence/*.json
+            mouse-stage/evidence/*.plist
+            mouse-stage/evidence/*.log
+            mouse-stage/evidence/ios/*.json
+            mouse-stage/evidence/ios/*.log
+          if-no-files-found: warn
+          retention-days: 7
