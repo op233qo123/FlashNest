@@ -125,11 +125,19 @@ def run(app, output, baseline, stage_receipt, toolchain_path):
             process = subprocess.run(args, cwd=app, stdout=log, stderr=subprocess.STDOUT, timeout=2100)
         raw = subprocess.check_output(['xcrun', 'xcresulttool', 'get', 'test-results', 'summary', '--path', str(result)], timeout=60)
         (output / 'native-summary.json').write_bytes(raw)
-        e.need(process.returncode == 0, 'Selected native tests failed')
-        native = verify_summary(json.loads(raw), (output / 'native.log').read_text(), expected, device, 'FlashNestTests', toolchain['runtimeVersion'])
-        native.update(summarySHA256=e.sha(raw), resultBundle='native.xcresult')
+        native_error = None
+        native = None
+        try:
+            e.need(process.returncode == 0, 'Selected native tests failed')
+            native = verify_summary(json.loads(raw), (output / 'native.log').read_text(), expected, device, 'FlashNestTests', toolchain['runtimeVersion'])
+            native.update(summarySHA256=e.sha(raw), resultBundle='native.xcresult')
+        except ValueError as error:
+            native_error = str(error)
+            print('Native lane failed; collecting the independent UI lane before enforcing aggregate failure:', native_error)
+        e.write(output / 'native-lane-status.json', {'passed': native_error is None, 'error': native_error, 'runID': os.environ.get('GITHUB_RUN_ID')})
         verify_identity()
         run_ui_lane(app, output, ui_config, {'diagnosticSourceFiles': effective}, device, release, helper, toolchain['runtimeVersion'])
+        e.need(native_error is None, 'Native lane failed; UI lane completed: ' + str(native_error))
         ui_raw = (output / 'ui-summary.json').read_bytes()
         ui = verify_summary(json.loads(ui_raw), (output / 'ui.log').read_text(), ui_expected, device, 'FlashNestUITests', toolchain['runtimeVersion'])
         ui.update(summarySHA256=e.sha(ui_raw), resultBundle='ui.xcresult')
