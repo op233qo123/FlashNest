@@ -137,7 +137,7 @@
       "before": "622d63ea0dd9640e5892a160da254a60b2d2673c5551864b54df8a419e048c9c"
     },
     "UITests/DraggablePlayerMenuUITests.swift": {
-      "after": "0cf55dfa90f94f6676fc882abb5e6c3667c87de30d33307ea60ec8efb6a49a69",
+      "after": "ded3cd0913d05fcd3dfa33b757beead0f30b03c712531f05e93f362375e57568",
       "before": null
     },
     "project.yml": {
@@ -185,7 +185,7 @@
     "overlay/App/Views/PlayerView.swift": "5fed34592c1ef01f1d3fd46144d203d3bb60bfb714f6745f323c7e72cbbf1790",
     "overlay/Tests/MouseTouchRuntimeTests.swift": "29ecbfa862081af818f4bd2a8e3c60ecb503f08cb5753e5bfcd2acb1ff0e2746",
     "overlay/Tests/TouchControlSettingsTests.swift": "6e67b11106ba55827e336880b71ed72a9b8170ce602eeb358705224fbd0d974e",
-    "overlay/UITests/DraggablePlayerMenuUITests.swift": "0cf55dfa90f94f6676fc882abb5e6c3667c87de30d33307ea60ec8efb6a49a69",
+    "overlay/UITests/DraggablePlayerMenuUITests.swift": "ded3cd0913d05fcd3dfa33b757beead0f30b03c712531f05e93f362375e57568",
     "overlay/project.yml": "bf873570629e64287cdaea00b484d5ce709cd956cd27e55063a9d5895f6ee21c",
     "overlay/scripts/mouse_touch_dom_fixture.html": "35501027bed134176c080918fd444b1de8152c5f35e229b6305c8e8aa7aa7eff",
     "overlay/scripts/test_mouse_shell_contract.js": "87918ac566e436aa82efc73ba0aa03890195e0107aa4efe3077b010d5229a78b",

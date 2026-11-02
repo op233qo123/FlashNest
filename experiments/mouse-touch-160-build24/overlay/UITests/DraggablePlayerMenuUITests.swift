@@ -26,11 +26,24 @@ final class DraggablePlayerMenuUITests: XCTestCase {
         let menu = app.buttons["player-menu"].firstMatch
         XCTAssertTrue(menu.waitForExistence(timeout: 30))
         XCTAssertTrue(LibraryNavigation.wait { menu.isHittable })
+        // Do not start a gesture while the player's presentation is still settling.
+        var lastFrame = CGRect.zero
+        var stableReads = 0
+        XCTAssertTrue(LibraryNavigation.wait {
+            let frame = menu.frame
+            stableReads = frame == lastFrame ? stableReads + 1 : 0
+            lastFrame = frame
+            return stableReads >= 4 && menu.isHittable
+        }, "Menu did not settle: app=\(app.frame), menu=\(menu.frame)")
         let original = menu.frame
+        print("MOUSE_MENU_BEFORE app=\(app.frame) menu=\(original)")
         let target = app.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.35))
         menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: target)
-        XCTAssertTrue(LibraryNavigation.wait { abs(menu.frame.midX - original.midX) > 30 })
+        let moved = LibraryNavigation.wait { abs(menu.frame.midX - original.midX) > 30 }
+        print("MOUSE_MENU_AFTER app=\(app.frame) menu=\(menu.frame) original=\(original)")
+        if !moved { print("MOUSE_MENU_FAILURE_TREE\n\(app.debugDescription)") }
+        XCTAssertTrue(moved, "Drag did not change horizontal menu position: before=\(original), after=\(menu.frame), app=\(app.frame)")
         XCTAssertFalse(app.buttons["player-resume"].firstMatch.exists, "Dragging must not be recognized as menu tap")
         assertInsideScreen(menu, app: app)
         menu.tap()
