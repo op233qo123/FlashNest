@@ -3,7 +3,16 @@
 import argparse,json,os,subprocess
 from pathlib import Path
 SUPPORTED=[('16.4','18.5')]
-def cmd(args,env):return subprocess.check_output(args,env=env,text=True,stderr=subprocess.STDOUT,timeout=90).strip()
+def cmd(args,env):
+ # CoreSimulator's first inventory may stall while its service cold-starts.
+ # Retry only read-only simctl inventory once; exact version checks stay intact.
+ limits = (90, 180) if args[:3] == ['xcrun', 'simctl', 'list'] else (90,)
+ for attempt, limit in enumerate(limits):
+  try:
+   return subprocess.check_output(args,env=env,text=True,stderr=subprocess.STDOUT,timeout=limit).strip()
+  except subprocess.TimeoutExpired:
+   if attempt + 1 == len(limits): raise
+   print('CoreSimulator inventory cold-start timed out; retrying once with 180 seconds', flush=True)
 def select(output):
  inspected=[]
  for version,sdk in SUPPORTED:
