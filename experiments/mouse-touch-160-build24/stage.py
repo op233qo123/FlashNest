@@ -33,6 +33,11 @@ def config():
  c=read(ROOT/'inputs.json')
  need(c['version']=='1.6.0' and c['build']=='25' and c['deliveredCommit']==DELIVERED,'New recipe identity')
  need(c['formalRelease'] is False and c['runtimeChanged'] is False,'Experimental/no-engine-delta scope')
+ debug=plistlib.loads((ROOT/'overlay/App/Info-Debug.plist').read_bytes())
+ need(debug['CFBundleVersion']==c['build'] and debug['CFBundleShortVersionString']==c['version'],'Debug version differs from package identity')
+ project=(ROOT/'overlay/project.yml').read_text()
+ for key,value in [('CFBundleVersion',c['build']),('CURRENT_PROJECT_VERSION',c['build']),('CFBundleShortVersionString',c['version']),('MARKETING_VERSION',c['version'])]:
+  need((key+": '"+value+"'") in project,'Project version differs: '+key)
  need({p:h for p,h in inventory(ROOT).items() if p!='inputs.json'}==c['recipeFiles'],'Recipe closure mismatch')
  need(inventory(ROOT/'overlay')=={p:r['after'] for p,r in c['overlay'].items()},'Overlay bytes differ')
  for p in c['overlay']:
