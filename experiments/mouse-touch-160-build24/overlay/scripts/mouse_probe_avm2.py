@@ -8,10 +8,15 @@ def fixture():
     t, h, end = b'\xd0', b'\xd0\x30', b'\x47'
     get = lambda n: t + a.prop(n)
     set_ = lambda n, v: t + v + a.op(0x61, a.qname(n))
-    # Full-stage colored interactive surface: works before any hover/frame warm-up.
-    drawing = a.call(get('graphics'), 'beginFill', a.push(100))
-    drawing += a.call(get('graphics'), 'drawRect', a.push(0), a.push(0), a.op(0x25,320), a.op(0x25,240))
-    drawing += a.call(get('graphics'), 'endFill')
+    # A conventional interactive child, not graphics drawn on the special
+    # document-root MovieClip. Root listeners below receive its bubbled events.
+    surface = get('surface')
+    graphics = surface + a.prop('graphics')
+    drawing = set_('surface', a.op(0x60,a.qname('Sprite','flash.display'))+a.op(0x42,0))
+    drawing += a.call(graphics, 'beginFill', a.push(100))
+    drawing += a.call(graphics, 'drawRect', a.push(0), a.push(0), a.op(0x25,320), a.op(0x25,240))
+    drawing += a.call(graphics, 'endFill')
+    drawing += a.call(t, 'addChild', surface)
     events = ['mouseDown','mouseUp','click','rightMouseDown','rightMouseUp','rightClick']
     ctor = h+t+a.op(0x49,0)+drawing+set_('pressed',b'\x27')
     methods=[]
@@ -22,10 +27,15 @@ def fixture():
         if event=='mouseUp': code+=set_('pressed',b'\x27')
         methods.append((name,a.method(name,code+end,args=1)))
         ctor+=a.call(t,'addEventListener',a.push(event),get(name))
+        stage_name='stage_'+event
+        methods.append((stage_name,a.method(stage_name,h+a.trace('STAGE_EVENT:'+event)+end,args=1)))
+        ctor+=a.call(get('stage'),'addEventListener',a.push(event),get(stage_name))
     # Records whether a game using enterFrame ever observes the button held.
     frame=h+a.trace('FRAME_PRESSED',get('pressed'))+end
     methods.append(('onFrame',a.method('onFrame',frame,args=1)))
-    ctor+=a.call(t,'addEventListener',a.push('enterFrame'),get('onFrame'))+a.trace('READY')+end
+    ctor+=a.call(t,'addEventListener',a.push('enterFrame'),get('onFrame'))
+    ctor+=a.trace('SURFACE_GEOMETRY',surface+a.prop('width'),surface+a.prop('height'),surface+a.prop('mouseEnabled'))
+    ctor+=a.trace('PROBE_GEOMETRY',get('width'),get('height'),get('mouseEnabled'),get('mouseChildren'))+a.trace('READY')+end
     a.class_('MouseProbe',a.method('MouseProbe$iinit',ctor),methods)
     script=h+b'\x65\x00'
     for n,p in [('Object',''),('EventDispatcher','flash.events'),('DisplayObject','flash.display'),('InteractiveObject','flash.display'),('DisplayObjectContainer','flash.display'),('Sprite','flash.display'),('MovieClip','flash.display')]:

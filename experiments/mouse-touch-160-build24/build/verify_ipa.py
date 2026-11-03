@@ -141,14 +141,14 @@ def verify(a):
         e.need((row.get('viewport'),row.get('dpr'),row.get('sampling'))==expected and row.get('corners')==4 and row.get('leftClick') is True and row.get('rightDOMPair') is True,'Mouse pointer behavior matrix differs')
         wasm=row.get('selectedWasm');e.need(isinstance(wasm,dict) and wasm and all(n.endswith('.wasm') and staged['runtimeFiles'].get(n)==h for n,h in wasm.items()),'Actual browser WASM response differs')
     clicks=browser.get('swfClicks',{})
-    e.need(clicks.get('result')=='PASS' and clicks.get('actualShell') is True and clicks.get('actualSWFEvents') is True and clicks.get('browserTouch')=='CDP' and clicks.get('nativeTouchCertified') is False,'Actual shell SWF clicks not passed')
+    e.need(clicks.get('result')=='PASS' and clicks.get('actualShell') is True and clicks.get('actualSWFEvents') is True and clicks.get('browserTouch')=='CDP' and clicks.get('actualRenderer') in ('webgl','webgl2','experimental-webgl') and clicks.get('nativeTouchCertified') is False,'Actual shell SWF clicks not passed')
     e.need(clicks.get('head')==os.environ['GITHUB_SHA'] and clicks.get('runID')==os.environ['GITHUB_RUN_ID'] and clicks.get('runtimeFiles')==staged['runtimeFiles'],'SWF click evidence wrong source/run')
     expected_names=['first_canvas_tap_without_warmup_move','jitter_click_once','slide_never_clicks','first_tap_after_slide','first_tap_after_focus_loss','visible_right_button_swf_events','repeat_right_button_no_left_leak','transparent_right_button_swf_events','first_tap_after_pause_resume','first_tap_after_mode_toggle']
     click_rows=clicks.get('cases',[])
     e.need([row.get('name') for row in click_rows]==expected_names,'SWF click case inventory differs')
     for row in click_rows:
         expected=[] if row['name']=='slide_never_clicks' else ['EVENT:rightMouseDown','EVENT:rightMouseUp','EVENT:rightClick'] if 'right_button' in row['name'] else ['EVENT:mouseDown','EVENT:mouseUp','EVENT:click']
-        e.need(row.get('events')==expected and row.get('expected')==expected,'SWF click event mismatch: '+row['name'])
+        e.need(row.get('events')==expected and row.get('expected')==expected and row.get('stageEvents')==[event.replace('EVENT:','STAGE_EVENT:') for event in expected],'SWF click event mismatch: '+row['name'])
     for name in ['test_mouse_touch_runtime.py','mouse_clicks_runtime.py','mouse_probe_abc.py','mouse_probe_avm2.py']:
         e.need(clicks.get('sourceFiles',{}).get(name)==e.sha((app/'scripts'/name).read_bytes())==effective.get('scripts/'+name),'SWF probe source mismatch')
     selected=clicks.get('selectedWasm',{})

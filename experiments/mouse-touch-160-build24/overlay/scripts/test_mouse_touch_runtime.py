@@ -50,9 +50,9 @@ with tempfile.TemporaryDirectory(prefix='flashnest-mouse-') as td:
     server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=td));threading.Thread(target=server.serve_forever,daemon=True).start()
     try:
         with sync_playwright() as p:
-            executable=os.environ.get('CHROMIUM_EXECUTABLE')
-            if not executable and pathlib.Path('/usr/bin/chromium').exists(): executable='/usr/bin/chromium'
-            browser=p.chromium.launch(executable_path=executable,headless=True,chromium_sandbox=True,ignore_default_args=['--enable-unsafe-swiftshader','--unsafely-disable-devtools-self-xss-warnings'])
+            # Match the existing successful FPS gate: full Chrome channel selects
+            # new-headless on macOS. Keep every sandbox/GPU restriction unchanged.
+            browser=p.chromium.launch(channel='chrome',headless=True,chromium_sandbox=True,ignore_default_args=['--enable-unsafe-swiftshader','--unsafely-disable-devtools-self-xss-warnings'])
             cdp=browser.new_browser_cdp_session()
             arguments=cdp.send('Browser.getBrowserCommandLine')['arguments']
             forbidden={'--no-sandbox','--disable-setuid-sandbox','--disable-gpu-sandbox','--enable-unsafe-swiftshader','--unsafely-disable-devtools-self-xss-warnings'}
