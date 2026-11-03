@@ -27,7 +27,10 @@ final class TouchControlSettingsTests: XCTestCase {
     func testMenuRemainsInsideSafeAreaAcrossRotationAndExtremeDrags() {
         let portrait = PlayerMenuGeometry(size: CGSize(width: 390, height: 844), safeArea: EdgeInsets(top: 59, leading: 0, bottom: 34, trailing: 0))
         let landscape = PlayerMenuGeometry(size: CGSize(width: 844, height: 390), safeArea: EdgeInsets(top: 0, leading: 59, bottom: 21, trailing: 59))
-        for layout in [portrait, landscape] {
+        let noInset = PlayerMenuGeometry(size: CGSize(width: 375, height: 667), safeArea: EdgeInsets())
+        XCTAssertEqual(noInset.center(TouchControlPoint(x: 1, y: 0)).y, 66)
+        for layout in [portrait, landscape, noInset] {
+            XCTAssertGreaterThanOrEqual(layout.bounds.minY - 22, 44)
             for point in [CGPoint(x: -1000, y: -1000), CGPoint(x: 3000, y: 3000)] {
                 let clamped = layout.center(layout.normalized(point))
                 XCTAssertGreaterThanOrEqual(clamped.x - 22, layout.safeArea.leading)

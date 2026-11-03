@@ -62,6 +62,8 @@ private struct PlayerMenuButton: UIViewRepresentable {
         #if DEBUG
         button.accessibilityValue = "menu-touch-idle"
         button.addTarget(context.coordinator, action: #selector(Coordinator.touchDown(_:)), for: .touchDown)
+        button.addTarget(context.coordinator, action: #selector(Coordinator.touchCancelled(_:)), for: .touchCancel)
+        button.addTarget(context.coordinator, action: #selector(Coordinator.touchMoved(_:)), for: [.touchDragInside, .touchDragOutside])
         #endif
         return button
     }
@@ -85,6 +87,11 @@ private struct PlayerMenuButton: UIViewRepresentable {
 
         #if DEBUG
         @objc func touchDown(_ sender: UIButton) { sender.accessibilityValue = "menu-touch-down" }
+        @objc func touchCancelled(_ sender: UIButton) {
+            let states = sender.gestureRecognizers?.map { String($0.state.rawValue) }.joined(separator: ",") ?? "none"
+            sender.accessibilityValue = "menu-touch-cancel-pan-" + states
+        }
+        @objc func touchMoved(_ sender: UIButton) { sender.accessibilityValue = "menu-touch-moved" }
         #endif
 
         @objc func panned(_ gesture: UIPanGestureRecognizer) {
@@ -112,7 +119,8 @@ struct PlayerMenuGeometry {
     var bounds: CGRect {
         let left = min(size.width / 2, max(12, safeArea.leading + 8) + 22)
         let right = max(left, size.width - max(12, safeArea.trailing + 8) - 22)
-        let top = min(size.height / 2, max(8, safeArea.top) + 22)
+        // Keep the entire handle below the system top-edge gesture region.
+        let top = min(size.height / 2, max(44, safeArea.top) + 22)
         let bottom = max(top, size.height - max(8, safeArea.bottom) - 22)
         return CGRect(x: left, y: top, width: right - left, height: bottom - top)
     }

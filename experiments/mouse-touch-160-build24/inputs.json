@@ -121,7 +121,7 @@
       "before": "035c79d20fefcb16d4dba4e97ab6125506717b0fcf0514b24523dcf223d72257"
     },
     "App/Views/DraggablePlayerMenu.swift": {
-      "after": "993f4c6d3e5801f5feb46e9226c29f85c0b5c0ce387510b6bdccf6ae19aaf619",
+      "after": "999c45b6dc0f8517f409c1e7c21604fb9121d2810c9f5f207c6f74b9b72951c6",
       "before": null
     },
     "App/Views/PlayerView.swift": {
@@ -133,7 +133,7 @@
       "before": null
     },
     "Tests/TouchControlSettingsTests.swift": {
-      "after": "6e67b11106ba55827e336880b71ed72a9b8170ce602eeb358705224fbd0d974e",
+      "after": "6eeb43a78f6614f565646e9a6020c5fc5042c083599ba970c66228463e42fcbb",
       "before": "622d63ea0dd9640e5892a160da254a60b2d2673c5551864b54df8a419e048c9c"
     },
     "UITests/DraggablePlayerMenuUITests.swift": {
@@ -181,10 +181,10 @@
     "overlay/App/Resources/Web/mouse-touch.js": "11a43f776f318567a0166930a88b5728f62153d8c39e90ccbf406bcb1aaa22e3",
     "overlay/App/Resources/Web/shell.css": "40fa90b39c3645a38218f4e6f4f2e21c803049776efe9821de67521faee5cc4c",
     "overlay/App/Resources/Web/shell.js": "2f6b1d0bfce8ba8f52610696889f7daa4493708d0ed687afb24c73fe98501932",
-    "overlay/App/Views/DraggablePlayerMenu.swift": "993f4c6d3e5801f5feb46e9226c29f85c0b5c0ce387510b6bdccf6ae19aaf619",
+    "overlay/App/Views/DraggablePlayerMenu.swift": "999c45b6dc0f8517f409c1e7c21604fb9121d2810c9f5f207c6f74b9b72951c6",
     "overlay/App/Views/PlayerView.swift": "5fed34592c1ef01f1d3fd46144d203d3bb60bfb714f6745f323c7e72cbbf1790",
     "overlay/Tests/MouseTouchRuntimeTests.swift": "29ecbfa862081af818f4bd2a8e3c60ecb503f08cb5753e5bfcd2acb1ff0e2746",
-    "overlay/Tests/TouchControlSettingsTests.swift": "6e67b11106ba55827e336880b71ed72a9b8170ce602eeb358705224fbd0d974e",
+    "overlay/Tests/TouchControlSettingsTests.swift": "6eeb43a78f6614f565646e9a6020c5fc5042c083599ba970c66228463e42fcbb",
     "overlay/UITests/DraggablePlayerMenuUITests.swift": "28f02e675197d333436a7cddaff484ba641fbd9632df8451753122a58cb92f0d",
     "overlay/project.yml": "bf873570629e64287cdaea00b484d5ce709cd956cd27e55063a9d5895f6ee21c",
     "overlay/scripts/mouse_touch_dom_fixture.html": "35501027bed134176c080918fd444b1de8152c5f35e229b6305c8e8aa7aa7eff",
