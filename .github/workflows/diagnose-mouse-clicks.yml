@@ -1,0 +1,73 @@
+name: Diagnose FlashNest real mouse clicks
+on:
+  push:
+    branches: [experiment/case-compatible-assets-build23]
+    paths:
+      - 'experiments/mouse-click-diagnostics/**'
+      - '.github/workflows/diagnose-mouse-clicks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: flashnest-mouse-click-diagnostics
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PREP: recipe/experiments/mouse-touch-160-build24
+      CASE: case-checkout/experiments/case-compatible-assets-build23
+      FLASHNEST_DELIVERED_CHECKOUT: delivered-checkout
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {path: recipe, persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: 9a93ade1c7dd79382a06ddcb7925282a2e7c5ea8, path: delivered-checkout, persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: c4cad276f1a79caffd012bcfcb6eb260a9e3492f, path: case-checkout, persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: cc6c4bf285a201d9c1a827140662c54606027d10, path: baseline-recipe, persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {ref: 9bc000e37695696f2427b25fe08efe4993bf22e5, path: source-checkout, persist-credentials: false}
+      - name: Verify new recipe and exact Xcode16.4 iOS18.5
+        run: |
+          set -euo pipefail
+          cmp "$PREP/build/workflow.yml" recipe/.github/workflows/build-mouse-touch-160.yml
+          python3 "$PREP/stage.py" preflight
+          python3 "$PREP/test_stage.py"
+          python3 "$PREP/build/select_toolchain.py" --output toolchain-evidence/toolchain.json
+      - name: Fetch exact delivered engine artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir engine-input
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368 > engine-input/metadata.json
+          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368/zip > engine-input/engine.zip
+      - name: Validate frozen delivered stage then apply explicit1.6 overlay
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 "$PREP/stage.py" stage --baseline-checkout baseline-recipe --source-checkout source-checkout --case-checkout case-checkout --engine-archive engine-input/engine.zip --engine-metadata engine-input/metadata.json --output mouse-stage
+          mkdir -p mouse-stage/evidence
+          python3 delivered-checkout/experiments/loader-unload-ipa/test_runtime_metadata.py --app mouse-stage/app | tee mouse-stage/evidence/runtime-metadata.log
+      - name: Diagnose actual shell clicks without changing product sources
+        env:
+          CHROMIUM_EXECUTABLE: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+        run: |
+          set -euo pipefail
+          cp recipe/experiments/mouse-click-diagnostics/*.py mouse-stage/app/scripts/
+          python3 -m venv "$RUNNER_TEMP/mouse-browser"
+          "$RUNNER_TEMP/mouse-browser/bin/pip" install playwright==1.51.0
+          "$RUNNER_TEMP/mouse-browser/bin/python" mouse-stage/app/scripts/test_mouse_touch_runtime.py > mouse-stage/evidence/click-diagnostic.log 2>&1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FlashNest-mouse-click-diagnostic
+          path: mouse-stage/evidence/click-diagnostic.log
+          if-no-files-found: warn
+          retention-days: 7
