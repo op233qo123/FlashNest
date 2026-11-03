@@ -58,6 +58,7 @@ import SwiftUI
     @Published private(set) var restartRequired = false
     private let saveStore: SaveStore
     private var requestedMouseTouchEnabled = false
+    private var requestedMouseRightButtonOpacity = 0.60
     private var currentPackage: GamePackage?
     private var currentContentRoot: URL?
     private var saveTask: Task<Bool, Never>?
@@ -139,7 +140,9 @@ import SwiftUI
         ownsPackageLease = true
         restartFailure = nil
         currentPackage = package; currentContentRoot = contentRoot
-        requestedMouseTouchEnabled = !storageOnly && TouchControlSettings.load(for: package.id).mouseTouchEnabled
+        let touchSettings = TouchControlSettings.load(for: package.id)
+        requestedMouseTouchEnabled = !storageOnly && touchSettings.mouseTouchEnabled
+        requestedMouseRightButtonOpacity = touchSettings.opacity
         requestedRendererSettings = storageOnly ? nil : RendererSettings.load(for: package.id)
         requestedSamplingSettings = storageOnly ? nil : (RenderSamplingSettings.runtimeValidated
             ? RenderSamplingSettings.load(for: package.id) : RenderSamplingSettings())
@@ -260,6 +263,7 @@ import SwiftUI
             if requestedMouseTouchEnabled {
                 components.queryItems?.append(URLQueryItem(name: "mouseTouch", value: "1"))
             }
+            components.queryItems?.append(URLQueryItem(name: "mouseOpacity", value: String(requestedMouseRightButtonOpacity)))
             if storageOnly { components.queryItems?.append(URLQueryItem(name: "storageOnly", value: "1")) }
             if let renderer = requestedRendererSettings?.mode.queryValue {
                 components.queryItems?.append(URLQueryItem(name: "renderer", value: renderer))
@@ -601,6 +605,11 @@ import SwiftUI
         webView?.evaluateJavaScript(value ? "window.FlashNest?.pause()" : "window.FlashNest?.resume()")
     }
 
+    func setMouseRightButtonOpacity(_ value: Double) {
+        requestedMouseRightButtonOpacity = value.isFinite ? min(1, max(0.1, value)) : 0.60
+        webView?.evaluateJavaScript("window.FlashNest?.setMouseRightButtonOpacity(\(requestedMouseRightButtonOpacity)); true")
+    }
+
     func setMouseTouchEnabled(_ enabled: Bool) {
         requestedMouseTouchEnabled = enabled
         webView?.evaluateJavaScript("window.FlashNest?.setMouseTouchEnabled(\(enabled ? "true" : "false")); true")
@@ -804,6 +813,7 @@ import SwiftUI
             status = L10n.text("Runtime ready"); ready = true
             // A menu change during loading may precede the shell bridge.
             setMouseTouchEnabled(requestedMouseTouchEnabled)
+            setMouseRightButtonOpacity(requestedMouseRightButtonOpacity)
             if paused { setPaused(true) }
         case "loaded": status = L10n.text("Playing"); ready = true; isLoaded = true
         case "error": failure = text; samplingDocumentBinding.invalidate(); samplingStatusTracker.reset(); appliedSamplingStatus = .unknown
@@ -936,4 +946,5 @@ import SwiftUI
     }
 
 }
+
 

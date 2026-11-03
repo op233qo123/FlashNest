@@ -51,9 +51,9 @@ async function exercise(timing) {
     suspend: () => { suspended++; runtimePlaying = false; overlayVisible = true; },
     resume: () => { resumed++; runtimePlaying = true; overlayVisible = false; resumeHook?.(); }
   };
-  for (const id of ['status','start','stage','audio-warning','audio-warning-message','audio-retry']) {
+  for (const id of ['status','start','stage','audio-warning','audio-warning-message','audio-retry','mouse-right-button']) {
     const handlers = new Map();
-    elements[id] = {textContent:'', disabled:id === 'start', hidden:false, append:p => appended = p, handlers,
+    elements[id] = {style:{}, attributes:{}, setAttribute(name,value) { this.attributes[name] = value; }, textContent:'', disabled:id === 'start', hidden:false, append:p => appended = p, handlers,
       addEventListener:(name, callback) => handlers.set(name, callback),
       removeEventListener:(name, callback) => { if (handlers.get(name) === callback) handlers.delete(name); }};
   }
@@ -97,9 +97,9 @@ async function exercise(timing) {
   if (timing === 'invalidrestore') context.window.__FlashNestRestore = {version:99,entries:[]};
   vm.runInNewContext(bridgeSource, context);
   vm.runInNewContext(audioSource, context);
-  let mouseCreated=0, mouseEnabled, mouseDisposed=0, mouseCancelled=0;
+  let mouseCreated=0, mouseEnabled, mouseDisposed=0, mouseCancelled=0, mouseRightClicks=0;
   context.window.FlashNestMouseTouch={create(options){mouseCreated++;mouseEnabled=options.enabled;return {
-    initialize(){}, setEnabled(value){mouseEnabled=value;}, cancel(){mouseCancelled++;},dispose(){mouseDisposed++;}
+    rightClick(){mouseRightClicks++;return true;}, initialize(){}, setEnabled(value){mouseEnabled=value;}, cancel(){mouseCancelled++;},dispose(){mouseDisposed++;}
   };}};
   vm.runInNewContext(source, context);
   await settle();
@@ -184,6 +184,28 @@ async function exercise(timing) {
   elements.start.onclick(); assert.equal(resumed, 2); assert.equal(elements.start.hidden, true);
   context.window.FlashNest.pause(); assert.equal(suspended, 1);
   context.window.FlashNest.resume(); assert.equal(resumed, 3);
+  const rightButton = elements['mouse-right-button'];
+  assert.equal(rightButton.textContent, language === 'zh-Hans' ? '右键' : 'Right click');
+  assert.equal(rightButton.attributes['aria-label'], rightButton.textContent);
+  assert.equal(rightButton.hidden, true, 'Disabled mouse mode hides right-click button');
+  context.window.FlashNest.setMouseTouchEnabled(true);
+  assert.equal(rightButton.hidden, false); assert.equal(rightButton.disabled, false);
+  const buttonEvent = {isTrusted:true, preventDefault(){}, stopPropagation(){}};
+  rightButton.handlers.get('pointerdown')(buttonEvent);
+  rightButton.handlers.get('pointerup')(buttonEvent);
+  assert.equal(mouseRightClicks, 0, 'Pointer events must not duplicate click');
+  rightButton.handlers.get('click')({...buttonEvent,isTrusted:false});
+  assert.equal(mouseRightClicks, 0, 'Scripted click cannot generate game input');
+  rightButton.handlers.get('click')(buttonEvent);
+  assert.equal(mouseRightClicks, 1, 'One trusted click invokes controller once');
+  context.window.FlashNest.setMouseRightButtonOpacity(0.35);
+  assert.equal(rightButton.style.opacity, '0.35');
+  context.window.FlashNest.setMouseRightButtonOpacity(NaN);
+  assert.equal(rightButton.style.opacity, '0.6');
+  context.window.FlashNest.setMouseTouchEnabled(false);
+  assert.equal(rightButton.hidden, true); assert.equal(rightButton.disabled, true);
+  rightButton.handlers.get('click')(buttonEvent);
+  assert.equal(mouseRightClicks, 1, 'Mode-off click cannot reach game');
   if (timing === 'audio-source') {
     const {pathToFileURL} = require('node:url');
     const {bindAudioContext,requestAudioOperation} = await import(pathToFileURL(process.env.FLASHNEST_AUDIO_OPERATION_SOURCE).href);
@@ -413,6 +435,9 @@ async function exercise(timing) {
   await assert.rejects(input.captureWrittenSaves(), /not ready/);
   assert.equal(keyEvents.at(-1).type, 'keyup', 'Close releases held native keys');
   assert.equal(mouseDisposed,1);assert(mouseCancelled>0);
+  assert.equal(rightButton.hidden, true); assert.equal(rightButton.disabled, true);
+  rightButton.handlers.get('click')(buttonEvent);
+  assert.equal(mouseRightClicks, 1, 'Disposed controller cannot receive button input');
   const afterClose = keyEvents.length; input.key('KeyA', true); assert.equal(keyEvents.length, afterClose);
 }
 

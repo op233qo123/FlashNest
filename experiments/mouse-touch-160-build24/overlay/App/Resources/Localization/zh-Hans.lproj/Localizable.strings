@@ -417,3 +417,6 @@
 "Mouse touch mode" = "鼠标触控模式";
 "Off by default. Drag one finger to move the cursor, tap with one finger to left-click, or tap with two fingers to right-click." = "默认关闭。单指拖动移动光标，单指轻点为鼠标左键，双指轻点为鼠标右键。";
 "Drag to move. Tap to open the game menu." = "拖动可移动位置，轻点打开游戏菜单。";
+
+"Off by default. Drag one finger to move the cursor, tap to left-click, or use the on-screen Right click button. Control opacity also adjusts this button." = "默认关闭。单指滑动移动光标，轻点左击，也可点屏幕上的“右键”按钮。按键透明度同样适用于此按钮。";
+

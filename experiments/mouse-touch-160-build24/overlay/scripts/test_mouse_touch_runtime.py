@@ -6,6 +6,7 @@ Run after staging the delivered app/runtime plus mouse-touch overlay.
 """
 import functools, hashlib, http.server, json, os, pathlib, shutil, struct, sys, tempfile, threading, time
 from playwright.sync_api import sync_playwright
+from mouse_clicks_runtime import run_shell_probe
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 def action(op, body=b''):
     return bytes([op]) + (struct.pack('<H',len(body))+body if op>=128 else b'')
@@ -101,5 +102,6 @@ with tempfile.TemporaryDirectory(prefix='flashnest-mouse-') as td:
                 assert all(u.startswith(f'http://127.0.0.1:{server.server_port}/') for u in requests),requests
                 results.append({'viewport':[width,height],'dpr':dpr,'sampling':sampling,'corners':4,'leftClick':True,'rightDOMPair':True,'selectedWasm':wasm})
                 context.close()
-            browser.close();print(json.dumps({'result':'PASS','actualRuffle':True,'nativeTouchCertified':False,'runtimeFiles':runtime_files,'sandbox':sandbox,'head':os.environ.get('GITHUB_SHA'),'runID':os.environ.get('GITHUB_RUN_ID'),'cases':results}))
+            swf_clicks=run_shell_probe(browser,pathlib.Path(td),f'http://127.0.0.1:{server.server_port}',runtime_files)
+            browser.close();print(json.dumps({'swfClicks':swf_clicks,'result':'PASS','actualRuffle':True,'nativeTouchCertified':False,'runtimeFiles':runtime_files,'sandbox':sandbox,'head':os.environ.get('GITHUB_SHA'),'runID':os.environ.get('GITHUB_RUN_ID'),'cases':results}))
     finally:server.shutdown()

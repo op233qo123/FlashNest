@@ -5,3 +5,7 @@
 
 /* Cursor tip stays at the mapped CSS pixel; never consumes game touches. */
 #mouse-touch-cursor{position:fixed;z-index:5;pointer-events:none;width:18px;height:24px;background:white;clip-path:polygon(0 0,0 100%,28% 72%,50% 100%,65% 91%,44% 64%,88% 64%);filter:drop-shadow(0 0 2px black)}#mouse-touch-cursor[hidden]{display:none}
+
+/* Separate mouse action: no full-screen interception; keep all four corners free. */
+#mouse-right-button{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 64px);transform:translateX(-50%);z-index:4;min-width:64px;min-height:48px;padding:10px 16px;border:1px solid #ffffff90;border-radius:16px;background:#202631;color:white;font:inherit;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;opacity:.6}
+#mouse-right-button[hidden]{display:none}#mouse-right-button:focus-visible{outline:2px solid #8acaff;outline-offset:2px}#mouse-right-button:active{background:#40516b}

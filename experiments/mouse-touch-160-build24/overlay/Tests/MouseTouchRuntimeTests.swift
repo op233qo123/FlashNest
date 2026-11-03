@@ -20,6 +20,10 @@ import WebKit
         let package = try PackageImporter(root: library).stageAndCommit(movie)
         defer { UserDefaults.standard.removeObject(forKey: TouchControlSettings.preferenceKey(for: package.id)) }
         XCTAssertFalse(TouchControlSettings.load(for: package.id).mouseTouchEnabled)
+        var savedControls = TouchControlSettings.load(for: package.id)
+        savedControls.opacity = 0.35
+        savedControls.save(for: package.id)
+        XCTAssertEqual(TouchControlSettings.load(for: package.id).opacity, 0.35)
         let session = PlayerSession()
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousWindow = scene.windows.first(where: { $0.isKeyWindow })
@@ -55,12 +59,30 @@ import WebKit
         }
         window.mouseTestSend = (type,id=1,x=100,y=100) => mouseTestCanvas.dispatchEvent(new PointerEvent(type,
           {pointerId:id,pointerType:'touch',clientX:x,clientY:y,bubbles:true,composed:true,cancelable:true}));
-        mouseTestSend('pointerdown'); mouseTestSend('pointerup'); true;
+        true;
         """)
-        try await assertJS(view, "mouseTestEvents.length === 2 && mouseTestEvents.every(e => e.pointer === 'touch')")
+
+        try await assertJS(view, "document.getElementById('mouse-right-button').hidden")
+        try await assertJS(view, "Number(getComputedStyle(document.getElementById('mouse-right-button')).opacity) === 0.35")
         session.setMouseTouchEnabled(true)
         // evaluateJavaScript calls are ordered; this query is also a bridge barrier.
         _ = try await view.evaluateJavaScript("window.mouseTestEvents=[]; true")
+        // First enabled tap must reach AVM1 before any mouse movement primes Ruffle.
+        _ = try await view.evaluateJavaScript("mouseTestRawTraces=[]; mouseTestSend('pointerdown'); mouseTestSend('pointerup'); true")
+        let firstClick = try await waitForJS(view, "mouseTestRawTraces.includes('DOWN') && mouseTestRawTraces.includes('UP')", seconds: 5)
+        XCTAssertTrue(firstClick, "First left tap, without prior drag, must reach actual AVM1")
+        try await assertJS(view, "mouseTestRawTraces.filter(m=>m==='DOWN').length===1 && mouseTestRawTraces.filter(m=>m==='UP').length===1")
+        try await assertJS(view, "!document.getElementById('mouse-right-button').hidden && !document.getElementById('mouse-right-button').disabled")
+        session.setMouseRightButtonOpacity(0.1)
+        try await assertJS(view, "Number(getComputedStyle(document.getElementById('mouse-right-button')).opacity) === 0.1")
+        session.setMouseRightButtonOpacity(1)
+        try await assertJS(view, "Number(getComputedStyle(document.getElementById('mouse-right-button')).opacity) === 1")
+        _ = try await view.evaluateJavaScript("mouseTestEvents=[]; document.getElementById('mouse-right-button').click(); true")
+        try await assertJS(view, "mouseTestEvents.length===0") // Untrusted DOM click is not UIKit tap coverage.
+        _ = try await view.evaluateJavaScript("window.FlashNest.pause(); true")
+        try await assertJS(view, "document.getElementById('mouse-right-button').hidden && document.getElementById('mouse-right-button').disabled")
+        _ = try await view.evaluateJavaScript("window.FlashNest.resume(); true")
+        try await assertJS(view, "!document.getElementById('mouse-right-button').hidden && !document.getElementById('mouse-right-button').disabled")
         let rectValue = try await view.evaluateJavaScript("JSON.stringify((()=>{const r=mouseTestCanvas.getBoundingClientRect(); return {x:r.x,y:r.y,w:r.width,h:r.height};})())")
         let rect = try XCTUnwrap(rectValue as? String)
         let dimensions = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(rect.utf8)) as? [String: Double])
@@ -82,6 +104,7 @@ import WebKit
             """, seconds: 5)
             XCTAssertTrue(reached, "Actual SWF mouse coordinate did not reach \(x),\(y)")
             try await assertJS(view, "mouseTestEvents.length > 0 && mouseTestEvents.every(e => e.pointer === 'mouse' && e.buttons === 0 && e.type !== 'pointerdown')")
+            try await assertJS(view, "!mouseTestRawTraces.includes('DOWN') && !mouseTestRawTraces.includes('UP')")
             cursorX = targetX; cursorY = targetY
         }
         // Test-only bounded tee reads real AVM1 traces before production rate limiting,
@@ -99,6 +122,8 @@ import WebKit
         try await assertJS(view, "mouseTestEvents.every(e=>e.type!=='pointerdown' && e.type!=='pointerup')")
         _ = try await view.evaluateJavaScript("mouseTestEvents=[]; mouseTestSend('pointerdown',1); mouseTestSend('pointerup',1); true")
         try await assertJS(view, "mouseTestEvents.length === 2 && mouseTestEvents.every(e=>e.pointer==='touch')")
+        try await assertJS(view, "mouseTestEvents.length === 2 && mouseTestEvents.every(e => e.pointer === 'touch')")
+        try await assertJS(view, "document.getElementById('mouse-right-button').hidden && document.getElementById('mouse-right-button').disabled")
         try await session.closeWithoutSaving()
     }
 

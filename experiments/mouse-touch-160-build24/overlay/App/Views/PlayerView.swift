@@ -75,6 +75,7 @@ struct PlayerView: View {
             // Editing, hiding and remapping cannot leave keys held in the movie.
             releaseKeys(); value.save(for: package.id)
             session.setMouseTouchEnabled(value.mouseTouchEnabled)
+            session.setMouseRightButtonOpacity(value.opacity)
         }
         .onChange(of: session.paused) { _, value in if value { releaseKeys() } }
         .onChange(of: scenePhase) { old, value in handleScenePhase(old: old, new: value) }
@@ -131,7 +132,7 @@ struct PlayerView: View {
                 Section {
                     Toggle(L10n.text("Mouse touch mode"), isOn: $settings.mouseTouchEnabled)
                         .accessibilityIdentifier("mouse-touch-enabled")
-                    Text(L10n.text("Off by default. Drag one finger to move the cursor, tap with one finger to left-click, or tap with two fingers to right-click."))
+                    Text(L10n.text("Off by default. Drag one finger to move the cursor, tap to left-click, or use the on-screen Right click button. Control opacity also adjusts this button."))
                         .font(.footnote).foregroundStyle(.secondary)
                 }.disabled(closing || checkpointing)
                 Section(L10n.text("Touch controls")) {
@@ -553,3 +554,4 @@ private struct PlayerWebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView { webView }
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 }
+

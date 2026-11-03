@@ -17,12 +17,12 @@
   const strings = {
     en: {
       rendererPreference:'Graphics policy: {0}; preferred renderer: {1}; actual renderer is not inferred from this preference', samplingState:'Onscreen sampling: requested={0}; renderer-applied={1}; canvas pixels={2}; total memory not measured', samplingUnconfirmed:'unconfirmed',
-      audioWarning:'Audio could not start. Retrying will not restart the game.', audioRetry:'Retry audio', audioRetrying:'Retrying audio…', audioWaiting:'Waiting for audio. You can still open the game menu.', title:'FlashNest Player', preparing:'Preparing offline runtime…', play:'Play / enable audio', pause:'Pause', resume:'Resume', action:'Action', enter:'Enter', stage:'Flash player', controls:'Game controls',
+      audioWarning:'Audio could not start. Retrying will not restart the game.', audioRetry:'Retry audio', audioRetrying:'Retrying audio…', audioWaiting:'Waiting for audio. You can still open the game menu.', title:'FlashNest Player', preparing:'Preparing offline runtime…', play:'Play / enable audio', pause:'Pause', resume:'Resume', action:'Action', enter:'Enter', stage:'Flash player', controls:'Game controls', rightClick:'Right click',
       offline:'Offline policy blocked {0}. Remote servers are unavailable; include local assets in the package.', jsError:'JavaScript/resource error: {0}', unknown:'unknown', runtimeError:'Runtime error: {0}', wasmStart:'Runtime WASM fetch started: {0}', wasmResponse:'Runtime WASM response: {0}; bytes={1}', assetFailed:'Asset request failed ({0}): {1}', assetBlocked:'Asset request blocked or unavailable: {0}', invalid:'Invalid package or entry SWF.', unsafe:'Unsafe entry path.', missing:'Bundled runtime missing or blocked.', ready:'Offline runtime ready.', initializing:'Initializing bundled WASM and renderer…', pending:'Runtime initialization still pending after 20 seconds; download progress={0}; visible={1}', unavailable:'unavailable', initialized:'Bundled WASM and renderer initialized; main SWF request started.', loaded:'Movie loaded. Tap Play to start audio.', saveReady:'Local save storage ready.', saveTimeout:'Native save preparation timed out.', swfRequest:'SWF request #{0}: {1}', swfResponse:'SWF response headers #{0}: status={1}; bytes={2}; {3}', swfFailure:'SWF fetch failed #{0}: {1}', swfLimit:'Further SWF request diagnostics omitted (limit reached).', traceSuppressed:'SWF trace limit: {0} message(s) suppressed in this interval.', graphicsEvent:'Renderer event: {0}', consoleEvent:'Runtime {0}: {1}', consoleLimit:'Further runtime {0} diagnostics omitted (limit reached).', playerState:'Player state ({0}): started={1}; shellPaused={2}; hidden={3}; focused={4}; canvasCSS={5}; canvasPixels={6}; DPR={7}; canvasVisual={8}; runtimePlaying={9}; playOverlayVisible={10}', loadError:'Unable to load movie: {0}'
     },
     'zh-Hans': {
       rendererPreference:'图形策略：{0}；首选渲染器：{1}；不以请求偏好推断实际渲染器', samplingState:'屏幕采样：请求={0}；渲染器报告={1}；画布像素={2}；未测量总内存', samplingUnconfirmed:'未确认',
-      audioWarning:'音频启动失败，可尝试重试；不会重启当前游戏。', audioRetry:'重试声音', audioRetrying:'正在重试声音…', audioWaiting:'正在等待音频响应，你仍可打开游戏菜单。', title:'FlashNest 播放器', preparing:'正在准备离线运行环境…', play:'播放 / 开启声音', pause:'暂停', resume:'继续', action:'动作', enter:'确认', stage:'Flash 播放区域', controls:'游戏按键',
+      audioWarning:'音频启动失败，可尝试重试；不会重启当前游戏。', audioRetry:'重试声音', audioRetrying:'正在重试声音…', audioWaiting:'正在等待音频响应，你仍可打开游戏菜单。', title:'FlashNest 播放器', preparing:'正在准备离线运行环境…', play:'播放 / 开启声音', pause:'暂停', resume:'继续', action:'动作', enter:'确认', stage:'Flash 播放区域', controls:'游戏按键', rightClick:'右键',
       offline:'离线策略已拦截 {0}。无法连接远程服务器，请将资源一并导入。', jsError:'脚本或资源错误：{0}', unknown:'未知', runtimeError:'运行错误：{0}', wasmStart:'正在加载 WASM：{0}', wasmResponse:'WASM 响应：{0}；字节数={1}', assetFailed:'资源请求失败（{0}）：{1}', assetBlocked:'资源被拦截或不可用：{0}', invalid:'游戏包或入口 SWF 无效。', unsafe:'入口路径不安全。', missing:'内置运行环境缺失或被拦截。', ready:'离线运行环境已就绪。', initializing:'正在初始化 WASM 和渲染器…', pending:'初始化已超过 20 秒；下载进度={0}；页面可见={1}', unavailable:'不可用', initialized:'WASM 和渲染器已初始化，正在加载主 SWF。', loaded:'文件已加载。点击“播放”开启声音。', saveReady:'本地存档已准备就绪。', saveTimeout:'原生存档准备超时。', swfRequest:'SWF 请求 #{0}：{1}', swfResponse:'SWF 响应头 #{0}：状态={1}；字节数={2}；{3}', swfFailure:'SWF 请求失败 #{0}：{1}', swfLimit:'后续 SWF 请求诊断已省略（达到数量上限）。', traceSuppressed:'SWF 跟踪限流：本时段已省略 {0} 条消息。', graphicsEvent:'渲染器事件：{0}', consoleEvent:'运行环境 {0}：{1}', consoleLimit:'后续运行环境 {0} 诊断已省略（达到数量上限）。', playerState:'播放器状态（{0}）：已开始={1}；外壳暂停={2}；隐藏={3}；焦点={4}；画布CSS={5}；画布像素={6}；DPR={7}；画布显示={8}；运行时播放={9}；播放遮罩可见={10}', loadError:'无法加载文件：{0}'
     }
   };
@@ -39,7 +39,41 @@
   function setMouseTouchEnabled(value) {
     mouseTouchEnabled = value === true;
     mouseTouch?.setEnabled(mouseTouchEnabled);
+    synchronizeMouseRightButton();
   }
+  // BEGIN mouse right-button bridge. No canvas event forwarding or DOM click duplication.
+  const mouseRightButton = document.getElementById('mouse-right-button');
+  let mouseRightButtonOpacity = 0.60;
+  function setMouseRightButtonOpacity(value) {
+    mouseRightButtonOpacity = typeof value === 'number' && Number.isFinite(value)
+      ? Math.min(1, Math.max(0.1, value)) : 0.60;
+    mouseRightButton.style.opacity = String(mouseRightButtonOpacity);
+  }
+  function synchronizeMouseRightButton() {
+    const available = !!mouseTouch && mouseTouchEnabled && started && !paused &&
+      !backgrounded && !document.hidden && !closing && !fatal;
+    mouseRightButton.hidden = !available;
+    mouseRightButton.disabled = !available;
+  }
+  function mouseRightButtonClick(event) {
+    event.preventDefault(); event.stopPropagation();
+    synchronizeMouseRightButton();
+    if (!event.isTrusted || mouseRightButton.disabled) return;
+    mouseTouch.rightClick();
+  }
+  function stopMouseButtonPropagation(event) { event.stopPropagation(); }
+  // Only click sends input: touch, keyboard activation and accessibility share one path.
+  mouseRightButton.addEventListener('click', mouseRightButtonClick);
+  for (const name of ['pointerdown', 'pointerup', 'pointermove', 'pointercancel']) {
+    mouseRightButton.addEventListener(name, stopMouseButtonPropagation);
+  }
+  mouseRightButton.textContent = t('rightClick');
+  mouseRightButton.title = t('rightClick');
+  mouseRightButton.setAttribute('aria-label', t('rightClick'));
+  const initialMouseOpacity = new URLSearchParams(location.search).get('mouseOpacity');
+  setMouseRightButtonOpacity(initialMouseOpacity === null ? 0.60 : Number(initialMouseOpacity));
+  synchronizeMouseRightButton();
+  // END mouse right-button bridge.
   const held = new Set();
   const keys = {ArrowLeft:37, ArrowUp:38, ArrowRight:39, ArrowDown:40, Space:32, Enter:13, Escape:27, Backspace:8, Tab:9, ShiftLeft:16, ShiftRight:16};
   for (let index = 0; index < 26; index++) keys['Key' + String.fromCharCode(65 + index)] = 65 + index;
@@ -48,7 +82,7 @@
   const diagnosticRoot = new URL('../', location.href);
   const privateURLPrefix = diagnosticRoot.origin + diagnosticRoot.pathname;
   function report(type, message, updateStatus = true) {
-    if (type === 'error') { fatal = true; audioWarning?.dispose(); samplingObserver?.dispose(); }
+    if (type === 'error') { fatal = true; synchronizeMouseRightButton(); audioWarning?.dispose(); samplingObserver?.dispose(); }
     // Remove only this app's exact capability-bearing URL prefix, before
     // truncation. Keep resource paths/status and unrelated remote URLs intact.
     const text = String(message).split(privateURLPrefix).join(diagnosticRoot.origin + '/').slice(0, 1024);
@@ -176,6 +210,7 @@
   }
   function releaseKeys() { for (const code of [...held]) key(code, false); }
   function reconcile() {
+    synchronizeMouseRightButton();
     audioWarning?.synchronize();
     if (!player || !started || closing) return;
     if (paused || backgrounded) player.ruffle().suspend(); else player.ruffle().resume();
@@ -200,7 +235,7 @@
   }
   function shutdownAndCapture() {
     if (shutdownPromise) return shutdownPromise;
-    releaseKeys(); pause(); mouseTouch?.dispose(); closing = true; audioWarning?.dispose(); samplingObserver?.dispose();
+    releaseKeys(); pause(); mouseTouch?.dispose(); closing = true; synchronizeMouseRightButton(); audioWarning?.dispose(); samplingObserver?.dispose();
     shutdownPromise = (async () => {
       await bootPromise; // Do not let delayed WASM creation race a save snapshot.
       if (!saveBridge || !storageReady) throw new Error('Save storage is not ready');
@@ -218,7 +253,7 @@
     resolveSaveHandshake(); resolveSaveHandshake = null;
     return true;
   }
-  window.FlashNest = Object.freeze({start:() => start(false), setMouseTouchEnabled, pause, resume, key, releaseKeys, captureWrittenSaves, shutdownAndCapture, confirmSaveReady});
+  window.FlashNest = Object.freeze({start:() => start(false), setMouseTouchEnabled, setMouseRightButtonOpacity, pause, resume, key, releaseKeys, captureWrittenSaves, shutdownAndCapture, confirmSaveReady});
   document.getElementById('start').onclick = () => start(true);
   window.addEventListener('blur', releaseKeys);
   window.addEventListener('resize', () => { releaseKeys(); samplingObserver?.refresh(true); reportState('resize'); });
@@ -394,6 +429,7 @@
         cursor:document.getElementById("mouse-touch-cursor"), enabled:mouseTouchEnabled,
         onGesture:() => start(true)});
       mouseTouch.initialize();
+      synchronizeMouseRightButton();
     }
     // A small movie can dispatch loadeddata before load() resolves; do not
     // overwrite the completed state with an earlier initialization milestone.

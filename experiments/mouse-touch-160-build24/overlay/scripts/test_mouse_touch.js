@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
-const source = fs.readFileSync(path.join(__dirname,'../App/Resources/Web/mouse-touch.js'),'utf8');
+const source = fs.readFileSync(process.env.MOUSE_SOURCE || path.join(__dirname,'../App/Resources/Web/mouse-touch.js'),'utf8');
 class Target {
   constructor() { this.listeners={}; }
   addEventListener(n,f) { (this.listeners[n]??=[]).push(f); }
@@ -55,3 +55,14 @@ for(const kind of ['third','move','long','cancel','lost','blur','hidden','off','
 {const s=setup(true);s.event('pointerdown',1);s.controller.setEnabled(false);assert.equal(s.event('pointerdown',1).stopped,undefined);}
 {const s=setup(true);s.event('pointerdown',1);s.event('pointerdown',2);s.event('pointerup',1);s.event('pointerdown',3);s.event('pointerup',2);s.event('pointerup',3);assert.deepEqual(clicks(s),[]);}
 console.log('mouse touch: 19 gesture-state/lifecycle/client-coordinate cases passed (mock DOM, not browser proof)');
+
+// Regression: jitter must never move the pointer or shift a tap target.
+{const s=setup(true);const origin={...s.cursor.style};s.event('pointerdown');s.event('pointermove',1,103,104);assert.deepEqual(s.cursor.style,origin);s.event('pointerup',1,103,104);assert.deepEqual(clicks(s),[0]);const d=s.sent.find(e=>e.type==='pointerdown');assert.equal(d.clientX,230);assert.equal(d.clientY,160);}
+// A movement gesture is permanently non-clicking, even after returning to origin.
+{const s=setup(true);s.event('pointerdown');s.event('pointermove',1,109,100);assert.equal(s.cursor.style.left,'239px');s.event('pointermove',1,100,100);s.event('pointerup');assert.deepEqual(clicks(s),[]);}
+// Pending second finger must not move the cursor or leak a left click.
+{const s=setup(true);const origin={...s.cursor.style};s.event('pointerdown',1);s.event('pointermove',1,104,100);s.event('pointerdown',2);s.event('pointerup',2);s.event('pointerup',1,104,100);assert.deepEqual(s.cursor.style,origin);assert.deepEqual(clicks(s),[2]);}
+// Button API works without simultaneous contacts and cancels an unfinished tap.
+{const s=setup(true);const origin={...s.cursor.style};s.event('pointerdown');assert.equal(s.controller.rightClick(),true);s.event('pointerup');assert.deepEqual(clicks(s),[2]);assert.deepEqual(s.cursor.style,origin);assert.equal(s.capture.size,0);}
+{const s=setup();assert.equal(s.controller.rightClick(),false);assert.deepEqual(clicks(s),[]);s.controller.dispose();assert.equal(s.controller.rightClick(),false);}
+console.log('5 additional exclusivity / right-button regressions passed');

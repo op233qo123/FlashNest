@@ -6,7 +6,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import stage as e
 from select_toolchain import verify as verify_toolchain
 from run_ios_tests import verify_summary
-IPA_NAME='FlashNest-1.6.0-build24-mouse-touch-experimental-unsigned.ipa'
+IPA_NAME='FlashNest-1.6.0-build25-mouse-touch-experimental-unsigned.ipa'
 def load_checks(baseline, x):
     root = baseline / 'experiments/release-ipa-156-build22'
     e.need(e.inventory(root) == x['releaseRecipeFiles'], 'Frozen release validators differ')
@@ -140,6 +140,19 @@ def verify(a):
     for row,expected in zip(rows,[([800,600],1,'1'),([390,844],3,'1'),([844,390],3,'1'),([800,600],3,'0.5')]):
         e.need((row.get('viewport'),row.get('dpr'),row.get('sampling'))==expected and row.get('corners')==4 and row.get('leftClick') is True and row.get('rightDOMPair') is True,'Mouse pointer behavior matrix differs')
         wasm=row.get('selectedWasm');e.need(isinstance(wasm,dict) and wasm and all(n.endswith('.wasm') and staged['runtimeFiles'].get(n)==h for n,h in wasm.items()),'Actual browser WASM response differs')
+    clicks=browser.get('swfClicks',{})
+    e.need(clicks.get('result')=='PASS' and clicks.get('actualShell') is True and clicks.get('actualSWFEvents') is True and clicks.get('browserTouch')=='CDP' and clicks.get('nativeTouchCertified') is False,'Actual shell SWF clicks not passed')
+    e.need(clicks.get('head')==os.environ['GITHUB_SHA'] and clicks.get('runID')==os.environ['GITHUB_RUN_ID'] and clicks.get('runtimeFiles')==staged['runtimeFiles'],'SWF click evidence wrong source/run')
+    expected_names=['first_canvas_tap_without_warmup_move','jitter_click_once','slide_never_clicks','first_tap_after_slide','first_tap_after_focus_loss','visible_right_button_swf_events','repeat_right_button_no_left_leak','transparent_right_button_swf_events','first_tap_after_pause_resume','first_tap_after_mode_toggle']
+    click_rows=clicks.get('cases',[])
+    e.need([row.get('name') for row in click_rows]==expected_names,'SWF click case inventory differs')
+    for row in click_rows:
+        expected=[] if row['name']=='slide_never_clicks' else ['EVENT:rightMouseDown','EVENT:rightMouseUp','EVENT:rightClick'] if 'right_button' in row['name'] else ['EVENT:mouseDown','EVENT:mouseUp','EVENT:click']
+        e.need(row.get('events')==expected and row.get('expected')==expected,'SWF click event mismatch: '+row['name'])
+    for name in ['test_mouse_touch_runtime.py','mouse_clicks_runtime.py','mouse_probe_abc.py','mouse_probe_avm2.py']:
+        e.need(clicks.get('sourceFiles',{}).get(name)==e.sha((app/'scripts'/name).read_bytes())==effective.get('scripts/'+name),'SWF probe source mismatch')
+    selected=clicks.get('selectedWasm',{})
+    e.need(selected and all(name.endswith('.wasm') and staged['runtimeFiles'].get(name)==digest for name,digest in selected.items()),'SWF click runtime mismatch')
     e.need(a.ipa.name==IPA_NAME and a.ipa.is_file() and not a.ipa.is_symlink(),'Wrong/linked IPA')
     ipa_raw=a.ipa.read_bytes();checks.verify_sources(app,effective)
     with tempfile.TemporaryDirectory() as td:
@@ -147,7 +160,7 @@ def verify(a):
             checks.safe_ipa_members(z.infolist());e.need(z.testzip() is None,'IPA CRC failure');z.extractall(td)
         bundle=Path(td)/'Payload/FlashNest.app';outer=checks.verify_outer_payload(bundle)
         info=plistlib.loads((bundle/'Info.plist').read_bytes())
-        expected={'CFBundleIdentifier':'com.flashnest.app','CFBundleShortVersionString':'1.6.0','CFBundleVersion':'24','DTPlatformName':'iphoneos','CFBundleExecutable':'FlashNest','MinimumOSVersion':'17.0','DTSDKName':'iphoneos'+toolchain['deviceSDK']}
+        expected={'CFBundleIdentifier':'com.flashnest.app','CFBundleShortVersionString':'1.6.0','CFBundleVersion':'25','DTPlatformName':'iphoneos','CFBundleExecutable':'FlashNest','MinimumOSVersion':'17.0','DTSDKName':'iphoneos'+toolchain['deviceSDK']}
         for k,v in expected.items():e.need(info.get(k)==v,'Packaged Info mismatch '+k)
         binary=(bundle/'FlashNest').read_bytes();macho=checks.device_macho(binary,minimum='17.0',sdk=toolchain['deviceSDK'])
         e.need(b'--flashnest-import-size-warning-ui-test' not in binary,'DEBUG warning harness in Release')
@@ -159,7 +172,7 @@ def verify(a):
         payload=checks.file_map(bundle)
     e.validate_stage(app,a.stage_receipt,a.baseline_checkout)
     e.need(a.stage_receipt.read_bytes()==stage_raw and a.ipa.read_bytes()==ipa_raw,'Inputs changed during verification')
-    e.write(a.output,{'schemaVersion':1,'kind':'EXPERIMENTAL-MOUSE-TOUCH-TEST-IPA','packageRevision':'mouse-touch-draggable-menu','version':'1.6.0','build':'24','bundleID':'com.flashnest.app','ipaFilename':a.ipa.name,'ipaSHA256':e.sha(ipa_raw),'ipaBytes':len(ipa_raw),'unsigned':True,'ipaBuilt':True,'packagingCommit':os.environ['GITHUB_SHA'],'packagingRunID':os.environ['GITHUB_RUN_ID'],'stageReceiptSHA256':e.sha(stage_raw),'engineReuseSHA256':staged['engineReuseSHA256'],'engineReference':e.read(a.stage_receipt.parent/'engine-reuse.json')['engineReference'],'engineBuildExecutedThisRun':False,'appSourceFiles':effective,'runtimeFiles':staged['runtimeFiles'],'webFiles':web,'packagedBundleFiles':payload,'outerPayloadFiles':sorted(outer),'deviceExecutable':macho,'toolchain':toolchain,'nativeExecutedThisRun':True,'nativeEvidenceReused':False,'nativeVerificationSHA256':native_hash,'nativeEvidence':native,'currentFocusedEvidence':focused,'mouseBrowserEvidence':browser,'mouseBrowserEvidenceSHA256':e.sha(browser_raw),'runtimeChanged':False,'diagnosticSchema':2,'observerRevision':2,'diagnosticOptInDefault':False,'productFrameRateChanged':False,'formalRelease':False,'physicalDeviceCertified':False,'gameLoadingIssueResolved':False,'speedRootCauseEstablished':False,'fullGatePassed':False})
+    e.write(a.output,{'schemaVersion':1,'kind':'EXPERIMENTAL-MOUSE-TOUCH-TEST-IPA','packageRevision':'mouse-exclusive-tap-right-button','version':'1.6.0','build':'25','bundleID':'com.flashnest.app','ipaFilename':a.ipa.name,'ipaSHA256':e.sha(ipa_raw),'ipaBytes':len(ipa_raw),'unsigned':True,'ipaBuilt':True,'packagingCommit':os.environ['GITHUB_SHA'],'packagingRunID':os.environ['GITHUB_RUN_ID'],'stageReceiptSHA256':e.sha(stage_raw),'engineReuseSHA256':staged['engineReuseSHA256'],'engineReference':e.read(a.stage_receipt.parent/'engine-reuse.json')['engineReference'],'engineBuildExecutedThisRun':False,'appSourceFiles':effective,'runtimeFiles':staged['runtimeFiles'],'webFiles':web,'packagedBundleFiles':payload,'outerPayloadFiles':sorted(outer),'deviceExecutable':macho,'toolchain':toolchain,'nativeExecutedThisRun':True,'nativeEvidenceReused':False,'nativeVerificationSHA256':native_hash,'nativeEvidence':native,'currentFocusedEvidence':focused,'mouseBrowserEvidence':browser,'mouseBrowserEvidenceSHA256':e.sha(browser_raw),'runtimeChanged':False,'diagnosticSchema':2,'observerRevision':2,'diagnosticOptInDefault':False,'productFrameRateChanged':False,'formalRelease':False,'physicalDeviceCertified':False,'gameLoadingIssueResolved':False,'speedRootCauseEstablished':False,'fullGatePassed':False})
     print('PASS exact candidate runtime, fresh native/UI evidence and unsigned arm64 diagnostic IPA')
 if __name__=='__main__':
     p=argparse.ArgumentParser()

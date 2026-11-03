@@ -65,7 +65,7 @@
       if (e.type === 'pointerup' || e.type === 'pointercancel') consumed.delete(e.pointerId);
       if (e.type === 'pointerdown') {
         onGesture();
-        if (!gesture) gesture = {time:e.timeStamp, max:0, total:0, invalid:false};
+        if (!gesture) gesture = {time:e.timeStamp, max:0, total:0, invalid:false, moving:false};
         if (!contacts.has(e.pointerId)) gesture.total++;
         contacts.set(e.pointerId, {x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY});
         gesture.max = Math.max(gesture.max, contacts.size);
@@ -75,11 +75,17 @@
       } else if (e.type === 'pointermove') {
         const c = contacts.get(e.pointerId);
         if (!c || !gesture) return;
-        if (Math.hypot(e.clientX-c.startX, e.clientY-c.startY) > threshold) gesture.invalid = true;
-        if (contacts.size === 1 && gesture.max === 1) {
+        const crossed = Math.hypot(e.clientX-c.startX, e.clientY-c.startY) > threshold;
+        if (crossed) gesture.invalid = true;
+        if (contacts.size === 1 && gesture.max === 1 && (gesture.moving || crossed)) {
+          // Pending tap jitter must not move the cursor or change its click target.
+          // Once movement wins, retain that decision until every contact ends.
+          const fromX = gesture.moving ? c.x : c.startX;
+          const fromY = gesture.moving ? c.y : c.startY;
+          gesture.moving = true;
           const r = rect();
-          position.x = Math.min(1, Math.max(0, position.x + (e.clientX-c.x)/Math.max(1,r.width-1)));
-          position.y = Math.min(1, Math.max(0, position.y + (e.clientY-c.y)/Math.max(1,r.height-1)));
+          position.x = Math.min(1, Math.max(0, position.x + (e.clientX-fromX)/Math.max(1,r.width-1)));
+          position.y = Math.min(1, Math.max(0, position.y + (e.clientY-fromY)/Math.max(1,r.height-1)));
           hover();
         }
         c.x=e.clientX; c.y=e.clientY;
@@ -109,7 +115,16 @@
     listen(window,'resize',reset);
     listen(window,'orientationchange',reset);
     listen(document,'visibilitychange',reset);
-    return Object.freeze({setEnabled, cancel:reset, dispose() {
+    function rightClick() {
+      if (disposed || !active) return false;
+      // A separate right button must not complete an earlier left-tap candidate.
+      cancel();
+      onGesture();
+      if (disposed || !active) return false;
+      click(2);
+      return true;
+    }
+    return Object.freeze({setEnabled, rightClick, cancel:reset, dispose() {
       if (disposed) return;
       setEnabled(false); disposed=true;
       for (const remove of listeners) remove();

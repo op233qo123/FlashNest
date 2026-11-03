@@ -31,7 +31,7 @@ def frozen():
 
 def config():
  c=read(ROOT/'inputs.json')
- need(c['version']=='1.6.0' and c['build']=='24' and c['deliveredCommit']==DELIVERED,'New recipe identity')
+ need(c['version']=='1.6.0' and c['build']=='25' and c['deliveredCommit']==DELIVERED,'New recipe identity')
  need(c['formalRelease'] is False and c['runtimeChanged'] is False,'Experimental/no-engine-delta scope')
  need({p:h for p,h in inventory(ROOT).items() if p!='inputs.json'}==c['recipeFiles'],'Recipe closure mismatch')
  need(inventory(ROOT/'overlay')=={p:r['after'] for p,r in c['overlay'].items()},'Overlay bytes differ')
@@ -45,7 +45,7 @@ def verify(app,expected):
   actual=inventory(app/folder);wanted={p[len(folder)+1:]:h for p,h in expected.items() if p.startswith(folder+'/')}
   if folder=='App' and 'Info.plist' in actual and 'Info.plist' not in wanted:
    raw=(app/'App/Info.plist').read_bytes()
-   normalized=raw.replace(b'<key>CFBundleVersion</key>\n\t<string>24</string>',b'<key>CFBundleVersion</key>\n\t<string>19</string>').replace(b'<key>CFBundleShortVersionString</key>\n\t<string>1.6.0</string>',b'<key>CFBundleShortVersionString</key>\n\t<string>1.5.6</string>')
+   normalized=raw.replace(b'<key>CFBundleVersion</key>\n\t<string>25</string>',b'<key>CFBundleVersion</key>\n\t<string>19</string>').replace(b'<key>CFBundleShortVersionString</key>\n\t<string>1.6.0</string>',b'<key>CFBundleShortVersionString</key>\n\t<string>1.5.6</string>')
    need(sha(normalized)=='b71b74d803b9a68e58a77e1043cbdcb07888606b513fecb8000651d73990085f','Generated Info differs beyond version/build');del actual['Info.plist']
   need(actual==wanted,'Source closure changed: '+folder)
 
@@ -74,9 +74,9 @@ def stage(a):
  for p,row in c['overlay'].items():
   need(effective.get(p)==row['before'],'Overlay preimage differs: '+p)
   dest=app/p;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes((ROOT/'overlay'/p).read_bytes());effective[p]=row['after']
- s=dict(prior);s.update(kind='EXPERIMENTAL-MOUSE-TOUCH-160-24',version='1.6.0',build='24',frozenStageSHA256=sha((a.output/'unload-staging.json').read_bytes()),effectiveSourceFiles=effective,overlay=c['overlay'],recipeFiles=c['recipeFiles'],additionalNativeTests=c['additionalNativeTests'],additionalTestSourceFiles=c['additionalTestSourceFiles'],additionalUITests=c['additionalUITests'],additionalUITestSourceFiles=c['additionalUITestSourceFiles'],runtimeChanged=False,formalRelease=False)
+ s=dict(prior);s.update(kind='EXPERIMENTAL-MOUSE-TOUCH-160-25',version='1.6.0',build='25',frozenStageSHA256=sha((a.output/'unload-staging.json').read_bytes()),effectiveSourceFiles=effective,overlay=c['overlay'],recipeFiles=c['recipeFiles'],additionalNativeTests=c['additionalNativeTests'],additionalTestSourceFiles=c['additionalTestSourceFiles'],additionalUITests=c['additionalUITests'],additionalUITestSourceFiles=c['additionalUITestSourceFiles'],runtimeChanged=False,formalRelease=False)
  write(a.output/'mouse-staging.json',s);validate_stage(app,a.output/'mouse-staging.json',a.baseline_checkout)
- print('PASS exact frozen base plus explicit 1.6.0/24 overlay; runtime unchanged')
+ print('PASS exact frozen base plus explicit 1.6.0/25 overlay; runtime unchanged')
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('action',choices=['stage','verify','preflight'])
  for n in ['baseline-checkout','source-checkout','case-checkout','engine-archive','engine-metadata','output']:p.add_argument('--'+n,type=Path)

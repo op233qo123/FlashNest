@@ -23,6 +23,14 @@ final class DraggablePlayerMenuUITests: XCTestCase {
         defer { XCUIDevice.shared.orientation = .portrait }
         LibraryNavigation.openSourceFolder(named: "FlashNest Player Fixture", in: app)
         LibraryNavigation.requireEntry("main.swf", in: app, towardTop: true).tap()
+        let play = app.webViews.buttons["Play / enable audio"].firstMatch
+        XCTAssertTrue(play.waitForExistence(timeout: 60))
+        XCTAssertTrue(LibraryNavigation.wait { play.isEnabled })
+        play.tap()
+        let childTrace = app.webViews.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "FLASHNEST_CHILD_OK")).firstMatch
+        XCTAssertTrue(childTrace.waitForExistence(timeout: 30), "Actual child SWF must be running before button checks")
+        let right = app.webViews.buttons["Right click"].firstMatch
+        XCTAssertFalse(right.exists, "Mouse mode defaults off")
         let menu = app.buttons["player-menu"].firstMatch
         XCTAssertTrue(menu.waitForExistence(timeout: 30))
         XCTAssertTrue(LibraryNavigation.wait { menu.isHittable })
@@ -69,12 +77,27 @@ final class DraggablePlayerMenuUITests: XCTestCase {
         XCTAssertEqual(visible.value as? String, "1")
         visible.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
         XCTAssertTrue(LibraryNavigation.wait { visible.value as? String == "0" })
+        let opacity = app.sliders["control-opacity"].firstMatch
+        for _ in 0..<4 {
+            if opacity.exists && opacity.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(opacity.isHittable, "Opacity stays adjustable with native keys hidden")
+        opacity.adjust(toNormalizedSliderPosition: 0)
+        XCTAssertEqual(app.staticTexts["control-opacity-value"].firstMatch.label, "10%")
         app.navigationBars.buttons["Done"].firstMatch.tap()
+        XCTAssertTrue(right.waitForExistence(timeout: 15))
+        XCTAssertTrue(LibraryNavigation.wait { right.isHittable })
+        assertInsideScreen(right, app: app)
+        right.tap() // Trusted UIKit route; this fixture does not expose AVM2 RIGHT_CLICK.
+        XCTAssertFalse(app.buttons["player-resume"].firstMatch.exists, "Right click must not open native menu")
         XCTAssertTrue(LibraryNavigation.wait { menu.isHittable })
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "touch-key-")).count, 0)
         XCUIDevice.shared.orientation = .landscapeLeft
         XCTAssertTrue(LibraryNavigation.wait { app.frame.width > app.frame.height && menu.isHittable })
         assertInsideScreen(menu, app: app)
+        XCTAssertTrue(LibraryNavigation.wait { right.isHittable })
+        assertInsideScreen(right, app: app)
         menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.99)))
         XCTAssertTrue(LibraryNavigation.wait { menu.isHittable })
@@ -86,6 +109,12 @@ final class DraggablePlayerMenuUITests: XCTestCase {
         menu.tap()
         XCTAssertTrue(app.buttons["player-resume"].firstMatch.waitForExistence(timeout: 10))
         XCTAssertEqual(app.switches["mouse-touch-enabled"].firstMatch.value as? String, "1")
+        let restoredOpacity = app.sliders["control-opacity"].firstMatch
+        for _ in 0..<4 {
+            if restoredOpacity.exists && restoredOpacity.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertEqual(app.staticTexts["control-opacity-value"].firstMatch.label, "10%", "Opacity persists across menu and rotation")
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = "Moved menu opens after rotation; mouse mode retained"
         attachment.lifetime = .keepAlways

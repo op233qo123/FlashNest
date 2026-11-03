@@ -417,3 +417,6 @@
 "Mouse touch mode" = "Mouse touch mode";
 "Off by default. Drag one finger to move the cursor, tap with one finger to left-click, or tap with two fingers to right-click." = "Off by default. Drag one finger to move the cursor, tap with one finger to left-click, or tap with two fingers to right-click.";
 "Drag to move. Tap to open the game menu." = "Drag to move. Tap to open the game menu.";
+
+"Off by default. Drag one finger to move the cursor, tap to left-click, or use the on-screen Right click button. Control opacity also adjusts this button." = "Off by default. Drag one finger to move the cursor, tap to left-click, or use the on-screen Right click button. Control opacity also adjusts this button.";
+
