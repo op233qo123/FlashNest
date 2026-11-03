@@ -171,6 +171,10 @@
     "scripts/test_mouse_touch_runtime.py": {
       "after": "e38e0dccf686d9b82f11a7f82e6b219691119b495be0a5b8b099720fb7d30e5d",
       "before": null
+    },
+    "scripts/test_shell.js": {
+      "after": "ec5f7d2414631a16039f2825a9c82184f396261646fad08c602b9a3497c042b6",
+      "before": "5466d9bd01e77585085e32c95223df17a36890130bdf0b29ea31898f00855f53"
     }
   },
   "recipeFiles": {
@@ -206,6 +210,7 @@
     "overlay/scripts/test_mouse_shell_contract.js": "0f24ea034885e4ad2e315b50799da8829c40aec2b530a001b72cb455f16b9d51",
     "overlay/scripts/test_mouse_touch.js": "fb14843c2c24b273849eddbad15f86fa1f326e42ceb1b4fece4c2b8026c9c97c",
     "overlay/scripts/test_mouse_touch_runtime.py": "e38e0dccf686d9b82f11a7f82e6b219691119b495be0a5b8b099720fb7d30e5d",
+    "overlay/scripts/test_shell.js": "ec5f7d2414631a16039f2825a9c82184f396261646fad08c602b9a3497c042b6",
     "stage.py": "7b2dc4d22a3ac1aa9b68c233dea7cf61989082e4bd23ca250ea9681b901d216d",
     "test_stage.py": "18643c6640bf935d57a7a5b2cc773c6ae75bc39e0fca1e1022cb25d68785eb1c"
   },
