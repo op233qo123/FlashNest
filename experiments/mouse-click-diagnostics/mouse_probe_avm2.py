@@ -22,6 +22,9 @@ def fixture():
         if event=='mouseUp': code+=set_('pressed',b'\x27')
         methods.append((name,a.method(name,code+end,args=1)))
         ctor+=a.call(t,'addEventListener',a.push(event),get(name))
+        stage_name='stage_'+event
+        methods.append((stage_name,a.method(stage_name,h+a.trace('STAGE_EVENT:'+event)+end,args=1)))
+        ctor+=a.call(get('stage'),'addEventListener',a.push(event),get(stage_name))
     # Records whether a game using enterFrame ever observes the button held.
     frame=h+a.trace('FRAME_PRESSED',get('pressed'))+end
     methods.append(('onFrame',a.method('onFrame',frame,args=1)))

@@ -14,6 +14,18 @@ def wait(page, expression, timeout=20):
         time.sleep(.03)
     raise AssertionError(('SWF mouse probe timeout',expression,page.evaluate('({diag:window.__diag,traces:window.__mouseRaw})')))
 
+RENDERER_OBSERVER = """(()=>{
+ const original=HTMLCanvasElement.prototype.getContext;
+ window.__successfulCanvasContexts=new WeakMap();window.__canvasContextAttempts=[];
+ HTMLCanvasElement.prototype.getContext=function(type,...args){
+  const result=original.call(this,type,...args);
+  if(window.__canvasContextAttempts.length<40)window.__canvasContextAttempts.push({type,success:!!result});
+  if(result)window.__successfulCanvasContexts.set(this,String(type));
+  return result;
+ };
+})()"""
+ACTUAL_RENDERER = """()=>window.__successfulCanvasContexts.get(document.querySelector('ruffle-player')?.shadowRoot?.querySelector('canvas'))||'none'"""
+
 # Bounded diagnostics are emitted to stderr only. A failing acceptance case is
 # never replaced by a successful retry or positive control.
 OBSERVE = """()=>{
@@ -33,7 +45,7 @@ SNAPSHOT = """()=>{
  const host=document.querySelector('ruffle-player'),canvas=host?.shadowRoot?.querySelector('canvas');
  const describe=e=>{if(!e)return null;const r=e.getBoundingClientRect(),s=getComputedStyle(e);return {tag:e.tagName,id:e.id,rect:{x:r.x,y:r.y,width:r.width,height:r.height},hidden:e.hidden,display:s.display,visibility:s.visibility,pointerEvents:s.pointerEvents};};
  const r=canvas?.getBoundingClientRect(),x=r?.x+r?.width/2,y=r?.y+r?.height/2;
- return {raw:window.__mouseRaw,dom:window.__mouseDOM,diag:window.__diag?.slice(-30),probeGeometry:window.__diag?.filter(m=>String(m.message).includes('PROBE_GEOMETRY')).slice(0,2),canvas:describe(canvas),host:describe(host),
+ return {actualRenderer:window.__successfulCanvasContexts?.get(canvas)||'none',contextAttempts:window.__canvasContextAttempts,raw:window.__mouseRaw,dom:window.__mouseDOM,diag:window.__diag?.slice(-30),probeGeometry:window.__diag?.filter(m=>String(m.message).includes('PROBE_GEOMETRY')).slice(0,2),canvas:describe(canvas),host:describe(host),
   cursor:describe(document.querySelector('#mouse-touch-cursor')),active:describe(document.activeElement),
   centerHit:describe(document.elementFromPoint(x,y)),shadowCenterHit:describe(host?.shadowRoot?.elementFromPoint(x,y)),
   viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},visibility:document.visibilityState};
@@ -46,6 +58,7 @@ def ordinary_mouse_control(browser, url):
         page=context.new_page();errors=[];console=[]
         page.on('console',lambda m:console.append({'type':m.type,'text':m.text[:2000]}) if m.type in ('error','warning') and len(console)<30 else None)
         page.on('pageerror',lambda e:errors.append(str(e)))
+        page.add_init_script(RENDERER_OBSERVER)
         page.add_init_script("window.__diag=[];window.webkit={messageHandlers:{flashnest:{postMessage:m=>window.__diag.push(m)}}}")
         page.goto(url)
         wait(page,"window.__diag.some(m=>m.type==='loaded')",60)
@@ -79,6 +92,7 @@ def run_shell_probe(browser, directory, base_url, runtime_files):
                 assert r.status==200 and name in runtime_files
                 wasm[name]=hashlib.sha256(r.body()).hexdigest()
         page.on('response',response)
+        page.add_init_script(RENDERER_OBSERVER)
         page.add_init_script("window.__diag=[];window.webkit={messageHandlers:{flashnest:{postMessage:m=>window.__diag.push(m)}}}")
         url=f'{base_url}/fixture/web/index.html?package={game_id}&entry=main.swf&mouseTouch=1&mouseOpacity=0.6'
         page.goto(url)
@@ -102,7 +116,7 @@ def run_shell_probe(browser, directory, base_url, runtime_files):
             time.sleep(.15)
             raw=page.evaluate('window.__mouseRaw')
             events=[m for m in raw if m.startswith('EVENT:')]
-            row={'name':name,'events':events,'expected':expected,'frameObservedPressed':'FRAME_PRESSED true' in raw}
+            row={'name':name,'events':events,'expected':expected,'frameObservedPressed':'FRAME_PRESSED true' in raw,'stageEvents':[m for m in raw if m.startswith('STAGE_EVENT:')]}
             cases.append(row)
             if events!=expected:
                 evidence={'failedCase':row,'original':page.evaluate(SNAPSHOT),'pageErrors':errors[:20],'console':console}
@@ -143,12 +157,14 @@ def run_shell_probe(browser, directory, base_url, runtime_files):
         page.evaluate('window.FlashNest.setMouseTouchEnabled(false)');assert not button.is_visible()
         page.evaluate('window.FlashNest.setMouseTouchEnabled(true)');assert button.is_visible()
         clear();tap();check('first_tap_after_mode_toggle',left)
+        actual_renderer=page.evaluate(ACTUAL_RENDERER)
+        assert actual_renderer in ('webgl','webgl2','experimental-webgl'),('No actual WebGL renderer',page.evaluate(SNAPSHOT))
         assert not errors,errors
         assert all(url.startswith(base_url+'/') for url in requests),requests
         assert wasm and all(runtime_files[n]==h for n,h in wasm.items()),wasm
         source=Path(__file__).resolve().parent
         files=['test_mouse_touch_runtime.py','mouse_clicks_runtime.py','mouse_probe_abc.py','mouse_probe_avm2.py']
         sources={n:hashlib.sha256((source/n).read_bytes()).hexdigest() for n in files}
-        return {'sourceFiles':sources,'selectedWasm':wasm,'runtimeFiles':runtime_files,'head':os.environ.get('GITHUB_SHA'),'runID':os.environ.get('GITHUB_RUN_ID'),'result':'PASS','actualShell':True,'actualSWFEvents':True,'browserTouch':'CDP','nativeTouchCertified':False,'cases':cases}
+        return {'actualRenderer':actual_renderer,'sourceFiles':sources,'selectedWasm':wasm,'runtimeFiles':runtime_files,'head':os.environ.get('GITHUB_SHA'),'runID':os.environ.get('GITHUB_RUN_ID'),'result':'PASS','actualShell':True,'actualSWFEvents':True,'browserTouch':'CDP','nativeTouchCertified':False,'cases':cases}
     finally:
         context.close()
