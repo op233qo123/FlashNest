@@ -45,7 +45,7 @@ SNAPSHOT = """()=>{
  const host=document.querySelector('ruffle-player'),canvas=host?.shadowRoot?.querySelector('canvas');
  const describe=e=>{if(!e)return null;const r=e.getBoundingClientRect(),s=getComputedStyle(e);return {tag:e.tagName,id:e.id,rect:{x:r.x,y:r.y,width:r.width,height:r.height},hidden:e.hidden,display:s.display,visibility:s.visibility,pointerEvents:s.pointerEvents};};
  const r=canvas?.getBoundingClientRect(),x=r?.x+r?.width/2,y=r?.y+r?.height/2;
- return {actualRenderer:window.__successfulCanvasContexts?.get(canvas)||'none',contextAttempts:window.__canvasContextAttempts,raw:window.__mouseRaw,dom:window.__mouseDOM,diag:window.__diag?.slice(-30),probeGeometry:window.__diag?.filter(m=>String(m.message).includes('PROBE_GEOMETRY')).slice(0,2),canvas:describe(canvas),host:describe(host),
+ return {actualRenderer:window.__successfulCanvasContexts?.get(canvas)||'none',contextAttempts:window.__canvasContextAttempts,raw:window.__mouseRaw,dom:window.__mouseDOM,diag:window.__diag?.slice(-30),probeGeometry:window.__diag?.filter(m=>String(m.message).includes('GEOMETRY')).slice(0,4),canvas:describe(canvas),host:describe(host),
   cursor:describe(document.querySelector('#mouse-touch-cursor')),active:describe(document.activeElement),
   centerHit:describe(document.elementFromPoint(x,y)),shadowCenterHit:describe(host?.shadowRoot?.elementFromPoint(x,y)),
   viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},visibility:document.visibilityState};
@@ -118,7 +118,9 @@ def run_shell_probe(browser, directory, base_url, runtime_files):
             events=[m for m in raw if m.startswith('EVENT:')]
             row={'name':name,'events':events,'expected':expected,'frameObservedPressed':'FRAME_PRESSED true' in raw,'stageEvents':[m for m in raw if m.startswith('STAGE_EVENT:')]}
             cases.append(row)
-            if events!=expected:
+            expected_stage=[m.replace('EVENT:','STAGE_EVENT:',1) for m in expected]
+            row['expectedStageEvents']=expected_stage
+            if events!=expected or row['stageEvents']!=expected_stage:
                 evidence={'failedCase':row,'original':page.evaluate(SNAPSHOT),'pageErrors':errors[:20],'console':console}
                 try:
                     clear();tap();time.sleep(.2)
