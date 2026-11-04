@@ -47,7 +47,7 @@ jobs:
           mkdir engine-input
           gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368 > engine-input/metadata.json
           gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368/zip > engine-input/engine.zip
-      - name: Validate frozen delivered stage then apply explicit1.6 overlay
+      - name: Reconstruct explicit recovered baseline with unchanged App and engine hashes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

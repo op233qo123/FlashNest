@@ -55,33 +55,43 @@ def verify(app,expected):
   need(actual==wanted,'Source closure changed: '+folder)
 
 def validate_stage(app,receipt,baseline):
- c=config();m=frozen();s=read(receipt);_,_,case=m.inherited(baseline);old,runtime=m.effective_inventory(case)
- before=read(receipt.parent/'unload-staging.json')
- need(sha((receipt.parent/'unload-staging.json').read_bytes())==s['frozenStageSHA256'],'Frozen stage receipt changed')
- need(before['effectiveSourceFiles']==old and before['runtimeFiles']==runtime,'Frozen source receipt identity')
- effective=dict(old)
- for p,row in c['overlay'].items():
-  need(effective.get(p)==row['before'],'Overlay preimage differs: '+p);effective[p]=row['after']
- need(s['effectiveSourceFiles']==effective and s['runtimeFiles']==runtime,'New overlay receipt differs')
- need(s['head']==os.environ['GITHUB_SHA'] and s['runID']==os.environ['GITHUB_RUN_ID'],'Wrong current run')
+ c=config();s=read(receipt);parent=receipt.parent
+ manifest=read(ROOT/'recovery-manifest.json');r=read(parent/'recovery-staging.json')
+ need(s['kind']=='EXPERIMENTAL-MOUSE-TOUCH-160-26-RECOVERED','Explicit recovered source identity')
+ need(s['recoveryReceiptSHA256']==sha((parent/'recovery-staging.json').read_bytes()),'Recovery receipt changed')
+ need(r['recoveryManifestSHA256']==sha((ROOT/'recovery-manifest.json').read_bytes()),'Recovery manifest changed')
+ need(r['kind']=='EXPLICIT-RECOVERED-SOURCE-BASELINE' and r['legacyStageExecuted'] is False,'Recovery cannot claim legacy staging')
+ need(r['recoveryScriptSHA256']==sha((ROOT/'recovery_stage.py').read_bytes()),'Recovery producer changed')
+ need(r['materialSources']==manifest['materials'],'Recovery material sources differ')
+ effective=manifest['effectiveSourceFiles'];original=manifest['originalEffectiveSourceFiles'];removed=manifest['removedFiles']
+ need(removed=={'vendor/ruffle-audio-recovery-40614335019.zip':'3befcb048669c074a017e2bfb6d3ccc283028ef90d7960695bbf0964a2634e9a'},'Unexpected recovery removal')
+ need(len(original)==230 and len(effective)==229 and {p:h for p,h in original.items() if p not in removed}==effective and all(original.get(p)==h for p,h in removed.items()),'Recovered source differs beyond declared historical ZIP')
+ need(r['effectiveSourceFiles']==effective and r['originalEffectiveSourceFiles']==original and r['removedFiles']==removed,'Recovery source declaration mismatch')
+ need(s['effectiveSourceFiles']==effective and s['runtimeFiles']==r['runtimeFiles'],'Mouse recovery identity mismatch')
+ for row in [s,r]:need(row['head']==os.environ['GITHUB_SHA'] and row['runID']==os.environ['GITHUB_RUN_ID'],'Wrong recovery current run')
  need(s['overlay']==c['overlay'] and s['recipeFiles']==c['recipeFiles'],'Overlay recipe changed')
- need(s['additionalNativeTests']==c['additionalNativeTests'] and s['additionalTestSourceFiles']==c['additionalTestSourceFiles'],'Native inventory differs')
- need(s['additionalUITests']==c['additionalUITests'] and s['additionalUITestSourceFiles']==c['additionalUITestSourceFiles'],'UI inventory differs')
- need(s['engineReuseSHA256']==before['engineReuseSHA256'] and sha((receipt.parent/'engine-reuse.json').read_bytes())==s['engineReuseSHA256'],'Engine reuse proof changed')
- need(s['cadenceInputsSHA256']==before['cadenceInputsSHA256'] and sha((receipt.parent/'cadence-inputs.json').read_bytes())==s['cadenceInputsSHA256'],'Cadence proof changed')
- need(inventory(app/'App/Resources/Web/runtime')==runtime and len(runtime)==12,'Exact engine closure differs')
+ for key in ['additionalNativeTests','additionalTestSourceFiles','additionalUITests','additionalUITestSourceFiles']:need(s[key]==c[key],'Test inventory differs: '+key)
+ for filename,key in [('engine-reuse.json','engineReuseSHA256'),('cadence-inputs.json','cadenceInputsSHA256')]:
+  need(s[key]==r[key]==sha((parent/filename).read_bytes()),'Recovery runtime proof changed: '+filename)
+ reuse=read(parent/'engine-reuse.json');cadence=read(parent/'cadence-inputs.json')
+ need(reuse['consumerHead']==s['head'] and reuse['consumerRunID']==s['runID'] and reuse['engineBuildExecutedThisRun'] is False,'Engine reuse current-run identity')
+ need(cadence['head']==s['head'] and cadence['runID']==s['runID'] and cadence['runtimeFiles']==s['runtimeFiles']==reuse['runtimeFiles'],'Cadence/runtime identity')
+ need(inventory(app/'App/Resources/Web/runtime')==s['runtimeFiles'] and len(s['runtimeFiles'])==12,'Exact engine closure differs')
+ need(not (app/next(iter(removed))).exists(),'Removed historical archive unexpectedly present')
  verify(app,effective)
+ need(git_head(baseline)==BASE,'Frozen validator checkout identity')
  return s,effective,read(baseline/RECIPE/'inputs.json')
 
 def stage(a):
- c=config();m=frozen();m.stage(a.baseline_checkout,a.source_checkout,a.case_checkout,a.engine_archive,a.engine_metadata,a.output)
- app=a.output/'app';prior,effective,_=m.validate_stage(app,a.output/'unload-staging.json',a.baseline_checkout)
- for p,row in c['overlay'].items():
-  need(effective.get(p)==row['before'],'Overlay preimage differs: '+p)
-  dest=app/p;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes((ROOT/'overlay'/p).read_bytes());effective[p]=row['after']
- s=dict(prior);s.update(kind='EXPERIMENTAL-MOUSE-TOUCH-160-26',version='1.6.0',build='26',frozenStageSHA256=sha((a.output/'unload-staging.json').read_bytes()),effectiveSourceFiles=effective,overlay=c['overlay'],recipeFiles=c['recipeFiles'],additionalNativeTests=c['additionalNativeTests'],additionalTestSourceFiles=c['additionalTestSourceFiles'],additionalUITests=c['additionalUITests'],additionalUITestSourceFiles=c['additionalUITestSourceFiles'],runtimeChanged=False,formalRelease=False)
- write(a.output/'mouse-staging.json',s);validate_stage(app,a.output/'mouse-staging.json',a.baseline_checkout)
- print('PASS exact frozen base plus explicit 1.6.0/26 overlay; runtime unchanged')
+ c=config();delivered=Path(os.environ['FLASHNEST_DELIVERED_CHECKOUT']).resolve()
+ need(git_head(delivered)==DELIVERED,'Frozen delivered checkout changed')
+ recovery=module('mouse_recovery_stage',ROOT/'recovery_stage.py')
+ recovery.stage(a.baseline_checkout,a.source_checkout,a.case_checkout,delivered,a.engine_archive,a.engine_metadata,a.output)
+ r=read(a.output/'recovery-staging.json');s=dict(r)
+ s.update(kind='EXPERIMENTAL-MOUSE-TOUCH-160-26-RECOVERED',version='1.6.0',build='26',recoveryReceiptSHA256=sha((a.output/'recovery-staging.json').read_bytes()),overlay=c['overlay'],recipeFiles=c['recipeFiles'],runtimeChanged=False,formalRelease=False)
+ for key in ['additionalNativeTests','additionalTestSourceFiles','additionalUITests','additionalUITestSourceFiles']:s[key]=c[key]
+ write(a.output/'mouse-staging.json',s);validate_stage(a.output/'app',a.output/'mouse-staging.json',a.baseline_checkout)
+ print('PASS explicit recovered229 source baseline; historical ZIP removed, all other hashes unchanged')
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('action',choices=['stage','verify','preflight'])
  for n in ['baseline-checkout','source-checkout','case-checkout','engine-archive','engine-metadata','output']:p.add_argument('--'+n,type=Path)
