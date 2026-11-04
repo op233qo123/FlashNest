@@ -6,7 +6,37 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import stage as e
 from select_toolchain import verify as verify_toolchain
 from run_ios_tests import verify_summary
-IPA_NAME='FlashNest-1.6.0-build25-mouse-touch-experimental-unsigned.ipa'
+IPA_NAME='FlashNest-1.6.0-build26-mouse-touch-experimental-unsigned.ipa'
+
+def verify_click_cases(clicks):
+    expected_names=['first_canvas_tap_without_warmup_move','jitter_click_once','slide_never_clicks','first_tap_after_slide','first_tap_after_focus_loss','visible_right_button_swf_events','repeat_right_button_no_left_leak','transparent_right_button_swf_events','first_tap_after_pause_resume','first_tap_after_mode_toggle','early_move_stays_hover_after_hold_threshold','hold_then_drag_balanced_and_frame_visible','cancel_drag_releases_engine_button','tap_after_cancel_has_no_leaked_button','disable_during_drag_releases_engine_button','tap_after_drag_mode_toggle']
+    hover={'slide_never_clicks','early_move_stays_hover_after_hold_threshold'}
+    drag={'hold_then_drag_balanced_and_frame_visible','cancel_drag_releases_engine_button','disable_during_drag_releases_engine_button'}
+    right={'visible_right_button_swf_events','repeat_right_button_no_left_leak','transparent_right_button_swf_events'}
+    rows=clicks.get('cases')
+    e.need(isinstance(rows,list) and all(isinstance(row,dict) for row in rows),'SWF click cases malformed')
+    e.need([row.get('name') for row in rows]==expected_names,'SWF click case inventory differs')
+    for row in rows:
+        name=row['name'];is_drag=name in drag;is_right=name in right
+        expected=[] if name in hover else ['EVENT:rightMouseDown','EVENT:rightMouseUp','EVENT:rightClick'] if is_right else ['EVENT:mouseDown','EVENT:mouseUp'] if is_drag else ['EVENT:mouseDown','EVENT:mouseUp','EVENT:click']
+        events=row.get('events')
+        e.need(isinstance(events,list) and all(isinstance(v,str) for v in events),'SWF event samples malformed: '+name)
+        # Ruffle may emit a click on release within the same Sprite. Never allow
+        # extra presses/releases, right leakage, or multiple synthetic clicks.
+        e.need(events in (expected,expected+['EVENT:click']) if is_drag else events==expected,'SWF click event mismatch: '+name)
+        e.need(row.get('expected')==expected and row.get('pairOnly') is is_drag,'SWF case semantics mismatch: '+name)
+        e.need(row.get('stageEvents')==[v.replace('EVENT:','STAGE_EVENT:',1) for v in events] and row.get('expectedStageEvents')==[v.replace('EVENT:','STAGE_EVENT:',1) for v in expected],'SWF stage event mismatch: '+name)
+        left_expected=bool(expected) and not is_right
+        for key,prefix,pressed_key,pressed_expected in [('leftFrameSamples','FRAME_PRESSED ','frameObservedPressed',left_expected),('rightFrameSamples','FRAME_RIGHT_PRESSED ','frameObservedRightPressed',is_right)]:
+            samples=row.get(key)
+            e.need(isinstance(samples,list) and samples and all(v in (prefix+'true',prefix+'false') for v in samples),'Missing/invalid SWF frame samples: '+name)
+            e.need(samples[-1]==prefix+'false' and ((prefix+'true' in samples)==pressed_expected) and row.get(pressed_key) is pressed_expected,'SWF pressed/released frame mismatch: '+name)
+        e.need(row.get('framePollingPassed') is True and row.get('dragPollingPassed') is True,'SWF frame/drag gate not passed: '+name)
+        moves=row.get('dragMoves')
+        e.need(isinstance(moves,list) and all(isinstance(v,str) and v.startswith('DRAG_MOVE ') for v in moves),'Invalid drag evidence: '+name)
+        if is_drag:
+            e.need(any(v.startswith('DRAG_MOVE true false ') for v in moves),'No SWF move while left pressed: '+name)
+
 def load_checks(baseline, x):
     root = baseline / 'experiments/release-ipa-156-build22'
     e.need(e.inventory(root) == x['releaseRecipeFiles'], 'Frozen release validators differ')
@@ -143,12 +173,7 @@ def verify(a):
     clicks=browser.get('swfClicks',{})
     e.need(clicks.get('result')=='PASS' and clicks.get('actualShell') is True and clicks.get('actualSWFEvents') is True and clicks.get('browserTouch')=='CDP' and clicks.get('actualRenderer') in ('webgl','webgl2','experimental-webgl') and clicks.get('nativeTouchCertified') is False,'Actual shell SWF clicks not passed')
     e.need(clicks.get('head')==os.environ['GITHUB_SHA'] and clicks.get('runID')==os.environ['GITHUB_RUN_ID'] and clicks.get('runtimeFiles')==staged['runtimeFiles'],'SWF click evidence wrong source/run')
-    expected_names=['first_canvas_tap_without_warmup_move','jitter_click_once','slide_never_clicks','first_tap_after_slide','first_tap_after_focus_loss','visible_right_button_swf_events','repeat_right_button_no_left_leak','transparent_right_button_swf_events','first_tap_after_pause_resume','first_tap_after_mode_toggle']
-    click_rows=clicks.get('cases',[])
-    e.need([row.get('name') for row in click_rows]==expected_names,'SWF click case inventory differs')
-    for row in click_rows:
-        expected=[] if row['name']=='slide_never_clicks' else ['EVENT:rightMouseDown','EVENT:rightMouseUp','EVENT:rightClick'] if 'right_button' in row['name'] else ['EVENT:mouseDown','EVENT:mouseUp','EVENT:click']
-        e.need(row.get('events')==expected and row.get('expected')==expected and row.get('stageEvents')==[event.replace('EVENT:','STAGE_EVENT:') for event in expected],'SWF click event mismatch: '+row['name'])
+    verify_click_cases(clicks)
     for name in ['test_mouse_touch_runtime.py','mouse_clicks_runtime.py','mouse_probe_abc.py','mouse_probe_avm2.py']:
         e.need(clicks.get('sourceFiles',{}).get(name)==e.sha((app/'scripts'/name).read_bytes())==effective.get('scripts/'+name),'SWF probe source mismatch')
     selected=clicks.get('selectedWasm',{})
@@ -172,7 +197,7 @@ def verify(a):
         payload=checks.file_map(bundle)
     e.validate_stage(app,a.stage_receipt,a.baseline_checkout)
     e.need(a.stage_receipt.read_bytes()==stage_raw and a.ipa.read_bytes()==ipa_raw,'Inputs changed during verification')
-    e.write(a.output,{'schemaVersion':1,'kind':'EXPERIMENTAL-MOUSE-TOUCH-TEST-IPA','packageRevision':'mouse-exclusive-tap-right-button','version':'1.6.0','build':'25','bundleID':'com.flashnest.app','ipaFilename':a.ipa.name,'ipaSHA256':e.sha(ipa_raw),'ipaBytes':len(ipa_raw),'unsigned':True,'ipaBuilt':True,'packagingCommit':os.environ['GITHUB_SHA'],'packagingRunID':os.environ['GITHUB_RUN_ID'],'stageReceiptSHA256':e.sha(stage_raw),'engineReuseSHA256':staged['engineReuseSHA256'],'engineReference':e.read(a.stage_receipt.parent/'engine-reuse.json')['engineReference'],'engineBuildExecutedThisRun':False,'appSourceFiles':effective,'runtimeFiles':staged['runtimeFiles'],'webFiles':web,'packagedBundleFiles':payload,'outerPayloadFiles':sorted(outer),'deviceExecutable':macho,'toolchain':toolchain,'nativeExecutedThisRun':True,'nativeEvidenceReused':False,'nativeVerificationSHA256':native_hash,'nativeEvidence':native,'currentFocusedEvidence':focused,'mouseBrowserEvidence':browser,'mouseBrowserEvidenceSHA256':e.sha(browser_raw),'runtimeChanged':False,'diagnosticSchema':2,'observerRevision':2,'diagnosticOptInDefault':False,'productFrameRateChanged':False,'formalRelease':False,'physicalDeviceCertified':False,'gameLoadingIssueResolved':False,'speedRootCauseEstablished':False,'fullGatePassed':False})
+    e.write(a.output,{'schemaVersion':1,'kind':'EXPERIMENTAL-MOUSE-TOUCH-TEST-IPA','packageRevision':'mouse-hold-drag-frame-visible-click','version':'1.6.0','build':'26','bundleID':'com.flashnest.app','ipaFilename':a.ipa.name,'ipaSHA256':e.sha(ipa_raw),'ipaBytes':len(ipa_raw),'unsigned':True,'ipaBuilt':True,'packagingCommit':os.environ['GITHUB_SHA'],'packagingRunID':os.environ['GITHUB_RUN_ID'],'stageReceiptSHA256':e.sha(stage_raw),'engineReuseSHA256':staged['engineReuseSHA256'],'engineReference':e.read(a.stage_receipt.parent/'engine-reuse.json')['engineReference'],'engineBuildExecutedThisRun':False,'appSourceFiles':effective,'runtimeFiles':staged['runtimeFiles'],'webFiles':web,'packagedBundleFiles':payload,'outerPayloadFiles':sorted(outer),'deviceExecutable':macho,'toolchain':toolchain,'nativeExecutedThisRun':True,'nativeEvidenceReused':False,'nativeVerificationSHA256':native_hash,'nativeEvidence':native,'currentFocusedEvidence':focused,'mouseBrowserEvidence':browser,'mouseBrowserEvidenceSHA256':e.sha(browser_raw),'runtimeChanged':False,'diagnosticSchema':2,'observerRevision':2,'diagnosticOptInDefault':False,'productFrameRateChanged':False,'formalRelease':False,'physicalDeviceCertified':False,'gameLoadingIssueResolved':False,'speedRootCauseEstablished':False,'fullGatePassed':False})
     print('PASS exact candidate runtime, fresh native/UI evidence and unsigned arm64 diagnostic IPA')
 if __name__=='__main__':
     p=argparse.ArgumentParser()

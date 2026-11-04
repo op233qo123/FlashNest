@@ -55,7 +55,7 @@ import WebKit
         };
         window.mouseTestCanvas = document.querySelector('ruffle-player').shadowRoot.querySelector('canvas');
         for (const type of ['pointerdown','pointermove','pointerup']) {
-          mouseTestCanvas.addEventListener(type, e => mouseTestEvents.push({type, pointer:e.pointerType, button:e.button, buttons:e.buttons}));
+          mouseTestCanvas.addEventListener(type, e => mouseTestEvents.push({type, pointer:e.pointerType, button:e.button, buttons:e.buttons, at:performance.now()}));
         }
         window.mouseTestSend = (type,id=1,x=100,y=100) => mouseTestCanvas.dispatchEvent(new PointerEvent(type,
           {pointerId:id,pointerType:'touch',clientX:x,clientY:y,bubbles:true,composed:true,cancelable:true}));
@@ -68,10 +68,11 @@ import WebKit
         // evaluateJavaScript calls are ordered; this query is also a bridge barrier.
         _ = try await view.evaluateJavaScript("window.mouseTestEvents=[]; true")
         // First enabled tap must reach AVM1 before any mouse movement primes Ruffle.
-        _ = try await view.evaluateJavaScript("mouseTestRawTraces=[]; mouseTestSend('pointerdown'); mouseTestSend('pointerup'); true")
+        try await assertJS(view, "(()=>{mouseTestRawTraces=[]; mouseTestSend('pointerdown'); mouseTestSend('pointerup'); return mouseTestEvents.filter(e=>e.type==='pointerdown').length===1 && !mouseTestEvents.some(e=>e.type==='pointerup');})()")
         let firstClick = try await waitForJS(view, "mouseTestRawTraces.includes('DOWN') && mouseTestRawTraces.includes('UP')", seconds: 5)
         XCTAssertTrue(firstClick, "First left tap, without prior drag, must reach actual AVM1")
         try await assertJS(view, "mouseTestRawTraces.filter(m=>m==='DOWN').length===1 && mouseTestRawTraces.filter(m=>m==='UP').length===1")
+        try await assertJS(view, "(()=>{const pair=mouseTestEvents.filter(e=>e.type==='pointerdown'||e.type==='pointerup');return pair.length===2 && pair[1].at-pair[0].at>=90;})()")
         try await assertJS(view, "!document.getElementById('mouse-right-button').hidden && !document.getElementById('mouse-right-button').disabled")
         session.setMouseRightButtonOpacity(0.1)
         try await assertJS(view, "Number(getComputedStyle(document.getElementById('mouse-right-button')).opacity) === 0.1")
@@ -110,12 +111,57 @@ import WebKit
         // Test-only bounded tee reads real AVM1 traces before production rate limiting,
         // while preserving the original observer and its safety policy.
         _ = try await view.evaluateJavaScript("mouseTestRawTraces=[]; mouseTestEvents=[]; mouseTestSend('pointerdown'); mouseTestSend('pointerup'); true")
-        let clicked = try await waitForJS(view, "mouseTestRawTraces.includes('DOWN')", seconds: 5)
+        let clicked = try await waitForJS(view, "mouseTestRawTraces.includes('DOWN') && mouseTestRawTraces.includes('UP')", seconds: 5)
         XCTAssertTrue(clicked, "Actual AVM1 mouse listener must receive the left click")
         try await assertJS(view, "mouseTestRawTraces.filter(message=>message==='DOWN').length === 1")
         try await assertJS(view, "JSON.stringify(mouseTestEvents.filter(e=>e.type==='pointerdown'||e.type==='pointerup').map(e=>[e.button,e.buttons])) === '[[0,1],[0,0]]'")
-        _ = try await view.evaluateJavaScript("mouseTestEvents=[]; mouseTestSend('pointerdown',1); mouseTestSend('pointerdown',2); mouseTestSend('pointerup',1); mouseTestSend('pointerup',2); true")
+        try await assertJS(view, "(()=>{mouseTestEvents=[]; mouseTestSend('pointerdown',1); mouseTestSend('pointerdown',2); mouseTestSend('pointerup',1); mouseTestSend('pointerup',2); return mouseTestEvents.some(e=>e.type==='pointerdown'&&e.button===2) && !mouseTestEvents.some(e=>e.type==='pointerup');})()")
+        let rightReleased = try await waitForJS(view, "mouseTestEvents.some(e=>e.type==='pointerup' && e.button===2)", seconds: 5)
+        XCTAssertTrue(rightReleased, "Right-click pulse must eventually release")
         try await assertJS(view, "JSON.stringify(mouseTestEvents.filter(e=>e.type==='pointerdown'||e.type==='pointerup').map(e=>[e.button,e.buttons])) === '[[2,2],[2,0]]'")
+        try await assertJS(view, "(()=>{const pair=mouseTestEvents.filter(e=>e.type==='pointerdown'||e.type==='pointerup');return pair[1].at-pair[0].at>=90;})()")
+        // Actual AVM1 DOWN/UP validates engine delivery; DOM masks separately
+        // validate dragging. Synthetic WK events do not certify UIKit gestures.
+        _ = try await view.evaluateJavaScript("mouseTestRawTraces=[]; mouseTestEvents=[]; window.mouseHoldStarted=performance.now(); mouseTestSend('pointerdown'); true")
+        let held = try await waitForJS(view, "mouseTestRawTraces.includes('DOWN')", seconds: 5)
+        XCTAssertTrue(held, "Stationary long hold must press the actual SWF mouse")
+        try await assertJS(view, "mouseTestEvents.filter(e=>e.type==='pointerdown').length===1 && mouseTestEvents.find(e=>e.type==='pointerdown').at-mouseHoldStarted>=240 && !mouseTestEvents.some(e=>e.type==='pointerup')")
+        try await assertJS(view, "(()=>{mouseTestSend('pointermove',1,140,60);const move=mouseTestEvents.filter(e=>e.type==='pointermove').slice(-1)[0];mouseTestSend('pointerup',1,140,60);return move.buttons===1 && mouseTestEvents.filter(e=>e.type==='pointerup').length===1;})()")
+        let dragReleased = try await waitForJS(view, "mouseTestRawTraces.includes('UP')", seconds: 5)
+        XCTAssertTrue(dragReleased, "Drag release must reach actual AVM1")
+        try await assertJS(view, "mouseTestRawTraces.filter(m=>m==='DOWN').length===1 && mouseTestRawTraces.filter(m=>m==='UP').length===1")
+        // Lifecycle routing uses actual production listeners, but dispatched blur /
+        // visibility events below are not an OS background/suspension simulation.
+        for phase in ["pending", "held", "pulse"] {
+            for cancellation in ["pointercancel", "blur", "visibility", "modeoff"] {
+                session.setMouseTouchEnabled(true)
+                if phase == "held" {
+                    _ = try await view.evaluateJavaScript("mouseTestRawTraces=[]; mouseTestEvents=[]; mouseTestSend('pointerdown'); true")
+                    let pressed = try await waitForJS(view, "mouseTestRawTraces.includes('DOWN')", seconds: 5)
+                    XCTAssertTrue(pressed, "Held cancellation setup must reach SWF")
+                }
+                let action: String
+                switch cancellation {
+                case "pointercancel": action = "mouseTestSend('pointercancel')"
+                case "blur": action = "window.dispatchEvent(new Event('blur'))"
+                case "visibility": action = "document.dispatchEvent(new Event('visibilitychange'))"
+                default: action = "window.FlashNest.setMouseTouchEnabled(false)"
+                }
+                let begin = phase == "held" ? "" : "mouseTestRawTraces=[]; mouseTestEvents=[]; mouseTestSend('pointerdown');"
+                let pulse = phase == "pulse" ? "mouseTestSend('pointerup');" : ""
+                // Cancel in the same JS turn as tap release so a slow CI roundtrip
+                // cannot accidentally wait out the entire click pulse first.
+                _ = try await view.evaluateJavaScript("\(begin) \(pulse) \(action); true")
+                try await Task.sleep(nanoseconds: 400_000_000)
+                let count = phase == "pending" ? 0 : 1
+                try await assertJS(view, "mouseTestEvents.filter(e=>e.type==='pointerdown').length===\(count) && mouseTestEvents.filter(e=>e.type==='pointerup').length===\(count)")
+                if phase == "held" {
+                    let released = try await waitForJS(view, "mouseTestRawTraces.includes('UP')", seconds: 5)
+                    XCTAssertTrue(released, "Cancellation must release actual held AVM1 input: \(cancellation)")
+                }
+            }
+        }
+        session.setMouseTouchEnabled(true)
         _ = try await view.evaluateJavaScript("mouseTestEvents=[]; mouseTestSend('pointerdown',1); mouseTestSend('pointerdown',2); true")
         session.setMouseTouchEnabled(false)
         _ = try await view.evaluateJavaScript("mouseTestSend('pointerup',1); mouseTestSend('pointerup',2); true")

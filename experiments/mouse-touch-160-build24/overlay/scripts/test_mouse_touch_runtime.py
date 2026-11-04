@@ -92,9 +92,11 @@ with tempfile.TemporaryDirectory(prefix='flashnest-mouse-') as td:
                 page.evaluate('window.__dom=[];window.__raw=[]')
                 page.evaluate(EVENT,['pointerdown',1,100,100]);page.evaluate(EVENT,['pointerup',1,100,100])
                 wait(page,"window.__raw.some(m=>m==='DOWN')",timeout=5000)
+                wait(page,"window.__raw.some(m=>m==='UP')",timeout=5000)
                 assert page.evaluate("window.__raw.filter(m=>m==='DOWN').length") == 1
                 page.evaluate('window.__dom=[];window.__raw=[]')
                 for e in [('pointerdown',1,100,100),('pointerdown',2,130,100),('pointerup',1,100,100),('pointerup',2,130,100)]:page.evaluate(EVENT,list(e))
+                wait(page,"window.__dom.some(e=>e.type==='pointerup'&&e.button===2)",timeout=5000)
                 clicks=page.evaluate("window.__dom.filter(e=>e.type==='pointerdown'||e.type==='pointerup')")
                 assert [e['button'] for e in clicks]==[2,2],clicks
                 assert not errors,errors

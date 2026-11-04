@@ -132,7 +132,7 @@ struct PlayerView: View {
                 Section {
                     Toggle(L10n.text("Mouse touch mode"), isOn: $settings.mouseTouchEnabled)
                         .accessibilityIdentifier("mouse-touch-enabled")
-                    Text(L10n.text("Off by default. Drag one finger to move the cursor, tap to left-click, or use the on-screen Right click button. Control opacity also adjusts this button."))
+                    Text(L10n.text("Off by default. Move immediately to move the cursor. Hold for 0.25 seconds, then move to left-drag. Tap to left-click, or use the on-screen Right click button. Control opacity also adjusts this button."))
                         .font(.footnote).foregroundStyle(.secondary)
                 }.disabled(closing || checkpointing)
                 Section(L10n.text("Touch controls")) {

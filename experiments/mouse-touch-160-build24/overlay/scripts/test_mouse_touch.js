@@ -17,17 +17,31 @@ function setup(enabled=false) {
   const dispatch=canvas.dispatchEvent.bind(canvas);
   canvas.dispatchEvent=e=>{if(e.pointerType==='mouse')sent.push(e);return dispatch(e);};
   class PointerEvent { constructor(type,init) {Object.assign(this,init,{type});} }
-  vm.runInNewContext(source,{window,document,PointerEvent,Math,Map,Set,Object});
+  let time=0, nextTimer=1;
+  const timers=new Map();
+  const setTimeout=(callback,delay=0)=>{const id=nextTimer++;timers.set(id,{at:time+Math.max(0,delay),callback});return id;};
+  const clearTimeout=id=>timers.delete(id);
+  function advance(ms) {
+    const end=time+ms;
+    for (;;) {
+      const next=[...timers].filter(([,t])=>t.at<=end).sort((a,b)=>a[1].at-b[1].at||a[0]-b[0])[0];
+      if(!next)break;
+      time=next[1].at;timers.delete(next[0]);next[1].callback();
+    }
+    time=end;
+  }
+  class FakeDate extends Date { static now(){return time;} }
+  Object.assign(window,{setTimeout,clearTimeout,performance:{now:()=>time}});
+  vm.runInNewContext(source,{window,document,PointerEvent,Math,Map,Set,Object,setTimeout,clearTimeout,performance:window.performance,Date:FakeDate});
   const controller=window.FlashNestMouseTouch.create({canvas,host:{focus(){}},cursor,enabled});controller.initialize();
-  let time=0;
-  function event(type,id=1,x=100,y=100,dt=10) {const e={type,pointerId:id,pointerType:'touch',clientX:x,clientY:y,timeStamp:time+=dt,preventDefault(){this.prevented=true;},stopImmediatePropagation(){this.stopped=true;}};canvas.dispatchEvent(e);return e;}
-  return {controller,sent,event,cursor,capture,window,document,resize:v=>r=v};
+  function event(type,id=1,x=100,y=100,dt=10, overdueInput=false) {if(overdueInput)time+=dt;else advance(dt);const e={type,pointerId:id,pointerType:'touch',clientX:x,clientY:y,timeStamp:time,preventDefault(){this.prevented=true;},stopImmediatePropagation(){this.stopped=true;}};canvas.dispatchEvent(e);return e;}
+  return {controller,sent,event,cursor,capture,window,document,advance,timers,now:()=>time,resize:v=>r=v};
 }
 const clicks=s=>s.sent.filter(e=>e.type==='pointerdown').map(e=>e.button);
 // Default-off must be a completely unmodified direct-touch path.
 {const s=setup();assert.equal(s.sent.length,0);assert.equal(s.event('pointerdown').stopped,undefined);assert.equal(s.cursor.hidden,true);}
 // Single tap only emits one paired left click; movement is never held down.
-{const s=setup(true);s.event('pointerdown');s.event('pointerup');assert.deepEqual(clicks(s),[0]);assert.equal(s.sent.filter(e=>e.type==='pointerup').length,1);assert.equal(s.capture.size,0);}
+{const s=setup(true);s.event('pointerdown');s.event('pointerup');assert.deepEqual(clicks(s),[0]);assert.equal(s.sent.filter(e=>e.type==='pointerup').length,0);s.advance(100);assert.equal(s.sent.filter(e=>e.type==='pointerup').length,1);assert.equal(s.capture.size,0);}
 // Relative dragging can reach all CSS canvas corners independent of DPR and margins.
 {const s=setup(true);s.event('pointerdown');for(const [x,y] of [[-1000,-1000],[1000,1000],[-1000,1000],[1000,-1000]])s.event('pointermove',1,x,y);s.event('pointerup',1,1000,-1000);assert.deepEqual(clicks(s),[]);const moves=s.sent.filter(e=>e.type==='pointermove');assert(moves.every(e=>e.buttons===0));assert(moves.some(e=>e.clientX===30&&e.clientY===60));assert(moves.some(e=>e.clientX===430&&e.clientY===260));assert(moves.some(e=>e.clientX===30&&e.clientY===260));assert(moves.some(e=>e.clientX===430&&e.clientY===60));}
 // Two fingers suppress left click and produce exactly one paired right click.
@@ -66,3 +80,69 @@ console.log('mouse touch: 19 gesture-state/lifecycle/client-coordinate cases pas
 {const s=setup(true);const origin={...s.cursor.style};s.event('pointerdown');assert.equal(s.controller.rightClick(),true);s.event('pointerup');assert.deepEqual(clicks(s),[2]);assert.deepEqual(s.cursor.style,origin);assert.equal(s.capture.size,0);}
 {const s=setup();assert.equal(s.controller.rightClick(),false);assert.deepEqual(clicks(s),[]);s.controller.dispose();assert.equal(s.controller.rightClick(),false);}
 console.log('5 additional exclusivity / right-button regressions passed');
+
+const ups=s=>s.sent.filter(e=>e.type==='pointerup');
+function balanced(s) {
+  const state=new Set();
+  for(const e of s.sent) {
+    if(e.type==='pointerdown'){assert(!state.has(e.button),'duplicate down');state.add(e.button);}
+    if(e.type==='pointerup'){assert(state.has(e.button),'orphan up');state.delete(e.button);assert.equal(e.buttons,0);}
+  }
+  assert.equal(state.size,0,'no stuck synthetic mouse button');
+}
+// Pulse duration is engine-visible time, not a synchronous DOM pair.
+for(const button of [0,2]) {
+  const s=setup(true);
+  if(button===0){s.event('pointerdown');s.event('pointerup');}else assert.equal(s.controller.rightClick(),true);
+  assert.deepEqual(clicks(s),[button]);assert.equal(ups(s).length,0);
+  s.advance(99);assert.equal(ups(s).length,0);
+  s.advance(1);assert.equal(ups(s).length,1);balanced(s);
+}
+// Hold threshold is measured from down; movement below it permanently chooses hover.
+{const s=setup(true);s.event('pointerdown');s.advance(249);assert.deepEqual(clicks(s),[]);s.advance(1);assert.deepEqual(clicks(s),[0]);assert.equal(ups(s).length,0);s.event('pointermove',1,140,100,0);assert.equal(s.sent.filter(e=>e.type==='pointermove').at(-1).buttons,1);s.event('pointerup',1,140,100,0);assert.equal(ups(s).length,1);s.advance(1000);assert.deepEqual(clicks(s),[0]);balanced(s);}
+{const s=setup(true);s.event('pointerdown');s.event('pointermove',1,109,100,100);s.advance(1000);s.event('pointermove',1,150,100,0);s.event('pointerup',1,150,100,0);s.advance(1000);assert.deepEqual(clicks(s),[]);assert(s.sent.filter(e=>e.type==='pointermove').every(e=>e.buttons===0));balanced(s);}
+// Stationary hold released shortly after activation completes only its remaining pulse.
+{const s=setup(true);s.event('pointerdown');s.advance(250);s.advance(20);s.event('pointerup',1,100,100,0);assert.equal(ups(s).length,0);s.advance(79);assert.equal(ups(s).length,0);s.advance(1);assert.equal(ups(s).length,1);balanced(s);}
+{const s=setup(true);s.event('pointerdown');s.advance(400);s.event('pointerup',1,100,100,0);assert.equal(ups(s).length,1);balanced(s);}
+// Starting another gesture releases a previous pulse before movement, never drags accidentally.
+{const s=setup(true);s.event('pointerdown');s.event('pointerup');s.event('pointerdown',2,100,100,1);assert.equal(ups(s).length,1);s.event('pointermove',2,140,100,1);assert.equal(s.sent.filter(e=>e.type==='pointermove').at(-1).buttons,0);s.event('pointerup',2,140,100,0);s.advance(1000);assert.deepEqual(clicks(s),[0]);balanced(s);}
+// Every cancellation phase clears both timers and pressed mouse state immediately.
+let lifecycleCases=0;
+for(const phase of ['pending','held','pulse','rightPulse'])for(const reason of ['cancel','blur','hidden','off','dispose','resize']) {
+  const s=setup(true);
+  if(phase==='rightPulse')s.controller.rightClick();
+  else {s.event('pointerdown');if(phase==='held')s.advance(250);if(phase==='pulse')s.event('pointerup');}
+  const before=clicks(s).length;
+  if(reason==='cancel')s.controller.cancel();
+  if(reason==='blur')s.window.dispatchEvent({type:'blur'});
+  if(reason==='hidden'){s.document.hidden=true;s.document.dispatchEvent({type:'visibilitychange'});}
+  if(reason==='off')s.controller.setEnabled(false);
+  if(reason==='dispose')s.controller.dispose();
+  if(reason==='resize')s.window.dispatchEvent({type:'resize'});
+  balanced(s);assert.equal(s.capture.size,0,phase+reason);
+  s.advance(2000);assert.equal(clicks(s).length,before,phase+reason+' delayed down');balanced(s);assert.equal(s.timers.size,0,phase+reason+' leaked timer');lifecycleCases++;
+}
+console.log('31 additional hold/pulse/lifecycle regressions passed ('+lifecycleCases+' lifecycle phases; deterministic timers, not browser proof)');
+// A 30fps polling game sees pressed state across successive frames, then sees release.
+for(const button of [0,2]) {
+ const s=setup(true);let mask=0;const frames=[];
+ s.event('pointerdown');s.controller.cancel(); // Warmup does not itself click.
+ s.sent.length=0;
+ s.sent.push = function(...events){for(const e of events){if(e.type==='pointerdown'||e.type==='pointerup')mask=e.buttons;}return Array.prototype.push.apply(this,events);};
+ const sample=()=>{frames.push(mask);if(frames.length<4)s.window.setTimeout(sample,33);};
+ s.window.setTimeout(sample,33);
+ if(button===0){s.event('pointerdown',1,100,100,0);s.event('pointerup',1,100,100,0);}else s.controller.rightClick();
+ s.advance(132);assert.deepEqual(frames,[button===2?2:1,button===2?2:1,button===2?2:1,0]);balanced(s);
+}
+// Detachment/zero layout cannot swallow the balancing release at the last valid position.
+for(const phase of ['held','pulse']) {
+ const s=setup(true);s.event('pointerdown');if(phase==='held')s.advance(250);else s.event('pointerup');
+ const down=s.sent.find(e=>e.type==='pointerdown');s.resize({left:0,top:0,width:0,height:0});s.controller.cancel();
+ balanced(s);assert.equal(ups(s)[0].clientX,down.clientX);assert.equal(ups(s)[0].clientY,down.clientY);s.advance(1000);assert.equal(ups(s).length,1);
+}
+console.log('4 frame-polling / collapsed-canvas release regressions passed');
+
+// Busy main-thread input may be delivered before its overdue hold timer.
+{const s=setup(true);s.event('pointerdown');s.event('pointermove',1,140,100,300,true);assert.deepEqual(clicks(s),[0]);assert.equal(s.sent.filter(e=>e.type==='pointermove').at(-1).buttons,1);s.event('pointerup',1,140,100);balanced(s);s.advance(1000);assert.equal(clicks(s).length,1);}
+{const s=setup(true);s.event('pointerdown');s.event('pointerup',1,100,100,600,true);assert.deepEqual(clicks(s),[0]);s.advance(100);balanced(s);assert.equal(clicks(s).length,1);}
+console.log('2 overdue-timer input regressions passed');

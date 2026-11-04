@@ -18,20 +18,25 @@ def fixture():
     drawing += a.call(graphics, 'endFill')
     drawing += a.call(t, 'addChild', surface)
     events = ['mouseDown','mouseUp','click','rightMouseDown','rightMouseUp','rightClick']
-    ctor = h+t+a.op(0x49,0)+drawing+set_('pressed',b'\x27')
+    ctor = h+t+a.op(0x49,0)+drawing+set_('pressed',b'\x27')+set_('rightPressed',b'\x27')
     methods=[]
     for event in events:
         name='on_'+event
         code=h+a.trace('EVENT:'+event)
         if event=='mouseDown': code+=set_('pressed',b'\x26')
         if event=='mouseUp': code+=set_('pressed',b'\x27')
+        if event=='rightMouseDown': code+=set_('rightPressed',b'\x26')
+        if event=='rightMouseUp': code+=set_('rightPressed',b'\x27')
         methods.append((name,a.method(name,code+end,args=1)))
         ctor+=a.call(t,'addEventListener',a.push(event),get(name))
         stage_name='stage_'+event
         methods.append((stage_name,a.method(stage_name,h+a.trace('STAGE_EVENT:'+event)+end,args=1)))
         ctor+=a.call(get('stage'),'addEventListener',a.push(event),get(stage_name))
+    move=h+a.trace('DRAG_MOVE',get('pressed'),get('rightPressed'),get('mouseX'),get('mouseY'))+end
+    methods.append(('onMove',a.method('onMove',move,args=1)))
+    ctor+=a.call(t,'addEventListener',a.push('mouseMove'),get('onMove'))
     # Records whether a game using enterFrame ever observes the button held.
-    frame=h+a.trace('FRAME_PRESSED',get('pressed'))+end
+    frame=h+a.trace('FRAME_PRESSED',get('pressed'))+a.trace('FRAME_RIGHT_PRESSED',get('rightPressed'))+end
     methods.append(('onFrame',a.method('onFrame',frame,args=1)))
     ctor+=a.call(t,'addEventListener',a.push('enterFrame'),get('onFrame'))
     ctor+=a.trace('SURFACE_GEOMETRY',surface+a.prop('width'),surface+a.prop('height'),surface+a.prop('mouseEnabled'))

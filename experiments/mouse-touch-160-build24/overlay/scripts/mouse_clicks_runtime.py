@@ -7,6 +7,18 @@ import time, hashlib, os, json, sys
 from pathlib import Path
 from mouse_probe_avm2 import fixture
 
+def frame_evidence(raw, expected, require_drag=False):
+    row={'frameObservedPressed':'FRAME_PRESSED true' in raw}
+    row['frameObservedRightPressed']='FRAME_RIGHT_PRESSED true' in raw
+    row['leftFrameSamples']=[m for m in raw if m.startswith('FRAME_PRESSED ')]
+    row['rightFrameSamples']=[m for m in raw if m.startswith('FRAME_RIGHT_PRESSED ')]
+    row['dragMoves']=[m for m in raw if m.startswith('DRAG_MOVE ')]
+    left_down='EVENT:mouseDown' in expected
+    right_down='EVENT:rightMouseDown' in expected
+    row['framePollingPassed']=(row['frameObservedPressed']==left_down and row['frameObservedRightPressed']==right_down and bool(row['leftFrameSamples']) and row['leftFrameSamples'][-1]=='FRAME_PRESSED false' and bool(row['rightFrameSamples']) and row['rightFrameSamples'][-1]=='FRAME_RIGHT_PRESSED false')
+    row['dragPollingPassed']=not require_drag or any(m.startswith('DRAG_MOVE true false ') for m in row['dragMoves'])
+    return row
+
 def wait(page, expression, timeout=20):
     deadline=time.monotonic()+timeout
     while time.monotonic()<deadline:
@@ -112,15 +124,21 @@ def run_shell_probe(browser, directory, base_url, runtime_files):
         def cursor():
             return page.locator('#mouse-touch-cursor').evaluate('e=>[e.style.left,e.style.top]')
         cases=[]
-        def check(name,expected):
-            time.sleep(.15)
+        def check(name,expected, *, pair_only=False, require_drag=False):
+            time.sleep(.22)
             raw=page.evaluate('window.__mouseRaw')
             events=[m for m in raw if m.startswith('EVENT:')]
             row={'name':name,'events':events,'expected':expected,'frameObservedPressed':'FRAME_PRESSED true' in raw,'stageEvents':[m for m in raw if m.startswith('STAGE_EVENT:')]}
+            row.update(frame_evidence(raw,expected,require_drag))
+            row['pairOnly']=pair_only
             cases.append(row)
             expected_stage=[m.replace('EVENT:','STAGE_EVENT:',1) for m in expected]
             row['expectedStageEvents']=expected_stage
-            if events!=expected or row['stageEvents']!=expected_stage:
+            # Drag/cancel acceptance requires balanced down/up and released frame
+            # state; Ruffle decides whether a release on the same Sprite clicks.
+            compared=[m for m in events if m.endswith(('Down','Up'))] if pair_only else events
+            compared_stage=[m for m in row['stageEvents'] if m.endswith(('Down','Up'))] if pair_only else row['stageEvents']
+            if compared!=expected or compared_stage!=expected_stage or not row['framePollingPassed'] or not row['dragPollingPassed']:
                 evidence={'failedCase':row,'original':page.evaluate(SNAPSHOT),'pageErrors':errors[:20],'console':console}
                 try:
                     clear();tap();time.sleep(.2)
@@ -159,6 +177,28 @@ def run_shell_probe(browser, directory, base_url, runtime_files):
         page.evaluate('window.FlashNest.setMouseTouchEnabled(false)');assert not button.is_visible()
         page.evaluate('window.FlashNest.setMouseTouchEnabled(true)');assert button.is_visible()
         clear();tap();check('first_tap_after_mode_toggle',left)
+        # Timing contract: hold threshold 250 ms, click pulse 100 ms. The
+        # 30 FPS neutral movie must see pressed=true, not just a DOM pair.
+        clear();touch('touchStart',[(1,x,y)]);time.sleep(.06)
+        touch('touchMove',[(1,x+20,y)]);time.sleep(.32)
+        touch('touchMove',[(1,x+35,y)]);touch('touchEnd',[])
+        check('early_move_stays_hover_after_hold_threshold',[])
+        clear();touch('touchStart',[(1,x,y)]);time.sleep(.36)
+        touch('touchMove',[(1,x+24,y)]);time.sleep(.08)
+        touch('touchMove',[(1,x+40,y)]);touch('touchEnd',[])
+        check('hold_then_drag_balanced_and_frame_visible',left[:2],pair_only=True,require_drag=True)
+        clear();touch('touchStart',[(1,x,y)]);time.sleep(.36)
+        touch('touchMove',[(1,x+22,y)]);time.sleep(.07)
+        touch('touchCancel',[])
+        check('cancel_drag_releases_engine_button',left[:2],pair_only=True,require_drag=True)
+        clear();tap();check('tap_after_cancel_has_no_leaked_button',left)
+        clear();touch('touchStart',[(1,x,y)]);time.sleep(.36)
+        touch('touchMove',[(1,x+22,y)]);time.sleep(.07)
+        page.evaluate('window.FlashNest.setMouseTouchEnabled(false)')
+        touch('touchEnd',[])
+        check('disable_during_drag_releases_engine_button',left[:2],pair_only=True,require_drag=True)
+        page.evaluate('window.FlashNest.setMouseTouchEnabled(true)')
+        clear();tap();check('tap_after_drag_mode_toggle',left)
         actual_renderer=page.evaluate(ACTUAL_RENDERER)
         assert actual_renderer in ('webgl','webgl2','experimental-webgl'),('No actual WebGL renderer',page.evaluate(SNAPSHOT))
         assert not errors,errors

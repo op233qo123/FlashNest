@@ -60,6 +60,7 @@ jobs:
           set -euo pipefail
           cd mouse-stage/app
           node scripts/test_mouse_touch.js
+          python3 scripts/test_mouse_frame_evidence.py
           node scripts/test_shell.js
           node scripts/test_shell.js zh-Hans
           node scripts/test_mouse_shell_contract.js
@@ -103,11 +104,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir mouse-stage/artifacts
-          bash mouse-stage/app/scripts/package_unsigned.sh mouse-stage/app/build/Build/Products/Release-iphoneos/FlashNest.app mouse-stage/artifacts/FlashNest-1.6.0-build25-mouse-touch-experimental-unsigned.ipa
-          python3 "$PREP/build/verify_ipa.py" --ipa mouse-stage/artifacts/FlashNest-1.6.0-build25-mouse-touch-experimental-unsigned.ipa --app mouse-stage/app --stage-receipt mouse-stage/mouse-staging.json --native-dir mouse-stage/evidence/ios --baseline-checkout baseline-recipe --case-checkout case-checkout --toolchain toolchain-evidence/toolchain.json --path-evidence mouse-stage/evidence/path-result.json --fps-evidence mouse-stage/evidence/fps-result.json --browser-evidence mouse-stage/evidence/mouse-runtime.json --output mouse-stage/artifacts/mouse-ipa-provenance.json
+          bash mouse-stage/app/scripts/package_unsigned.sh mouse-stage/app/build/Build/Products/Release-iphoneos/FlashNest.app mouse-stage/artifacts/FlashNest-1.6.0-build26-mouse-touch-experimental-unsigned.ipa
+          python3 "$PREP/build/verify_ipa.py" --ipa mouse-stage/artifacts/FlashNest-1.6.0-build26-mouse-touch-experimental-unsigned.ipa --app mouse-stage/app --stage-receipt mouse-stage/mouse-staging.json --native-dir mouse-stage/evidence/ios --baseline-checkout baseline-recipe --case-checkout case-checkout --toolchain toolchain-evidence/toolchain.json --path-evidence mouse-stage/evidence/path-result.json --fps-evidence mouse-stage/evidence/fps-result.json --browser-evidence mouse-stage/evidence/mouse-runtime.json --output mouse-stage/artifacts/mouse-ipa-provenance.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: FlashNest-1.6.0-build25-mouse-touch-experimental-unsigned
+          name: FlashNest-1.6.0-build26-mouse-touch-experimental-unsigned
           path: mouse-stage/artifacts/
           if-no-files-found: error
           retention-days: 7

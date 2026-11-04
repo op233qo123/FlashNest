@@ -258,7 +258,7 @@
   window.addEventListener('blur', releaseKeys);
   window.addEventListener('resize', () => { releaseKeys(); samplingObserver?.refresh(true); reportState('resize'); });
   window.addEventListener('orientationchange', () => { releaseKeys(); samplingObserver?.refresh(true); reportState('orientation'); });
-  document.addEventListener('visibilitychange', () => { backgrounded = document.hidden; releaseKeys(); reconcile(); reportState('visibility'); });
+  document.addEventListener('visibilitychange', () => { backgrounded = document.hidden; if (backgrounded) mouseTouch?.cancel(); releaseKeys(); reconcile(); reportState('visibility'); });
   document.addEventListener('pointercancel', releaseKeys);
   document.addEventListener('lostpointercapture', releaseKeys, true);
   document.addEventListener('securitypolicyviolation', e => report('diagnostic', t('offline', e.blockedURI || e.violatedDirective)));
