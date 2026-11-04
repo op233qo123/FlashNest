@@ -21,7 +21,26 @@ final class DraggablePlayerMenuUITests: XCTestCase {
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         defer { XCUIDevice.shared.orientation = .portrait }
-        LibraryNavigation.openSourceFolder(named: "FlashNest Player Fixture", in: app)
+        // The first Files presentation was not observed within the shared helper's
+        // 15s window in CI41806033807. Its cause is not established.
+        // Wait for the single requested presentation; never repeat the import tap.
+        LibraryNavigation.revealFolderImport(in: app).tap()
+        let filesNavigation = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"]
+        let filesPresented = filesNavigation.waitForExistence(timeout: 45)
+        if !filesPresented {
+            LibraryNavigation.captureControlState("import-menu", in: app,
+                                                  context: "First Files presentation failed after one import tap")
+            print("MOUSE_FILES_PRESENTATION_FAILURE_AX\n\(app.debugDescription)")
+            let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            screenshot.name = "First Files presentation timeout"
+            screenshot.lifetime = .keepAlways
+            add(screenshot)
+        }
+        XCTAssertTrue(filesPresented, "The single import action must present real Files within 45 seconds")
+        LibraryNavigation.navigateToSourceFolder(named: "FlashNest Player Fixture", in: app)
+        let open = app.buttons["Open"].firstMatch
+        XCTAssertTrue(LibraryNavigation.wait { open.exists && open.isEnabled && open.isHittable })
+        open.tap()
         LibraryNavigation.requireEntry("main.swf", in: app, towardTop: true).tap()
         let play = app.webViews.buttons["Play / enable audio"].firstMatch
         XCTAssertTrue(play.waitForExistence(timeout: 60))

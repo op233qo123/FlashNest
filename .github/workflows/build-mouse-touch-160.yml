@@ -68,6 +68,7 @@ jobs:
           python3 scripts/test_localization.py
           python3 scripts/test_licenses.py
       - name: Generate project with verified XcodeGen and locked dependencies
+        id: generate
         working-directory: mouse-stage/app
         run: |
           set -euo pipefail
@@ -84,6 +85,7 @@ jobs:
           python3 "$PREP/build/run_ios_tests.py" --app mouse-stage/app --output mouse-stage/evidence/ios --baseline-checkout baseline-recipe --stage-receipt mouse-stage/mouse-staging.json --toolchain toolchain-evidence/toolchain.json
           python3 "$PREP/stage.py" verify --output mouse-stage --baseline-checkout baseline-recipe
       - name: Case resolver, unchanged engine cadence, actual mouse runtime matrix
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
         env:
           CHROMIUM_EXECUTABLE: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
         run: |

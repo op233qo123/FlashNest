@@ -137,7 +137,7 @@
     "Tests/TouchControlSettingsTests.swift": "6eeb43a78f6614f565646e9a6020c5fc5042c083599ba970c66228463e42fcbb",
     "Tests/UnloadWKSmokeTests.swift": "505d0136556082c6397df1e4bd3e959fee73b0b2ded8174f61cc25e79ffa491f",
     "UITestSupport/FixtureSource/FixtureSourceApp.swift": "284a2c8874959b8e37ded594b5cc5d017c36f359032dd1cf3b053674af9dc8c2",
-    "UITests/DraggablePlayerMenuUITests.swift": "f20d53836f24ec58176a5223f7135d98c4446f0f1f5c252ab455bf1032eb567c",
+    "UITests/DraggablePlayerMenuUITests.swift": "559f35b00d9d9b9d7a9cb1f0be69ae6ebfbceefa1732495460348a977c99bace",
     "UITests/ExternalDocumentImportUITests.swift": "1116770cac0c4ef3f4504dffb926f15db9b159282cfcc240da3c4136c852374c",
     "UITests/FolderPickerUITests.swift": "336bb1e21af18470bcc97a98b81a7fc34c0db095eb578087525ec2a06ed9650c",
     "UITests/FullscreenPlayerUITests.swift": "bfae22f1b0dcc5cc5567194c47af519971e428f19c019fd98c294ac83a816e0d",
@@ -1083,7 +1083,7 @@
       "checkout": "recipe",
       "kind": "repository",
       "path": "experiments/mouse-touch-160-build24/overlay/UITests/DraggablePlayerMenuUITests.swift",
-      "sourceSHA256": "f20d53836f24ec58176a5223f7135d98c4446f0f1f5c252ab455bf1032eb567c"
+      "sourceSHA256": "559f35b00d9d9b9d7a9cb1f0be69ae6ebfbceefa1732495460348a977c99bace"
     },
     "UITests/ExternalDocumentImportUITests.swift": {
       "checkout": "recipe",
@@ -1767,7 +1767,7 @@
     "Tests/TouchControlSettingsTests.swift": "6eeb43a78f6614f565646e9a6020c5fc5042c083599ba970c66228463e42fcbb",
     "Tests/UnloadWKSmokeTests.swift": "505d0136556082c6397df1e4bd3e959fee73b0b2ded8174f61cc25e79ffa491f",
     "UITestSupport/FixtureSource/FixtureSourceApp.swift": "284a2c8874959b8e37ded594b5cc5d017c36f359032dd1cf3b053674af9dc8c2",
-    "UITests/DraggablePlayerMenuUITests.swift": "f20d53836f24ec58176a5223f7135d98c4446f0f1f5c252ab455bf1032eb567c",
+    "UITests/DraggablePlayerMenuUITests.swift": "559f35b00d9d9b9d7a9cb1f0be69ae6ebfbceefa1732495460348a977c99bace",
     "UITests/ExternalDocumentImportUITests.swift": "1116770cac0c4ef3f4504dffb926f15db9b159282cfcc240da3c4136c852374c",
     "UITests/FolderPickerUITests.swift": "336bb1e21af18470bcc97a98b81a7fc34c0db095eb578087525ec2a06ed9650c",
     "UITests/FullscreenPlayerUITests.swift": "bfae22f1b0dcc5cc5567194c47af519971e428f19c019fd98c294ac83a816e0d",
