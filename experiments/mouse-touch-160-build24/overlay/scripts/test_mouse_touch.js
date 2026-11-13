@@ -146,3 +146,29 @@ console.log('4 frame-polling / collapsed-canvas release regressions passed');
 {const s=setup(true);s.event('pointerdown');s.event('pointermove',1,140,100,300,true);assert.deepEqual(clicks(s),[0]);assert.equal(s.sent.filter(e=>e.type==='pointermove').at(-1).buttons,1);s.event('pointerup',1,140,100);balanced(s);s.advance(1000);assert.equal(clicks(s).length,1);}
 {const s=setup(true);s.event('pointerdown');s.event('pointerup',1,100,100,600,true);assert.deepEqual(clicks(s),[0]);s.advance(100);balanced(s);assert.equal(clicks(s).length,1);}
 console.log('2 overdue-timer input regressions passed');
+
+
+// Round 1: background input must never synthesize game clicks.
+for (const mode of ['right','tap']) {
+ const s=setup(true); s.document.hidden=true;
+ if(mode==='right') assert.equal(s.controller.rightClick(),false);
+ else {s.event('pointerdown');s.event('pointerup');}
+ s.advance(1000); assert.deepEqual(clicks(s),[]); assert.equal(s.timers.size,0); balanced(s);
+}
+console.log('Round 1: 2 hidden-document input regressions passed');
+
+// Round 2: collapsed/detached canvas must not create unmatched synthetic releases.
+for(const warmed of [false,true]) for(const mode of ['right','tap','hold']) {
+ const s=setup(true);
+ if(warmed) {s.controller.rightClick();s.advance(100);s.sent.length=0;}
+ s.resize({left:0,top:0,width:0,height:0});
+ if(mode==='right') assert.equal(s.controller.rightClick(),false);
+ else {s.event('pointerdown');if(mode==='hold')s.advance(250);s.event('pointerup');}
+ s.advance(1000);assert.deepEqual(clicks(s),[]);assert.equal(ups(s).length,0);assert.equal(s.timers.size,0);balanced(s);
+ s.resize({left:30,top:60,width:401,height:201});assert.equal(s.controller.rightClick(),true);s.advance(100);assert.deepEqual(clicks(s),[2]);balanced(s);
+}
+console.log('Round 2: 6 collapsed-canvas input/recovery regressions passed');
+
+// Review: mode changes must still consume the release of a hidden down.
+{const s=setup(true);s.document.hidden=true;assert.equal(s.event('pointerdown').stopped,true);s.controller.setEnabled(false);s.document.hidden=false;assert.equal(s.event('pointerup').stopped,true);assert.deepEqual(clicks(s),[]);}
+console.log('Review: 1 hidden-input/mode-switch regression passed');

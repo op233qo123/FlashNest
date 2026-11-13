@@ -109,7 +109,7 @@
       "before": "1dd192554d511b84546e9b6f770cedc038273032bf4f8949f93df161a9f91435"
     },
     "App/Resources/Web/mouse-touch.js": {
-      "after": "bfca3707c72a42aa6f8844cb0a638e95fd2e70c34b98e51660a1831b4b585a7e",
+      "after": "d1da572582c0094261692616d0f1bfc6e6409673330f6636bca58cd6f8feab93",
       "before": null
     },
     "App/Resources/Web/shell.css": {
@@ -169,7 +169,7 @@
       "before": null
     },
     "scripts/test_mouse_touch.js": {
-      "after": "c627405a1c8879c49210152cdc5d46c16300da215f5dd86ccae88264c895edcb",
+      "after": "ac35d4ebf54c944d43176cb218a71be7a6acc122661e4b64bc275dc955f12b88",
       "before": null
     },
     "scripts/test_mouse_touch_runtime.py": {
@@ -199,7 +199,7 @@
     "overlay/App/Resources/Localization/en.lproj/Localizable.strings": "8cc5288ba1d2658f85af7a288a9607281e04bd7211b9b0998b6875a5448955e2",
     "overlay/App/Resources/Localization/zh-Hans.lproj/Localizable.strings": "6b27d3876054ed9ce95ba16278bc9ba129566e3febcb82a8a1ef53c5701f62fc",
     "overlay/App/Resources/Web/index.html": "87f2dcdd6571da143141447e318cd8fa3fd7f55e701e8a5fabfb8f5ce94c2328",
-    "overlay/App/Resources/Web/mouse-touch.js": "bfca3707c72a42aa6f8844cb0a638e95fd2e70c34b98e51660a1831b4b585a7e",
+    "overlay/App/Resources/Web/mouse-touch.js": "d1da572582c0094261692616d0f1bfc6e6409673330f6636bca58cd6f8feab93",
     "overlay/App/Resources/Web/shell.css": "fd5b6f35cd8f36549939a51b3c438b1a9bc7fb184fa9009ec440b0d803044e6c",
     "overlay/App/Resources/Web/shell.js": "3e7b5acbe547fe08f17dd36157f290e5fb38211d6c55ecde29a39b60481265a8",
     "overlay/App/Views/DraggablePlayerMenu.swift": "999c45b6dc0f8517f409c1e7c21604fb9121d2810c9f5f207c6f74b9b72951c6",
@@ -214,10 +214,10 @@
     "overlay/scripts/mouse_touch_dom_fixture.html": "35501027bed134176c080918fd444b1de8152c5f35e229b6305c8e8aa7aa7eff",
     "overlay/scripts/test_mouse_frame_evidence.py": "10938a91402eecbd16864758b3247c962b73c2f85145393cc1b7e74a4c0c2d08",
     "overlay/scripts/test_mouse_shell_contract.js": "0f24ea034885e4ad2e315b50799da8829c40aec2b530a001b72cb455f16b9d51",
-    "overlay/scripts/test_mouse_touch.js": "c627405a1c8879c49210152cdc5d46c16300da215f5dd86ccae88264c895edcb",
+    "overlay/scripts/test_mouse_touch.js": "ac35d4ebf54c944d43176cb218a71be7a6acc122661e4b64bc275dc955f12b88",
     "overlay/scripts/test_mouse_touch_runtime.py": "890a63e7472a83ca22f664b69a856b97b764a4f0767d0f8156d035e2df32b886",
     "overlay/scripts/test_shell.js": "ec5f7d2414631a16039f2825a9c82184f396261646fad08c602b9a3497c042b6",
-    "recovery-manifest.json": "fbf8a35616816342362910896de49da82604b7f44ebe92155e61f8a667c7ad0c",
+    "recovery-manifest.json": "ce7328c84967734e59926a69f7427c988e030d4874283a4620f73ce3c93096a5",
     "recovery_stage.py": "60ee181a4c2a602e9850899f39e0157b2685813b00ac4d7927df54589dc08bf5",
     "stage.py": "fcbc0a6a17abc520472d9cc6a18badf8ac574b5c697032177dfae4555654e719",
     "test_stage.py": "d76991b53cbbc0359460f6b812431d0710f07eff4df687dbcedd3036fde932ac"

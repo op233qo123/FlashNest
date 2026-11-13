@@ -1,0 +1,28 @@
+name: Mouse background regression (logic only)
+on:
+  push:
+    branches: [experiment/mouse-background-regression-20261113]
+    paths:
+      - 'experiments/mouse-touch-160-build24/**'
+      - '.github/workflows/test-mouse-background-regression.yml'
+permissions:
+  contents: read
+concurrency:
+  group: mouse-background-regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  node-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Verify mouse controller logic (mock DOM, not iOS or real engine)
+        working-directory: experiments/mouse-touch-160-build24/overlay
+        run: |
+          set -euo pipefail
+          node --version
+          node --check App/Resources/Web/mouse-touch.js
+          node --check scripts/test_mouse_touch.js
+          node scripts/test_mouse_touch.js

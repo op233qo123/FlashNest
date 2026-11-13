@@ -47,10 +47,15 @@
       if (button !== null) emit('pointerup', button, 0);
     }
     function press(button) {
-      release(); hover();
+      release();
+      const r = rect();
+      // Do not remember a press that could never reach a visible canvas.
+      if (disposed || !active || document.hidden || r.width <= 0 || r.height <= 0) return false;
+      hover();
       pressed = button; pressedAt = now();
       try { emit('pointerdown', button, buttonMask()); }
       catch (error) { release(); throw error; }
+      return true;
     }
     function finishClick() {
       if (pressed === null) return;
@@ -60,12 +65,14 @@
     }
     function click(button) {
       // Keep the state observable across normal game frames, not just DOM callbacks.
-      press(button); finishClick();
+      if (!press(button)) return false;
+      finishClick();
+      return true;
     }
     function beginHold(candidate) {
       if (disposed || !active || document.hidden || gesture !== candidate ||
           contacts.size !== 1 || candidate.max !== 1 || candidate.moving || candidate.invalid || candidate.holding) return;
-      clearHold(); candidate.holding = true; press(0);
+      clearHold(); candidate.holding = press(0);
     }
     function armHold() {
       clearHold();
@@ -94,9 +101,11 @@
       consume(e);
       if (e.type === 'pointerdown') consumed.add(e.pointerId);
       if (e.type === 'pointerup' || e.type === 'pointercancel') consumed.delete(e.pointerId);
+      // Visibility delivery and queued native input can race. Never click in background.
+      if (document.hidden) { cancel(); return; }
       if (e.type === 'pointerdown') {
         onGesture();
-        if (disposed || !active) return;
+        if (disposed || !active || document.hidden) return;
         if (!gesture) release(); // Never turn a previous click pulse into a new drag.
         if (!gesture) gesture = {time:e.timeStamp, max:0, total:0, invalid:false, moving:false, holding:false};
         if (!contacts.has(e.pointerId)) gesture.total++;
@@ -156,13 +165,12 @@
     listen(window,'orientationchange',reset);
     listen(document,'visibilitychange',reset);
     function rightClick() {
-      if (disposed || !active) return false;
+      if (disposed || !active || document.hidden) return false;
       // A separate right button must not complete an earlier left-tap candidate.
       cancel();
       onGesture();
-      if (disposed || !active) return false;
-      click(2);
-      return true;
+      if (disposed || !active || document.hidden) return false;
+      return click(2);
     }
     return Object.freeze({setEnabled, rightClick, cancel:reset, dispose() {
       if (disposed) return;
@@ -171,3 +179,4 @@
     }, initialize() { setEnabled(enabled); }});
   }
 })();
+

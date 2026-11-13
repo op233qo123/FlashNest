@@ -50,7 +50,7 @@
     "App/Resources/Web/licenses/wasm-feature-detect-LICENSE": "bcf29b4fd3ec2cb5f9d40a0866da446f6da62170d2ccedf4aeca9cf9406dd20c",
     "App/Resources/Web/licenses/webpack-LICENSE": "9068a8782d2fb4c6e432cfa25334efa56f722822180570802bf86e71b6003b1e",
     "App/Resources/Web/long-run-diagnostics.js": "f9cbd98b7edb416ad8f184fdf4e193f1b4cb10b99cef9dbdbf2ea17a1b631a2b",
-    "App/Resources/Web/mouse-touch.js": "bfca3707c72a42aa6f8844cb0a638e95fd2e70c34b98e51660a1831b4b585a7e",
+    "App/Resources/Web/mouse-touch.js": "d1da572582c0094261692616d0f1bfc6e6409673330f6636bca58cd6f8feab93",
     "App/Resources/Web/runtime-identity.json": "bf822afb0afa700b3c9662a10e1cf670bf12fdb825a0a430a8dd5ea189cde5e5",
     "App/Resources/Web/runtime/36b3cbd33c368ba3e094.wasm": "65bfde20229c0ea07a944dbb6a61f8de438826ea8fa7c3dc98a7d5ab60cab685",
     "App/Resources/Web/runtime/81a207f7dca57201d407.wasm": "b65fd06f17f68b1c30417dc19cd406016f445c3ff7ff93c1ce9286527f65be7b",
@@ -211,7 +211,7 @@
     "scripts/test_localization.py": "e82a02a9081972a1371445064020426c5d3ab90c4b4bef880e1badd7d7423e72",
     "scripts/test_mouse_frame_evidence.py": "10938a91402eecbd16864758b3247c962b73c2f85145393cc1b7e74a4c0c2d08",
     "scripts/test_mouse_shell_contract.js": "0f24ea034885e4ad2e315b50799da8829c40aec2b530a001b72cb455f16b9d51",
-    "scripts/test_mouse_touch.js": "c627405a1c8879c49210152cdc5d46c16300da215f5dd86ccae88264c895edcb",
+    "scripts/test_mouse_touch.js": "ac35d4ebf54c944d43176cb218a71be7a6acc122661e4b64bc275dc955f12b88",
     "scripts/test_mouse_touch_runtime.py": "890a63e7472a83ca22f664b69a856b97b764a4f0767d0f8156d035e2df32b886",
     "scripts/test_package_metadata.py": "fc701a17c54e1300aead3ac01ef649503b8df48e1aa9de61136e7a0741519d03",
     "scripts/test_preservation_diagnostics.py": "2a565ec07ab4bf6ccd1c25ec81c6a29665374f8811b35e6f30abad0f5668fd15",
@@ -550,7 +550,7 @@
       "checkout": "recipe",
       "kind": "repository",
       "path": "experiments/mouse-touch-160-build24/overlay/App/Resources/Web/mouse-touch.js",
-      "sourceSHA256": "bfca3707c72a42aa6f8844cb0a638e95fd2e70c34b98e51660a1831b4b585a7e"
+      "sourceSHA256": "d1da572582c0094261692616d0f1bfc6e6409673330f6636bca58cd6f8feab93"
     },
     "App/Resources/Web/runtime-identity.json": {
       "checkout": "recipe",
@@ -1527,7 +1527,7 @@
       "checkout": "recipe",
       "kind": "repository",
       "path": "experiments/mouse-touch-160-build24/overlay/scripts/test_mouse_touch.js",
-      "sourceSHA256": "c627405a1c8879c49210152cdc5d46c16300da215f5dd86ccae88264c895edcb"
+      "sourceSHA256": "ac35d4ebf54c944d43176cb218a71be7a6acc122661e4b64bc275dc955f12b88"
     },
     "scripts/test_mouse_touch_runtime.py": {
       "checkout": "recipe",
@@ -1680,7 +1680,7 @@
     "App/Resources/Web/licenses/wasm-feature-detect-LICENSE": "bcf29b4fd3ec2cb5f9d40a0866da446f6da62170d2ccedf4aeca9cf9406dd20c",
     "App/Resources/Web/licenses/webpack-LICENSE": "9068a8782d2fb4c6e432cfa25334efa56f722822180570802bf86e71b6003b1e",
     "App/Resources/Web/long-run-diagnostics.js": "f9cbd98b7edb416ad8f184fdf4e193f1b4cb10b99cef9dbdbf2ea17a1b631a2b",
-    "App/Resources/Web/mouse-touch.js": "bfca3707c72a42aa6f8844cb0a638e95fd2e70c34b98e51660a1831b4b585a7e",
+    "App/Resources/Web/mouse-touch.js": "d1da572582c0094261692616d0f1bfc6e6409673330f6636bca58cd6f8feab93",
     "App/Resources/Web/runtime-identity.json": "bf822afb0afa700b3c9662a10e1cf670bf12fdb825a0a430a8dd5ea189cde5e5",
     "App/Resources/Web/runtime/36b3cbd33c368ba3e094.wasm": "65bfde20229c0ea07a944dbb6a61f8de438826ea8fa7c3dc98a7d5ab60cab685",
     "App/Resources/Web/runtime/81a207f7dca57201d407.wasm": "b65fd06f17f68b1c30417dc19cd406016f445c3ff7ff93c1ce9286527f65be7b",
@@ -1841,7 +1841,7 @@
     "scripts/test_localization.py": "e82a02a9081972a1371445064020426c5d3ab90c4b4bef880e1badd7d7423e72",
     "scripts/test_mouse_frame_evidence.py": "10938a91402eecbd16864758b3247c962b73c2f85145393cc1b7e74a4c0c2d08",
     "scripts/test_mouse_shell_contract.js": "0f24ea034885e4ad2e315b50799da8829c40aec2b530a001b72cb455f16b9d51",
-    "scripts/test_mouse_touch.js": "c627405a1c8879c49210152cdc5d46c16300da215f5dd86ccae88264c895edcb",
+    "scripts/test_mouse_touch.js": "ac35d4ebf54c944d43176cb218a71be7a6acc122661e4b64bc275dc955f12b88",
     "scripts/test_mouse_touch_runtime.py": "890a63e7472a83ca22f664b69a856b97b764a4f0767d0f8156d035e2df32b886",
     "scripts/test_package_metadata.py": "fc701a17c54e1300aead3ac01ef649503b8df48e1aa9de61136e7a0741519d03",
     "scripts/test_preservation_diagnostics.py": "2a565ec07ab4bf6ccd1c25ec81c6a29665374f8811b35e6f30abad0f5668fd15",
