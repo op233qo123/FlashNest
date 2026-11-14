@@ -84,7 +84,7 @@ def stage(baseline,source,case,delivered,archive,metadata,output):
     output=Path(output).resolve();need(not output.exists(),'Refuse to overwrite recovery staging');output.mkdir(parents=True)
     helper=roots['case']/'experiments/loader-unload-replay/reuse_engine.py'
     need(sha(helper.read_bytes())==read(d/'inputs.json')['reuseHelperSHA256'],'Original reuse helper differs')
-    spec=importlib.util.spec_from_file_location('recovery_original_engine_reuse',helper);reuse=importlib.util.module_from_spec(spec);spec.loader.exec_module(reuse)
+    spec=importlib.util.spec_from_file_location('explicit_archival_engine_restore',ROOT/'restore_engine.py');reuse=importlib.util.module_from_spec(spec);spec.loader.exec_module(reuse)
     reuse.reuse(Path(archive),Path(metadata),roots['case']/'experiments/loader-unload-fix',output/'candidate-runtime',output/'candidate-runtime-lock.json',output/'engine-reuse.json',consumer,run)
     need((output/'candidate-runtime-lock.json').read_bytes()==(d/'candidate-runtime-reference.json').read_bytes(),'Executed engine lock differs')
     # Re-run the original native fixture generator and retain its exact evidence.

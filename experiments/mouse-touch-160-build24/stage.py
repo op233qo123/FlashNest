@@ -74,6 +74,17 @@ def validate_stage(app,receipt,baseline):
  for filename,key in [('engine-reuse.json','engineReuseSHA256'),('cadence-inputs.json','cadenceInputsSHA256')]:
   need(s[key]==r[key]==sha((parent/filename).read_bytes()),'Recovery runtime proof changed: '+filename)
  reuse=read(parent/'engine-reuse.json');cadence=read(parent/'cadence-inputs.json')
+ restore=module('mouse_engine_restore',ROOT/'restore_engine.py')
+ descriptor_raw=(ROOT/'engine-backup.json').read_bytes();descriptor=restore.validate_descriptor(json.loads(descriptor_raw))
+ proof_path=parent/'engine-reuse.json.restoration.json'
+ need(proof_path.is_file() and not proof_path.is_symlink(),'Missing regular engine restoration proof')
+ proof=read(proof_path);binding=reuse.get('archivalRestoration',{})
+ need(binding=={'schema':'flashnest-archival-engine-restoration-receipt-v1','receiptSHA256':sha(proof_path.read_bytes()),'descriptorSHA256':sha(descriptor_raw),'originalArtifactAvailability':'unavailable'},'Engine restoration proof binding differs')
+ need(proof['schema']==binding['schema'] and proof['descriptor']==descriptor and proof['descriptorSHA256']==sha(descriptor_raw),'Engine restoration descriptor differs')
+ need(proof['restoreHelperSHA256']==sha((ROOT/'restore_engine.py').read_bytes()) and proof['originalCheckerSHA256']==restore.CHECKER_SHA,'Engine restoration validator differs')
+ need(proof['consumerHead']==s['head'] and proof['consumerRunID']==s['runID'],'Engine restoration current-run identity')
+ need(proof['archiveSHA256']==restore.PIN['archiveSHA256'] and proof['archiveBytes']==restore.PIN['archiveBytes'],'Engine restoration archive identity')
+ need(all(proof[key] is False for key in ['liveArtifactDownloadPerformed','engineBuildExecutedThisRun','coreTestsExecutedThisRun','applicationPass','physicalDeviceCertified']),'Engine restoration cannot claim new execution or acceptance')
  need(reuse['consumerHead']==s['head'] and reuse['consumerRunID']==s['runID'] and reuse['engineBuildExecutedThisRun'] is False,'Engine reuse current-run identity')
  need(cadence['head']==s['head'] and cadence['runID']==s['runID'] and cadence['runtimeFiles']==s['runtimeFiles']==reuse['runtimeFiles'],'Cadence/runtime identity')
  need(inventory(app/'App/Resources/Web/runtime')==s['runtimeFiles'] and len(s['runtimeFiles'])==12,'Exact engine closure differs')

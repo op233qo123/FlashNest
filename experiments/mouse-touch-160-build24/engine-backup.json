@@ -1,0 +1,16 @@
+{
+  "backupProvenance": "retained-local-copy-of-original-artifact-zip",
+  "coreTestsExecutedThisRun": false,
+  "engineBuildExecutedThisRun": false,
+  "originalArtifact": {
+    "archiveBytes": 15260480,
+    "archiveSHA256": "dac0c326e29d2cfd354eb418000ac049fa7bdcfaa56b7693132f5799661d52c2",
+    "artifactID": 13089357368,
+    "head": "3b0ab52a334336e6e6474e840e9c487e3f666f1d",
+    "runID": 41318527222
+  },
+  "originalArtifactAvailability": "unavailable",
+  "originalArtifactName": "FlashNest-unload-candidate-engine-not-IPA",
+  "schema": "flashnest-archival-engine-restore-v1",
+  "transport": "reviewed-byte-identical-backup"
+}

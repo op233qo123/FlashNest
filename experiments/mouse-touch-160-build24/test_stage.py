@@ -46,6 +46,11 @@ class RecoveryIdentityTests(unittest.TestCase):
   self.s={**self.r,**self.config,'kind':'EXPERIMENTAL-MOUSE-TOUCH-160-26-RECOVERED'}
   self.reuse={'consumerHead':'current-head','consumerRunID':'current-run','engineBuildExecutedThisRun':False,'runtimeFiles':dict(self.runtime)}
   self.cadence={'head':'current-head','runID':'current-run','runtimeFiles':dict(self.runtime)}
+  spec=importlib.util.spec_from_file_location('restore_fixture',pathlib.Path(__file__).with_name('restore_engine.py'))
+  self.restore=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.restore)
+  self.descriptor=self.restore.descriptor_for_backup()
+  self.proof={'schema':'flashnest-archival-engine-restoration-receipt-v1','descriptor':self.descriptor,'archiveSHA256':self.restore.PIN['archiveSHA256'],'archiveBytes':self.restore.PIN['archiveBytes'],'originalCheckerSHA256':self.restore.CHECKER_SHA,'consumerHead':'current-head','consumerRunID':'current-run'}
+  for k in ['liveArtifactDownloadPerformed','engineBuildExecutedThisRun','coreTestsExecutedThisRun','applicationPass','physicalDeviceCertified']:self.proof[k]=False
   m.write(self.base/m.RECIPE/'inputs.json',{'fixture':True})
   self.patches=[patch.object(m,'ROOT',self.recipe),patch.object(m,'config',return_value=self.config),patch.object(m,'git_head',return_value=m.BASE),patch.dict(m.os.environ,{'GITHUB_SHA':'current-head','GITHUB_RUN_ID':'current-run'})]
   for p in self.patches:p.start()
@@ -59,6 +64,13 @@ class RecoveryIdentityTests(unittest.TestCase):
   (self.recipe/'recovery_stage.py').write_bytes(script)
   self.r.setdefault('recoveryScriptSHA256',m.sha(script))
   self.r['recoveryManifestSHA256']=m.sha((self.recipe/'recovery-manifest.json').read_bytes())
+  helper=pathlib.Path(__file__).with_name('restore_engine.py').read_bytes()
+  (self.recipe/'restore_engine.py').write_bytes(helper)
+  m.write(self.recipe/'engine-backup.json',self.descriptor)
+  dh=m.sha((self.recipe/'engine-backup.json').read_bytes())
+  self.proof.setdefault('descriptorSHA256',dh);self.proof.setdefault('restoreHelperSHA256',m.sha(helper))
+  m.write(self.out/'engine-reuse.json.restoration.json',self.proof)
+  self.reuse['archivalRestoration']={'schema':'flashnest-archival-engine-restoration-receipt-v1','receiptSHA256':m.sha((self.out/'engine-reuse.json.restoration.json').read_bytes()),'descriptorSHA256':dh,'originalArtifactAvailability':'unavailable'}
   for name,key,data in [('engine-reuse.json','engineReuseSHA256',self.reuse),('cadence-inputs.json','cadenceInputsSHA256',self.cadence)]:
    m.write(self.out/name,data);self.r[key]=self.s[key]=m.sha((self.out/name).read_bytes())
   m.write(self.out/'recovery-staging.json',self.r)
@@ -68,6 +80,28 @@ class RecoveryIdentityTests(unittest.TestCase):
  def reject(self,message):
   self.flush()
   with self.assertRaisesRegex(ValueError,message):self.validate()
+ def test_restoration_proof_unhashed_tamper_rejected(self):
+  self.flush();self.proof['consumerRunID']='stale';m.write(self.out/'engine-reuse.json.restoration.json',self.proof)
+  with self.assertRaisesRegex(ValueError,'proof binding differs'):self.validate()
+ def test_restoration_proof_missing_rejected(self):
+  self.flush();(self.out/'engine-reuse.json.restoration.json').unlink()
+  with self.assertRaisesRegex(ValueError,'Missing regular'):self.validate()
+ def test_restoration_descriptor_rejected_even_with_rehashed_proof(self):
+  self.proof['descriptor']={};self.reject('restoration descriptor differs')
+ def test_restoration_descriptor_hash_rejected(self):
+  self.proof['descriptorSHA256']='0'*64;self.reject('restoration descriptor differs')
+ def test_restoration_validator_rejected_even_with_rehashed_proof(self):
+  for field in ['restoreHelperSHA256','originalCheckerSHA256']:
+   self.proof[field]='0'*64;self.reject('restoration validator differs')
+ def test_restoration_current_run_rejected_even_with_rehashed_proof(self):
+  for field in ['consumerHead','consumerRunID']:
+   old=self.proof[field];self.proof[field]='stale';self.reject('restoration current-run identity');self.proof[field]=old
+ def test_restoration_archive_rejected_even_with_rehashed_proof(self):
+  for field in ['archiveSHA256','archiveBytes']:
+   old=self.proof[field];self.proof[field]='wrong';self.reject('restoration archive identity');self.proof[field]=old
+ def test_restoration_false_acceptance_rejected_even_with_rehashed_proof(self):
+  for field in ['liveArtifactDownloadPerformed','engineBuildExecutedThisRun','coreTestsExecutedThisRun','applicationPass','physicalDeviceCertified']:
+   self.proof[field]=True;self.reject('cannot claim new execution');self.proof[field]=False
  def test_fixture_uses_actual_producer_manifest_key(self):
   import ast
   producer=pathlib.Path(__file__).with_name('recovery_stage.py')

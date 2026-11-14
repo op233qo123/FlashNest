@@ -133,8 +133,9 @@ def run(app, output, baseline, stage_receipt, toolchain_path):
             native.update(summarySHA256=e.sha(raw), resultBundle='native.xcresult')
         except ValueError as error:
             native_error = str(error)
-            print('Native lane failed; collecting the independent UI lane before enforcing aggregate failure:', native_error)
+            print('Native lane failed; stopping before UI:', native_error)
         e.write(output / 'native-lane-status.json', {'passed': native_error is None, 'error': native_error, 'runID': os.environ.get('GITHUB_RUN_ID')})
+        e.need(native_error is None, 'Native lane failed; later stages not run: ' + str(native_error))
         verify_identity()
         run_ui_lane(app, output, ui_config, {'diagnosticSourceFiles': effective}, device, release, helper, toolchain['runtimeVersion'])
         e.need(native_error is None, 'Native lane failed; UI lane completed: ' + str(native_error))

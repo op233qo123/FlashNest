@@ -1,19 +1,19 @@
-name: Experimental FlashNest 1.6.0 mouse touch IPA
+name: Archived-engine mouse regression iOS validation
 on:
   push:
-    branches: [experiment/case-compatible-assets-build23]
+    branches: [experiment/mouse-macos-validation-20261114]
     paths:
       - 'experiments/mouse-touch-160-build24/**'
-      - '.github/workflows/build-mouse-touch-160.yml'
-  workflow_dispatch:
+      - '.github/workflows/test-mouse-macos-restored.yml'
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: flashnest-mouse-touch-160
+  group: flashnest-mouse-macos-validation-20261114
   cancel-in-progress: false
 jobs:
   build:
+    if: github.run_attempt == 1
     runs-on: macos-15
     timeout-minutes: 110
     env:
@@ -32,21 +32,20 @@ jobs:
         with: {ref: cc6c4bf285a201d9c1a827140662c54606027d10, path: baseline-recipe, persist-credentials: false}
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {ref: 9bc000e37695696f2427b25fe08efe4993bf22e5, path: source-checkout, persist-credentials: false}
-      - name: Verify new recipe and exact Xcode16.4 iOS18.5
-        run: |
-          set -euo pipefail
-          cmp "$PREP/build/workflow.yml" recipe/.github/workflows/build-mouse-touch-160.yml
-          python3 "$PREP/stage.py" preflight
-          python3 "$PREP/test_stage.py"
-          python3 "$PREP/build/select_toolchain.py" --output toolchain-evidence/toolchain.json
-      - name: Fetch exact delivered engine artifact
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Use reviewed byte-identical archived engine (not a live artifact download)
         run: |
           set -euo pipefail
           mkdir engine-input
-          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368 > engine-input/metadata.json
-          gh api repos/op233qo123/FlashNest/actions/artifacts/13089357368/zip > engine-input/engine.zip
+          cat recipe/engine-backup/unload-candidate-engine.zip.part01 recipe/engine-backup/unload-candidate-engine.zip.part02 > engine-input/engine.zip
+          cp "$PREP/engine-backup.json" engine-input/metadata.json
+      - name: Verify new recipe and exact Xcode16.4 iOS18.5
+        run: |
+          set -euo pipefail
+          cmp "$PREP/build/workflow.yml" recipe/.github/workflows/test-mouse-macos-restored.yml
+          python3 "$PREP/stage.py" preflight
+          python3 "$PREP/test_stage.py"
+          FLASHNEST_ENGINE_ARCHIVE="$PWD/engine-input/engine.zip" python3 "$PREP/test_restore_engine.py"
+          python3 "$PREP/build/select_toolchain.py" --output toolchain-evidence/toolchain.json
       - name: Reconstruct explicit recovered baseline with unchanged App and engine hashes
         env:
           GH_TOKEN: ${{ github.token }}
@@ -85,7 +84,6 @@ jobs:
           python3 "$PREP/build/run_ios_tests.py" --app mouse-stage/app --output mouse-stage/evidence/ios --baseline-checkout baseline-recipe --stage-receipt mouse-stage/mouse-staging.json --toolchain toolchain-evidence/toolchain.json
           python3 "$PREP/stage.py" verify --output mouse-stage --baseline-checkout baseline-recipe
       - name: Case resolver, unchanged engine cadence, actual mouse runtime matrix
-        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
         env:
           CHROMIUM_EXECUTABLE: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
         run: |
@@ -122,11 +120,13 @@ jobs:
             toolchain-evidence/
             mouse-stage/*staging.json
             mouse-stage/engine-reuse.json
+            mouse-stage/engine-reuse.json.restoration.json
             mouse-stage/cadence-inputs.json
             mouse-stage/evidence/*.json
             mouse-stage/evidence/*.plist
             mouse-stage/evidence/*.log
             mouse-stage/evidence/ios/*.json
             mouse-stage/evidence/ios/*.log
+            mouse-stage/evidence/ios/*.xcresult
           if-no-files-found: warn
           retention-days: 7
